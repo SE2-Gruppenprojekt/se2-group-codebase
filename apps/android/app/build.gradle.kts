@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -32,16 +33,19 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    kotlinOptions {
-        jvmTarget = libs.versions.jvmTarget.get()
-    }
-
     buildFeatures {
         compose = true
     }
+}
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
+// ✅ NEW Kotlin config (outside android block)
+kotlin {
+    compilerOptions {
+        jvmTarget.set(
+            org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(
+                libs.versions.jvmTarget.get()
+            )
+        )
     }
 }
 
@@ -49,28 +53,21 @@ dependencies {
     implementation(libs.core.ktx)
     implementation(libs.lifecycle.runtime)
 
-    // Compose BOM
     implementation(platform(libs.compose.bom))
 
-    // Compose UI
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)
 
-    // Material3
     implementation(libs.material3)
-
-    // Activity
     implementation(libs.activity.compose)
 
-    // Testing
     testImplementation(libs.junit4)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test)
 
-    // Debug
     debugImplementation(libs.compose.tooling)
     debugImplementation(libs.compose.test.manifest)
 }
