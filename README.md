@@ -242,9 +242,35 @@ Examples:
 
 ### Commit Messages
 
-Use **Conventional Commits** where possible.
+Use **Conventional Commits** for all commit messages where possible.
 
-Examples:
+### Commit Message Format
+
+```text
+<type>(<scope>): <short summary>
+```
+
+### Format Rules
+
+- use a lowercase commit `type`
+- use a short and specific `scope` when applicable
+- write the summary in the imperative mood
+- keep the summary concise and descriptive
+- do not end the summary with a period
+- prefer one logical change per commit
+
+### Common Types
+
+- `feat` for a new feature
+- `fix` for a bug fix
+- `docs` for documentation changes
+- `chore` for maintenance, setup, or repository tasks
+- `refactor` for code changes that do not add features or fix bugs
+- `test` for adding or updating tests
+- `ci` for CI or workflow-related changes
+- `build` for build system or dependency changes
+
+### Good Examples
 
 ```text
 feat(android): add homescreen UI
@@ -254,7 +280,13 @@ fix(android): validate username input
 chore(repo): add root gradle configuration
 docs(readme): add setup instructions
 ci(github): add build workflow
+build(gradle): add gradle wrapper
 ```
+
+### References
+
+- [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+- [How to Write a Git Commit Message](https://cbea.ms/git-commit/)
 
 ### Pull Requests
 
@@ -266,7 +298,44 @@ Before opening a pull request:
 - update documentation if needed
 - add screenshots for UI changes if applicable
 
----
+### Pull Request Title Format
+
+Use a title structure similar to the commit message format.
+
+```text
+<type>(<scope>): <short summary>
+```
+
+### Pull Request Title Rules
+
+- use a lowercase `type`
+- use a meaningful `scope` when applicable
+- keep the summary short, clear, and review-friendly
+- describe the overall purpose of the PR, not every internal detail
+- do not end the title with a period
+- make sure the title aligns with the linked issue and branch purpose
+
+### Good Examples
+
+```text
+feat(android): add lobby screen skeleton
+feat(backend): add mock lobby endpoint
+docs(project): initialize project documentation
+chore(repo): add github templates and ci workflow
+build(gradle): configure root monorepo build
+fix(android): correct username validation state
+```
+
+### Pull Request Description
+
+The pull request description should usually include:
+
+- a short summary of the change
+- the motivation or goal of the PR
+- the main files or areas affected
+- references to related issues
+- testing or verification notes
+- screenshots for UI changes when relevant
 
 ## Definition of Done
 
