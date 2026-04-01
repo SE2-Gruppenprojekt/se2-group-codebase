@@ -2,10 +2,19 @@ rootProject.name = "se2-group-codebase"
 
 pluginManagement {
     repositories {
-        google()
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
         mavenCentral()
         gradlePluginPortal()
     }
+}
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.10.0"
 }
 
 dependencyResolutionManagement {
@@ -15,6 +24,14 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
+/*
+   Docs: https://docs.gradle.org/current/userguide/declaring_dependencies_basics.html
+   TL;DR should make project accessors less error prone and improve consistency
+*/
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-include(":apps:android")
+include(":apps:android:app")
 include(":apps:backend")
+
+project(":apps:android:app").projectDir = file("apps/android/app")
+project(":apps:backend").projectDir = file("apps/backend")
