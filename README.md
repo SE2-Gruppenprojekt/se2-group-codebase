@@ -1,8 +1,6 @@
-# Untitled
+# SE2 Group Project – Rummikub Game
 
-# SE2 Group Project – UNO Card Game
-
-> Monorepo for our SE2 group project: an UNO-inspired multiplayer card game with an **Android frontend** and a **Spring Boot backend**, both written in **Kotlin**.
+> Monorepo for our SE2 group project: a Rummikub-inspired multiplayer game with an **Android frontend** and a **Spring Boot backend**, both written in **Kotlin**.
 
 ## Project Status
 
@@ -14,15 +12,29 @@
 
 ## Overview
 
-The goal of this project is to build a digital card game inspired by UNO.
+The goal of this project is to design and implement a digital game inspired by Rummikub as part of the SE2 group project. The application is being developed as a shared monorepo so the Android frontend, Spring Boot backend, and all project documentation can evolve together in one repository with consistent structure, tooling, and workflow.
 
-The application consists of:
+The system is currently planned around two main technical parts:
 
-- an **Android app** for players
-- a **Spring Boot backend** for lobbies, game state, and scoring
-- a shared repository structure for team collaboration and future scaling
+- an **Android application** that provides the user interface and the player experience
+- a **Spring Boot backend** that manages lobbies, game state, validation, and future score-related functionality
 
-This repository is organized as a **monorepo** so frontend, backend, and shared setup can evolve together in one place.
+In addition to the implementation itself, the repository also contains project documentation, development conventions, and collaboration resources intended to support smooth teamwork throughout the course of the project.
+
+---
+
+## Project Goals
+
+The main objective is to deliver one polished multiplayer card game experience instead of several loosely connected mini-projects. The focus is on building a clear, maintainable, and well-documented application that can be developed collaboratively by the whole team.
+
+The project aims to:
+
+- build a stable Android client in Kotlin
+- build a structured backend in Kotlin with Spring Boot
+- define clear contracts between frontend and backend
+- maintain a clean monorepo structure for the whole team
+- document setup, architecture, workflow, and technical decisions inside the repository
+- keep project organization transparent through GitHub and Notion
 
 ---
 
@@ -45,12 +57,13 @@ This repository is organized as a **monorepo** so frontend, backend, and shared 
 - GitHub
 - GitHub Actions
 - Notion for project management
+- IntelliJ IDEA / Android Studio
 
 ---
 
 ## Repository Structure
 
-```
+```text
 .
 ├── apps/
 │   ├── android/              # Android application
@@ -65,34 +78,87 @@ This repository is organized as a **monorepo** so frontend, backend, and shared 
 ├── build.gradle.kts          # Root Gradle configuration
 ├── settings.gradle.kts       # Included modules
 ├── gradle.properties         # Shared Gradle defaults
-├── gradlew
-├── gradlew.bat
+├── gradlew                   # Gradle wrapper for macOS / Linux
+├── gradlew.bat               # Gradle wrapper for Windows
 └── README.md
 ```
 
+### Repository Notes
+
+- `apps/android` contains the Android client
+- `apps/backend` contains the Spring Boot backend
+- `docs` contains the main project documentation
+- `.github` contains collaboration and workflow templates
+- the root Gradle files define shared build configuration for the whole monorepo
+
+---
+
 ## Project Management
 
-We use:
+The team currently uses:
 
-- **GitHub** for source code, issues, and pull requests
-- **Notion** for planning, user stories, sprint tracking, and team organization
+- **GitHub** for source code, issues, pull requests, and code review
+- **Notion** for planning, user stories, meeting notes, and project organization
 
 ### Project Links
 
-- **GitHub Repository:** `<add-repo-link-here>`
-- **GitHub Organization:** `<add-org-link-here>`
-- **Notion Workspace / Hub:** `<add-notion-link-here>`
+- **GitHub Repository:** `<https://github.com/SE2-Gruppenprojekt/se2-group-codebase>`
+- **GitHub Organization:** `<https://github.com/SE2-Gruppenprojekt>`
+- **Notion Workspace / Hub:** `<https://kingjulien1.notion.site/SE2-Project-Team-Gamma-Hub-33086e6823a4809eb050f4a8335b695d?source=copy_link>`
+
+---
+
+## Team
+
+The following team members are currently part of the project.
+
+### Erik `@erzeber`
+
+- **Role:** Team Leader
+- **Workspace:** Organisational / Frontend / Backend / Reviewer
+
+### Julian Blaschke `@Julian`
+
+- **Role:** Architect
+- **Workspace:** Organisational / Backend / Reviewer
+
+### Stefan `@Stefan`
+
+- **Role:** Developer
+- **Workspace:** Backend
+
+### Katrin Herold `@Katrin Herold`
+
+- **Role:** Developer
+- **Workspace:** Backend
+
+### Vanessa `@Vanessa`
+
+- **Role:** Developer
+- **Workspace:** Frontend
+
+### Miriam `@Miri`
+
+- **Role:** Developer
+- **Workspace:** Backend
+
+### Sabine
+
+- **Role:** Developer
+- **Workspace:** Frontend
 
 ---
 
 ## Requirements
 
-Before starting, make sure you have:
+Before starting, make sure the following tools are installed:
 
 - **JDK 17**
 - **Android Studio**
 - **Git**
-- optionally **IntelliJ IDEA** for backend or general Kotlin work
+- optionally **IntelliJ IDEA** for backend work or general Kotlin development
+
+It is also recommended that all contributors use the committed Gradle Wrapper instead of a globally installed Gradle version.
 
 ---
 
@@ -100,7 +166,7 @@ Before starting, make sure you have:
 
 ### 1. Clone the repository
 
-```
+```bash
 git clone <your-repository-url>
 cd codebase
 ```
@@ -109,41 +175,53 @@ cd codebase
 
 On macOS / Linux:
 
-```
+```bash
 ./gradlew tasks
 ```
 
 On Windows:
 
-```
+```bat
 gradlew.bat tasks
 ```
+
+If Gradle does not run successfully, verify that the Gradle Wrapper files are present and that the project is using **JDK 17**.
 
 ---
 
 ## Running the Backend
 
-From the repository root:
+From the repository root, start the backend with:
 
-```
+```bash
 ./gradlew :apps:backend:bootRun
 ```
 
-Expected local endpoint:
+The backend should start using the local configuration defined in the backend module.
 
-```
-GET /api/health
-```
+### Notes
+
+- run the backend from the repository root
+- use the Gradle Wrapper instead of a system Gradle installation
+- update backend-specific documentation when endpoints or configuration change
 
 ---
 
 ## Running the Android App
 
+To run the Android application:
+
 1. Open the repository in **Android Studio**
-2. Wait for **Gradle sync**
-3. Select the Android app configuration
+2. Wait for **Gradle sync** to complete
+3. Select the Android app run configuration
 4. Start an emulator or connect a physical device
-5. Run the app
+5. Run the application
+
+### Notes
+
+- make sure the Android SDK is installed correctly
+- let Gradle sync fully before running the app
+- use the shared repository configuration instead of creating local project variants
 
 ### Troubleshooting Gradle Sync or Build Errors
 
@@ -239,7 +317,9 @@ This resolved a project issue where the Android Gradle Plugin version was newer 
 
 ### Branch Naming
 
-Use clear and short branch names:
+Use clear and concise branch names.
+
+Examples:
 
 - `feature/homescreen`
 - `feature/create-lobby`
@@ -250,19 +330,51 @@ Use clear and short branch names:
 
 ### Commit Messages
 
-Use **Conventional Commits** where possible.
+Use **Conventional Commits** for all commit messages where possible.
 
-Examples:
+### Commit Message Format
 
+```text
+<type>(<scope>): <short summary>
 ```
+
+### Format Rules
+
+- use a lowercase commit `type`
+- use a short and specific `scope` when applicable
+- write the summary in the imperative mood
+- keep the summary concise and descriptive
+- do not end the summary with a period
+- prefer one logical change per commit
+
+### Common Types
+
+- `feat` for a new feature
+- `fix` for a bug fix
+- `docs` for documentation changes
+- `chore` for maintenance, setup, or repository tasks
+- `refactor` for code changes that do not add features or fix bugs
+- `test` for adding or updating tests
+- `ci` for CI or workflow-related changes
+- `build` for build system or dependency changes
+
+### Good Examples
+
+```text
 feat(android): add homescreen UI
-feat(backend): add health endpoint
+feat(backend): add mock lobby endpoint
 feat(game): implement deal cards use case
 fix(android): validate username input
 chore(repo): add root gradle configuration
 docs(readme): add setup instructions
 ci(github): add build workflow
+build(gradle): add gradle wrapper
 ```
+
+### References
+
+- [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+- [How to Write a Git Commit Message](https://cbea.ms/git-commit/)
 
 ### Pull Requests
 
@@ -274,31 +386,44 @@ Before opening a pull request:
 - update documentation if needed
 - add screenshots for UI changes if applicable
 
----
+### Pull Request Title Format
 
-## Issue Management
+Use a title structure similar to the commit message format.
 
-We split work into **small technical issues** that can be implemented independently.
+```text
+<type>(<scope>): <short summary>
+```
 
-Typical categories:
+### Pull Request Title Rules
 
-- **repo/setup**
-- **android**
-- **backend**
-- **game logic**
-- **docs**
-- **ci**
-- **testing**
+- use a lowercase `type`
+- use a meaningful `scope` when applicable
+- keep the summary short, clear, and review-friendly
+- describe the overall purpose of the PR, not every internal detail
+- do not end the title with a period
+- make sure the title aligns with the linked issue and branch purpose
 
-Each issue should ideally include:
+### Good Examples
 
-- a clear title
-- a short description
-- acceptance criteria
-- labels
-- assignee / reviewer if known
+```text
+feat(android): add lobby screen skeleton
+feat(backend): add mock lobby endpoint
+docs(project): initialize project documentation
+chore(repo): add github templates and ci workflow
+build(gradle): configure root monorepo build
+fix(android): correct username validation state
+```
 
----
+### Pull Request Description
+
+The pull request description should usually include:
+
+- a short summary of the change
+- the motivation or goal of the PR
+- the main files or areas affected
+- references to related issues
+- testing or verification notes
+- screenshots for UI changes when relevant
 
 ## Definition of Done
 
@@ -306,77 +431,17 @@ A task is considered done when:
 
 - acceptance criteria are fulfilled
 - code builds locally
-- relevant tests are added or updated
+- relevant tests are added or updated where appropriate
 - code follows project conventions
-- no obvious debug or placeholder code remains
+- no obvious debug or placeholder code remains unless explicitly intended
 - documentation is updated if required
-- the PR has been reviewed
-
----
-
-## Planned Features
-
-Current project scope includes features such as:
-
-- homescreen
-- username input
-- leaderboard
-- create lobby
-- browse lobbies
-- join lobby by ID
-- lobby game options
-- start game
-- initial game state
-- first dealt card
-- deal cards
-- play a card
-- take a card
-- timer handling
-- win game
-- game results and score updates
-
----
-
-## Suggested Sprint 0 / Setup Scope
-
-Before feature implementation, the repository should provide:
-
-- monorepo folder structure
-- root Gradle configuration
-- Gradle wrapper
-- `.gitignore`
-- `.editorconfig`
-- Android bootstrap project
-- backend bootstrap project
-- README and docs skeleton
-- issue / PR templates
-- CI workflow
-
----
-
-## Documentation
-
-The `docs/` directory should contain technical project documentation such as:
-
-- `architecture.md`
-- `setup.md`
-- `api.md`
-- `contributing.md`
-
----
-
-## Team Conventions
-
-- Prefer **small issues** over large vague tasks
-- Keep pull requests focused
-- Discuss bigger architecture changes before implementation
-- Do not commit secrets or local environment files
-- Use consistent Kotlin formatting and naming conventions
-- Keep frontend and backend contracts explicit and documented
+- the pull request has been reviewed
 
 ---
 
 ## Contributing
+
+Basic contribution flow:
 
 1. Pick or create an issue
 2. Create a branch
@@ -386,4 +451,63 @@ The `docs/` directory should contain technical project documentation such as:
 6. Request review
 7. Merge after approval
 
+For more detailed contribution guidance, see the linked project documentation below.
+
 ---
+
+## Project Documentation
+
+The `docs/` directory contains the main project documentation. These files should be kept up to date as the project evolves.
+
+### Core Guides
+
+- [Setup Guide](docs/setup.md)
+- [Architecture Overview](docs/architecture.md)
+- [API Overview](docs/api.md)
+- [Testing Guide](docs/testing.md)
+
+### Supporting Documentation
+
+- [Database Notes](docs/database.md)
+- [Design System Notes](docs/design-system.md)
+- [Meeting Notes Guide](docs/meetings.md)
+- [Meeting Notes Template](docs/meeting_notes_template.md)
+- [Project Roadmap](docs/roadmap.md)
+
+### Meeting Files
+
+- [Launch Session](docs/meetings/meeting_01_launch_session.md)
+- [Pre-Kickoff Meeting](docs/meetings/meeting_02_pre_kickoff.md)
+- [Kickoff Meeting](docs/meetings/meeting_03_kickoff.md)
+
+---
+
+## Resources
+
+### Internal Resources
+
+- [GitHub Repository](https://github.com/SE2-Gruppenprojekt/se2-group-codebase)
+- [GitHub Organization](https://github.com/SE2-Gruppenprojekt)
+- [Notion Workspace / Hub](https://kingjulien1.notion.site/SE2-Project-Team-Gamma-Hub-33086e6823a4809eb050f4a8335b695d?source=copy_link)
+
+### External References
+
+- [Kotlin Documentation](https://kotlinlang.org/docs/home.html)
+- [Android Developers Documentation](https://developer.android.com/docs)
+- [Jetpack Compose Documentation](https://developer.android.com/jetpack/compose)
+- [Spring Boot Reference Documentation](https://docs.spring.io/spring-boot/documentation.html)
+- [Gradle Documentation](https://docs.gradle.org/)
+- [Conventional Commits](https://www.conventionalcommits.org/)
+- [EditorConfig Documentation](https://editorconfig.org/)
+- [GitHub Actions Documentation](https://docs.github.com/actions)
+
+---
+
+## Additional Notes
+
+- keep the repository clean and well-structured
+- prefer small, focused pull requests over large mixed changes
+- discuss larger architectural changes before implementation
+- do not commit secrets, local environment files, or generated build output
+- keep frontend/backend contracts explicit and documented
+- use the repository documentation as the main technical reference whenever possible

@@ -38,21 +38,14 @@ Do not push directly to `main`.
 ## Branch naming
 
 Use clear and predictable branch names.
+Use descriptive branch names in `snake_case` where applicable.
 
-Recommended format:
+Recommended format / Examples:
 
-- `feature/<issue-number>-short-description`
-- `fix/<issue-number>-short-description`
-- `chore/<issue-number>-short-description`
-- `docs/<issue-number>-short-description`
-- `build/<issue-number>-short-description`
-- `ci/<issue-number>-short-description`
-
-Examples:
-
-- `feature/12-login-screen`
-- `fix/18-card-draw-bug`
-- `chore/4-editorconfig-setup`
+- `feature/home_screen`
+- `feature/create_lobby`
+- `fix/join_lobby_validation`
+- `chore/add_ci_workflow`
 
 Use lowercase letters and hyphens.
 
