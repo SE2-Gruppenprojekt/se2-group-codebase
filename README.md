@@ -139,11 +139,99 @@ GET /api/health
 
 ## Running the Android App
 
-1. Open the repository in **Android Studio**
-2. Wait for **Gradle sync**
+1. Open the repository in **Android Studio**
+2. Wait for **Gradle sync**
 3. Select the Android app configuration
 4. Start an emulator or connect a physical device
 5. Run the app
+
+### Troubleshooting Gradle Sync or Build Errors
+
+If the Android frontend does not compile, Gradle sync fails, or the build shows an error status, try the following steps.
+
+#### Common Symptoms
+
+- Gradle sync never finishes
+- Build fails with an error status
+- Android Studio shows missing Gradle tasks
+- Cache-related errors such as missing files in `~/.gradle/caches`
+
+#### Fix Steps
+
+##### 1. Close Android Studio completely
+
+Quit Android Studio fully before cleaning any files.
+
+##### 2. Delete the broken Gradle cache
+
+Run these commands in your terminal:
+
+```bash
+rm -rf ~/.gradle/caches
+rm -rf ~/.gradle/daemon
+rm -rf ~/.gradle/native
+rm -rf ~/.gradle/wrapper
+```
+
+This removes the local Gradle cache so dependencies and wrapper files can be downloaded again cleanly.
+
+##### 3. Delete the project-local Gradle files
+
+From the project root, run:
+
+```bash
+rm -rf .gradle
+rm -rf build
+```
+
+If you also have an app build directory, run:
+
+```bash
+rm -rf app/build
+```
+
+##### 4. Reopen Android Studio
+
+After reopening the project:
+
+- use **Sync Project with Gradle Files**
+- wait for Gradle to redownload dependencies and regenerate project state
+
+##### 5. Force a terminal rebuild if it still fails
+
+From the project root, run:
+
+```bash
+./gradlew --stop
+./gradlew clean
+./gradlew build
+```
+
+If the build still fails, run:
+
+```bash
+./gradlew tasks --stacktrace
+```
+
+This usually gives a more detailed error message than the Android Studio popup.
+
+##### 3. Update Android Studio if the Android Gradle Plugin version is unsupported
+
+If Gradle sync reports that the project is using an unsupported or incompatible Android Gradle Plugin version, your installed Android Studio version may be too old.
+
+In that case:
+
+- update Android Studio to the latest stable version
+- reopen the project
+- sync Gradle again
+
+This resolved a project issue where the Android Gradle Plugin version was newer than the maximum version supported by the installed Android Studio version.
+
+#### Notes
+
+- Corrupted local Gradle caches are a common cause of sync failures
+- If errors continue after clearing caches, check `settings.gradle.kts`, module `build.gradle.kts` files, the Gradle wrapper version, and the JDK version configured in Android Studio
+- Make sure you opened the repository root and not only a subfolder
 
 ---
 
