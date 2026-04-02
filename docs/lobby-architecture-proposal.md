@@ -23,9 +23,10 @@ The goal is to keep the lobby simple, reliable, and easy to extend.
 
 A mock design or wireframe for the lobby feature can be placed here for visual reference during implementation.
 
-![Lobby Mock Design](./images/lobby-mock-design.png)
+<img width="728" height="1564" alt="image" src="https://github.com/user-attachments/assets/846b8647-fc81-453b-a85f-94568d3a7e72" />
 
-> Replace the image path above with the correct file path once the mock design asset is added to the repository.
+<img width="706" height="1572" alt="image" src="https://github.com/user-attachments/assets/cc9a440c-8917-432b-b364-c02abd51ecc8" />
+
 
 This section should help align backend and frontend implementation with the intended user flow and screen structure.
 
@@ -44,8 +45,8 @@ It should support at least these actions:
 - leave a lobby
 - mark a player as ready
 - mark a player as unready
-- update lobby settings
-- start a match
+- update lobby settings - only for host
+- start a match - only for host
 - broadcast lobby changes to connected clients
 
 The lobby should **not** contain actual game logic for Rummikub turns, board validation, or scoring. Once a game starts, responsibility moves to the match or game module.
@@ -54,6 +55,8 @@ A useful rule of thumb is:
 
 - **Lobby = waiting room**
 - **Match = actual game**
+
+_note: perhaps dont distinguish between lobby and match - use the same for everything -> lobby = match_
 
 ---
 
@@ -90,6 +93,129 @@ lobby/
 ```
 
 This keeps the lobby feature separated from the match feature and makes it easier to evolve later.
+
+---
+
+### Suggested frontend feature structure
+
+The Android app should mirror the same separation conceptually, even if the exact package structure differs.
+
+A clean frontend structure for the lobby feature could look like this:
+
+```text
+apps/android/.../lobby/
+├── api/
+│   ├── LobbyApiService.kt
+│   ├── dto/
+│   │   ├── CreateLobbyRequestDto.kt
+│   │   ├── JoinLobbyRequestDto.kt
+│   │   ├── UpdateLobbySettingsRequestDto.kt
+│   │   ├── LobbyResponseDto.kt
+│   │   ├── LobbyListItemResponseDto.kt
+│   │   └── LobbyEventDto.kt
+├── data/
+│   ├── LobbyRepository.kt
+│   ├── LobbyRepositoryImpl.kt
+│   └── mapper/
+├── model/
+│   ├── LobbyUiModel.kt
+│   ├── LobbyPlayerUiModel.kt
+│   ├── LobbySettingsUiModel.kt
+│   └── LobbyStatusUiModel.kt
+├── websocket/
+│   ├── LobbySocketClient.kt
+│   └── LobbyEventHandler.kt
+├── presentation/
+│   ├── LobbyListViewModel.kt
+│   ├── LobbyDetailViewModel.kt
+│   ├── CreateLobbyViewModel.kt
+│   ├── LobbyListScreen.kt
+│   ├── LobbyDetailScreen.kt
+│   ├── CreateLobbyScreen.kt
+│   └── components/
+└── navigation/
+    └── LobbyNavigation.kt
+```
+
+### Frontend responsibilities by layer
+
+#### `api/`
+
+Contains the HTTP service definitions and network DTOs used to communicate with the backend.
+
+Responsibilities:
+
+- define Retrofit or HTTP endpoints for lobby actions
+- define request and response DTOs matching the backend contract
+- keep transport models separate from UI models
+
+#### `data/`
+
+Contains the repository and mapping logic that coordinates REST calls and WebSocket events.
+
+Responsibilities:
+
+- call lobby REST endpoints
+- subscribe to lobby WebSocket events
+- map API DTOs into frontend models
+- expose a clean interface to ViewModels
+
+#### `model/`
+
+Contains the models that the UI actually consumes.
+
+Responsibilities:
+
+- represent lobby state in a frontend-friendly shape
+- keep UI concerns separate from raw network payloads
+- hold data used directly by screens and state containers
+
+#### `websocket/`
+
+Contains the socket client and event handling logic for live lobby updates.
+
+Responsibilities:
+
+- connect and subscribe to lobby topics
+- parse lobby event payloads
+- notify repository or ViewModels about updates
+- handle reconnect and resubscribe behavior
+
+#### `presentation/`
+
+Contains ViewModels, screens, and reusable UI components.
+
+Responsibilities:
+
+- manage screen state
+- call repository methods for user actions
+- expose loading, error, and content state to the UI
+- render lobby list, create lobby, and lobby detail flows
+
+#### `navigation/`
+
+Contains the routes and navigation wiring for the lobby flow.
+
+Responsibilities:
+
+- define lobby-related destinations
+- pass required arguments such as `lobbyId`
+- connect lobby screens to the rest of the app flow
+
+### Frontend data model guidance
+
+Even in a shared monorepo, the frontend should **not** directly reuse backend persistence entities.
+
+Recommended separation:
+
+- backend entities -> database and persistence only
+- backend DTOs -> API contract
+- frontend DTOs -> network transport models
+- frontend UI models -> screen and ViewModel state
+
+If duplication later becomes annoying, a small shared **API contract** module can be introduced for request and response shapes only. However, backend JPA entities and internal backend domain models should not be shared with the Android app.
+
+This keeps the frontend decoupled from backend persistence concerns and makes both sides easier to evolve independently.
 
 ---
 
@@ -155,6 +281,8 @@ data class LobbyPlayer(
 )
 ```
 
+_note: only arbitrary settings for now - discuss what settings would be useful_
+
 ### `LobbySettings`
 
 ```kotlin
@@ -189,6 +317,9 @@ data class Lobby(
 ## DTOs
 
 DTOs define the API contract between the backend and the client.
+
+For this project, DTOs should still exist even though the backend and frontend live in the same monorepo. The frontend should not directly depend on backend persistence entities or backend-internal domain models. At most, only stable API contract models should ever be shared, while JPA entities and backend implementation models should remain backend-only.
+
 
 ### Requests
 
@@ -637,7 +768,8 @@ class LobbyService(
 ) {
 
     fun createLobby(hostUserId: String, request: CreateLobbyRequest): Lobby {
-        require(request.maxPlayers >= 2) { "maxPlayers must be at least 2" }
+        // evtl. falsch
+        //require(request.maxPlayers >= 2) { "maxPlayers must be at least 2" }
 
         val lobby = Lobby(
             lobbyId = UUID.randomUUID().toString(),
@@ -952,6 +1084,25 @@ Possible event types:
 
 This is enough for a first version. You do not need many more event types unless the feature becomes more advanced.
 
+### Disconnect and reconnect behavior
+
+If a client disconnects from the lobby WebSocket subscription, this should **not** automatically remove the player from the lobby.
+
+For the first version, lobby membership should only change through explicit REST endpoints such as:
+
+- `POST /api/lobbies/{lobbyId}/leave`
+- `DELETE /api/lobbies/{lobbyId}`
+
+A temporary socket disconnect should be treated as a lost live connection, not as a lobby leave.
+
+When the client reconnects, it should:
+
+1. reconnect the WebSocket connection
+2. resubscribe to `/topic/lobbies/{lobbyId}`
+3. refetch `GET /api/lobbies/{lobbyId}` once to restore the latest authoritative state
+
+This keeps the first-version lobby behavior simple and avoids incorrectly removing players because of short network interruptions.
+
 ---
 
 ## Error handling recommendations
@@ -1085,7 +1236,7 @@ The backend lobby feature should be implemented in a layered order so that plann
 
 ### Best implementation order
 
-#### Phase 0: Planning
+#### Phase 0: Planning (Can be split up and assigned to other phases when actually needed)
 
 1. `docs(backend)(lobby): plan lobby architecture and implementation`
 
@@ -1155,16 +1306,7 @@ These issues verify service rules, REST integration, and live update behavior.
 
 This issue should be completed last so the documentation reflects the final implementation and not just the planned structure.
 
-### Why this order is recommended
-
-This order minimizes rework and follows the real dependency structure of the backend:
-
-- planning should happen first so the implementation has a clear direction
-- domain models, DTOs, and mappers should exist before persistence and service work
-- persistence should exist before service logic depends on it
-- service logic should be complete before exposing the REST controller
-- live updates should come after the underlying state transitions already work
-- error handling, match handoff, testing, and final documentation are most effective once the feature is largely stable
+---
 
 ### Simple dependency chain
 
