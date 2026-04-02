@@ -3,14 +3,7 @@ package at.se2group.backend.api
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-
-data class LeaderboardEntry(
-    val rank: Int,
-    val playerName: String,
-    val score: Int,
-    val gamesPlayed: Int,
-    val wins: Int
-)
+import shared.models.LeaderboardEntry
 
 @RestController
 @RequestMapping("/api/leaderboard")

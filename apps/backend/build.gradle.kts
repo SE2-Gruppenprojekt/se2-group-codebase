@@ -16,6 +16,7 @@ kotlin {
 }
 
 dependencies {
+    implementation(projects.apps.shared)
     implementation(libs.spring.boot.starter.web)
     implementation(libs.spring.boot.starter.actuator)
     implementation(libs.jackson.module.kotlin)

@@ -2,7 +2,7 @@
 compileSdk = "36"
 minSdk = "26"
 targetSdk = "36"
-jvmTarget = "11"
+jvmTarget = "17"
 
 agp = "8.13.2"
 kotlin = "2.3.10"
