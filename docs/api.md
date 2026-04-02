@@ -155,3 +155,56 @@ Each object contains the following fields:
 - The endpoint is intended for initial frontend-backend integration
 - Future versions may connect this endpoint to persistent storage and real game statistics
 - The response structure may be extended later with additional fields such as player ID, avatar, win rate, or last active timestamp
+
+
+# APP Update
+
+## Shared Directory
+
+**Path:**  
+`/apps/shared/src/main/kotlin/shared/models`
+
+A new directory has been introduced to hold shared code between the backend and frontend. This helps avoid code duplication and improves maintainability.
+
+### Example
+
+```kotlin
+data class LeaderboardEntry(
+    val rank: Int,
+    val playerName: String,
+    val score: Int,
+    val gamesPlayed: Int,
+    val wins: Int
+)
+```
+
+This class is required by both the frontend and backend. By keeping the structure consistent, JSON parsing via Jackson becomes automatic.
+
+---
+
+## Manifest Updates
+
+### Required Permissions
+
+These permissions are necessary to allow network communication:
+
+```xml
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+```
+
+### Network Configuration
+
+Additional configuration via `network_security_config.xml` enables extended network options (e.g., allowing cleartext traffic for local Spring Boot testing):
+
+```xml
+android:usesCleartextTraffic="true"
+android:networkSecurityConfig="@xml/network_security_config"
+```
+
+---
+
+## Dependencies
+
+- **krossbow** → WebSockets & STOMP support
+- **ktor** → HTTP client for RESTful API calls
