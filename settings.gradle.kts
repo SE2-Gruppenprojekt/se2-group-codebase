@@ -32,6 +32,8 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":apps:android:app")
 include(":apps:backend")
+include(":apps:shared")
 
 project(":apps:android:app").projectDir = file("apps/android/app")
 project(":apps:backend").projectDir = file("apps/backend")
+project(":apps:shared").projectDir = file("apps/shared")
