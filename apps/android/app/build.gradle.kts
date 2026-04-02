@@ -29,8 +29,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.toVersion(libs.versions.jvmTarget.get())
+        targetCompatibility = JavaVersion.toVersion(libs.versions.jvmTarget.get())
     }
 
     buildFeatures {
@@ -38,7 +38,6 @@ android {
     }
 }
 
-// ✅ NEW Kotlin config (outside android block)
 kotlin {
     compilerOptions {
         jvmTarget.set(
@@ -50,8 +49,18 @@ kotlin {
 }
 
 dependencies {
+    implementation(projects.apps.shared)
+
+    // Ktor HTTP client
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.jackson)
+
     implementation(libs.core.ktx)
     implementation(libs.lifecycle.runtime)
+    implementation(libs.lifecycle.viewmodel.compose)
+
 
     implementation(platform(libs.compose.bom))
 
