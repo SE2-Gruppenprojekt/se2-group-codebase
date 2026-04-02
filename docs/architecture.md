@@ -872,8 +872,9 @@ This also helps with reconnects and duplicate requests.
 
 Handles:
 
-- registration and login if needed
+- registration and login if needed later
 - guest accounts if that is simpler
+- anonymous guest identity with locally stored UUID for the first version
 - player profile
 - display name
 
@@ -920,14 +921,173 @@ Handles:
 
 API payloads should be separated from internal domain models.
 
+### What DTO means
+
+DTO stands for **Data Transfer Object**.
+
+A DTO is a class or data structure that is used only to transfer data between parts of the system, especially:
+
+- between the backend and the Android client
+- between REST controllers and service methods
+- between WebSocket handlers and the rest of the backend
+
+A DTO is not the same thing as a domain model or persistence entity.
+
+### What DTOs are used for
+
+DTOs define the exact shape of data that is sent or received.
+
+They are useful for:
+
+- request bodies coming from the client
+- response bodies sent back to the client
+- WebSocket messages
+- internal transport between layers when needed
+
 Examples:
 
+- `CreateLobbyRequest`
+- `LobbyResponse`
 - `SubmitMoveRequest`
 - `MatchStateResponse`
 - `PlayerPrivateStateResponse`
-- `LobbyResponse`
+- `LeaderboardEntryResponse`
+- `MoveRejectedEvent`
 
-Internal engine classes should not be exposed directly through the API. This keeps the transport format stable even when internal implementation changes.
+### Why DTOs are important
+
+DTOs are important because they create a clean boundary between the API and the internal backend logic.
+
+This helps because:
+
+- the API format stays stable even if internal classes change
+- the backend does not expose internal implementation details by accident
+- request and response validation becomes easier
+- frontend and backend teams have a clear contract to work against
+- sensitive or unnecessary fields can be excluded from API responses
+
+### DTOs versus domain models
+
+A **domain model** represents the actual business concepts and rules inside the application.
+
+Examples:
+
+- `Match`
+- `Player`
+- `Tile`
+- `BoardGroup`
+
+A **DTO** represents how data is exchanged with the outside world.
+
+For example:
+
+- the internal `Match` domain model may contain technical fields, helper methods, and rule-related state
+- the external `MatchStateResponse` DTO should only contain the data the client actually needs to render the current state
+
+That means a DTO should be designed for communication, while a domain model should be designed for business logic.
+
+### DTOs versus persistence entities
+
+A persistence entity is designed for database storage.
+
+For example, a database entity might include:
+
+- primary keys
+- foreign keys
+- timestamps
+- persistence annotations
+- internal storage-specific structure
+
+Those details should usually not be sent directly to the client.
+
+DTOs prevent the API from becoming tightly coupled to the database design.
+
+### Practical DTO usage in this project
+
+For this Rummikub backend, DTOs should be used in at least these places:
+
+#### REST request DTOs
+
+Used for data coming into the backend.
+
+Examples:
+
+- `CreateLobbyRequest`
+- `UpdateLobbySettingsRequest`
+- `GuestLoginRequest`
+
+#### REST response DTOs
+
+Used for data returned to the Android app.
+
+Examples:
+
+- `LobbyResponse`
+- `MatchSummaryResponse`
+- `LeaderboardResponse`
+
+#### WebSocket incoming message DTOs
+
+Used for live messages sent by the client.
+
+Examples:
+
+- `JoinMatchMessage`
+- `SubmitMoveMessage`
+- `EndTurnMessage`
+
+#### WebSocket outgoing message DTOs
+
+Used for live messages sent by the backend.
+
+Examples:
+
+- `MatchStateUpdatedEvent`
+- `PrivateRackUpdatedEvent`
+- `MoveRejectedEvent`
+- `TurnChangedEvent`
+
+### Example
+
+A client might send a move using a DTO like this:
+
+```kotlin
+data class SubmitMoveRequest(
+    val matchId: String,
+    val expectedVersion: Long,
+    val proposedBoardGroups: List<BoardGroupDto>,
+    val proposedRackTiles: List<TileDto>,
+    val endTurn: Boolean
+)
+```
+
+The backend may then convert that DTO into internal domain objects and pass them into the game engine.
+
+After validation, the backend might send back a DTO like:
+
+```kotlin
+data class MatchStateResponse(
+    val matchId: String,
+    val version: Long,
+    val currentPlayerId: String,
+    val boardGroups: List<BoardGroupDto>,
+    val players: List<PlayerSummaryDto>,
+    val gameStatus: String
+)
+```
+
+### Important guideline
+
+Internal engine classes should not be exposed directly through the API.
+
+The recommended flow is:
+
+- controllers or WebSocket handlers receive DTOs
+- services map DTOs into domain objects
+- the game engine works with domain objects
+- the backend maps results back into DTOs before returning them
+
+This keeps the transport format stable even when internal implementation changes.
 
 ---
 
@@ -946,7 +1106,7 @@ These are the endpoints that are most relevant for the first working version of 
 
 #### Authentication and session
 
-If the project starts with guest access, this area can stay very small at first.
+For the first version of the project, the recommended approach is **anonymous guest users with a generated UUID stored locally on the device**. This keeps player identities simple without requiring passwords or a complex authentication flow.
 
 ```text
 POST   /api/auth/guest
@@ -959,6 +1119,16 @@ Purpose:
 - create a guest session for quick game access
 - fetch the currently authenticated user
 - end the current session
+
+Recommended first-version identity model:
+
+- create a guest user on first app launch
+- generate a stable unique user ID for that player
+- store the ID locally on the device
+- let the player choose a display name
+- use that guest identity for lobbies, matches, leaderboard entries, and player statistics
+
+This gives the project lightweight player identities without introducing password management, email verification, or full account recovery complexity.
 
 #### User and profile
 
@@ -1341,6 +1511,7 @@ Responsible for:
 - pure Rummikub rules engine
 - persistence with PostgreSQL
 - JSON snapshots for current match state
+- simple guest-user identity support without password-based authentication
 
 This setup offers:
 
@@ -1354,6 +1525,8 @@ The most important implementation guideline is that the client should never be t
 ---
 
 ## Simple Rule of Thumb
+
+For the first version of the game, player identity should be lightweight: create a guest player once, store their generated ID locally, and reuse it across sessions on the same device.
 
 Use this split throughout the project:
 
