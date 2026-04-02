@@ -26,12 +26,12 @@ A mock design or wireframe for the lobby feature can be placed here for visual r
 <table>
   <tr>
     <td align="center">
-<img width="728" height="1564" alt="image" src="https://github.com/user-attachments/assets/846b8647-fc81-453b-a85f-94568d3a7e72" />
+<img width="702" height="1616" alt="image" src="https://github.com/user-attachments/assets/c92a5e14-181d-48fe-99a4-4d3e79b91a75" />
       <sub>Lobby screen</sub>
     </td>
     <td align="center">
-<img width="706" height="1572" alt="image" src="https://github.com/user-attachments/assets/cc9a440c-8917-432b-b364-c02abd51ecc8" />
-      <sub>Match screen</sub>
+<img width="674" height="1546" alt="image" src="https://github.com/user-attachments/assets/7d2c5a9f-a5d0-4a97-a66e-9d5c313deb71" />
+      <sub>Lobby list screen</sub>
     </td>
   </tr>
 </table>
