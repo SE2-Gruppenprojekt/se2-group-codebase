@@ -23,9 +23,20 @@ The goal is to keep the lobby simple, reliable, and easy to extend.
 
 A mock design or wireframe for the lobby feature can be placed here for visual reference during implementation.
 
+<table>
+  <tr>
+    <td align="center">
 <img width="728" height="1564" alt="image" src="https://github.com/user-attachments/assets/846b8647-fc81-453b-a85f-94568d3a7e72" />
-
+      <sub>Lobby screen</sub>
+    </td>
+    <td align="center">
 <img width="706" height="1572" alt="image" src="https://github.com/user-attachments/assets/cc9a440c-8917-432b-b364-c02abd51ecc8" />
+      <sub>Match screen</sub>
+    </td>
+  </tr>
+</table>
+
+
 
 
 This section should help align backend and frontend implementation with the intended user flow and screen structure.
