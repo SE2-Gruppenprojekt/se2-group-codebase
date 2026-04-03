@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/lobby")
+@RequestMapping("/api/lobbies")
 class LobbyController(
     private val lobbyService: LobbyService
 ) {
