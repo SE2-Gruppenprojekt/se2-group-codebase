@@ -32,6 +32,7 @@ secret.properties
 # --- Java / Kotlin ---
 *.class
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.ear
 *.kotlin_module
