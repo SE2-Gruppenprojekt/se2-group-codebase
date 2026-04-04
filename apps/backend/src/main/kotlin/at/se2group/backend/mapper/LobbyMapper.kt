@@ -4,6 +4,7 @@ import at.se2group.backend.domain.Lobby
 import at.se2group.backend.domain.LobbySettings
 import at.se2group.backend.dto.LobbyListItemResponse
 import at.se2group.backend.persistence.LobbyEntity
+import at.se2group.backend.dto.LobbyResponse
 
 fun LobbyEntity.toDomain(): Lobby =
     Lobby(
@@ -27,4 +28,15 @@ fun Lobby.toListItemResponse(): LobbyListItemResponse =
         currentPlayerCount = currentPlayerCount,
         maxPlayers = settings.maxPlayers,
         isPrivate = settings.isPrivate
+    )
+
+fun Lobby.toResponse(): LobbyResponse =
+    LobbyResponse(
+        lobbyId = lobbyId,
+        hostUserId = hostUserId,
+        status = status.name,
+        currentPlayerCount = currentPlayerCount,
+        maxPlayers = settings.maxPlayers,
+        isPrivate = settings.isPrivate,
+        allowGuests = settings.allowGuests
     )
