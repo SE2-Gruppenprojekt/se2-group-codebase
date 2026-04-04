@@ -10,6 +10,8 @@ import at.se2group.backend.dto.CreateLobbyRequest
 import at.se2group.backend.persistence.LobbyEntity
 import java.time.Instant
 import java.util.UUID
+import org.springframework.http.HttpStatus
+import org.springframework.web.server.ResponseStatusException
 
 @Service
 @Transactional(readOnly = true)
@@ -37,5 +39,10 @@ class LobbyService(
         )
 
         return lobbyRepository.save(lobbyEntity).toDomain()
+    }
+    fun getLobby(lobbyId: String): Lobby {
+        return lobbyRepository.findById(lobbyId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found") }
+            .toDomain()
     }
 }
