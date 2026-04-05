@@ -16,7 +16,9 @@ fun LobbyEntity.toDomain(): Lobby =
         players = players.map {
             LobbyPlayer(
                 userId = it.userId,
-                displayName = it.displayName
+                displayName = it.displayName,
+                isReady = it.isReady,
+                joinedAt = it.joinedAt
             )
         },
         status = status,
@@ -40,7 +42,9 @@ fun Lobby.toEntity(): LobbyEntity =
         players = players.map {
             LobbyPlayerEmbeddable(
                 userId = it.userId,
-                displayName = it.displayName
+                displayName = it.displayName,
+                isReady = it.isReady,
+                joinedAt = it.joinedAt
             )
         }.toMutableList()
     )
@@ -66,7 +70,8 @@ fun Lobby.toResponse(): LobbyResponse =
         players = players.map {
             LobbyPlayerResponse(
                 userId = it.userId,
-                displayName = it.displayName
+                displayName = it.displayName,
+                isReady = it.isReady
             )
         }
     )

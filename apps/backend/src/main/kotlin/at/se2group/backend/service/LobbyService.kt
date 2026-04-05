@@ -22,6 +22,10 @@ class LobbyService(
     private val lobbyRepository: LobbyRepository
 ) {
 
+    companion object {
+        const val MAX_PLAYERS = 8
+    }
+
     fun listOpenLobbies(): List<Lobby> {
         return lobbyRepository.findAllByStatus(LobbyStatus.OPEN)
             .map { it.toDomain() }
@@ -29,13 +33,22 @@ class LobbyService(
 
     @Transactional
     fun createLobby(userId: String, request: CreateLobbyRequest): Lobby {
+        if (request.maxPlayers < 0 || request.maxPlayers >= MAX_PLAYERS) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "maxPlayers must be between 0 and ${MAX_PLAYERS - 1}"
+            )
+        }
+
         val lobby = Lobby(
             lobbyId = UUID.randomUUID().toString(),
             hostUserId = userId,
             players = listOf(
                 LobbyPlayer(
                     userId = userId,
-                    displayName = request.displayName
+                    displayName = request.displayName,
+                    isReady = false,
+                    joinedAt = Instant.now()
                 )
             ),
             status = LobbyStatus.OPEN,
@@ -77,7 +90,9 @@ class LobbyService(
         val updatedLobby = lobby.copy(
             players = lobby.players + LobbyPlayer(
                 userId = request.userId,
-                displayName = request.displayName
+                displayName = request.displayName,
+                isReady = false,
+                joinedAt = Instant.now()
             )
         )
 
