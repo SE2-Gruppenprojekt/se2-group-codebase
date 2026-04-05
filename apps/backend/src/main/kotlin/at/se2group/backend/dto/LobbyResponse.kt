@@ -4,7 +4,7 @@ data class LobbyResponse(
     val lobbyId: String,
     val hostUserId: String,
     val status: String,
-    val currentPlayerCount: Int,
+    val players: List<LobbyPlayerResponse>,
     val maxPlayers: Int,
     val isPrivate: Boolean,
     val allowGuests: Boolean

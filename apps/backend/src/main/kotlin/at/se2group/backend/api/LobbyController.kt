@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.PathVariable
+import at.se2group.backend.dto.JoinLobbyRequest
 
 @RestController
 @RequestMapping("/api/lobbies")
@@ -38,5 +39,12 @@ class LobbyController(
     @GetMapping("/{lobbyId}")
     fun getLobby(@PathVariable lobbyId: String): LobbyResponse {
         return lobbyService.getLobby(lobbyId).toResponse()
+    }
+    @PostMapping("/{lobbyId}/join")
+    fun joinLobby(
+        @PathVariable lobbyId: String,
+        @RequestBody request: JoinLobbyRequest
+    ): LobbyResponse {
+        return lobbyService.joinLobby(lobbyId, request).toResponse()
     }
 }

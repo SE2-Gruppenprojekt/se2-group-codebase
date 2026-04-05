@@ -1,11 +1,14 @@
 package at.se2group.backend.persistence
 
 import at.se2group.backend.domain.LobbyStatus
+import jakarta.persistence.CollectionTable
 import jakarta.persistence.Column
+import jakarta.persistence.ElementCollection
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
 import jakarta.persistence.Table
 import java.time.Instant
 
@@ -18,9 +21,6 @@ class LobbyEntity(
 
     @Column(name = "host_user_id", nullable = false)
     var hostUserId: String = "",
-
-    @Column(name = "current_player_count", nullable = false)
-    var currentPlayerCount: Int = 1,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -36,5 +36,9 @@ class LobbyEntity(
     var allowGuests: Boolean = true,
 
     @Column(name = "created_at", nullable = false)
-    var createdAt: Instant = Instant.now()
+    var createdAt: Instant = Instant.now(),
+
+    @ElementCollection
+    @CollectionTable(name = "lobby_players", joinColumns = [JoinColumn(name = "lobby_id")])
+    var players: MutableList<LobbyPlayerEmbeddable> = mutableListOf()
 )
