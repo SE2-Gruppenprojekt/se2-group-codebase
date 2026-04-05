@@ -75,7 +75,7 @@ class LobbyController(
         return lobbyService.leaveLobby(lobbyId, userId).toResponse()
     }
 
-    @PostMapping("/{lobbyid}/ready")
+    @PostMapping("/{lobbyId}/ready")
     fun readyLobby(
         @PathVariable lobbyId: String,
         @RequestHeader("X-User-Id") userId: String,
@@ -83,7 +83,7 @@ class LobbyController(
         return lobbyService.readyLobby(lobbyId, userId).toResponse()
     }
 
-    @PostMapping("/{lobbyid}/unready")
+    @PostMapping("/{lobbyId}/unready")
     fun unreadyLobby(
         @PathVariable lobbyId: String,
         @RequestHeader("X-User-Id") userId: String
