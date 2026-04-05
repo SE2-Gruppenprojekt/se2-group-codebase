@@ -168,7 +168,7 @@ class LobbyService(
         }
 
         val updatedLobby = lobby.copy(
-            players = lobby.players.filter { it.userId == userId }
+            players = lobby.players.filter { it.userId != userId }
         )
 
         return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
@@ -179,7 +179,7 @@ class LobbyService(
         val lobby = getLobby(lobbyId)
 
         if(lobby.status != LobbyStatus.OPEN) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "While lobby is not open you cannot change the ready status")
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot change the ready status, while lobby is not open")
         }
 
         if(lobby.players.none { it.userId == userId}) {
