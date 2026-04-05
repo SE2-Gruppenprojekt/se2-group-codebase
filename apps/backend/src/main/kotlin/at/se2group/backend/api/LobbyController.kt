@@ -66,4 +66,12 @@ class LobbyController(
         ): LobbyResponse {
         return lobbyService.startLobby(lobbyId, userId).toResponse()
     }
+
+    @PostMapping("/{lobbyId}/leave")
+    fun leaveLobby(
+        @PathVariable lobbyId: String,
+        @RequestHeader("X-User-Id") userId: String,
+        ): LobbyResponse {
+        return lobbyService.leaveLobby(lobbyId, userId).toResponse()
+    }
 }

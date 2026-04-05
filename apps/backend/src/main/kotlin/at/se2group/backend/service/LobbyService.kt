@@ -154,4 +154,23 @@ class LobbyService(
 
         return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
     }
+
+    @Transactional
+    fun leaveLobby(lobbyId: String, userId: String): Lobby {
+        val lobby = getLobby(lobbyId)
+
+        if(lobby.status != LobbyStatus.OPEN) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot leave an unopen lobby")
+        }
+
+        if (lobby.players.none { it.userId == userId }) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "No player found in this lobby")
+        }
+
+        val updatedLobby = lobby.copy(
+            players = lobby.players.filter { it.userId == userId }
+        )
+
+        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+    }
 }
