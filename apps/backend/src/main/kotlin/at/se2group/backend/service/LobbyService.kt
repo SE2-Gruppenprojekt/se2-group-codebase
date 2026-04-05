@@ -154,4 +154,15 @@ class LobbyService(
 
         return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
     }
+
+    @Transactional
+    fun deleteLobby(lobbyId: String, userId: String) {
+        val lobby = getLobby(lobbyId)
+
+        if (lobby.hostUserId != userId) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only the host can delete the lobby")
+        }
+
+        lobbyRepository.deleteById(lobbyId)
+    }
 }
