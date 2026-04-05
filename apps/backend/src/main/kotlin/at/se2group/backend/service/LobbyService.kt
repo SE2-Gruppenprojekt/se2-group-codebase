@@ -117,7 +117,7 @@ class LobbyService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Maximum players must be between ${MIN_PLAYERS} and ${MAX_PLAYERS}")
         }
 
-        val updated_lobby = lobby.copy(
+        val updatedLobby = lobby.copy(
             settings = LobbySettings(
                 maxPlayers = request.maxPlayers,
                 isPrivate = request.isPrivate,
@@ -125,7 +125,7 @@ class LobbyService(
             )
         )
 
-        return lobbyRepository.save(updated_lobby.toEntity()).toDomain()
+        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
     }
 
     @Transactional
