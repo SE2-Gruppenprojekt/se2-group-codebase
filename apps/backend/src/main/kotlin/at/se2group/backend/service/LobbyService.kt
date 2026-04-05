@@ -173,4 +173,25 @@ class LobbyService(
 
         return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
     }
+
+    @Transactional
+    fun readyLobby(lobbyId: String, userId: String): Lobby {
+        val lobby = getLobby(lobbyId)
+
+        if(lobby.status != LobbyStatus.OPEN) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "While lobby is not open you cannot change the ready status")
+        }
+
+        if(lobby.players.none { it.userId == userId}) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "No player was found in this lobby")
+        }
+
+        val updatedLobby = lobby.copy(
+            players = lobby.players.map {
+                if (it.userId == userId) it.copy(isReady = true) else it
+            }
+        )
+
+        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+    }
 }
