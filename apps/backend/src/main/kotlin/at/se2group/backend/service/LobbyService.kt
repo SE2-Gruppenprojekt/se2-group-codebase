@@ -127,4 +127,31 @@ class LobbyService(
 
         return lobbyRepository.save(updated_lobby.toEntity()).toDomain()
     }
+
+    @Transactional
+    fun startLobby(lobbyId: String, userId: String): Lobby {
+        val lobby = getLobby(lobbyId)
+
+        if (lobby.hostUserId != userId) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only the host can start the match")
+        }
+
+        if (lobby.status != LobbyStatus.OPEN) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Match can only be started while the lobby is open")
+        }
+
+        if (lobby.players.size < MIN_PLAYERS) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "At least ${MIN_PLAYERS} players are required to start the match")
+        }
+
+        if (lobby.players.any { !it.isReady }) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "All players must be ready to start the match")
+        }
+
+        val updatedLobby = lobby.copy(
+            status = LobbyStatus.IN_GAME
+        )
+
+        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+    }
 }

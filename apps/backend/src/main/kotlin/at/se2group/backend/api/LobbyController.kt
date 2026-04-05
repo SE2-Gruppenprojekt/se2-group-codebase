@@ -58,4 +58,12 @@ class LobbyController(
     ): LobbyResponse {
         return lobbyService.updateLobbySettings(lobbyId, userId, request).toResponse()
     }
+
+    @PostMapping("/{lobbyId}/start")
+    fun startLobby(
+        @PathVariable lobbyId: String,
+        @RequestHeader("X-User-Id") userId: String,
+        ): LobbyResponse {
+        return lobbyService.startLobby(lobbyId, userId).toResponse()
+    }
 }
