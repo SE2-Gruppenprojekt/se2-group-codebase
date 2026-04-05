@@ -24,7 +24,7 @@ class LobbyService(
 ) {
 
     companion object {
-        const val MAX_PLAYERS = 8
+        const val MAX_PLAYERS = 4
         const val MIN_PLAYERS = 2
     }
 
@@ -35,10 +35,10 @@ class LobbyService(
 
     @Transactional
     fun createLobby(userId: String, request: CreateLobbyRequest): Lobby {
-        if (request.maxPlayers < 0 || request.maxPlayers >= MAX_PLAYERS) {
+        if (request.maxPlayers < MIN_PLAYERS || request.maxPlayers > MAX_PLAYERS) {
             throw ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
-                "maxPlayers must be between 0 and ${MAX_PLAYERS - 1}"
+                "maxPlayers must be between ${MIN_PLAYERS} and ${MAX_PLAYERS}"
             )
         }
 
