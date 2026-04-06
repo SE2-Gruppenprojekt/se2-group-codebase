@@ -167,7 +167,21 @@ class LobbyService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "No player found in this lobby")
         }
 
+        val remainingPlayers = lobby.players.filter { it.userId != userId }
+
+        if(remainingPlayers.isEmpty()) {
+            lobbyRepository.deleteById(lobbyId)
+            throw ResponseStatusException(HttpStatus.NO_CONTENT, "Lobby deleted as there are no players left")
+        }
+
+        val nextHostId = if (lobby.hostUserId == userId) {
+            remainingPlayers.first().userId
+        } else {
+            lobby.hostUserId
+        }
+
         val updatedLobby = lobby.copy(
+            hostUserId = nextHostId,
             players = lobby.players.filter { it.userId != userId }
         )
 
