@@ -76,14 +76,14 @@ dependencies {
     testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
-
-
+    implementation(libs.navigation.compose)
 
     // Instrumented tests
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test)
+    androidTestImplementation(libs.navigation.testing)
 
     debugImplementation(libs.compose.tooling)
     debugImplementation(libs.compose.test.manifest)
