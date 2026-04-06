@@ -14,8 +14,8 @@ class GlobalExceptionHandler {
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(
                 ApiErrorResponse(
-                    errorCode = "INTERNAL_SERVICE_ERROR",
-                    errorMessage = "An unexpected error occured"
+                    errorCode = "INTERNAL_SERVER_ERROR",
+                    errorMessage = "An unexpected error occurred"
                 )
             )
     }
