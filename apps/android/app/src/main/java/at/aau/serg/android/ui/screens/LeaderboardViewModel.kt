@@ -2,13 +2,19 @@ package at.aau.serg.android.ui.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import at.aau.serg.android.network.LeaderboardApi
+import at.aau.serg.android.network.RetrofitProvider
+import at.aau.serg.android.network.leaderboard.LeaderboardAPI
+import at.aau.serg.android.network.leaderboard.LeaderboardService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import shared.models.LeaderboardEntry
 
-class LeaderboardViewModel : ViewModel() {
+class LeaderboardViewModel(
+    private val api: LeaderboardAPI = LeaderboardAPI(
+        RetrofitProvider.retrofit.create(LeaderboardService::class.java)
+    )
+) : ViewModel() {
 
     private val _players = MutableStateFlow<List<LeaderboardEntry>>(emptyList())
     val players = _players.asStateFlow()
@@ -19,14 +25,10 @@ class LeaderboardViewModel : ViewModel() {
 
     private fun loadLeaderboard() {
         viewModelScope.launch {
-            runCatching {
-                LeaderboardApi.fetchLeaderboard()
-            }.onSuccess { list ->
-                _players.value = list
-            }.onFailure {
-                // you can log or show error state later
-                _players.value = emptyList()
-            }
+            runCatching { api.fetchLeaderboard() }
+                .onSuccess { _players.value = it }
+                .onFailure { _players.value = emptyList() }
         }
     }
 }
+
