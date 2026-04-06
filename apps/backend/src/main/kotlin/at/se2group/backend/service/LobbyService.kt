@@ -113,12 +113,8 @@ class LobbyService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Lobby settings can only be changed while the lobby is open")
         }
 
-        if (request.maxPlayers < MIN_PLAYERS || request.maxPlayers > MAX_PLAYERS) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Maximum players must be between ${MIN_PLAYERS} and ${MAX_PLAYERS}")
-        }
-
-        if (request.maxPlayers < lobby.players.size) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Maximum players cannot be smaller than the current player count")
+        if (request.maxPlayers !in maxOf(MIN_PLAYERS, lobby.players.size)..MAX_PLAYERS) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Maximum players must be between ${maxOf(MIN_PLAYERS, lobby.players.size)} and ${MAX_PLAYERS}")
         }
 
         val updatedLobby = lobby.copy(
