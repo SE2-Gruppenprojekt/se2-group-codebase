@@ -6,6 +6,7 @@ import at.se2group.backend.domain.LobbySettings
 import at.se2group.backend.domain.LobbyStatus
 import at.se2group.backend.dto.CreateLobbyRequest
 import at.se2group.backend.dto.JoinLobbyRequest
+import at.se2group.backend.dto.UpdateLobbySettingsRequest
 import at.se2group.backend.mapper.toDomain
 import at.se2group.backend.mapper.toEntity
 import at.se2group.backend.persistence.LobbyRepository
@@ -23,7 +24,8 @@ class LobbyService(
 ) {
 
     companion object {
-        const val MAX_PLAYERS = 8
+        const val MAX_PLAYERS = 4
+        const val MIN_PLAYERS = 2
     }
 
     fun listOpenLobbies(): List<Lobby> {
@@ -33,10 +35,10 @@ class LobbyService(
 
     @Transactional
     fun createLobby(userId: String, request: CreateLobbyRequest): Lobby {
-        if (request.maxPlayers < 0 || request.maxPlayers >= MAX_PLAYERS) {
+        if (request.maxPlayers < MIN_PLAYERS || request.maxPlayers > MAX_PLAYERS) {
             throw ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
-                "maxPlayers must be between 0 and ${MAX_PLAYERS - 1}"
+                "maxPlayers must be between ${MIN_PLAYERS} and ${MAX_PLAYERS}"
             )
         }
 
@@ -97,5 +99,70 @@ class LobbyService(
         )
 
         return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+    }
+
+    @Transactional
+    fun updateLobbySettings(lobbyId: String, userId: String, request: UpdateLobbySettingsRequest): Lobby {
+        val lobby = getLobby(lobbyId)
+
+        if (lobby.hostUserId != userId) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only the host can update lobby settings")
+        }
+
+        if (lobby.status != LobbyStatus.OPEN) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Lobby settings can only be changed while the lobby is open")
+        }
+
+        if (request.maxPlayers !in maxOf(MIN_PLAYERS, lobby.players.size)..MAX_PLAYERS) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Maximum players must be between ${maxOf(MIN_PLAYERS, lobby.players.size)} and ${MAX_PLAYERS}")
+        }
+
+        val updatedLobby = lobby.copy(
+            settings = LobbySettings(
+                maxPlayers = request.maxPlayers,
+                isPrivate = request.isPrivate,
+                allowGuests = request.allowGuests
+            )
+        )
+
+        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+    }
+
+    @Transactional
+    fun startLobby(lobbyId: String, userId: String): Lobby {
+        val lobby = getLobby(lobbyId)
+
+        if (lobby.hostUserId != userId) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only the host can start the match")
+        }
+
+        if (lobby.status != LobbyStatus.OPEN) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Match can only be started while the lobby is open")
+        }
+
+        if (lobby.players.size < MIN_PLAYERS) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "At least ${MIN_PLAYERS} players are required to start the match")
+        }
+
+        if (lobby.players.any { !it.isReady }) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "All players must be ready to start the match")
+        }
+
+        val updatedLobby = lobby.copy(
+            status = LobbyStatus.IN_GAME
+        )
+
+        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+    }
+
+    @Transactional
+    fun deleteLobby(lobbyId: String, userId: String) {
+        val lobby = getLobby(lobbyId)
+
+        if (lobby.hostUserId != userId) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only the host can delete the lobby")
+        }
+
+        lobbyRepository.deleteById(lobbyId)
     }
 }
