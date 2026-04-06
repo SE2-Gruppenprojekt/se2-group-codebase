@@ -69,6 +69,30 @@ class LobbyController(
         return lobbyService.startLobby(lobbyId, userId).toResponse()
     }
 
+    @PostMapping("/{lobbyId}/leave")
+    fun leaveLobby(
+        @PathVariable lobbyId: String,
+        @RequestHeader("X-User-Id") userId: String,
+        ): LobbyResponse {
+        return lobbyService.leaveLobby(lobbyId, userId).toResponse()
+    }
+
+    @PostMapping("/{lobbyId}/ready")
+    fun readyLobby(
+        @PathVariable lobbyId: String,
+        @RequestHeader("X-User-Id") userId: String,
+    ): LobbyResponse {
+        return lobbyService.readyLobby(lobbyId, userId).toResponse()
+    }
+
+    @PostMapping("/{lobbyId}/unready")
+    fun unreadyLobby(
+        @PathVariable lobbyId: String,
+        @RequestHeader("X-User-Id") userId: String
+     ): LobbyResponse {
+        return lobbyService.unreadyLobby(lobbyId, userId).toResponse()
+    }
+    
     @DeleteMapping("/{lobbyId}")
     fun deleteLobby(
         @PathVariable lobbyId: String,

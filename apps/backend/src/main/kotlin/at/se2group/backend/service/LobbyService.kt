@@ -156,6 +156,79 @@ class LobbyService(
     }
 
     @Transactional
+    fun leaveLobby(lobbyId: String, userId: String): Lobby {
+        val lobby = getLobby(lobbyId)
+
+        if(lobby.status != LobbyStatus.OPEN) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot leave an unopen lobby")
+        }
+
+        if (lobby.players.none { it.userId == userId }) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "No player found in this lobby")
+        }
+
+        val remainingPlayers = lobby.players.filter { it.userId != userId }
+
+        if(remainingPlayers.isEmpty()) {
+            lobbyRepository.deleteById(lobbyId)
+            throw ResponseStatusException(HttpStatus.NO_CONTENT, "Lobby deleted as there are no players left")
+        }
+
+        val nextHostId = if (lobby.hostUserId == userId) {
+            remainingPlayers.first().userId
+        } else {
+            lobby.hostUserId
+        }
+
+        val updatedLobby = lobby.copy(
+            hostUserId = nextHostId,
+            players = lobby.players.filter { it.userId != userId }
+        )
+
+        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+    }
+
+    @Transactional
+    fun readyLobby(lobbyId: String, userId: String): Lobby {
+        val lobby = getLobby(lobbyId)
+
+        if(lobby.status != LobbyStatus.OPEN) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot change the ready status, while lobby is not open")
+        }
+
+        if(lobby.players.none { it.userId == userId}) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "No player was found in this lobby")
+        }
+
+        val updatedLobby = lobby.copy(
+            players = lobby.players.map {
+                if (it.userId == userId) it.copy(isReady = true) else it
+            }
+        )
+
+        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+    }
+
+     @Transactional
+     fun unreadyLobby(lobbyId: String, userId: String): Lobby {
+         val lobby = getLobby(lobbyId)
+
+         if(lobby.status != LobbyStatus.OPEN) {
+             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot change the ready status, while lobby is not open")
+         }
+
+         if(lobby.players.none {it.userId == userId}) {
+             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "No player found in this lobby")
+         }
+
+         val updatedLobby = lobby.copy(
+             players = lobby.players.map {
+                 if (it.userId == userId) it.copy(isReady = false) else it
+             }
+         )
+         return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+     }
+     
     fun deleteLobby(lobbyId: String, userId: String) {
         val lobby = getLobby(lobbyId)
 
