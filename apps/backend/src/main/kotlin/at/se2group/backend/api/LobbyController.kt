@@ -73,9 +73,14 @@ class LobbyController(
     fun leaveLobby(
         @PathVariable lobbyId: String,
         @RequestHeader("X-User-Id") userId: String,
-        ): ResponseEntity<Void> {
-        lobbyService.leaveLobby(lobbyId, userId)
-        return ResponseEntity.noContent().build()
+        ): ResponseEntity<Any> {
+        val updatedLobby = lobbyService.leaveLobby(lobbyId, userId)
+
+        return if (updatedLobby == null) {
+            ResponseEntity.noContent().build()
+        } else {
+            ResponseEntity.ok(updatedLobby.toResponse())
+        }
     }
 
     @PostMapping("/{lobbyId}/ready")

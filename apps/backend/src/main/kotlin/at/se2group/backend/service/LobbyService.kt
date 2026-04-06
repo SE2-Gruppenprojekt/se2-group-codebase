@@ -151,7 +151,7 @@ class LobbyService(
     }
 
     @Transactional
-    fun leaveLobby(lobbyId: String, userId: String) {
+    fun leaveLobby(lobbyId: String, userId: String): Lobby? {
         val lobby = getLobby(lobbyId)
 
         if(lobby.status != LobbyStatus.OPEN) {
@@ -166,7 +166,7 @@ class LobbyService(
 
         if(remainingPlayers.isEmpty()) {
             lobbyRepository.deleteById(lobbyId)
-            return
+            return null
         }
 
         val nextHostId = if (lobby.hostUserId == userId) {
@@ -180,7 +180,7 @@ class LobbyService(
             players = lobby.players.filter { it.userId != userId }
         )
 
-        lobbyRepository.save(updatedLobby.toEntity())
+        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
     }
 
     @Transactional
