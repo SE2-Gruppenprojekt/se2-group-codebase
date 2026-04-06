@@ -117,6 +117,10 @@ class LobbyService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Maximum players must be between ${MIN_PLAYERS} and ${MAX_PLAYERS}")
         }
 
+        if (request.maxPlayers < lobby.players.size) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Maximum players cannot be smaller than the current player count")
+        }
+
         val updatedLobby = lobby.copy(
             settings = LobbySettings(
                 maxPlayers = request.maxPlayers,
