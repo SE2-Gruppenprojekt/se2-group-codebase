@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.PathVariable
 import at.se2group.backend.dto.JoinLobbyRequest
 import at.se2group.backend.dto.UpdateLobbySettingsRequest
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
 
 @RestController
 @RequestMapping("/api/lobbies")
@@ -62,8 +64,8 @@ class LobbyController(
     @PostMapping("/{lobbyId}/start")
     fun startLobby(
         @PathVariable lobbyId: String,
-        @RequestHeader("X-User-Id") userId: String,
-        ): LobbyResponse {
+        @RequestHeader("X-User-Id") userId: String
+    ): LobbyResponse {
         return lobbyService.startLobby(lobbyId, userId).toResponse()
     }
 
@@ -89,5 +91,14 @@ class LobbyController(
         @RequestHeader("X-User-Id") userId: String
      ): LobbyResponse {
         return lobbyService.unreadyLobby(lobbyId, userId).toResponse()
+    }
+    
+    @DeleteMapping("/{lobbyId}")
+    fun deleteLobby(
+        @PathVariable lobbyId: String,
+        @RequestHeader("X-User-Id") userId: String
+    ): ResponseEntity<Void> {
+        lobbyService.deleteLobby(lobbyId, userId)
+        return ResponseEntity.noContent().build()
     }
 }
