@@ -73,8 +73,9 @@ class LobbyController(
     fun leaveLobby(
         @PathVariable lobbyId: String,
         @RequestHeader("X-User-Id") userId: String,
-        ): LobbyResponse {
-        return lobbyService.leaveLobby(lobbyId, userId).toResponse()
+        ): ResponseEntity<Void> {
+        lobbyService.leaveLobby(lobbyId, userId)
+        return ResponseEntity.noContent().build()
     }
 
     @PostMapping("/{lobbyId}/ready")
@@ -92,7 +93,7 @@ class LobbyController(
      ): LobbyResponse {
         return lobbyService.unreadyLobby(lobbyId, userId).toResponse()
     }
-    
+
     @DeleteMapping("/{lobbyId}")
     fun deleteLobby(
         @PathVariable lobbyId: String,
