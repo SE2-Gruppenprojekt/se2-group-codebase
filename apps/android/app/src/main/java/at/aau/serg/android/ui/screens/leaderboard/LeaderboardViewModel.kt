@@ -1,4 +1,4 @@
-package at.aau.serg.android.ui.screens
+package at.aau.serg.android.ui.screens.leaderboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

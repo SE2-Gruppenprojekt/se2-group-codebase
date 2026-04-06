@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import at.aau.serg.android.ui.screens.HomeScreen
-import at.aau.serg.android.ui.screens.LeaderboardScreen
+import at.aau.serg.android.ui.screens.home.HomeScreen
+import at.aau.serg.android.ui.screens.leaderboard.LeaderboardScreen
 import at.aau.serg.android.ui.theme.TempappTheme
 
 class MainActivity : ComponentActivity() {
@@ -31,8 +31,17 @@ class MainActivity : ComponentActivity() {
 
                         Screen.HOME -> HomeScreen(
                             modifier = Modifier.padding(innerPadding),
+                            onCreateLobby = {
+                                // TODO: Navigate to Create Lobby screen
+                            },
+                            onBrowseLobbies = {
+                                // TODO: Navigate to Browse Lobbies screen
+                            },
                             onShowLeaderboard = {
                                 currentScreen = Screen.LEADERBOARD
+                            },
+                            onSettings = {
+                                // TODO: Navigate to Settings screen
                             }
                         )
 

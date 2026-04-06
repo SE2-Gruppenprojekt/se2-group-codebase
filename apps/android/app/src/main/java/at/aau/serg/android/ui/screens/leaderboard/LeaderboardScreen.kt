@@ -1,4 +1,4 @@
-package at.aau.serg.android.ui.screens
+package at.aau.serg.android.ui.screens.leaderboard
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
