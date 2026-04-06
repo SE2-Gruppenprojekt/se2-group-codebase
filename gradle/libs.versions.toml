@@ -41,6 +41,7 @@ krossbowWebsocketOkhttp = "9.3.0"
 # Retrofit
 retrofit = "2.11.0"
 moshi = "1.15.1"
+navigationCompose = "2.9.7"
 
 
 [libraries]
@@ -103,6 +104,7 @@ retrofit-moshi = { group = "com.squareup.retrofit2", name = "converter-moshi", v
 
 moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "moshi" }
 moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 
 
 [plugins]

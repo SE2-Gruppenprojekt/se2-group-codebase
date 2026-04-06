@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.material3)
     implementation(libs.activity.compose)
+    implementation(libs.androidx.navigation.compose)
 
     // Unit tests
     testImplementation(libs.junit4)
