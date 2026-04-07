@@ -10,10 +10,8 @@ import at.se2group.backend.dto.UpdateLobbySettingsRequest
 import at.se2group.backend.mapper.toDomain
 import at.se2group.backend.mapper.toEntity
 import at.se2group.backend.persistence.LobbyRepository
-import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
 import java.util.UUID
 
@@ -36,10 +34,7 @@ class LobbyService(
     @Transactional
     fun createLobby(userId: String, request: CreateLobbyRequest): Lobby {
         if (request.maxPlayers < MIN_PLAYERS || request.maxPlayers > MAX_PLAYERS) {
-            throw ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "maxPlayers must be between ${MIN_PLAYERS} and ${MAX_PLAYERS}"
-            )
+            throw IllegalArgumentException("maxPlayers must be between ${MIN_PLAYERS} and ${MAX_PLAYERS}")
         }
 
         val lobby = Lobby(
@@ -68,7 +63,7 @@ class LobbyService(
     fun getLobby(lobbyId: String): Lobby {
         return lobbyRepository.findById(lobbyId)
             .orElseThrow {
-                ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found")
+                NoSuchElementException("Lobby not found")
             }
             .toDomain()
     }
@@ -78,15 +73,15 @@ class LobbyService(
         val lobby = getLobby(lobbyId)
 
         if (lobby.status != LobbyStatus.OPEN) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Lobby is not open")
+            throw IllegalStateException("Lobby is not open")
         }
 
         if (lobby.players.size >= lobby.settings.maxPlayers) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Lobby is full")
+            throw IllegalStateException("Lobby is full")
         }
 
         if (lobby.players.any { it.userId == request.userId }) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Player already in lobby")
+            throw IllegalStateException("Player already in lobby")
         }
 
         val updatedLobby = lobby.copy(
@@ -106,15 +101,15 @@ class LobbyService(
         val lobby = getLobby(lobbyId)
 
         if (lobby.hostUserId != userId) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only the host can update lobby settings")
+            throw SecurityException("Only the host can update lobby settings")
         }
 
         if (lobby.status != LobbyStatus.OPEN) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Lobby settings can only be changed while the lobby is open")
+            throw IllegalStateException("Lobby settings can only be changed while the lobby is open")
         }
 
         if (request.maxPlayers !in maxOf(MIN_PLAYERS, lobby.players.size)..MAX_PLAYERS) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Maximum players must be between ${maxOf(MIN_PLAYERS, lobby.players.size)} and ${MAX_PLAYERS}")
+            throw IllegalArgumentException("Maximum players must be between ${maxOf(MIN_PLAYERS, lobby.players.size)} and ${MAX_PLAYERS}")
         }
 
         val updatedLobby = lobby.copy(
@@ -133,19 +128,19 @@ class LobbyService(
         val lobby = getLobby(lobbyId)
 
         if (lobby.hostUserId != userId) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only the host can start the match")
+            throw SecurityException("Only the host can start the match")
         }
 
         if (lobby.status != LobbyStatus.OPEN) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Match can only be started while the lobby is open")
+            throw IllegalStateException("Match can only be started while the lobby is open")
         }
 
         if (lobby.players.size < MIN_PLAYERS) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "At least ${MIN_PLAYERS} players are required to start the match")
+            throw IllegalStateException("At least ${MIN_PLAYERS} players are required to start the match")
         }
 
         if (lobby.players.any { !it.isReady }) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "All players must be ready to start the match")
+            throw IllegalStateException("All players must be ready to start the match")
         }
 
         val updatedLobby = lobby.copy(
@@ -156,22 +151,22 @@ class LobbyService(
     }
 
     @Transactional
-    fun leaveLobby(lobbyId: String, userId: String): Lobby {
+    fun leaveLobby(lobbyId: String, userId: String): Lobby? {
         val lobby = getLobby(lobbyId)
 
         if(lobby.status != LobbyStatus.OPEN) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot leave an unopen lobby")
+            throw IllegalStateException("Cannot leave an unopen lobby")
         }
 
         if (lobby.players.none { it.userId == userId }) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "No player found in this lobby")
+            throw IllegalArgumentException("No player found in this lobby")
         }
 
         val remainingPlayers = lobby.players.filter { it.userId != userId }
 
         if(remainingPlayers.isEmpty()) {
             lobbyRepository.deleteById(lobbyId)
-            throw ResponseStatusException(HttpStatus.NO_CONTENT, "Lobby deleted as there are no players left")
+            return null
         }
 
         val nextHostId = if (lobby.hostUserId == userId) {
@@ -193,11 +188,11 @@ class LobbyService(
         val lobby = getLobby(lobbyId)
 
         if(lobby.status != LobbyStatus.OPEN) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot change the ready status, while lobby is not open")
+            throw IllegalStateException("You cannot change the ready status, while lobby is not open")
         }
 
         if(lobby.players.none { it.userId == userId}) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "No player was found in this lobby")
+            throw IllegalArgumentException("No player was found in this lobby")
         }
 
         val updatedLobby = lobby.copy(
@@ -214,11 +209,11 @@ class LobbyService(
          val lobby = getLobby(lobbyId)
 
          if(lobby.status != LobbyStatus.OPEN) {
-             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot change the ready status, while lobby is not open")
+             throw IllegalStateException("You cannot change the ready status, while lobby is not open")
          }
 
          if(lobby.players.none {it.userId == userId}) {
-             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "No player found in this lobby")
+             throw IllegalArgumentException("No player found in this lobby")
          }
 
          val updatedLobby = lobby.copy(
@@ -228,12 +223,12 @@ class LobbyService(
          )
          return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
      }
-     
+
     fun deleteLobby(lobbyId: String, userId: String) {
         val lobby = getLobby(lobbyId)
 
         if (lobby.hostUserId != userId) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only the host can delete the lobby")
+            throw SecurityException("Only the host can delete the lobby")
         }
 
         lobbyRepository.deleteById(lobbyId)
