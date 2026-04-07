@@ -18,8 +18,8 @@ import java.util.UUID
 @Service
 @Transactional(readOnly = true)
 class LobbyService(
-    private val lobbyRepository: LobbyRepository
-) {
+    private val lobbyRepository: LobbyRepository,
+    private val lobbyBroadcastService: LobbyBroadcastService) {
 
     companion object {
         const val MAX_PLAYERS = 4
@@ -57,7 +57,9 @@ class LobbyService(
             createdAt = Instant.now()
         )
 
-        return lobbyRepository.save(lobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(lobby.toEntity()).toDomain()
+        lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        return saved
     }
 
     fun getLobby(lobbyId: String): Lobby {
@@ -93,7 +95,9 @@ class LobbyService(
             )
         )
 
-        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        return saved
     }
 
     @Transactional
@@ -120,7 +124,9 @@ class LobbyService(
             )
         )
 
-        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        return saved
     }
 
     @Transactional
@@ -147,7 +153,9 @@ class LobbyService(
             status = LobbyStatus.IN_GAME
         )
 
-        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        lobbyBroadcastService.broadcastLobbyStarted(saved.lobbyId, saved.lobbyId)
+        return saved
     }
 
     @Transactional
@@ -164,8 +172,9 @@ class LobbyService(
 
         val remainingPlayers = lobby.players.filter { it.userId != userId }
 
-        if(remainingPlayers.isEmpty()) {
+        if (remainingPlayers.isEmpty()) {
             lobbyRepository.deleteById(lobbyId)
+            lobbyBroadcastService.broadcastLobbyDeleted(lobbyId)
             return null
         }
 
@@ -180,7 +189,9 @@ class LobbyService(
             players = lobby.players.filter { it.userId != userId }
         )
 
-        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        return saved
     }
 
     @Transactional
@@ -201,7 +212,9 @@ class LobbyService(
             }
         )
 
-        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        return saved
     }
 
      @Transactional
@@ -221,7 +234,9 @@ class LobbyService(
                  if (it.userId == userId) it.copy(isReady = false) else it
              }
          )
-         return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+         val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+         lobbyBroadcastService.broadcastLobbyUpdated(saved)
+         return saved
      }
 
     fun deleteLobby(lobbyId: String, userId: String) {
@@ -232,5 +247,6 @@ class LobbyService(
         }
 
         lobbyRepository.deleteById(lobbyId)
+        lobbyBroadcastService.broadcastLobbyDeleted(lobbyId)
     }
 }

@@ -1,6 +1,8 @@
 package at.se2group.backend.service
 
 import at.se2group.backend.domain.Lobby
+import at.se2group.backend.dto.LobbyDeletedEvent
+import at.se2group.backend.dto.LobbyStartedEvent
 import at.se2group.backend.dto.LobbyUpdatedEvent
 import at.se2group.backend.mapper.toResponse
 import org.springframework.messaging.simp.SimpMessagingTemplate
@@ -15,6 +17,23 @@ class LobbyBroadcastService(
         messagingTemplate.convertAndSend(
             "/topic/lobbies/${lobby.lobbyId}",
             LobbyUpdatedEvent(lobby = lobby.toResponse())
+        )
+    }
+
+    fun broadcastLobbyDeleted(lobbyId: String) {
+        messagingTemplate.convertAndSend(
+            "/topic/lobbies/$lobbyId",
+            LobbyDeletedEvent(lobbyId = lobbyId)
+        )
+    }
+
+    fun broadcastLobbyStarted(lobbyId: String, matchId: String) {
+        messagingTemplate.convertAndSend(
+            "/topic/lobbies/$lobbyId",
+            LobbyStartedEvent(
+                lobbyId = lobbyId,
+                matchId = matchId
+            )
         )
     }
 }
