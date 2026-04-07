@@ -19,8 +19,7 @@ import java.util.UUID
 @Transactional(readOnly = true)
 class LobbyService(
     private val lobbyRepository: LobbyRepository,
-    private val lobbyBroadcastService: LobbyBroadcastService)
-{
+    private val lobbyBroadcastService: LobbyBroadcastService) {
 
     companion object {
         const val MAX_PLAYERS = 4
