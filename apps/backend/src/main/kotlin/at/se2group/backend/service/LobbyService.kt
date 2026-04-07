@@ -154,7 +154,9 @@ class LobbyService(
             status = LobbyStatus.IN_GAME
         )
 
-        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        lobbyBroadcastService.broadcastLobbyStarted(saved.lobbyId, saved.lobbyId)
+        return saved
     }
 
     @Transactional
@@ -171,8 +173,9 @@ class LobbyService(
 
         val remainingPlayers = lobby.players.filter { it.userId != userId }
 
-        if(remainingPlayers.isEmpty()) {
+        if (remainingPlayers.isEmpty()) {
             lobbyRepository.deleteById(lobbyId)
+            lobbyBroadcastService.broadcastLobbyDeleted(lobbyId)
             return null
         }
 
@@ -245,5 +248,6 @@ class LobbyService(
         }
 
         lobbyRepository.deleteById(lobbyId)
+        lobbyBroadcastService.broadcastLobbyDeleted(lobbyId)
     }
 }
