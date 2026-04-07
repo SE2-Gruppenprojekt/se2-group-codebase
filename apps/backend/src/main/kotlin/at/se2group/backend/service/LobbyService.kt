@@ -18,8 +18,9 @@ import java.util.UUID
 @Service
 @Transactional(readOnly = true)
 class LobbyService(
-    private val lobbyRepository: LobbyRepository
-) {
+    private val lobbyRepository: LobbyRepository,
+    private val lobbyBroadcastService: LobbyBroadcastService)
+{
 
     companion object {
         const val MAX_PLAYERS = 4
@@ -120,7 +121,10 @@ class LobbyService(
             )
         )
 
-        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(lobby.toEntity()).toDomain()
+        lobbyBroadcastService.broadcastLobbyUpdated(saved)
+
+        return saved;
     }
 
     @Transactional
