@@ -1,6 +1,5 @@
 package at.se2group.backend.lobby.service
 
-import at.se2group.backend.domain.Lobby
 import at.se2group.backend.domain.LobbyStatus
 import at.se2group.backend.dto.CreateLobbyRequest
 import at.se2group.backend.persistence.LobbyEntity
