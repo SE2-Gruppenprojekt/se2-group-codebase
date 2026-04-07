@@ -58,7 +58,9 @@ class LobbyService(
             createdAt = Instant.now()
         )
 
-        return lobbyRepository.save(lobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(lobby.toEntity()).toDomain()
+        lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        return saved
     }
 
     fun getLobby(lobbyId: String): Lobby {
@@ -94,7 +96,9 @@ class LobbyService(
             )
         )
 
-        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        return saved
     }
 
     @Transactional
@@ -121,10 +125,9 @@ class LobbyService(
             )
         )
 
-        val saved = lobbyRepository.save(lobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
         lobbyBroadcastService.broadcastLobbyUpdated(saved)
-
-        return saved;
+        return saved
     }
 
     @Transactional
@@ -184,7 +187,9 @@ class LobbyService(
             players = lobby.players.filter { it.userId != userId }
         )
 
-        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        return saved
     }
 
     @Transactional
@@ -205,7 +210,9 @@ class LobbyService(
             }
         )
 
-        return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        return saved
     }
 
      @Transactional
@@ -225,7 +232,9 @@ class LobbyService(
                  if (it.userId == userId) it.copy(isReady = false) else it
              }
          )
-         return lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+         val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+         lobbyBroadcastService.broadcastLobbyUpdated(saved)
+         return saved
      }
 
     fun deleteLobby(lobbyId: String, userId: String) {
