@@ -9,6 +9,7 @@ import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.service.LobbyService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
@@ -68,13 +69,43 @@ class LobbyServiceJoinTest {
 
         val result = lobbyService.joinLobby("lobby-1", request)
 
-        assertEquals(2, result.players.size)
-        assertEquals("player-2", result.players.last().userId)
-        assertEquals("Bob", result.players.last().displayName)
-        assertFalse(result.players.last().isReady)
+        assertEquals("lobby-1", result.lobbyId)
+        assertEquals("host-1", result.hostUserId)
+        assertEquals(LobbyStatus.OPEN, result.status)
+        assertEquals(4, result.settings.maxPlayers)
+        assertFalse(result.settings.isPrivate)
+        assertTrue(result.settings.allowGuests)
 
-        verify(lobbyRepository).findById("lobby-1")
-        verify(lobbyRepository).save(any(LobbyEntity::class.java))
+        assertEquals(2, result.players.size)
+
+        val originalPlayer = result.players.first()
+        assertEquals("host-1", originalPlayer.userId)
+        assertEquals("Alice", originalPlayer.displayName)
+        assertFalse(originalPlayer.isReady)
+
+        val joinedPlayer = result.players.last()
+        assertEquals("player-2", joinedPlayer.userId)
+        assertEquals("Bob", joinedPlayer.displayName)
+        assertFalse(joinedPlayer.isReady)
+
+        val saveCaptor = ArgumentCaptor.forClass(LobbyEntity::class.java)
+        verify(lobbyRepository).save(saveCaptor.capture())
+
+        val saved = saveCaptor.value
+        assertEquals("lobby-1", saved.lobbyId)
+        assertEquals("host-1", saved.hostUserId)
+        assertEquals(LobbyStatus.OPEN, saved.status)
+        assertEquals(4, saved.maxPlayers)
+        assertFalse(saved.isPrivate)
+        assertTrue(saved.allowGuests)
+        assertEquals(2, saved.players.size)
+        assertEquals("host-1", saved.players.first().userId)
+        assertEquals("Alice", saved.players.first().displayName)
+        assertFalse(saved.players.first().isReady)
+        assertEquals("player-2", saved.players.last().userId)
+        assertEquals("Bob", saved.players.last().displayName)
+        assertFalse(saved.players.last().isReady)
+
         verify(lobbyBroadcastService).broadcastLobbyUpdated(result)
     }
 
@@ -249,9 +280,23 @@ class LobbyServiceJoinTest {
         verify(lobbyRepository).save(captor.capture())
 
         val saved = captor.value
+        assertEquals("lobby-1", saved.lobbyId)
+        assertEquals("host-1", saved.hostUserId)
+        assertEquals(LobbyStatus.OPEN, saved.status)
+        assertEquals(4, saved.maxPlayers)
+        assertFalse(saved.isPrivate)
+        assertTrue(saved.allowGuests)
+
         assertEquals(2, saved.players.size)
-        assertEquals("player-2", saved.players.last().userId)
-        assertEquals("Bob", saved.players.last().displayName)
-        assertFalse(saved.players.last().isReady)
+
+        val originalPlayer = saved.players.first()
+        assertEquals("host-1", originalPlayer.userId)
+        assertEquals("Alice", originalPlayer.displayName)
+        assertFalse(originalPlayer.isReady)
+
+        val joinedPlayer = saved.players.last()
+        assertEquals("player-2", joinedPlayer.userId)
+        assertEquals("Bob", joinedPlayer.displayName)
+        assertFalse(joinedPlayer.isReady)
     }
 }
