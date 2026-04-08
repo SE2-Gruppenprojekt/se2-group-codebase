@@ -6,8 +6,6 @@ import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.persistence.LobbyRepository
 import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.service.LobbyService
-import at.se2group.backend.service.LobbyService.Companion.MAX_PLAYERS
-import at.se2group.backend.service.LobbyService.Companion.MIN_PLAYERS
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
