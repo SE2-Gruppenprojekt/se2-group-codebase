@@ -59,7 +59,20 @@ class LobbyServiceCreateTest {
         assertEquals("Alice", result.players.first().displayName)
         assertFalse(result.players.first().isReady)
 
-        verify(lobbyRepository).save(any(LobbyEntity::class.java))
+        val saveCaptor = ArgumentCaptor.forClass(LobbyEntity::class.java)
+        verify(lobbyRepository).save(saveCaptor.capture())
+
+        val saved = saveCaptor.value
+        assertEquals("host alice", saved.hostUserId)
+        assertEquals(LobbyStatus.OPEN, saved.status)
+        assertEquals(4, saved.maxPlayers)
+        assertFalse(saved.isPrivate)
+        assertTrue(saved.allowGuests)
+        assertEquals(1, saved.players.size)
+        assertEquals("host alice", saved.players.first().userId)
+        assertEquals("Alice", saved.players.first().displayName)
+        assertFalse(saved.players.first().isReady)
+
         verify(lobbyBroadcastService).broadcastLobbyUpdated(result)
     }
 
@@ -71,10 +84,6 @@ class LobbyServiceCreateTest {
             isPrivate = false,
             allowGuests = true
         )
-
-        assertThrows<IllegalArgumentException> {
-            lobbyService.createLobby("host alice", request)
-        }
 
         val exception = assertThrows<IllegalArgumentException> {
             lobbyService.createLobby("host alice", request)
