@@ -78,9 +78,11 @@ class LobbyServiceGetTest {
         Mockito.`when`(lobbyRepository.findById("missing-lobby"))
             .thenReturn(Optional.empty())
 
-        assertThrows<NoSuchElementException> {
+        val exception = assertThrows<NoSuchElementException> {
             lobbyService.getLobby("missing-lobby")
         }
+
+        assertEquals("Lobby not found", exception.message)
 
         verify(lobbyRepository).findById("missing-lobby")
         verifyNoInteractions(lobbyBroadcastService)

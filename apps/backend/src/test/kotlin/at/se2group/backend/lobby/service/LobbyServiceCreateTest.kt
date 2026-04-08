@@ -6,6 +6,8 @@ import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.persistence.LobbyRepository
 import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.service.LobbyService
+import at.se2group.backend.service.LobbyService.Companion.MAX_PLAYERS
+import at.se2group.backend.service.LobbyService.Companion.MIN_PLAYERS
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -21,6 +23,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.junit.jupiter.MockitoExtension
+import kotlin.IllegalArgumentException
 
 @ExtendWith(MockitoExtension::class)
 class LobbyServiceCreateTest {
@@ -75,6 +78,12 @@ class LobbyServiceCreateTest {
             lobbyService.createLobby("host alice", request)
         }
 
+        val exception = assertThrows<IllegalArgumentException> {
+            lobbyService.createLobby("host alice", request)
+        }
+
+        assertEquals("maxPlayers must be between 2 and 4", exception.message)
+
         verify(lobbyRepository, never()).save(any(LobbyEntity::class.java))
         verifyNoInteractions(lobbyBroadcastService)
     }
@@ -88,9 +97,11 @@ class LobbyServiceCreateTest {
             allowGuests = true
         )
 
-        assertThrows<IllegalArgumentException> {
+        val exception = assertThrows<IllegalArgumentException> {
             lobbyService.createLobby("host alice", request)
         }
+
+        assertEquals("maxPlayers must be between 2 and 4", exception.message)
 
         verify(lobbyRepository, never()).save(any(LobbyEntity::class.java))
         verifyNoInteractions(lobbyBroadcastService)
