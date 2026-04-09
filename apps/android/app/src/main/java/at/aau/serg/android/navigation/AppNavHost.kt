@@ -3,10 +3,7 @@ package at.aau.serg.android.navigation
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -16,6 +13,8 @@ import androidx.navigation.compose.composable
 import at.aau.serg.android.ui.screens.home.HomeScreen
 import at.aau.serg.android.ui.screens.leaderboard.LeaderboardScreen
 import at.aau.serg.android.ui.screens.leaderboard.LeaderboardViewModel
+import at.aau.serg.android.ui.screens.lobby.LobbyScreen
+import at.aau.serg.android.ui.screens.lobby.LobbyViewModel
 
 @Composable
 fun AppNavHost(
@@ -34,12 +33,22 @@ fun AppNavHost(
             val parentEntry = remember(navController.currentBackStackEntry) {
                 navController.getBackStackEntry("root")
             }
+
             val leaderboardVM: LeaderboardViewModel = viewModel(parentEntry)
+            val lobbyVM: LobbyViewModel = viewModel(parentEntry)
             val state by leaderboardVM.loadState.collectAsState()
 
             HomeScreen(
                 state = state,
-                onCreateLobby = { navController.navigate("createLobby") },
+                onCreateLobby = {
+                    lobbyVM.createLobby(
+                        onSuccess = { lobby ->
+                            // Navigate with ONLY the lobbyId
+                            navController.navigate("lobby/${lobby.lobbyId}")
+                        },
+                        onError = { /* show error */ }
+                    )
+                },
                 onBrowseLobbies = { navController.navigate("browseLobbies") },
                 onShowLeaderboard = {
                     leaderboardVM.loadLeaderboard(
@@ -65,7 +74,19 @@ fun AppNavHost(
             )
         }
 
-        composable("createLobby") { Text("TODO: Create Lobby Screen") }
+        // LOBBY SCREEN — loads lobby inside the screen
+        composable("lobby/{lobbyId}") { backStackEntry ->
+            val lobbyId = backStackEntry.arguments?.getString("lobbyId")!!
+            val vm: LobbyViewModel = viewModel()
+
+            LobbyScreen(
+                navController = navController,
+                viewModel = vm,
+                lobbyId = lobbyId
+            )
+        }
+
+        // PLACEHOLDER SCREENS
         composable("browseLobbies") { Text("TODO: Browse Lobbies Screen") }
         composable("settings") { Text("TODO: Settings Screen") }
     }
