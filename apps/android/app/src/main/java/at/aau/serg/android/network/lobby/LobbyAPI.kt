@@ -18,8 +18,8 @@ class LobbyAPI(
         return service.createLobby(userId, lobbyRequest)
     }
 
-    suspend fun joinLobby(lobbyId: String): LobbyResponse {
-        return service.joinLobby(lobbyId)
+    suspend fun joinLobby(lobbyId: String, request: JoinLobbyRequest): LobbyResponse {
+        return service.joinLobby(lobbyId, request)
     }
 
     suspend fun leaveLobby(userId: String, lobbyId: String): Boolean {

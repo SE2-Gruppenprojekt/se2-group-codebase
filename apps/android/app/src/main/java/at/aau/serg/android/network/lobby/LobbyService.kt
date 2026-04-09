@@ -26,7 +26,8 @@ interface LobbyService {
 
     @POST("lobbies/{lobbyId}/join")
     suspend fun joinLobby(
-        @Path("lobbyId") lobbyId: String
+        @Path("lobbyId") lobbyId: String,
+        @Body request: JoinLobbyRequest
     ): LobbyResponse
 
     @POST("lobbies/{lobbyId}/leave")

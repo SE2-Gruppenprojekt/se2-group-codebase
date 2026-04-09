@@ -6,14 +6,12 @@ import shared.models.lobby.domain.LobbySettings
 import shared.models.lobby.domain.LobbyStatus
 import shared.models.lobby.response.LobbyPlayerResponse
 import shared.models.lobby.response.LobbyResponse
-import java.time.Instant
 
 fun LobbyPlayerResponse.toDomain(): LobbyPlayer {
     return LobbyPlayer(
         userId = userId,
         displayName = displayName,
-        isReady = isReady,
-        joinedAt = Instant.now()
+        isReady = isReady
     )
 }
 
@@ -27,7 +25,6 @@ fun LobbyResponse.toDomain(): Lobby {
             maxPlayers = maxPlayers,
             isPrivate = isPrivate,
             allowGuests = allowGuests
-        ),
-        createdAt = Instant.now()
+        )
     )
 }
