@@ -72,6 +72,7 @@ dependencies {
     implementation(libs.material3)
     implementation(libs.activity.compose)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.runtime)
 
     // Unit tests
     testImplementation(libs.junit4)
@@ -95,4 +96,3 @@ dependencies {
     implementation(libs.moshi)
     implementation(libs.moshi.kotlin)
 }
-
