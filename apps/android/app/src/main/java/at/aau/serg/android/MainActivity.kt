@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.rememberNavController
 import at.aau.serg.android.navigation.AppNavHost
 import at.aau.serg.android.ui.theme.TempappTheme
+import at.aau.serg.android.ui.theme.ThemeState
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -14,7 +15,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            TempappTheme {
+
+            TempappTheme(
+                darkTheme = ThemeState.isDarkMode.value
+            ) {
+
                 val navController = rememberNavController()
 
                 androidx.compose.material3.Scaffold { innerPadding ->
@@ -27,6 +32,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-
-

@@ -10,11 +10,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import at.aau.serg.android.ui.screens.browselobbies.BrowseLobbiesScreen
+import at.aau.serg.android.ui.screens.createlobby.CreateLobbyScreen
 import at.aau.serg.android.ui.screens.home.HomeScreen
 import at.aau.serg.android.ui.screens.leaderboard.LeaderboardScreen
 import at.aau.serg.android.ui.screens.leaderboard.LeaderboardViewModel
 import at.aau.serg.android.ui.screens.lobby.LobbyScreen
 import at.aau.serg.android.ui.screens.lobby.LobbyViewModel
+import at.aau.serg.android.ui.screens.settings.SettingsScreen
 
 @Composable
 fun AppNavHost(
@@ -86,8 +89,31 @@ fun AppNavHost(
             )
         }
 
-        // PLACEHOLDER SCREENS
-        composable("browseLobbies") { Text("TODO: Browse Lobbies Screen") }
-        composable("settings") { Text("TODO: Settings Screen") }
+        composable("createLobby") {
+            CreateLobbyScreen(
+                onBack = { navController.popBackStack() },
+                onCreate = { lobbyName ->
+                    // later Backend Call
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable("browseLobbies") {
+            BrowseLobbiesScreen(
+                lobbies = listOf("Lobby A", "Lobby B", "Lobby C"), // dummy data
+                onJoin = { lobby ->
+                    // later Backend Join
+                },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+
+        composable("settings") {
+            SettingsScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
     }
 }
