@@ -18,6 +18,7 @@ import at.aau.serg.android.ui.screens.leaderboard.LeaderboardViewModel
 import at.aau.serg.android.ui.screens.lobby.LobbyScreen
 import at.aau.serg.android.ui.screens.lobby.LobbyViewModel
 import at.aau.serg.android.ui.screens.settings.SettingsScreen
+import at.aau.serg.android.ui.screens.waiting.WaitingRoomScreen
 
 @Composable
 fun AppNavHost(
@@ -59,7 +60,9 @@ fun AppNavHost(
                         onError = { }
                     )
                 },
-                onSettings = { navController.navigate("settings") }
+                onSettings = { navController.navigate("settings") },
+
+                onWaitingRoom = { navController.navigate("waitingRoom") }
             )
         }
 
@@ -109,6 +112,12 @@ fun AppNavHost(
             )
         }
 
+        composable("waitingRoom") {
+            WaitingRoomScreen(
+                onBack = { navController.popBackStack() },
+                onSettings = { navController.navigate("settings") }
+            )
+        }
 
         composable("settings") {
             SettingsScreen(

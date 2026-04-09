@@ -20,7 +20,8 @@ fun HomeScreen(
     onCreateLobby: () -> Unit,
     onBrowseLobbies: () -> Unit,
     onShowLeaderboard: () -> Unit,
-    onSettings: () -> Unit
+    onSettings: () -> Unit,
+    onWaitingRoom: () -> Unit
 ) {
     val activity = LocalContext.current.findActivity()
 
@@ -58,14 +59,20 @@ fun HomeScreen(
 
         Spacer(Modifier.height(12.dp))
 
-        Button(
+        Button(onClick = onWaitingRoom) {
+            Text("Waiting Room")
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        /*Button(
             onClick = onShowLeaderboard,
             enabled = state !is LoadState.Loading   // ← UPDATED
         ) {
             Text("Leaderboard")
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(12.dp)) */
 
         Button(onClick = onSettings) {
             Text("Settings")
