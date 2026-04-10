@@ -1,12 +1,28 @@
 package at.se2group.backend.lobby.service
 
+import at.se2group.backend.persistence.LobbyEntity
+import at.se2group.backend.domain.LobbyStatus
+import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
 import at.se2group.backend.service.LobbyBroadcastService
+import at.se2group.backend.dto.UpdateLobbySettingsRequest
+import at.se2group.backend.domain.Lobby
 import at.se2group.backend.service.LobbyService
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.never
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.junit.jupiter.MockitoExtension
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.Assertions.assertEquals
+import java.util.Optional
+import java.time.Instant
+
+
 
 @ExtendWith(MockitoExtension::class)
 class LobbyServiceLeaveTest {
@@ -19,4 +35,149 @@ class LobbyServiceLeaveTest {
 
     @InjectMocks
     lateinit var lobbyService: LobbyService
+
+    private fun <T> any(): T {
+        org.mockito.Mockito.any<T>()
+        @Suppress("UNCHECKED_CAST")
+        return null as T
+    }
+
+    @Test
+    fun `leaveLobby allows player to leave successfully`() {
+        val entity = LobbyEntity(
+            lobbyId = "lobby-1",
+            hostUserId = "host-1",
+            status = LobbyStatus.OPEN,
+            maxPlayers = 4,
+            isPrivate = false,
+            allowGuests = true,
+            createdAt = Instant.now(),
+            players = mutableListOf(
+                LobbyPlayerEmbeddable("host-1", "Anna", false, Instant.now()),
+                LobbyPlayerEmbeddable("player-2", "Marco", false, Instant.now())
+            )
+        )
+
+        `when`(lobbyRepository.findById("lobby-1")).thenReturn(Optional.of(entity))
+        `when`(lobbyRepository.save(any()))
+            .thenAnswer {it.arguments[0] as LobbyEntity}
+
+        lobbyService.leaveLobby("lobby-1", "player-2")
+
+        verify(lobbyRepository).save(any())
+        verify(lobbyBroadcastService).broadcastLobbyUpdated(any())
+    }
+
+    @Test
+    fun `leaveLobby rejects when lobby is not open`() {
+        val entity = LobbyEntity(
+            lobbyId = "lobby-1",
+            hostUserId = "host-1",
+            status = LobbyStatus.IN_GAME,
+            maxPlayers = 4,
+            isPrivate = false,
+            allowGuests = true,
+            createdAt = Instant.now(),
+            players = mutableListOf(
+                LobbyPlayerEmbeddable("host-1", "Anna", false, Instant.now()),
+                LobbyPlayerEmbeddable("player-2", "Marco", false, Instant.now())
+            )
+        )
+
+        `when`(lobbyRepository.findById("lobby-1")).thenReturn(Optional.of(entity))
+
+        val exception = assertThrows<IllegalStateException> {
+            lobbyService.leaveLobby("lobby-1", "player-2")
+        }
+
+        assertEquals("Cannot leave an unopen lobby", exception.message)
+        verify(lobbyRepository, never()).save(any())
+        verifyNoInteractions(lobbyBroadcastService)
+    }
+
+
+    @Test
+    fun `leaveLobby rejects when player is not in lobby`() {
+        val entity = LobbyEntity(
+            lobbyId = "lobby-1",
+            hostUserId = "host-1",
+            status = LobbyStatus.OPEN,
+            maxPlayers = 4,
+            isPrivate = false,
+            allowGuests = true,
+            createdAt = Instant.now(),
+            players = mutableListOf(
+                LobbyPlayerEmbeddable("host-1", "Anna", false, Instant.now())
+
+            )
+        )
+
+        `when`(lobbyRepository.findById("lobby-1")).thenReturn(Optional.of(entity))
+
+        val exception = assertThrows<IllegalArgumentException> {
+            lobbyService.leaveLobby("lobby-1", "missed-player")
+        }
+
+        assertEquals("No player found in this lobby", exception.message)
+        verify(lobbyRepository, never()).save(any())
+        verifyNoInteractions(lobbyBroadcastService)
+    }
+
+
+    @Test
+    fun `leaveLobby assigns new host when previous host and its players exit the game`() {
+        val entity = LobbyEntity(
+            lobbyId = "lobby-1",
+            hostUserId = "host-1",
+            status = LobbyStatus.OPEN,
+            maxPlayers = 4,
+            isPrivate = false,
+            allowGuests = true,
+            createdAt = Instant.now(),
+            players = mutableListOf(
+                LobbyPlayerEmbeddable("host-1", "Anna", false, Instant.now()),
+                LobbyPlayerEmbeddable("player-2", "Marco", false, Instant.now())
+            )
+        )
+
+        `when`(lobbyRepository.findById("lobby-1")).thenReturn(Optional.of(entity))
+        `when`(lobbyRepository.save(any()))
+            .thenAnswer {it.arguments[0] as LobbyEntity }
+
+        val result = lobbyService.leaveLobby("lobby-1", "host-1")
+
+
+        assertEquals("player-2", result!!.hostUserId)
+        verify(lobbyRepository).save(any())
+        verify(lobbyBroadcastService).broadcastLobbyUpdated(any())
+    }
+
+
+
+
+    @Test
+    fun `leaveLobby deletes lobby when host leaves`() {
+        val entity = LobbyEntity(
+            lobbyId = "lobby-1",
+            hostUserId = "host-1",
+            status = LobbyStatus.OPEN,
+            maxPlayers = 4,
+            isPrivate = false,
+            allowGuests = true,
+            createdAt = Instant.now(),
+            players = mutableListOf(
+                LobbyPlayerEmbeddable("host-1", "Anna", false, Instant.now())
+            )
+        )
+
+        `when`(lobbyRepository.findById("lobby-1")).thenReturn(Optional.of(entity))
+
+
+            lobbyService.leaveLobby("lobby-1", "host-1")
+
+
+
+        verify(lobbyRepository).deleteById("lobby-1")
+        verify(lobbyBroadcastService).broadcastLobbyDeleted("lobby-1")
+    }
 }
