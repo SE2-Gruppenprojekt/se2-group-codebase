@@ -57,6 +57,13 @@ class LobbyServiceReadyTest {
             .thenAnswer { it.arguments[0] as LobbyEntity }
 
         val result = lobbyService.readyLobby("lobby-1", "player-2")
+        assertEquals("lobby-1", result.lobbyId)
+        assertEquals("host-1", result.hostUserId)
+        assertEquals(LobbyStatus.OPEN, result.status)
+        assertEquals(4, result.settings.maxPlayers)
+        assertFalse(result.settings.isPrivate)
+        assertTrue(result.settings.allowGuests)
+        assertEquals(2, result.players.size)
 
         val player = result.players.first { it.userId == "player-2" }
         assertTrue(player.isReady)
@@ -66,7 +73,15 @@ class LobbyServiceReadyTest {
 
         val captor = ArgumentCaptor.forClass(LobbyEntity::class.java)
         verify(lobbyRepository).save(captor.capture())
+
         val saved = captor.value
+        assertEquals("lobby-1", saved.lobbyId)
+        assertEquals("host-1", saved.hostUserId)
+        assertEquals(LobbyStatus.OPEN, saved.status)
+        assertEquals(4, saved.maxPlayers)
+        assertFalse(saved.isPrivate)
+        assertTrue(saved.allowGuests)
+        assertEquals(2, saved.players.size)
 
         assertTrue(saved.players.first { it.userId == "player-2" }.isReady)
         assertFalse(saved.players.first { it.userId == "host-1" }.isReady)
