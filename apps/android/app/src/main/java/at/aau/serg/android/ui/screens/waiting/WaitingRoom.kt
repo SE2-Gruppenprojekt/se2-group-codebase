@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -41,9 +42,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -52,21 +51,84 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import kotlin.random.Random
 import at.aau.serg.android.ui.theme.ThemeState
-import androidx.compose.foundation.layout.*
+
+data class WaitingRoomPlayerUi(
+    val userId: String,
+    val displayName: String,
+    val subtitle: String = "",
+    val isHost: Boolean = false,
+    val isReady: Boolean = false
+)
+
+data class WaitingRoomUiState(
+    val lobbyId: String = "",
+    val roomCode: String = "",
+    val playerCountLabel: String = "0/0",
+    val joinedLabel: String = "0 joined",
+    val maxPlayers: Int = 0,
+    val turnTimer: Int = 60,
+    val startingCards: Int = 7,
+    val stackEnabled: Boolean = true,
+    val players: List<WaitingRoomPlayerUi> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
+)
+
+fun waitingRoomUiStateFromLobby(
+    lobbyId: String,
+    hostUserId: String,
+    maxPlayers: Int,
+    players: List<WaitingRoomPlayerUi>
+): WaitingRoomUiState {
+    val joinedPlayers = players.size
+    return WaitingRoomUiState(
+        lobbyId = lobbyId,
+        roomCode = lobbyId.take(6).uppercase(),
+        playerCountLabel = "$joinedPlayers/$maxPlayers",
+        joinedLabel = "$joinedPlayers joined",
+        maxPlayers = maxPlayers,
+        players = players
+    )
+}
+
+@Composable
+fun WaitingRoomRoute(
+    uiStateFlow: kotlinx.coroutines.flow.StateFlow<WaitingRoomUiState>,
+    onBack: () -> Unit,
+    onSettings: () -> Unit,
+    onTurnTimerChange: (Int) -> Unit,
+    onStartingCardsChange: (Int) -> Unit,
+    onStackEnabledChange: (Boolean) -> Unit,
+    onStartGame: () -> Unit,
+    onInvite: () -> Unit
+) {
+    val uiState by uiStateFlow.collectAsState()
+
+    WaitingRoomScreen(
+        uiState = uiState,
+        onBack = onBack,
+        onSettings = onSettings,
+        onTurnTimerChange = onTurnTimerChange,
+        onStartingCardsChange = onStartingCardsChange,
+        onStackEnabledChange = onStackEnabledChange,
+        onStartGame = onStartGame,
+        onInvite = onInvite
+    )
+}
 
 @Composable
 fun WaitingRoomScreen(
+    uiState: WaitingRoomUiState,
     onBack: () -> Unit,
-    onSettings: () -> Unit
+    onSettings: () -> Unit,
+    onTurnTimerChange: (Int) -> Unit,
+    onStartingCardsChange: (Int) -> Unit,
+    onStackEnabledChange: (Boolean) -> Unit,
+    onStartGame: () -> Unit,
+    onInvite: () -> Unit
 ) {
-    var turnTimer by remember { mutableStateOf(60) }
-    var startingCards by remember { mutableStateOf(7) }
-    var stackEnabled by remember { mutableStateOf(true) }
-
     val context = LocalContext.current
-    val roomCode = remember { generateRoomCode() }
     val scrollState = rememberScrollState()
     val darkMode = ThemeState.isDarkMode.value
 
@@ -124,6 +186,22 @@ fun WaitingRoomScreen(
         Color.White.copy(alpha = 0.06f)
     } else {
         Color.Black.copy(alpha = 0.04f)
+    }
+
+    val placeholderCount = (uiState.maxPlayers - uiState.players.size).coerceAtLeast(0)
+
+    if (uiState.isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Loading lobby...",
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+        return
     }
 
     Column(
@@ -210,7 +288,7 @@ fun WaitingRoomScreen(
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = roomCode,
+                            text = uiState.roomCode,
                             style = MaterialTheme.typography.titleMedium,
                             color = primaryTextColor,
                             fontWeight = FontWeight.Bold
@@ -223,7 +301,7 @@ fun WaitingRoomScreen(
                             onClick = {
                                 val clipboardManager =
                                     context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                val clip = ClipData.newPlainText("Room Code", roomCode)
+                                val clip = ClipData.newPlainText("Room Code", uiState.roomCode)
                                 clipboardManager.setPrimaryClip(clip)
 
                                 Toast.makeText(
@@ -251,7 +329,7 @@ fun WaitingRoomScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "4/8",
+                        text = uiState.playerCountLabel,
                         color = primaryTextColor,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
@@ -276,7 +354,7 @@ fun WaitingRoomScreen(
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = "2 joined",
+                text = uiState.joinedLabel,
                 color = secondaryTextColor,
                 style = MaterialTheme.typography.labelSmall
             )
@@ -284,49 +362,31 @@ fun WaitingRoomScreen(
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        PlayerItem(
-            name = "You",
-            subtitle = "Level 24",
-            isHost = true,
-            isJoined = true,
-            isPlaceholder = false,
-            borderColor = activePlayerBorder,
-            backgroundColor = activePlayerBackground,
-            primaryTextColor = primaryTextColor,
-            secondaryTextColor = secondaryTextColor
-        )
+        uiState.players.forEach { player ->
+            PlayerItem(
+                name = player.displayName,
+                subtitle = player.subtitle,
+                isHost = player.isHost,
+                isJoined = player.isReady,
+                isPlaceholder = false,
+                borderColor = activePlayerBorder,
+                backgroundColor = activePlayerBackground,
+                primaryTextColor = primaryTextColor,
+                secondaryTextColor = secondaryTextColor
+            )
+        }
 
-        PlayerItem(
-            name = "Alex",
-            subtitle = "Level 18",
-            isHost = false,
-            isJoined = true,
-            isPlaceholder = false,
-            borderColor = activePlayerBorder,
-            backgroundColor = activePlayerBackground,
-            primaryTextColor = primaryTextColor,
-            secondaryTextColor = secondaryTextColor
-        )
-
-        PlayerItem(
-            name = "Waiting for player...",
-            subtitle = "",
-            isPlaceholder = true,
-            borderColor = if (darkMode) Color(0xFF3A3F4B) else Color(0xFFD1D5DB),
-            backgroundColor = waitingBackground,
-            primaryTextColor = if (darkMode) Color(0xFF727887) else Color(0xFF9AA3B2),
-            secondaryTextColor = if (darkMode) Color(0xFF5E6573) else Color(0xFFB2BAC8)
-        )
-
-        PlayerItem(
-            name = "Waiting for player...",
-            subtitle = "",
-            isPlaceholder = true,
-            borderColor = if (darkMode) Color(0xFF3A3F4B) else Color(0xFFD1D5DB),
-            backgroundColor = waitingBackground,
-            primaryTextColor = if (darkMode) Color(0xFF727887) else Color(0xFF9AA3B2),
-            secondaryTextColor = if (darkMode) Color(0xFF5E6573) else Color(0xFFB2BAC8)
-        )
+        repeat(placeholderCount) {
+            PlayerItem(
+                name = "Waiting for player...",
+                subtitle = "",
+                isPlaceholder = true,
+                borderColor = if (darkMode) Color(0xFF3A3F4B) else Color(0xFFD1D5DB),
+                backgroundColor = waitingBackground,
+                primaryTextColor = if (darkMode) Color(0xFF727887) else Color(0xFF9AA3B2),
+                secondaryTextColor = if (darkMode) Color(0xFF5E6573) else Color(0xFFB2BAC8)
+            )
+        }
 
         Spacer(modifier = Modifier.height(18.dp))
 
@@ -350,9 +410,9 @@ fun WaitingRoomScreen(
 
             SettingRow(
                 title = "Turn Timer",
-                value = "${turnTimer}s",
-                onMinus = { if (turnTimer > 10) turnTimer -= 10 },
-                onPlus = { turnTimer += 10 },
+                value = "${uiState.turnTimer}s",
+                onMinus = { if (uiState.turnTimer > 10) onTurnTimerChange(uiState.turnTimer - 10) },
+                onPlus = { onTurnTimerChange(uiState.turnTimer + 10) },
                 cardColor = cardColor,
                 primaryTextColor = primaryTextColor,
                 buttonColor = inviteButtonColor
@@ -360,9 +420,9 @@ fun WaitingRoomScreen(
 
             SettingRow(
                 title = "Starting Cards",
-                value = "$startingCards",
-                onMinus = { if (startingCards > 1) startingCards -= 1 },
-                onPlus = { startingCards += 1 },
+                value = "${uiState.startingCards}",
+                onMinus = { if (uiState.startingCards > 1) onStartingCardsChange(uiState.startingCards - 1) },
+                onPlus = { onStartingCardsChange(uiState.startingCards + 1) },
                 cardColor = cardColor,
                 primaryTextColor = primaryTextColor,
                 buttonColor = inviteButtonColor
@@ -391,8 +451,8 @@ fun WaitingRoomScreen(
                     )
 
                     Switch(
-                        checked = stackEnabled,
-                        onCheckedChange = { stackEnabled = it },
+                        checked = uiState.stackEnabled,
+                        onCheckedChange = onStackEnabledChange,
                         modifier = Modifier.scale(0.78f),
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
@@ -413,7 +473,7 @@ fun WaitingRoomScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
-                    onClick = { },
+                    onClick = onStartGame,
                     modifier = Modifier
                         .weight(1f)
                         .height(56.dp),
@@ -437,7 +497,7 @@ fun WaitingRoomScreen(
                 }
 
                 Button(
-                    onClick = { },
+                    onClick = onInvite,
                     modifier = Modifier
                         .weight(1f)
                         .height(56.dp),
@@ -460,6 +520,15 @@ fun WaitingRoomScreen(
                     )
                 }
             }
+        }
+
+        uiState.errorMessage?.let { message ->
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = message,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -667,9 +736,3 @@ fun SettingRow(
     }
 }
 
-private fun generateRoomCode(length: Int = 6): String {
-    val chars = "ABCgenerateRoomCodeDEFGHJKLMNPQRSTUVWXYZ23456789"
-    return (1..length)
-        .map { chars[Random.nextInt(chars.length)] }
-        .joinToString("")
-}
