@@ -52,6 +52,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.theme.ThemeState
+import androidx.compose.runtime.LaunchedEffect
+import at.aau.serg.android.ui.screens.lobby.LobbyViewModel
+import shared.models.lobby.domain.Lobby
 
 data class WaitingRoomPlayerUi(
     val userId: String,
@@ -75,26 +78,35 @@ data class WaitingRoomUiState(
     val errorMessage: String? = null
 )
 
-fun waitingRoomUiStateFromLobby(
-    lobbyId: String,
-    hostUserId: String,
-    maxPlayers: Int,
-    players: List<WaitingRoomPlayerUi>
-): WaitingRoomUiState {
+fun waitingRoomUiStateFromLobby(lobby: Lobby): WaitingRoomUiState {
+    val players = lobby.players.map { player ->
+        WaitingRoomPlayerUi(
+            userId = player.userId,
+            displayName = player.displayName,
+            subtitle = if (player.userId == lobby.hostUserId) "Host" else "",
+            isHost = player.userId == lobby.hostUserId,
+            isReady = player.isReady
+        )
+    }
+
     val joinedPlayers = players.size
+
     return WaitingRoomUiState(
-        lobbyId = lobbyId,
-        roomCode = lobbyId.take(6).uppercase(),
-        playerCountLabel = "$joinedPlayers/$maxPlayers",
+        lobbyId = lobby.lobbyId,
+        roomCode = lobby.lobbyId.take(6).uppercase(),
+        playerCountLabel = "$joinedPlayers/${lobby.settings.maxPlayers}",
         joinedLabel = "$joinedPlayers joined",
-        maxPlayers = maxPlayers,
-        players = players
+        maxPlayers = lobby.settings.maxPlayers,
+        players = players,
+        isLoading = false,
+        errorMessage = null
     )
 }
 
 @Composable
 fun WaitingRoomRoute(
-    uiStateFlow: kotlinx.coroutines.flow.StateFlow<WaitingRoomUiState>,
+    lobbyId: String,
+    viewModel: LobbyViewModel,
     onBack: () -> Unit,
     onSettings: () -> Unit,
     onTurnTimerChange: (Int) -> Unit,
@@ -103,7 +115,14 @@ fun WaitingRoomRoute(
     onStartGame: () -> Unit,
     onInvite: () -> Unit
 ) {
-    val uiState by uiStateFlow.collectAsState()
+    val lobby by viewModel.lobby.collectAsState()
+
+    LaunchedEffect(lobbyId) {
+        viewModel.loadLobby(lobbyId)
+    }
+
+    val uiState = lobby?.let { waitingRoomUiStateFromLobby(it) }
+        ?: WaitingRoomUiState(isLoading = true)
 
     WaitingRoomScreen(
         uiState = uiState,

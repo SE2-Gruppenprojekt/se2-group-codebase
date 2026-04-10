@@ -26,6 +26,7 @@ class LobbyViewModel(
         launchRequest(
             request = { api.getLobby(lobbyId).toDomain() },
             onSuccess = { loaded -> _lobby.value = loaded },
+            // TODO: Handle error properly
             onError = {}
         )
     }
