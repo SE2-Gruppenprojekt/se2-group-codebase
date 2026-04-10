@@ -45,10 +45,13 @@ fun HomeScreen(
     onBrowseLobbies: () -> Unit,
     onShowLeaderboard: () -> Unit,
     onSettings: () -> Unit,
-    onWaitingRoom: () -> Unit
+    onWaitingRoom: () -> Unit,
+    onNewLobbyScreen: () -> Unit
 ) {
+    // read current theme mode
     val darkMode = ThemeState.isDarkMode.value
 
+    // background gradient for light and dark mode
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(
             if (darkMode) MaterialTheme.colorScheme.background else Color(0xFFF6F8FD),
@@ -57,24 +60,28 @@ fun HomeScreen(
         )
     )
 
+    // title color
     val titleColor = if (darkMode) {
         Color(0xFFEAEFFF)
     } else {
         Color(0xFF1D2750)
     }
 
+    // subtitle color
     val subtitleColor = if (darkMode) {
         Color.White.copy(alpha = 0.78f)
     } else {
         Color(0xFF4D5A78)
     }
 
+    // error text color
     val errorColor = if (darkMode) {
         Color(0xFFFF8F8F)
     } else {
         Color(0xFFC74141)
     }
 
+    // settings button gradient
     val settingsBrush = Brush.horizontalGradient(
         colors = if (darkMode) {
             listOf(Color(0xFF2D3951), Color(0xFF253046))
@@ -83,6 +90,7 @@ fun HomeScreen(
         }
     )
 
+    // leaderboard button gradient
     val leaderboardBrush = Brush.horizontalGradient(
         colors = if (darkMode) {
             listOf(Color(0xFF33435B), Color(0xFF273347))
@@ -91,6 +99,7 @@ fun HomeScreen(
         }
     )
 
+    // shared ui colors for neutral buttons and bottom profile bar
     val neutralButtonContentColor = if (darkMode) Color.White else Color(0xFF23314C)
     val playerBarBackground = if (darkMode) Color(0xFF151D34) else Color(0xFFF3F6FC)
     val playerBarBorder = if (darkMode) Color.White.copy(alpha = 0.05f) else Color(0xFFD5DDEA)
@@ -98,12 +107,15 @@ fun HomeScreen(
     val playerNameColor = if (darkMode) Color.White else Color(0xFF1E2847)
     val playerLevelColor = if (darkMode) Color(0xFFFFD93D) else Color(0xFFC08A00)
     val xpColor = if (darkMode) Color(0xFF9AA6C0) else Color(0xFF6A7692)
+
+    // root screen layout
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(backgroundGradient),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // main content section
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -113,6 +125,7 @@ fun HomeScreen(
         ) {
             Spacer(modifier = Modifier.height(20.dp))
 
+            // app icon card
             Box(
                 modifier = Modifier
                     .size(120.dp)
@@ -137,6 +150,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(22.dp))
 
+            // title
             Text(
                 text = "RUMMIKUB",
                 style = MaterialTheme.typography.displaySmall,
@@ -144,6 +158,7 @@ fun HomeScreen(
                 color = titleColor
             )
 
+            // subtitle
             Text(
                 text = "Classic Tile Game",
                 style = MaterialTheme.typography.bodyLarge,
@@ -152,11 +167,13 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
+            // loading state
             if (state is LoadState.Loading) {
                 CircularProgressIndicator(color = if (darkMode) Color.White else Color(0xFF456EFF))
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
+            // error state
             if (state is LoadState.Error) {
                 Text(
                     text = state.message,
@@ -166,6 +183,7 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
+            // standard create lobby action
             HomeActionButton(
                 text = "Create Lobby",
                 onClick = onCreateLobby,
@@ -184,6 +202,26 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(6.dp))
 
+            // custom fancy lobby screen
+            HomeActionButton(
+                text = "Create fancy Lobby",
+                onClick = onNewLobbyScreen,
+                icon = { tint ->
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = null,
+                        tint = tint,
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                containerBrush = Brush.horizontalGradient(
+                    colors = listOf(Color(0xE24B68FF), Color(0xD74B3FD4))
+                )
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // browse open lobbies
             HomeActionButton(
                 text = "Browse Lobbies",
                 onClick = onBrowseLobbies,
@@ -202,6 +240,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(6.dp))
 
+            // go to waiting room
             HomeActionButton(
                 text = "Waiting Room",
                 onClick = onWaitingRoom,
@@ -220,6 +259,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // settings action
             HomeActionButton(
                 text = "Settings",
                 onClick = onSettings,
@@ -237,6 +277,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(6.dp))
 
+            // leaderboard action
             HomeActionButton(
                 text = "Leaderboard",
                 onClick = onShowLeaderboard,
@@ -252,9 +293,11 @@ fun HomeScreen(
                 contentColor = neutralButtonContentColor
             )
 
+            // push bottom profile bar down
             Spacer(modifier = Modifier.weight(1f))
         }
 
+        // bottom profile/info bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -269,6 +312,7 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // left side player identity
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -305,6 +349,7 @@ fun HomeScreen(
                 }
             }
 
+            // right side level and xp
             Column(
                 horizontalAlignment = Alignment.End
             ) {
@@ -333,6 +378,7 @@ private fun HomeActionButton(
     containerBrush: Brush,
     contentColor: Color = Color.White
 ) {
+    // reusable home screen action button
     Button(
         onClick = onClick,
         modifier = Modifier
@@ -351,6 +397,7 @@ private fun HomeActionButton(
             hoveredElevation = 0.dp
         )
     ) {
+        // custom gradient background inside button
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -362,8 +409,10 @@ private fun HomeActionButton(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // button icon
                 icon(contentColor)
                 Spacer(modifier = Modifier.size(12.dp))
+                // button label
                 Text(
                     text = text,
                     style = MaterialTheme.typography.titleMedium,
