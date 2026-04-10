@@ -18,11 +18,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
@@ -33,8 +36,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,6 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -86,34 +90,40 @@ fun WaitingRoomScreen(
         Color(0xFF6B7280)
     }
 
-    val onlineCardColor = if (darkMode) {
-        Color(0xFF183C30)
+    val activePlayerBackground = if (darkMode) {
+        Color(0xFF1F356A)
     } else {
-        Color(0xFFDFF7E8)
+        Color(0xFFEAF1FF)
     }
 
-    val onlineTextColor = if (darkMode) {
-        Color(0xFF8CFFB1)
+    val activePlayerBorder = if (darkMode) {
+        Color(0xFF3E73E8)
     } else {
-        Color(0xFF1E6B57)
-    }
-
-    val hostBackground = if (darkMode) {
-        Color(0xFF1C2A45)
-    } else {
-        Color(0xFFEFF4FF)
-    }
-
-    val playerBackground = if (darkMode) {
-        Color(0xFF1B3326)
-    } else {
-        Color(0xFFEAFBF1)
+        Color(0xFF4C84FF)
     }
 
     val waitingBackground = if (darkMode) {
         MaterialTheme.colorScheme.surface
     } else {
         Color.White
+    }
+
+    val playersHeaderBackground = if (darkMode) {
+        Color.White.copy(alpha = 0.04f)
+    } else {
+        Color(0xFF284B8F).copy(alpha = 0.05f)
+    }
+
+    val inviteButtonColor = if (darkMode) {
+        Color(0xFF2A3552)
+    } else {
+        Color(0xFF2F3A57)
+    }
+
+    val settingsSectionBackground = if (darkMode) {
+        Color.White.copy(alpha = 0.06f)
+    } else {
+        Color.Black.copy(alpha = 0.04f)
     }
 
     Column(
@@ -125,7 +135,7 @@ fun WaitingRoomScreen(
                 )
             )
             .verticalScroll(scrollState)
-            .padding(16.dp)
+            .padding(10.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -133,55 +143,47 @@ fun WaitingRoomScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.size(32.dp)
+                ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onBackground
+                        tint = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.size(16.dp)
                     )
                 }
 
                 Column {
                     Text(
                         text = "RUMMIKUB",
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
                         text = "Waiting Room",
-                        color = MaterialTheme.colorScheme.onBackground
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.78f),
+                        style = MaterialTheme.typography.labelSmall
                     )
                 }
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = onlineCardColor
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Text(
-                        text = "● Online",
-                        color = onlineTextColor,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                IconButton(onClick = onSettings) {
-                    Icon(
-                        imageVector = Icons.Filled.Settings,
-                        contentDescription = "Settings",
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                }
+            IconButton(
+                onClick = onSettings,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = "Settings",
+                    tint = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.size(16.dp)
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -193,29 +195,31 @@ fun WaitingRoomScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp),
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
                     Text(
                         text = "Room Code",
-                        color = secondaryTextColor
+                        color = secondaryTextColor,
+                        style = MaterialTheme.typography.labelSmall
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = roomCode,
-                            style = MaterialTheme.typography.headlineMedium,
+                            style = MaterialTheme.typography.titleMedium,
                             color = primaryTextColor,
                             fontWeight = FontWeight.Bold
                         )
 
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
 
                         IconButton(
+                            modifier = Modifier.size(28.dp),
                             onClick = {
                                 val clipboardManager =
                                     context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -232,7 +236,8 @@ fun WaitingRoomScreen(
                             Icon(
                                 imageVector = Icons.Filled.ContentCopy,
                                 contentDescription = "Copy Room Code",
-                                tint = primaryTextColor
+                                tint = primaryTextColor,
+                                modifier = Modifier.size(14.dp)
                             )
                         }
                     }
@@ -241,13 +246,14 @@ fun WaitingRoomScreen(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = "Players",
-                        color = secondaryTextColor
+                        color = secondaryTextColor,
+                        style = MaterialTheme.typography.labelSmall
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "4/8",
                         color = primaryTextColor,
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -257,28 +263,35 @@ fun WaitingRoomScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 2.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Players Ready",
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.82f),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold
             )
             Text(
                 text = "2 joined",
-                color = secondaryTextColor
+                color = secondaryTextColor,
+                style = MaterialTheme.typography.labelSmall
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         PlayerItem(
             name = "You",
-            subtitle = "HOST • Level 24",
-            borderColor = Color(0xFF3C7CFF),
-            backgroundColor = hostBackground,
+            subtitle = "Level 24",
+            isHost = true,
+            isJoined = true,
+            isPlaceholder = false,
+            borderColor = activePlayerBorder,
+            backgroundColor = activePlayerBackground,
             primaryTextColor = primaryTextColor,
             secondaryTextColor = secondaryTextColor
         )
@@ -286,8 +299,11 @@ fun WaitingRoomScreen(
         PlayerItem(
             name = "Alex",
             subtitle = "Level 18",
-            borderColor = Color(0xFF20C76F),
-            backgroundColor = playerBackground,
+            isHost = false,
+            isJoined = true,
+            isPlaceholder = false,
+            borderColor = activePlayerBorder,
+            backgroundColor = activePlayerBackground,
             primaryTextColor = primaryTextColor,
             secondaryTextColor = secondaryTextColor
         )
@@ -295,110 +311,154 @@ fun WaitingRoomScreen(
         PlayerItem(
             name = "Waiting for player...",
             subtitle = "",
+            isPlaceholder = true,
             borderColor = if (darkMode) Color(0xFF3A3F4B) else Color(0xFFD1D5DB),
             backgroundColor = waitingBackground,
-            primaryTextColor = primaryTextColor,
-            secondaryTextColor = secondaryTextColor
+            primaryTextColor = if (darkMode) Color(0xFF727887) else Color(0xFF9AA3B2),
+            secondaryTextColor = if (darkMode) Color(0xFF5E6573) else Color(0xFFB2BAC8)
         )
 
         PlayerItem(
             name = "Waiting for player...",
             subtitle = "",
+            isPlaceholder = true,
             borderColor = if (darkMode) Color(0xFF3A3F4B) else Color(0xFFD1D5DB),
             backgroundColor = waitingBackground,
-            primaryTextColor = primaryTextColor,
-            secondaryTextColor = secondaryTextColor
+            primaryTextColor = if (darkMode) Color(0xFF727887) else Color(0xFF9AA3B2),
+            secondaryTextColor = if (darkMode) Color(0xFF5E6573) else Color(0xFFB2BAC8)
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
-        Text(
-            text = "Game Settings",
-            color = MaterialTheme.colorScheme.onBackground,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        SettingRow(
-            title = "Turn Timer",
-            value = "${turnTimer}s",
-            onMinus = { if (turnTimer > 10) turnTimer -= 10 },
-            onPlus = { turnTimer += 10 },
-            cardColor = cardColor,
-            primaryTextColor = primaryTextColor
-        )
-
-        SettingRow(
-            title = "Starting Cards",
-            value = "$startingCards",
-            onMinus = { if (startingCards > 1) startingCards -= 1 },
-            onPlus = { startingCards += 1 },
-            cardColor = cardColor,
-            primaryTextColor = primaryTextColor
-        )
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = cardColor
-            ),
-            shape = RoundedCornerShape(18.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    color = settingsSectionBackground,
+                    shape = RoundedCornerShape(18.dp)
+                )
+                .padding(horizontal = 10.dp, vertical = 10.dp)
         ) {
+            Text(
+                text = "Game Settings",
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            SettingRow(
+                title = "Turn Timer",
+                value = "${turnTimer}s",
+                onMinus = { if (turnTimer > 10) turnTimer -= 10 },
+                onPlus = { turnTimer += 10 },
+                cardColor = cardColor,
+                primaryTextColor = primaryTextColor,
+                buttonColor = inviteButtonColor
+            )
+
+            SettingRow(
+                title = "Starting Cards",
+                value = "$startingCards",
+                onMinus = { if (startingCards > 1) startingCards -= 1 },
+                onPlus = { startingCards += 1 },
+                cardColor = cardColor,
+                primaryTextColor = primaryTextColor,
+                buttonColor = inviteButtonColor
+            )
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = cardColor
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .padding(horizontal = 14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Stack +2/+4",
+                        color = primaryTextColor,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                    Switch(
+                        checked = stackEnabled,
+                        onCheckedChange = { stackEnabled = it },
+                        modifier = Modifier.scale(0.78f),
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = inviteButtonColor,
+                            uncheckedThumbColor = Color.White.copy(alpha = 0.9f),
+                            uncheckedTrackColor = inviteButtonColor.copy(alpha = 0.55f),
+                            uncheckedBorderColor = Color.Transparent,
+                            checkedBorderColor = Color.Transparent
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 18.dp, vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    text = "Stack +2/+4",
-                    color = primaryTextColor,
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Button(
+                    onClick = { },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF4F8DFF),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        "Start Game",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
-                Switch(
-                    checked = stackEnabled,
-                    onCheckedChange = { stackEnabled = it }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Button(
-                onClick = { },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(18.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.PlayArrow,
-                    contentDescription = null
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Start Game")
-            }
-
-            OutlinedButton(
-                onClick = { },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(18.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.PersonAdd,
-                    contentDescription = null
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Invite")
+                Button(
+                    onClick = { },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = inviteButtonColor,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.PersonAdd,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        "Invite",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
 
@@ -410,15 +470,30 @@ fun WaitingRoomScreen(
 fun PlayerItem(
     name: String,
     subtitle: String,
+    isHost: Boolean = false,
+    isJoined: Boolean = false,
+    isPlaceholder: Boolean = false,
     borderColor: Color,
     backgroundColor: Color,
     primaryTextColor: Color,
     secondaryTextColor: Color
 ) {
+    val displayName = if (isHost) "$name (Host)" else name
+    val avatarBackground = if (isPlaceholder) {
+        secondaryTextColor.copy(alpha = 0.16f)
+    } else {
+        Color(0xFF4F8DFF)
+    }
+    val avatarIconTint = if (isPlaceholder) {
+        secondaryTextColor
+    } else {
+        Color.White
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
+            .padding(vertical = 4.dp)
             .border(
                 width = 2.dp,
                 color = borderColor,
@@ -427,23 +502,80 @@ fun PlayerItem(
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         shape = RoundedCornerShape(18.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = name,
-                color = primaryTextColor,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-
-            if (subtitle.isNotBlank()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = subtitle,
-                    color = secondaryTextColor,
-                    style = MaterialTheme.typography.bodyMedium
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .background(
+                        color = avatarBackground,
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Person,
+                    contentDescription = null,
+                    tint = avatarIconTint,
+                    modifier = Modifier.size(24.dp)
                 )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = displayName,
+                        color = primaryTextColor,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                if (subtitle.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = subtitle,
+                        color = secondaryTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
+            if (isJoined) {
+                Spacer(modifier = Modifier.width(10.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(22.dp)
+                            .background(
+                                color = Color(0xFF2DBE60),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
+                }
             }
         }
     }
@@ -456,28 +588,31 @@ fun SettingRow(
     onMinus: () -> Unit,
     onPlus: () -> Unit,
     cardColor: Color,
-    primaryTextColor: Color
+    primaryTextColor: Color,
+    buttonColor: Color
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(
             containerColor = cardColor
         ),
-        shape = RoundedCornerShape(18.dp)
+        shape = RoundedCornerShape(16.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 16.dp),
+                .height(50.dp)
+                .padding(horizontal = 14.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = title,
                 color = primaryTextColor,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold
             )
 
             Row(
@@ -486,28 +621,46 @@ fun SettingRow(
                 Button(
                     onClick = onMinus,
                     contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(28.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = buttonColor,
+                        contentColor = Color.White
+                    )
                 ) {
-                    Text("-")
+                    Text(
+                        "-",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(10.dp))
 
                 Text(
                     text = value,
                     color = primaryTextColor,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(10.dp))
 
                 Button(
                     onClick = onPlus,
                     contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(28.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = buttonColor,
+                        contentColor = Color.White
+                    )
                 ) {
-                    Text("+")
+                    Text(
+                        "+",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
@@ -515,7 +668,7 @@ fun SettingRow(
 }
 
 private fun generateRoomCode(length: Int = 6): String {
-    val chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    val chars = "ABCgenerateRoomCodeDEFGHJKLMNPQRSTUVWXYZ23456789"
     return (1..length)
         .map { chars[Random.nextInt(chars.length)] }
         .joinToString("")
