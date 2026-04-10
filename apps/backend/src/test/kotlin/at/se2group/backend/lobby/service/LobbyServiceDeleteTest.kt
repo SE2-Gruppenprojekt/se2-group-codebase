@@ -16,6 +16,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.junit.jupiter.MockitoExtension
 import java.time.Instant
 import java.util.Optional
@@ -51,8 +52,10 @@ class LobbyServiceDeleteTest {
 
         lobbyService.deleteLobby("lobby-1", "host-1")
 
+        verify(lobbyRepository).findById("lobby-1")
         verify(lobbyRepository).deleteById("lobby-1")
         verify(lobbyBroadcastService).broadcastLobbyDeleted("lobby-1")
+        verifyNoMoreInteractions(lobbyRepository, lobbyBroadcastService)
     }
 
     @Test
@@ -78,6 +81,7 @@ class LobbyServiceDeleteTest {
         }
 
         assertEquals("Only the host can delete the lobby", exception.message)
+        verify(lobbyRepository).findById("lobby-1")
         verify(lobbyRepository, never()).deleteById("lobby-1")
         verifyNoInteractions(lobbyBroadcastService)
     }
