@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.state.LoadState
+import at.aau.serg.android.ui.theme.ThemeState
 
 @Composable
 fun HomeScreen(
@@ -44,13 +45,51 @@ fun HomeScreen(
     onSettings: () -> Unit,
     onWaitingRoom: () -> Unit
 ) {
+    val darkMode = ThemeState.isDarkMode.value
+
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(
-            Color(0xFF090F22),
-            Color(0xFF121A31),
-            Color(0xFF0E1429)
+            if (darkMode) MaterialTheme.colorScheme.background else Color(0xFFF6F8FD),
+            if (darkMode) Color(0xFF121A31) else Color(0xFFEFF3FF),
+            if (darkMode) Color(0xFF0E1429) else Color(0xFFE7ECFA)
         )
     )
+
+    val titleColor = if (darkMode) {
+        Color(0xFFEAEFFF)
+    } else {
+        Color(0xFF1D2750)
+    }
+
+    val subtitleColor = if (darkMode) {
+        Color.White.copy(alpha = 0.78f)
+    } else {
+        Color(0xFF4D5A78)
+    }
+
+    val errorColor = if (darkMode) {
+        Color(0xFFFF8F8F)
+    } else {
+        Color(0xFFC74141)
+    }
+
+    val settingsBrush = Brush.horizontalGradient(
+        colors = if (darkMode) {
+            listOf(Color(0xFF2D3951), Color(0xFF253046))
+        } else {
+            listOf(Color(0xFFD7DEEA), Color(0xFFC9D2E2))
+        }
+    )
+
+    val leaderboardBrush = Brush.horizontalGradient(
+        colors = if (darkMode) {
+            listOf(Color(0xFF33435B), Color(0xFF273347))
+        } else {
+            listOf(Color(0xFFDCE3EF), Color(0xFFCED7E7))
+        }
+    )
+
+    val neutralButtonContentColor = if (darkMode) Color.White else Color(0xFF23314C)
 
     Column(
         modifier = modifier
@@ -89,26 +128,26 @@ fun HomeScreen(
             text = "RUMMIKUB",
             style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.Black,
-            color = Color(0xFFEAEFFF)
+            color = titleColor
         )
 
         Text(
             text = "Classic Tile Game",
             style = MaterialTheme.typography.bodyLarge,
-            color = Color.White.copy(alpha = 0.78f)
+            color = subtitleColor
         )
 
         Spacer(modifier = Modifier.height(28.dp))
 
         if (state is LoadState.Loading) {
-            CircularProgressIndicator(color = Color.White)
+            CircularProgressIndicator(color = if (darkMode) Color.White else Color(0xFF456EFF))
             Spacer(modifier = Modifier.height(14.dp))
         }
 
         if (state is LoadState.Error) {
             Text(
                 text = state.message,
-                color = Color(0xFFFF8F8F),
+                color = errorColor,
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(modifier = Modifier.height(14.dp))
@@ -117,11 +156,11 @@ fun HomeScreen(
         HomeActionButton(
             text = "Create Lobby",
             onClick = onCreateLobby,
-            icon = {
+            icon = { tint ->
                 Icon(
                     imageVector = Icons.Filled.Person,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = tint,
                     modifier = Modifier.size(24.dp)
                 )
             },
@@ -130,16 +169,16 @@ fun HomeScreen(
             )
         )
 
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         HomeActionButton(
             text = "Browse Lobbies",
             onClick = onBrowseLobbies,
-            icon = {
+            icon = { tint ->
                 Icon(
                     imageVector = Icons.Filled.Groups,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = tint,
                     modifier = Modifier.size(24.dp)
                 )
             },
@@ -148,16 +187,16 @@ fun HomeScreen(
             )
         )
 
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         HomeActionButton(
             text = "Waiting Room",
             onClick = onWaitingRoom,
-            icon = {
+            icon = { tint ->
                 Icon(
                     imageVector = Icons.Filled.ViewInAr,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = tint,
                     modifier = Modifier.size(24.dp)
                 )
             },
@@ -171,35 +210,33 @@ fun HomeScreen(
         HomeActionButton(
             text = "Settings",
             onClick = onSettings,
-            icon = {
+            icon = { tint ->
                 Icon(
                     imageVector = Icons.Filled.Settings,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = tint,
                     modifier = Modifier.size(22.dp)
                 )
             },
-            containerBrush = Brush.horizontalGradient(
-                colors = listOf(Color(0xFF2D3951), Color(0xFF253046))
-            )
+            containerBrush = settingsBrush,
+            contentColor = neutralButtonContentColor
         )
 
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         HomeActionButton(
             text = "Leaderboard",
             onClick = onShowLeaderboard,
-            icon = {
+            icon = { tint ->
                 Icon(
                     imageVector = Icons.Filled.EmojiEvents,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = tint,
                     modifier = Modifier.size(22.dp)
                 )
             },
-            containerBrush = Brush.horizontalGradient(
-                colors = listOf(Color(0xFF33435B), Color(0xFF273347))
-            )
+            containerBrush = leaderboardBrush,
+            contentColor = neutralButtonContentColor
         )
     }
 }
@@ -208,20 +245,27 @@ fun HomeScreen(
 private fun HomeActionButton(
     text: String,
     onClick: () -> Unit,
-    icon: @Composable () -> Unit,
-    containerBrush: Brush
+    icon: @Composable (Color) -> Unit,
+    containerBrush: Brush,
+    contentColor: Color = Color.White
 ) {
     Button(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(62.dp),
+            .height(56.dp),
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
             contentColor = Color.White
         ),
-        contentPadding = ButtonDefaults.ContentPadding
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 0.dp,
+            pressedElevation = 0.dp,
+            focusedElevation = 0.dp,
+            hoveredElevation = 0.dp
+        )
     ) {
         Box(
             modifier = Modifier
@@ -234,13 +278,13 @@ private fun HomeActionButton(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                icon()
+                icon(contentColor)
                 Spacer(modifier = Modifier.size(12.dp))
                 Text(
                     text = text,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = contentColor
                 )
             }
         }
