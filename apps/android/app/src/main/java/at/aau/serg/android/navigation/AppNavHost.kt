@@ -18,7 +18,7 @@ import at.aau.serg.android.ui.screens.leaderboard.LeaderboardViewModel
 import at.aau.serg.android.ui.screens.lobby.LobbyScreen
 import at.aau.serg.android.ui.screens.lobby.LobbyViewModel
 import at.aau.serg.android.ui.screens.settings.SettingsScreen
-import at.aau.serg.android.ui.screens.waiting.WaitingRoomScreen
+import at.aau.serg.android.ui.screens.waiting.WaitingRoomRoute
 
 @Composable
 fun AppNavHost(
@@ -62,7 +62,7 @@ fun AppNavHost(
                 },
                 onSettings = { navController.navigate("settings") },
 
-                onWaitingRoom = { navController.navigate("waitingRoom") }
+                onWaitingRoom = { navController.navigate("waitingRoom/test-lobby") }
             )
         }
 
@@ -112,10 +112,20 @@ fun AppNavHost(
             )
         }
 
-        composable("waitingRoom") {
-            WaitingRoomScreen(
+        composable("waitingRoom/{lobbyId}") { backStackEntry ->
+            val lobbyId = backStackEntry.arguments?.getString("lobbyId")!!
+            val vm: LobbyViewModel = viewModel()
+
+            WaitingRoomRoute(
+                lobbyId = lobbyId,
+                viewModel = vm,
                 onBack = { navController.popBackStack() },
-                onSettings = { navController.navigate("settings") }
+                onSettings = { navController.navigate("settings") },
+                onTurnTimerChange = { },
+                onStartingCardsChange = { },
+                onStackEnabledChange = { },
+                onStartGame = { },
+                onInvite = { }
             )
         }
 

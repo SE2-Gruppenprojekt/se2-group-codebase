@@ -55,6 +55,7 @@ import at.aau.serg.android.ui.theme.ThemeState
 import androidx.compose.runtime.LaunchedEffect
 import at.aau.serg.android.ui.screens.lobby.LobbyViewModel
 import shared.models.lobby.domain.Lobby
+// import shared.models.lobby.response.LobbyResponse
 
 data class WaitingRoomPlayerUi(
     val userId: String,
