@@ -1,6 +1,7 @@
 package at.aau.serg.android.ui.screens.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Groups
@@ -90,154 +92,236 @@ fun HomeScreen(
     )
 
     val neutralButtonContentColor = if (darkMode) Color.White else Color(0xFF23314C)
-
+    val playerBarBackground = if (darkMode) Color(0xFF151D34) else Color(0xFFF3F6FC)
+    val playerBarBorder = if (darkMode) Color.White.copy(alpha = 0.05f) else Color(0xFFD5DDEA)
+    val playerIconBackground = if (darkMode) Color(0xFF27324A) else Color(0xFFE3E9F4)
+    val playerNameColor = if (darkMode) Color.White else Color(0xFF1E2847)
+    val playerLevelColor = if (darkMode) Color(0xFFFFD93D) else Color(0xFFC08A00)
+    val xpColor = if (darkMode) Color(0xFF9AA6C0) else Color(0xFF6A7692)
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(backgroundGradient)
-            .padding(horizontal = 28.dp, vertical = 32.dp),
+            .background(backgroundGradient),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Box(
+        Column(
             modifier = Modifier
-                .size(120.dp)
-                .clip(RoundedCornerShape(28.dp))
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFF4F8DFF),
-                            Color(0xFF9B42FF)
-                        )
-                    )
-                ),
-            contentAlignment = Alignment.Center
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(horizontal = 28.dp, vertical = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = Icons.Filled.ViewInAr,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(60.dp)
-            )
-        }
+            Spacer(modifier = Modifier.height(20.dp))
 
-        Spacer(modifier = Modifier.height(22.dp))
-
-        Text(
-            text = "RUMMIKUB",
-            style = MaterialTheme.typography.displaySmall,
-            fontWeight = FontWeight.Black,
-            color = titleColor
-        )
-
-        Text(
-            text = "Classic Tile Game",
-            style = MaterialTheme.typography.bodyLarge,
-            color = subtitleColor
-        )
-
-        Spacer(modifier = Modifier.height(28.dp))
-
-        if (state is LoadState.Loading) {
-            CircularProgressIndicator(color = if (darkMode) Color.White else Color(0xFF456EFF))
-            Spacer(modifier = Modifier.height(14.dp))
-        }
-
-        if (state is LoadState.Error) {
-            Text(
-                text = state.message,
-                color = errorColor,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(modifier = Modifier.height(14.dp))
-        }
-
-        HomeActionButton(
-            text = "Create Lobby",
-            onClick = onCreateLobby,
-            icon = { tint ->
-                Icon(
-                    imageVector = Icons.Filled.Person,
-                    contentDescription = null,
-                    tint = tint,
-                    modifier = Modifier.size(24.dp)
-                )
-            },
-            containerBrush = Brush.horizontalGradient(
-                colors = listOf(Color(0xFF4B68FF), Color(0xFF4B3FD4))
-            )
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        HomeActionButton(
-            text = "Browse Lobbies",
-            onClick = onBrowseLobbies,
-            icon = { tint ->
-                Icon(
-                    imageVector = Icons.Filled.Groups,
-                    contentDescription = null,
-                    tint = tint,
-                    modifier = Modifier.size(24.dp)
-                )
-            },
-            containerBrush = Brush.horizontalGradient(
-                colors = listOf(Color(0xFF9D3CFF), Color(0xFF7D23D7))
-            )
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        HomeActionButton(
-            text = "Waiting Room",
-            onClick = onWaitingRoom,
-            icon = { tint ->
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFF4F8DFF),
+                                Color(0xFF9B42FF)
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
                 Icon(
                     imageVector = Icons.Filled.ViewInAr,
                     contentDescription = null,
-                    tint = tint,
-                    modifier = Modifier.size(24.dp)
+                    tint = Color.White,
+                    modifier = Modifier.size(60.dp)
                 )
-            },
-            containerBrush = Brush.horizontalGradient(
-                colors = listOf(Color(0xFF4C59E8), Color(0xFF3154C8))
+            }
+
+            Spacer(modifier = Modifier.height(22.dp))
+
+            Text(
+                text = "RUMMIKUB",
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Black,
+                color = titleColor
             )
-        )
 
-        Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = "Classic Tile Game",
+                style = MaterialTheme.typography.bodyLarge,
+                color = subtitleColor
+            )
 
-        HomeActionButton(
-            text = "Settings",
-            onClick = onSettings,
-            icon = { tint ->
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    contentDescription = null,
-                    tint = tint,
-                    modifier = Modifier.size(22.dp)
+            Spacer(modifier = Modifier.height(28.dp))
+
+            if (state is LoadState.Loading) {
+                CircularProgressIndicator(color = if (darkMode) Color.White else Color(0xFF456EFF))
+                Spacer(modifier = Modifier.height(14.dp))
+            }
+
+            if (state is LoadState.Error) {
+                Text(
+                    text = state.message,
+                    color = errorColor,
+                    style = MaterialTheme.typography.bodyMedium
                 )
-            },
-            containerBrush = settingsBrush,
-            contentColor = neutralButtonContentColor
-        )
+                Spacer(modifier = Modifier.height(14.dp))
+            }
 
-        Spacer(modifier = Modifier.height(4.dp))
-
-        HomeActionButton(
-            text = "Leaderboard",
-            onClick = onShowLeaderboard,
-            icon = { tint ->
-                Icon(
-                    imageVector = Icons.Filled.EmojiEvents,
-                    contentDescription = null,
-                    tint = tint,
-                    modifier = Modifier.size(22.dp)
+            HomeActionButton(
+                text = "Create Lobby",
+                onClick = onCreateLobby,
+                icon = { tint ->
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = null,
+                        tint = tint,
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                containerBrush = Brush.horizontalGradient(
+                    colors = listOf(Color(0xFF4B68FF), Color(0xFF4B3FD4))
                 )
-            },
-            containerBrush = leaderboardBrush,
-            contentColor = neutralButtonContentColor
-        )
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            HomeActionButton(
+                text = "Browse Lobbies",
+                onClick = onBrowseLobbies,
+                icon = { tint ->
+                    Icon(
+                        imageVector = Icons.Filled.Groups,
+                        contentDescription = null,
+                        tint = tint,
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                containerBrush = Brush.horizontalGradient(
+                    colors = listOf(Color(0xFF9D3CFF), Color(0xFF7D23D7))
+                )
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            HomeActionButton(
+                text = "Waiting Room",
+                onClick = onWaitingRoom,
+                icon = { tint ->
+                    Icon(
+                        imageVector = Icons.Filled.ViewInAr,
+                        contentDescription = null,
+                        tint = tint,
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                containerBrush = Brush.horizontalGradient(
+                    colors = listOf(Color(0xFF4C59E8), Color(0xFF3154C8))
+                )
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            HomeActionButton(
+                text = "Settings",
+                onClick = onSettings,
+                icon = { tint ->
+                    Icon(
+                        imageVector = Icons.Filled.Settings,
+                        contentDescription = null,
+                        tint = tint,
+                        modifier = Modifier.size(22.dp)
+                    )
+                },
+                containerBrush = settingsBrush,
+                contentColor = neutralButtonContentColor
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            HomeActionButton(
+                text = "Leaderboard",
+                onClick = onShowLeaderboard,
+                icon = { tint ->
+                    Icon(
+                        imageVector = Icons.Filled.EmojiEvents,
+                        contentDescription = null,
+                        tint = tint,
+                        modifier = Modifier.size(22.dp)
+                    )
+                },
+                containerBrush = leaderboardBrush,
+                contentColor = neutralButtonContentColor
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp))
+                .background(playerBarBackground)
+                .border(
+                    width = 1.dp,
+                    color = playerBarBorder,
+                    shape = RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)
+                )
+                .padding(horizontal = 20.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(playerIconBackground),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = null,
+                        tint = if (darkMode) Color.White.copy(alpha = 0.92f) else Color(0xFF58657F),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(10.dp))
+
+                Column {
+                    Text(
+                        text = "Player123",
+                        color = playerNameColor,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "#482731",
+                        color = xpColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = "Level 12",
+                    color = playerLevelColor,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "850 XP",
+                    color = xpColor,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
     }
 }
 
