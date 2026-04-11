@@ -13,7 +13,6 @@ import at.se2group.backend.persistence.LobbyRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
-import java.util.UUID
 
 @Service
 @Transactional(readOnly = true)
@@ -38,7 +37,7 @@ class LobbyService(
         }
 
         val lobby = Lobby(
-            lobbyId = UUID.randomUUID().toString(),
+            lobbyId = (100000..999999).random().toString(),
             hostUserId = userId,
             players = listOf(
                 LobbyPlayer(
