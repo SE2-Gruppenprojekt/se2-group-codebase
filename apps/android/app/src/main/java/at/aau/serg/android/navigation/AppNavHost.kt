@@ -197,6 +197,9 @@ fun AppNavHost(
                 },
                 onSettings = {
                     navController.navigate("settings")
+                },
+                onBack = {
+                    navController.popBackStack()
                 }
             )
         }
