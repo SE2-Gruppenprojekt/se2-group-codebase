@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,7 +22,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Lock
@@ -42,6 +45,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -51,6 +55,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -75,6 +80,7 @@ fun NewLobbyScreen(
     val selectedColor = if (darkMode) Color(0xFF2A4D92) else Color(0xFFDCE7FF)
     val selectedBorder = Color(0xFF4B8CFF)
     val actionGreen = Color(0xFF22C55E)
+    val settingButtonColor = if (darkMode) Color(0xFF2A3552) else Color(0xFF2F3A57)
 
     // local form state
     var lobbyName by remember { mutableStateOf("Alex's Room") }
@@ -152,25 +158,23 @@ fun NewLobbyScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        SettingCard(cardColor) {
-            // lobby name input
-            OutlinedTextField(
-                value = lobbyName,
-                onValueChange = { lobbyName = it },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                shape = RoundedCornerShape(18.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = primaryText,
-                    unfocusedTextColor = primaryText,
-                    focusedBorderColor = selectedBorder,
-                    unfocusedBorderColor = cardBorder,
-                    focusedContainerColor = cardColor,
-                    unfocusedContainerColor = cardColor,
-                    cursorColor = selectedBorder
-                )
+        OutlinedTextField(
+            value = lobbyName,
+            onValueChange = { lobbyName = it },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyMedium,
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = primaryText,
+                unfocusedTextColor = primaryText,
+                focusedBorderColor = selectedBorder,
+                unfocusedBorderColor = cardBorder,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                cursorColor = selectedBorder
             )
-        }
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -193,7 +197,7 @@ fun NewLobbyScreen(
                     onClick = { maxPlayers = count },
                     modifier = Modifier
                         .weight(1f)
-                        .height(80.dp),
+                        .height(40.dp),
                     cardColor = cardColor,
                     selectedColor = selectedColor,
                     borderColor = cardBorder,
@@ -223,7 +227,7 @@ fun NewLobbyScreen(
                 onClick = { isPrivate = false },
                 modifier = Modifier
                     .weight(1f)
-                    .height(140.dp),
+                    .height(84.dp),
                 cardColor = cardColor,
                 selectedColor = selectedColor,
                 borderColor = cardBorder,
@@ -238,7 +242,7 @@ fun NewLobbyScreen(
                 onClick = { isPrivate = true },
                 modifier = Modifier
                     .weight(1f)
-                    .height(140.dp),
+                    .height(84.dp),
                 cardColor = cardColor,
                 selectedColor = selectedColor,
                 borderColor = cardBorder,
@@ -262,8 +266,10 @@ fun NewLobbyScreen(
             value = "${turnTimer}s",
             onMinus = { if (turnTimer > 10) turnTimer -= 10 },
             onPlus = { turnTimer += 10 },
+            modifier = Modifier.padding(bottom = 4.dp),
             cardColor = cardColor,
-            textColor = primaryText
+            textColor = primaryText,
+            buttonColor = settingButtonColor
         )
 
         NumericSettingRow(
@@ -272,8 +278,10 @@ fun NewLobbyScreen(
             value = startingTiles.toString(),
             onMinus = { if (startingTiles > 1) startingTiles -= 1 },
             onPlus = { startingTiles += 1 },
+            modifier = Modifier.padding(bottom = 4.dp),
             cardColor = cardColor,
-            textColor = primaryText
+            textColor = primaryText,
+            buttonColor = settingButtonColor
         )
 
         NumericSettingRow(
@@ -282,8 +290,10 @@ fun NewLobbyScreen(
             value = winScore.toString(),
             onMinus = { if (winScore > 100) winScore -= 100 },
             onPlus = { winScore += 100 },
+            modifier = Modifier.padding(bottom = 4.dp),
             cardColor = cardColor,
-            textColor = primaryText
+            textColor = primaryText,
+            buttonColor = settingButtonColor
         )
 
         ToggleSettingRow(
@@ -291,8 +301,10 @@ fun NewLobbyScreen(
             title = "Quick Mode",
             checked = quickMode,
             onCheckedChange = { quickMode = it },
+            modifier = Modifier.padding(bottom = 4.dp),
             cardColor = cardColor,
-            textColor = primaryText
+            textColor = primaryText,
+            switchColor = settingButtonColor
         )
 
         ToggleSettingRow(
@@ -300,8 +312,10 @@ fun NewLobbyScreen(
             title = "Voice Chat",
             checked = voiceChat,
             onCheckedChange = { voiceChat = it },
+            modifier = Modifier.padding(bottom = 4.dp),
             cardColor = cardColor,
-            textColor = primaryText
+            textColor = primaryText,
+            switchColor = settingButtonColor
         )
 
         // moved near other toggle settings
@@ -311,7 +325,8 @@ fun NewLobbyScreen(
             checked = ThemeState.isDarkMode.value,
             onCheckedChange = { ThemeState.isDarkMode.value = it },
             cardColor = cardColor,
-            textColor = primaryText
+            textColor = primaryText,
+            switchColor = settingButtonColor
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -334,14 +349,24 @@ fun NewLobbyScreen(
                 },
                 modifier = Modifier
                     .weight(1f)
-                    .height(58.dp),
-                shape = RoundedCornerShape(20.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = actionGreen),
-                contentPadding = PaddingValues(vertical = 18.dp)
+                    .height(56.dp),
+                shape = RoundedCornerShape(18.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4F8DFF),
+                    contentColor = Color.White
+                )
             ) {
-                Icon(Icons.Filled.Check, contentDescription = null)
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Create Lobby")
+                Text(
+                    text = "Create Lobby",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
             OutlinedButton(
@@ -352,7 +377,7 @@ fun NewLobbyScreen(
                 shape = RoundedCornerShape(20.dp),
                 contentPadding = PaddingValues(vertical = 18.dp)
             ) {
-                Icon(Icons.Filled.Close, contentDescription = "Cancel")
+                Icon(Icons.Filled.Cancel, contentDescription = "Cancel")
             }
         }
 
@@ -428,7 +453,7 @@ private fun SelectableBox(
             Text(
                 text = text,
                 color = textColor,
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -466,13 +491,15 @@ private fun LargeSelectableBox(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            icon()
-            Spacer(modifier = Modifier.height(10.dp))
+            Box(modifier = Modifier.size(18.dp), contentAlignment = Alignment.Center) {
+                icon()
+            }
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = title,
                 color = textColor,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
@@ -485,60 +512,83 @@ private fun NumericSettingRow(
     value: String,
     onMinus: () -> Unit,
     onPlus: () -> Unit,
+    modifier: Modifier = Modifier,
     cardColor: Color,
-    textColor: Color
+    textColor: Color,
+    buttonColor: Color
 ) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .padding(vertical = 2.dp),
         colors = CardDefaults.cardColors(containerColor = cardColor),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(16.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 18.dp),
+                .height(50.dp)
+                .padding(horizontal = 14.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                icon()
+                Box(modifier = Modifier.size(16.dp), contentAlignment = Alignment.Center) {
+                    icon()
+                }
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = title,
                     color = textColor,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Button(
                     onClick = onMinus,
-                    modifier = Modifier.size(44.dp),
-                    contentPadding = PaddingValues(0.dp)
+                    modifier = Modifier.size(28.dp),
+                    contentPadding = PaddingValues(0.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = buttonColor,
+                        contentColor = Color.White
+                    )
                 ) {
-                    Text("-")
+                    Text(
+                        "-",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(10.dp))
 
                 Text(
                     text = value,
                     color = textColor,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(10.dp))
 
                 Button(
                     onClick = onPlus,
-                    modifier = Modifier.size(44.dp),
-                    contentPadding = PaddingValues(0.dp)
+                    modifier = Modifier.size(28.dp),
+                    contentPadding = PaddingValues(0.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = buttonColor,
+                        contentColor = Color.White
+                    )
                 ) {
-                    Text("+")
+                    Text(
+                        "+",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
@@ -551,38 +601,51 @@ private fun ToggleSettingRow(
     title: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
     cardColor: Color,
-    textColor: Color
+    textColor: Color,
+    switchColor: Color
 ) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .padding(vertical = 2.dp),
         colors = CardDefaults.cardColors(containerColor = cardColor),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(16.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 18.dp),
+                .height(50.dp)
+                .padding(horizontal = 14.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                icon()
+                Box(modifier = Modifier.size(16.dp), contentAlignment = Alignment.Center) {
+                    icon()
+                }
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = title,
                     color = textColor,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
 
-            // simple reusable switch row
             Switch(
                 checked = checked,
-                onCheckedChange = onCheckedChange
+                onCheckedChange = onCheckedChange,
+                modifier = Modifier.scale(0.78f),
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = switchColor,
+                    uncheckedThumbColor = Color.White.copy(alpha = 0.9f),
+                    uncheckedTrackColor = switchColor.copy(alpha = 0.55f),
+                    uncheckedBorderColor = Color.Transparent,
+                    checkedBorderColor = Color.Transparent
+                )
             )
         }
     }
