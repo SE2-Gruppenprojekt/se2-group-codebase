@@ -118,6 +118,7 @@ fun AppNavHost(
             NewLobbyScreen(
                 onBack = { navController.popBackStack() },
                 onSettings = { navController.navigate("settings") },
+                isLoading = lobbyLoadState is LoadState.Loading,
                 onCreateLobby = { maxPlayers, isPrivate ->
                     lobbyVM.createLobby(
                         displayName = "Host",

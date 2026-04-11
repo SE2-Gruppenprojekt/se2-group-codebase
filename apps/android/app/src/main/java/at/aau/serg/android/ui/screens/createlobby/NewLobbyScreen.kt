@@ -63,6 +63,7 @@ import at.aau.serg.android.ui.theme.ThemeState
 fun NewLobbyScreen(
     onBack: () -> Unit,
     onSettings: () -> Unit,
+    isLoading: Boolean = false,
     onCreateLobby: (maxPlayers: Int, isPrivate: Boolean) -> Unit
 ) {
     val darkMode = ThemeState.isDarkMode.value
@@ -364,6 +365,7 @@ fun NewLobbyScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
+            enabled = !isLoading,
             shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF9D3CFF),
@@ -371,10 +373,18 @@ fun NewLobbyScreen(
             )
         ) {
             Text(
-                text = "Create Lobby",
+                text = if (isLoading) "Loading" else "Create Lobby",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
+            if (!isLoading) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
