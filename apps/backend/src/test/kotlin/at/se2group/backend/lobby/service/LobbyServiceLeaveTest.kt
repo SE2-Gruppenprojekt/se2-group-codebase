@@ -5,8 +5,6 @@ import at.se2group.backend.domain.LobbyStatus
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
 import at.se2group.backend.service.LobbyBroadcastService
-import at.se2group.backend.dto.UpdateLobbySettingsRequest
-import at.se2group.backend.domain.Lobby
 import at.se2group.backend.service.LobbyService
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
@@ -16,6 +14,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.ArgumentCaptor
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -62,9 +61,23 @@ class LobbyServiceLeaveTest {
         `when`(lobbyRepository.save(any()))
             .thenAnswer {it.arguments[0] as LobbyEntity}
 
-        lobbyService.leaveLobby("lobby-1", "player-2")
+        val result = lobbyService.leaveLobby("lobby-1", "player-2")
 
-        verify(lobbyRepository).save(any())
+        assertEquals("lobby-1", result!!.lobbyId)
+        assertEquals("host-1", result.hostUserId)
+        assertEquals(LobbyStatus.OPEN, result.status)
+        assertEquals(1, result.players.size)
+        assertEquals("host-1", result.players[0].userId)
+
+        val captor = ArgumentCaptor.forClass(LobbyEntity::class.java)
+        verify(lobbyRepository).save(captor.capture())
+        val saved = captor.value
+        assertEquals("lobby-1", saved.lobbyId)
+        assertEquals("host-1", saved.hostUserId)
+        assertEquals(1, saved.players.size)
+        assertEquals("host-1", saved.players[0].userId)
+
+
         verify(lobbyBroadcastService).broadcastLobbyUpdated(any())
     }
 
@@ -146,9 +159,20 @@ class LobbyServiceLeaveTest {
 
         val result = lobbyService.leaveLobby("lobby-1", "host-1")
 
+        assertEquals("lobby-1", result!!.lobbyId)
+        assertEquals(LobbyStatus.OPEN, result.status)
+        assertEquals(1, result.players.size)
+        assertEquals("player-2", result.players[0].userId)
 
-        assertEquals("player-2", result!!.hostUserId)
-        verify(lobbyRepository).save(any())
+        val captor = ArgumentCaptor.forClass(LobbyEntity::class.java)
+        verify(lobbyRepository).save(captor.capture())
+
+        val saved = captor.value
+        assertEquals("lobby-1", saved.lobbyId)
+        assertEquals("player-2", saved.hostUserId)
+        assertEquals(1, saved.players.size)
+        assertEquals("player-2", saved.players[0].userId)
+
         verify(lobbyBroadcastService).broadcastLobbyUpdated(any())
     }
 
