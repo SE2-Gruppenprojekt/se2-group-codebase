@@ -23,9 +23,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Public
@@ -33,6 +31,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -74,8 +73,9 @@ fun NewLobbyScreen(
     val cardColor = MaterialTheme.colorScheme.surface
     val cardBorder = if (darkMode) Color(0xFF2A3558) else Color(0xFFD8DEF0)
     val primaryText = MaterialTheme.colorScheme.onSurface
-    val selectedColor = if (darkMode) Color(0xFF1F356A) else Color(0xFFDCE7FF)
-    val selectedBorder = if (darkMode) Color(0xFF3E73E8) else Color(0xFF4B8CFF)
+    val selectedColor = if (darkMode) Color(0xFF2A3552) else Color(0xFF2F3A57)
+    val selectedBorder = if (darkMode) Color(0xFF4A5676) else Color(0xFF47536F)
+    val selectedContentColor = if (darkMode) Color(0xFF1E2430) else Color.White
     val actionGreen = Color(0xFF22C55E)
     val settingButtonColor = if (darkMode) Color(0xFF2A3552) else Color(0xFF2F3A57)
     val secondaryText = if (darkMode) {
@@ -92,6 +92,7 @@ fun NewLobbyScreen(
     var startingTiles by remember { mutableIntStateOf(14) }
     var winScore by remember { mutableIntStateOf(500) }
     var quickMode by remember { mutableStateOf(false) }
+    var requireInitialMeld by remember { mutableStateOf(true) }
 
     Column(
         modifier = Modifier
@@ -204,7 +205,7 @@ fun NewLobbyScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         SectionTitle(
-            icon = { Icon(Icons.Filled.Groups, null, tint = Color(0xFF5FE07A)) },
+            icon = { Icon(Icons.Filled.Groups, null, tint = Color(0xFF9D3CFF)) },
             title = "Maximum Players"
         )
 
@@ -227,7 +228,8 @@ fun NewLobbyScreen(
                     selectedColor = selectedColor,
                     borderColor = cardBorder,
                     selectedBorder = selectedBorder,
-                    textColor = primaryText
+                    textColor = primaryText,
+                    selectedTextColor = selectedContentColor
                 )
             }
         }
@@ -235,7 +237,7 @@ fun NewLobbyScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         SectionTitle(
-            icon = { Icon(Icons.Filled.Lock, null, tint = Color(0xFFC084FC)) },
+            icon = { Icon(Icons.Filled.Lock, null, tint = Color(0xFF9D3CFF)) },
             title = "Privacy"
         )
 
@@ -247,46 +249,48 @@ fun NewLobbyScreen(
         ) {
             LargeSelectableBox(
                 title = "Public",
-                icon = { Icon(Icons.Filled.Public, null, tint = primaryText) },
+                icon = { tint -> Icon(Icons.Filled.Public, null, tint = tint) },
                 selected = !isPrivate,
                 onClick = { isPrivate = false },
                 modifier = Modifier
                     .weight(1f)
-                    .height(84.dp),
+                    .height(72.dp),
                 cardColor = cardColor,
                 selectedColor = selectedColor,
                 borderColor = cardBorder,
                 selectedBorder = selectedBorder,
-                textColor = primaryText
+                textColor = primaryText,
+                selectedTextColor = selectedContentColor
             )
 
             LargeSelectableBox(
                 title = "Private",
-                icon = { Icon(Icons.Filled.Lock, null, tint = primaryText) },
+                icon = { tint -> Icon(Icons.Filled.Lock, null, tint = tint) },
                 selected = isPrivate,
                 onClick = { isPrivate = true },
                 modifier = Modifier
                     .weight(1f)
-                    .height(84.dp),
+                    .height(72.dp),
                 cardColor = cardColor,
                 selectedColor = selectedColor,
                 borderColor = cardBorder,
                 selectedBorder = selectedBorder,
-                textColor = primaryText
+                textColor = primaryText,
+                selectedTextColor = selectedContentColor
             )
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
         SectionTitle(
-            icon = { Icon(Icons.Filled.Timer, null, tint = Color(0xFFFFC857)) },
+            icon = { Icon(Icons.Filled.Timer, null, tint = Color(0xFF9D3CFF)) },
             title = "Game Settings"
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         NumericSettingRow(
-            icon = { Icon(Icons.Filled.Timer, null, tint = Color(0xFF60A5FA)) },
+            icon = { Icon(Icons.Filled.Timer, null, tint = primaryText) },
             title = "Turn Timer",
             value = "${turnTimer}s",
             onMinus = { if (turnTimer > 10) turnTimer -= 10 },
@@ -298,7 +302,7 @@ fun NewLobbyScreen(
         )
 
         NumericSettingRow(
-            icon = { Icon(Icons.Filled.Groups, null, tint = Color(0xFF4ADE80)) },
+            icon = { Icon(Icons.Filled.Groups, null, tint = primaryText) },
             title = "Starting Tiles",
             value = startingTiles.toString(),
             onMinus = { if (startingTiles > 1) startingTiles -= 1 },
@@ -310,7 +314,7 @@ fun NewLobbyScreen(
         )
 
         NumericSettingRow(
-            icon = { Icon(Icons.Filled.Star, null, tint = Color(0xFFFACC15)) },
+            icon = { Icon(Icons.Filled.Star, null, tint = primaryText) },
             title = "Win Score",
             value = winScore.toString(),
             onMinus = { if (winScore > 100) winScore -= 100 },
@@ -322,7 +326,7 @@ fun NewLobbyScreen(
         )
 
         ToggleSettingRow(
-            icon = { Icon(Icons.Filled.Speed, null, tint = Color(0xFFFB923C)) },
+            icon = { Icon(Icons.Filled.Speed, null, tint = primaryText) },
             title = "Quick Mode",
             checked = quickMode,
             onCheckedChange = { quickMode = it },
@@ -332,56 +336,51 @@ fun NewLobbyScreen(
             switchColor = settingButtonColor
         )
 
+        ToggleSettingRow(
+            icon = { Icon(Icons.Filled.Visibility, null, tint = primaryText) },
+            title = "Require Initial Meld",
+            checked = requireInitialMeld,
+            onCheckedChange = { requireInitialMeld = it },
+            modifier = Modifier.padding(bottom = 4.dp),
+            cardColor = cardColor,
+            textColor = primaryText,
+            switchColor = settingButtonColor
+        )
+
         Spacer(modifier = Modifier.height(24.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        Button(
+            onClick = {
+                // store selected values for waiting room
+                LobbyUiState.lobbyName.value = "New Lobby"
+                LobbyUiState.maxPlayers.intValue = maxPlayers
+                LobbyUiState.turnTimer.intValue = turnTimer
+                LobbyUiState.startingCards.intValue = startingTiles
+                LobbyUiState.stackEnabled.value = quickMode
+                LobbyUiState.roomCode.value = ""
+
+                onCreateLobby("New Lobby")
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(18.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF9D3CFF),
+                contentColor = Color.White
+            )
         ) {
-            Button(
-                onClick = {
-                    // store selected values for waiting room
-                    LobbyUiState.lobbyName.value = "New Lobby"
-                    LobbyUiState.maxPlayers.intValue = maxPlayers
-                    LobbyUiState.turnTimer.intValue = turnTimer
-                    LobbyUiState.startingCards.intValue = startingTiles
-                    LobbyUiState.stackEnabled.value = quickMode
-                    LobbyUiState.roomCode.value = ""
-
-                    onCreateLobby("New Lobby")
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    .height(56.dp),
-                shape = RoundedCornerShape(18.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4F8DFF),
-                    contentColor = Color.White
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Create Lobby",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            OutlinedButton(
-                onClick = onBack,
-                modifier = Modifier
-                    .width(72.dp)
-                    .height(58.dp),
-                shape = RoundedCornerShape(20.dp),
-                contentPadding = PaddingValues(vertical = 18.dp)
-            ) {
-                Icon(Icons.Filled.Cancel, contentDescription = "Cancel")
-            }
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Create Lobby",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -433,7 +432,8 @@ private fun SelectableBox(
     selectedColor: Color,
     borderColor: Color,
     selectedBorder: Color,
-    textColor: Color
+    textColor: Color,
+    selectedTextColor: Color
 ) {
     Card(
         modifier = modifier
@@ -455,7 +455,7 @@ private fun SelectableBox(
         ) {
             Text(
                 text = text,
-                color = textColor,
+                color = if (selected) selectedTextColor else textColor,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold
             )
@@ -466,7 +466,7 @@ private fun SelectableBox(
 @Composable
 private fun LargeSelectableBox(
     title: String,
-    icon: @Composable () -> Unit,
+    icon: @Composable (Color) -> Unit,
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -474,7 +474,8 @@ private fun LargeSelectableBox(
     selectedColor: Color,
     borderColor: Color,
     selectedBorder: Color,
-    textColor: Color
+    textColor: Color,
+    selectedTextColor: Color
 ) {
     Card(
         modifier = modifier
@@ -494,14 +495,15 @@ private fun LargeSelectableBox(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(modifier = Modifier.size(18.dp), contentAlignment = Alignment.Center) {
-                icon()
+            val contentColor = if (selected) selectedTextColor else textColor
+            Box(modifier = Modifier.size(16.dp), contentAlignment = Alignment.Center) {
+                icon(contentColor)
             }
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = title,
-                color = textColor,
-                style = MaterialTheme.typography.titleSmall,
+                color = contentColor,
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold
             )
         }

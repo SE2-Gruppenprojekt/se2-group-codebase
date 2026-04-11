@@ -461,7 +461,7 @@ fun WaitingRoomScreen(
                         .height(56.dp),
                     shape = RoundedCornerShape(18.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4F8DFF),
+                        containerColor = Color(0xFF9D3CFF),
                         contentColor = Color.White
                     )
                 ) {
