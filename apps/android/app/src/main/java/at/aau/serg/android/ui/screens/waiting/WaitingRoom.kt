@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -41,9 +42,6 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -52,24 +50,38 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import kotlin.random.Random
+import at.aau.serg.android.ui.lobby.LobbyUiState
 import at.aau.serg.android.ui.theme.ThemeState
-import androidx.compose.foundation.layout.*
+import kotlin.random.Random
 
 @Composable
 fun WaitingRoomScreen(
     onBack: () -> Unit,
     onSettings: () -> Unit
 ) {
-    var turnTimer by remember { mutableStateOf(60) }
-    var startingCards by remember { mutableStateOf(7) }
-    var stackEnabled by remember { mutableStateOf(true) }
-
+    // context for clipboard and toast
     val context = LocalContext.current
-    val roomCode = remember { generateRoomCode() }
+
+    // scroll support for smaller screens
     val scrollState = rememberScrollState()
+
+    // current theme mode
     val darkMode = ThemeState.isDarkMode.value
 
+    // shared lobby state
+    val lobbyName by LobbyUiState.lobbyName
+    val maxPlayers by LobbyUiState.maxPlayers
+    val turnTimer by LobbyUiState.turnTimer
+    val startingCards by LobbyUiState.startingCards
+    val stackEnabled by LobbyUiState.stackEnabled
+
+    // generate room code once if missing
+    if (LobbyUiState.roomCode.value.isBlank()) {
+        LobbyUiState.roomCode.value = generateRoomCode()
+    }
+    val roomCode by LobbyUiState.roomCode
+
+    // background gradient colors
     val gradientTop = if (darkMode) {
         MaterialTheme.colorScheme.background
     } else {
@@ -82,6 +94,7 @@ fun WaitingRoomScreen(
         Color(0xFFEAEFFF)
     }
 
+    // text and card colors
     val cardColor = MaterialTheme.colorScheme.surface
     val primaryTextColor = MaterialTheme.colorScheme.onSurface
     val secondaryTextColor = if (darkMode) {
@@ -90,6 +103,7 @@ fun WaitingRoomScreen(
         Color(0xFF6B7280)
     }
 
+    // first player highlight
     val activePlayerBackground = if (darkMode) {
         Color(0xFF1F356A)
     } else {
@@ -102,30 +116,41 @@ fun WaitingRoomScreen(
         Color(0xFF4C84FF)
     }
 
+    // second player highlight
+    val secondPlayerBackground = if (darkMode) {
+        Color(0xFF1E3A2D)
+    } else {
+        Color(0xFFEAFBF1)
+    }
+
+    val secondPlayerBorder = if (darkMode) {
+        Color(0xFF2BC46D)
+    } else {
+        Color(0xFF20C76F)
+    }
+
+    // placeholder player colors
     val waitingBackground = if (darkMode) {
         MaterialTheme.colorScheme.surface
     } else {
         Color.White
     }
 
-    val playersHeaderBackground = if (darkMode) {
-        Color.White.copy(alpha = 0.04f)
-    } else {
-        Color(0xFF284B8F).copy(alpha = 0.05f)
-    }
-
+    // action button color
     val inviteButtonColor = if (darkMode) {
         Color(0xFF2A3552)
     } else {
         Color(0xFF2F3A57)
     }
 
+    // settings group background
     val settingsSectionBackground = if (darkMode) {
         Color.White.copy(alpha = 0.06f)
     } else {
         Color.Black.copy(alpha = 0.04f)
     }
 
+    // root content
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -137,6 +162,7 @@ fun WaitingRoomScreen(
             .verticalScroll(scrollState)
             .padding(10.dp)
     ) {
+        // top bar
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -163,7 +189,7 @@ fun WaitingRoomScreen(
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
-                        text = "Waiting Room",
+                        text = lobbyName,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.78f),
                         style = MaterialTheme.typography.labelSmall
                     )
@@ -185,6 +211,7 @@ fun WaitingRoomScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
+        // room info card
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -218,6 +245,7 @@ fun WaitingRoomScreen(
 
                         Spacer(modifier = Modifier.width(6.dp))
 
+                        // copy room code
                         IconButton(
                             modifier = Modifier.size(28.dp),
                             onClick = {
@@ -251,7 +279,7 @@ fun WaitingRoomScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "4/8",
+                        text = "2/$maxPlayers",
                         color = primaryTextColor,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
@@ -262,6 +290,7 @@ fun WaitingRoomScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // player list header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -284,6 +313,7 @@ fun WaitingRoomScreen(
 
         Spacer(modifier = Modifier.height(6.dp))
 
+        // host player
         PlayerItem(
             name = "You",
             subtitle = "Level 24",
@@ -296,40 +326,36 @@ fun WaitingRoomScreen(
             secondaryTextColor = secondaryTextColor
         )
 
+        // second joined player
         PlayerItem(
             name = "Alex",
             subtitle = "Level 18",
             isHost = false,
             isJoined = true,
             isPlaceholder = false,
-            borderColor = activePlayerBorder,
-            backgroundColor = activePlayerBackground,
+            borderColor = secondPlayerBorder,
+            backgroundColor = secondPlayerBackground,
             primaryTextColor = primaryTextColor,
             secondaryTextColor = secondaryTextColor
         )
 
-        PlayerItem(
-            name = "Waiting for player...",
-            subtitle = "",
-            isPlaceholder = true,
-            borderColor = if (darkMode) Color(0xFF3A3F4B) else Color(0xFFD1D5DB),
-            backgroundColor = waitingBackground,
-            primaryTextColor = if (darkMode) Color(0xFF727887) else Color(0xFF9AA3B2),
-            secondaryTextColor = if (darkMode) Color(0xFF5E6573) else Color(0xFFB2BAC8)
-        )
-
-        PlayerItem(
-            name = "Waiting for player...",
-            subtitle = "",
-            isPlaceholder = true,
-            borderColor = if (darkMode) Color(0xFF3A3F4B) else Color(0xFFD1D5DB),
-            backgroundColor = waitingBackground,
-            primaryTextColor = if (darkMode) Color(0xFF727887) else Color(0xFF9AA3B2),
-            secondaryTextColor = if (darkMode) Color(0xFF5E6573) else Color(0xFFB2BAC8)
-        )
+        // remaining placeholder slots
+        val placeholderCount = (maxPlayers - 2).coerceAtLeast(0)
+        repeat(placeholderCount) {
+            PlayerItem(
+                name = "Waiting for player...",
+                subtitle = "",
+                isPlaceholder = true,
+                borderColor = if (darkMode) Color(0xFF3A3F4B) else Color(0xFFD1D5DB),
+                backgroundColor = waitingBackground,
+                primaryTextColor = if (darkMode) Color(0xFF727887) else Color(0xFF9AA3B2),
+                secondaryTextColor = if (darkMode) Color(0xFF5E6573) else Color(0xFFB2BAC8)
+            )
+        }
 
         Spacer(modifier = Modifier.height(18.dp))
 
+        // settings panel
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -348,26 +374,41 @@ fun WaitingRoomScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // turn timer control
             SettingRow(
                 title = "Turn Timer",
                 value = "${turnTimer}s",
-                onMinus = { if (turnTimer > 10) turnTimer -= 10 },
-                onPlus = { turnTimer += 10 },
+                onMinus = {
+                    if (LobbyUiState.turnTimer.intValue > 10) {
+                        LobbyUiState.turnTimer.intValue -= 10
+                    }
+                },
+                onPlus = {
+                    LobbyUiState.turnTimer.intValue += 10
+                },
                 cardColor = cardColor,
                 primaryTextColor = primaryTextColor,
                 buttonColor = inviteButtonColor
             )
 
+            // starting cards control
             SettingRow(
                 title = "Starting Cards",
                 value = "$startingCards",
-                onMinus = { if (startingCards > 1) startingCards -= 1 },
-                onPlus = { startingCards += 1 },
+                onMinus = {
+                    if (LobbyUiState.startingCards.intValue > 1) {
+                        LobbyUiState.startingCards.intValue -= 1
+                    }
+                },
+                onPlus = {
+                    LobbyUiState.startingCards.intValue += 1
+                },
                 cardColor = cardColor,
                 primaryTextColor = primaryTextColor,
                 buttonColor = inviteButtonColor
             )
 
+            // stack toggle
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -392,7 +433,7 @@ fun WaitingRoomScreen(
 
                     Switch(
                         checked = stackEnabled,
-                        onCheckedChange = { stackEnabled = it },
+                        onCheckedChange = { LobbyUiState.stackEnabled.value = it },
                         modifier = Modifier.scale(0.78f),
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
@@ -408,6 +449,7 @@ fun WaitingRoomScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
+            // bottom action buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -419,7 +461,7 @@ fun WaitingRoomScreen(
                         .height(56.dp),
                     shape = RoundedCornerShape(18.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4F8DFF),
+                        containerColor = Color(0xFF9D3CFF),
                         contentColor = Color.White
                     )
                 ) {
@@ -478,18 +520,21 @@ fun PlayerItem(
     primaryTextColor: Color,
     secondaryTextColor: Color
 ) {
-    val displayName = if (isHost) "$name (Host)" else name
+    // avatar background depends on placeholder state
     val avatarBackground = if (isPlaceholder) {
         secondaryTextColor.copy(alpha = 0.16f)
     } else {
         Color(0xFF4F8DFF)
     }
+
+    // avatar icon tint
     val avatarIconTint = if (isPlaceholder) {
         secondaryTextColor
     } else {
         Color.White
     }
 
+    // player row card
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -508,6 +553,7 @@ fun PlayerItem(
                 .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // avatar
             Box(
                 modifier = Modifier
                     .size(44.dp)
@@ -527,6 +573,7 @@ fun PlayerItem(
 
             Spacer(modifier = Modifier.width(12.dp))
 
+            // player text content
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -535,11 +582,16 @@ fun PlayerItem(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = displayName,
+                        text = name,
                         color = primaryTextColor,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
+
+                    // host indicator
+                    if (isHost) {
+                        HostBadge()
+                    }
                 }
 
                 if (subtitle.isNotBlank()) {
@@ -552,32 +604,48 @@ fun PlayerItem(
                 }
             }
 
+            // joined checkmark
             if (isJoined) {
                 Spacer(modifier = Modifier.width(10.dp))
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                Box(
+                    modifier = Modifier
+                        .size(22.dp)
+                        .background(
+                            color = Color(0xFF2DBE60),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(22.dp)
-                            .background(
-                                color = Color(0xFF2DBE60),
-                                shape = CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Check,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(12.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(12.dp)
+                    )
                 }
             }
         }
+    }
+}
+
+@Composable
+fun HostBadge() {
+    // small host label
+    Box(
+        modifier = Modifier
+            .background(
+                color = Color(0xFF4F8DFF).copy(alpha = 0.18f),
+                shape = RoundedCornerShape(10.dp)
+            )
+            .padding(horizontal = 8.dp, vertical = 3.dp)
+    ) {
+        Text(
+            text = "HOST",
+            color = Color(0xFF4F8DFF),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
@@ -591,6 +659,7 @@ fun SettingRow(
     primaryTextColor: Color,
     buttonColor: Color
 ) {
+    // reusable numeric settings row
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -615,6 +684,7 @@ fun SettingRow(
                 fontWeight = FontWeight.SemiBold
             )
 
+            // minus/value/plus controls
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -668,7 +738,8 @@ fun SettingRow(
 }
 
 private fun generateRoomCode(length: Int = 6): String {
-    val chars = "ABCgenerateRoomCodeDEFGHJKLMNPQRSTUVWXYZ23456789"
+    // exclude confusing characters
+    val chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
     return (1..length)
         .map { chars[Random.nextInt(chars.length)] }
         .joinToString("")

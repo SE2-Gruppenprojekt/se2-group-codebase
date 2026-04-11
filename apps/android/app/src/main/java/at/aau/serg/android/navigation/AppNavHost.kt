@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import at.aau.serg.android.ui.screens.browselobbies.BrowseLobbiesScreen
 import at.aau.serg.android.ui.screens.createlobby.CreateLobbyScreen
+import at.aau.serg.android.ui.screens.createlobby.NewLobbyScreen
 import at.aau.serg.android.ui.screens.home.HomeScreen
 import at.aau.serg.android.ui.screens.leaderboard.LeaderboardScreen
 import at.aau.serg.android.ui.screens.leaderboard.LeaderboardViewModel
@@ -45,6 +46,7 @@ fun AppNavHost(
             HomeScreen(
                 state = state,
                 onCreateLobby = {
+                    // create lobby directly from backend
                     lobbyVM.createLobby(
                         onSuccess = { lobby ->
                             // Navigate with ONLY the lobbyId
@@ -61,8 +63,8 @@ fun AppNavHost(
                     )
                 },
                 onSettings = { navController.navigate("settings") },
-
-                onWaitingRoom = { navController.navigate("waitingRoom") }
+                onWaitingRoom = { navController.navigate("waitingRoom") },
+                onNewLobbyScreen = { navController.navigate("createLobbyFancy") }
             )
         }
 
@@ -92,6 +94,7 @@ fun AppNavHost(
             )
         }
 
+        // simple create lobby screen
         composable("createLobby") {
             CreateLobbyScreen(
                 onBack = { navController.popBackStack() },
@@ -102,6 +105,18 @@ fun AppNavHost(
             )
         }
 
+        // fancy create lobby screen
+        composable("createLobbyFancy") {
+            NewLobbyScreen(
+                onBack = { navController.popBackStack() },
+                onSettings = { navController.navigate("settings") },
+                onCreateLobby = {
+                    navController.navigate("waitingRoom")
+                }
+            )
+        }
+
+        // browse lobbies screen
         composable("browseLobbies") {
             BrowseLobbiesScreen(
                 lobbies = listOf("Lobby A", "Lobby B", "Lobby C"), // dummy data
@@ -112,6 +127,7 @@ fun AppNavHost(
             )
         }
 
+        // waiting room screen
         composable("waitingRoom") {
             WaitingRoomScreen(
                 onBack = { navController.popBackStack() },
@@ -119,6 +135,7 @@ fun AppNavHost(
             )
         }
 
+        // settings screen
         composable("settings") {
             SettingsScreen(
                 onBack = { navController.popBackStack() }
