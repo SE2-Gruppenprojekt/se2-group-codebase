@@ -109,6 +109,7 @@ fun AppNavHost(
         composable("createLobbyFancy") {
             NewLobbyScreen(
                 onBack = { navController.popBackStack() },
+                onSettings = { navController.navigate("settings") },
                 onCreateLobby = {
                     navController.navigate("waitingRoom")
                 }

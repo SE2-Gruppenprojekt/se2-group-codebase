@@ -22,12 +22,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Timer
@@ -61,6 +61,7 @@ import at.aau.serg.android.ui.theme.ThemeState
 @Composable
 fun NewLobbyScreen(
     onBack: () -> Unit,
+    onSettings: () -> Unit,
     onCreateLobby: (String) -> Unit
 ) {
     val darkMode = ThemeState.isDarkMode.value
@@ -99,42 +100,50 @@ fun NewLobbyScreen(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.size(32.dp)
+                ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = primaryText
+                        tint = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.size(16.dp)
                     )
                 }
 
                 Column {
                     Text(
                         text = "RUMMIKUB",
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF7C8CFF)
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
                         text = "Create New Lobby",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = primaryText
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.78f)
                     )
                 }
             }
 
-            IconButton(onClick = onBack) {
+            IconButton(
+                onClick = onSettings,
+                modifier = Modifier.size(32.dp)
+            ) {
                 Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = "Close",
-                    tint = primaryText
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = "Settings",
+                    tint = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
         SectionTitle(
             icon = { Icon(Icons.Filled.Groups, null, tint = Color(0xFF7C8CFF)) },
@@ -357,13 +366,15 @@ private fun SectionTitle(
     title: String
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        icon()
-        Spacer(modifier = Modifier.width(8.dp))
+        Box(modifier = Modifier.size(16.dp), contentAlignment = Alignment.Center) {
+            icon()
+        }
+        Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = title,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.88f)
         )
     }
 }
