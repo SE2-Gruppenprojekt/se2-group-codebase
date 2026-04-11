@@ -22,13 +22,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
@@ -42,8 +41,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -71,26 +68,30 @@ fun NewLobbyScreen(
 ) {
     val darkMode = ThemeState.isDarkMode.value
 
-    // theme-aware colors
-    val bgTop = if (darkMode) Color(0xFF24103F) else Color(0xFFF4F6FF)
-    val bgBottom = if (darkMode) Color(0xFF0C1430) else Color(0xFFE9EEFF)
-    val cardColor = if (darkMode) Color(0xFF18213D) else MaterialTheme.colorScheme.surface
+    // align dark mode with waiting room styling
+    val bgTop = if (darkMode) MaterialTheme.colorScheme.background else Color(0xFFF5F7FB)
+    val bgBottom = if (darkMode) MaterialTheme.colorScheme.surface else Color(0xFFEAEFFF)
+    val cardColor = MaterialTheme.colorScheme.surface
     val cardBorder = if (darkMode) Color(0xFF2A3558) else Color(0xFFD8DEF0)
-    val primaryText = MaterialTheme.colorScheme.onBackground
-    val selectedColor = if (darkMode) Color(0xFF2A4D92) else Color(0xFFDCE7FF)
-    val selectedBorder = Color(0xFF4B8CFF)
+    val primaryText = MaterialTheme.colorScheme.onSurface
+    val selectedColor = if (darkMode) Color(0xFF1F356A) else Color(0xFFDCE7FF)
+    val selectedBorder = if (darkMode) Color(0xFF3E73E8) else Color(0xFF4B8CFF)
     val actionGreen = Color(0xFF22C55E)
     val settingButtonColor = if (darkMode) Color(0xFF2A3552) else Color(0xFF2F3A57)
+    val secondaryText = if (darkMode) {
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+    } else {
+        Color(0xFF6B7280)
+    }
+    val roomCode = remember { "XK7P2M" }
 
     // local form state
-    var lobbyName by remember { mutableStateOf("Alex's Room") }
     var maxPlayers by remember { mutableIntStateOf(6) }
     var isPrivate by remember { mutableStateOf(false) }
     var turnTimer by remember { mutableIntStateOf(60) }
     var startingTiles by remember { mutableIntStateOf(14) }
     var winScore by remember { mutableIntStateOf(500) }
     var quickMode by remember { mutableStateOf(false) }
-    var voiceChat by remember { mutableStateOf(true) }
 
     Column(
         modifier = Modifier
@@ -151,30 +152,54 @@ fun NewLobbyScreen(
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        SectionTitle(
-            icon = { Icon(Icons.Filled.Groups, null, tint = Color(0xFF7C8CFF)) },
-            title = "Lobby Name"
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = lobbyName,
-            onValueChange = { lobbyName = it },
+        Card(
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            textStyle = MaterialTheme.typography.bodyMedium,
-            shape = RoundedCornerShape(16.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = primaryText,
-                unfocusedTextColor = primaryText,
-                focusedBorderColor = selectedBorder,
-                unfocusedBorderColor = cardBorder,
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                cursorColor = selectedBorder
-            )
-        )
+            colors = CardDefaults.cardColors(
+                containerColor = cardColor
+            ),
+            shape = RoundedCornerShape(20.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "#  ROOM CODE",
+                        color = secondaryText,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = roomCode,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = primaryText,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(modifier = Modifier.width(6.dp))
+
+                        IconButton(
+                            onClick = { },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.ContentCopy,
+                                contentDescription = "Copy Room Code",
+                                tint = primaryText,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -307,28 +332,6 @@ fun NewLobbyScreen(
             switchColor = settingButtonColor
         )
 
-        ToggleSettingRow(
-            icon = { Icon(Icons.Filled.Mic, null, tint = Color(0xFFC084FC)) },
-            title = "Voice Chat",
-            checked = voiceChat,
-            onCheckedChange = { voiceChat = it },
-            modifier = Modifier.padding(bottom = 4.dp),
-            cardColor = cardColor,
-            textColor = primaryText,
-            switchColor = settingButtonColor
-        )
-
-        // moved near other toggle settings
-        ToggleSettingRow(
-            icon = { Icon(Icons.Filled.DarkMode, null, tint = Color(0xFF7C8CFF)) },
-            title = if (darkMode) "Dark Mode" else "Light Mode",
-            checked = ThemeState.isDarkMode.value,
-            onCheckedChange = { ThemeState.isDarkMode.value = it },
-            cardColor = cardColor,
-            textColor = primaryText,
-            switchColor = settingButtonColor
-        )
-
         Spacer(modifier = Modifier.height(24.dp))
 
         Row(
@@ -338,14 +341,14 @@ fun NewLobbyScreen(
             Button(
                 onClick = {
                     // store selected values for waiting room
-                    LobbyUiState.lobbyName.value = lobbyName
+                    LobbyUiState.lobbyName.value = "New Lobby"
                     LobbyUiState.maxPlayers.intValue = maxPlayers
                     LobbyUiState.turnTimer.intValue = turnTimer
                     LobbyUiState.startingCards.intValue = startingTiles
                     LobbyUiState.stackEnabled.value = quickMode
                     LobbyUiState.roomCode.value = ""
 
-                    onCreateLobby(lobbyName)
+                    onCreateLobby("New Lobby")
                 },
                 modifier = Modifier
                     .weight(1f)
