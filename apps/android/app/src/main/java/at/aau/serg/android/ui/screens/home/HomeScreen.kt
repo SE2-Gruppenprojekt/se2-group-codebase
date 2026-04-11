@@ -43,6 +43,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     onCreateLobby: () -> Unit,
     onBrowseLobbies: () -> Unit,
+    onBrowseFancyLobbies: () -> Unit,
     onShowLeaderboard: () -> Unit,
     onSettings: () -> Unit,
     onWaitingRoom: () -> Unit,
@@ -235,6 +236,25 @@ fun HomeScreen(
                 },
                 containerBrush = Brush.horizontalGradient(
                     colors = listOf(Color(0xFF9D3CFF), Color(0xFF7D23D7))
+                )
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // browse fancy lobbies
+            HomeActionButton(
+                text = "Browse fancy Lobbies",
+                onClick = onBrowseFancyLobbies,
+                icon = { tint ->
+                    Icon(
+                        imageVector = Icons.Filled.Groups,
+                        contentDescription = null,
+                        tint = tint,
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                containerBrush = Brush.horizontalGradient(
+                    colors = listOf(Color(0xE87C3AED), Color(0xE62563EB))
                 )
             )
 
