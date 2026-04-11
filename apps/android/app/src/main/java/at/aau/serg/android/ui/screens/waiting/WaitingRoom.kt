@@ -41,7 +41,9 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -51,13 +53,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.lobby.LobbyUiState
+import at.aau.serg.android.ui.screens.lobby.LobbyViewModel
 import at.aau.serg.android.ui.theme.ThemeState
 import kotlin.random.Random
 
 @Composable
 fun WaitingRoomScreen(
     onBack: () -> Unit,
-    onSettings: () -> Unit
+    onSettings: () -> Unit,
+    lobbyId: String? = null,
+    viewModel: LobbyViewModel? = null
 ) {
     // context for clipboard and toast
     val context = LocalContext.current
@@ -68,18 +73,34 @@ fun WaitingRoomScreen(
     // current theme mode
     val darkMode = ThemeState.isDarkMode.value
 
+    val fetchedLobbyState = viewModel?.lobby?.collectAsState()
+    val fetchedLobby = fetchedLobbyState?.value
+
+    LaunchedEffect(lobbyId) {
+        if (lobbyId != null && viewModel != null) {
+            viewModel.loadLobby(lobbyId)
+        }
+    }
+
     // shared lobby state
-    val lobbyName by LobbyUiState.lobbyName
-    val maxPlayers by LobbyUiState.maxPlayers
+    val fallbackLobbyName by LobbyUiState.lobbyName
+    val fallbackMaxPlayers by LobbyUiState.maxPlayers
     val turnTimer by LobbyUiState.turnTimer
     val startingCards by LobbyUiState.startingCards
     val stackEnabled by LobbyUiState.stackEnabled
 
     // generate room code once if missing
-    if (LobbyUiState.roomCode.value.isBlank()) {
+    if (LobbyUiState.roomCode.value.isBlank() && lobbyId == null) {
         LobbyUiState.roomCode.value = generateRoomCode()
     }
-    val roomCode by LobbyUiState.roomCode
+    val fallbackRoomCode by LobbyUiState.roomCode
+
+    val lobbyName = if (fetchedLobby != null) "Waiting Room" else fallbackLobbyName
+    val maxPlayers = fetchedLobby?.settings?.maxPlayers ?: fallbackMaxPlayers
+    val roomCode = fetchedLobby?.lobbyId?.take(6)?.uppercase() ?: fallbackRoomCode
+    val players = fetchedLobby?.players ?: emptyList()
+    val joinedCount = if (fetchedLobby != null) players.size else 2
+    val isLobbyLoading = lobbyId != null && fetchedLobby == null
 
     // background gradient colors
     val gradientTop = if (darkMode) {
@@ -279,7 +300,7 @@ fun WaitingRoomScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "2/$maxPlayers",
+                        text = "$joinedCount/$maxPlayers",
                         color = primaryTextColor,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
@@ -305,7 +326,7 @@ fun WaitingRoomScreen(
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = "2 joined",
+                text = "$joinedCount joined",
                 color = secondaryTextColor,
                 style = MaterialTheme.typography.labelSmall
             )
@@ -313,34 +334,60 @@ fun WaitingRoomScreen(
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        // host player
-        PlayerItem(
-            name = "You",
-            subtitle = "Level 24",
-            isHost = true,
-            isJoined = true,
-            isPlaceholder = false,
-            borderColor = activePlayerBorder,
-            backgroundColor = activePlayerBackground,
-            primaryTextColor = primaryTextColor,
-            secondaryTextColor = secondaryTextColor
-        )
+        if (isLobbyLoading) {
+            Text(
+                text = "Loading players...",
+                color = secondaryTextColor,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(vertical = 12.dp)
+            )
+        } else if (fetchedLobby != null) {
+            players.forEachIndexed { index, player ->
+                PlayerItem(
+                    name = player.displayName,
+                    subtitle = if (player.isReady) "Ready" else "Not ready",
+                    isHost = player.userId == fetchedLobby.hostUserId,
+                    isJoined = true,
+                    isPlaceholder = false,
+                    borderColor = if (index == 1) secondPlayerBorder else activePlayerBorder,
+                    backgroundColor = if (index == 1) secondPlayerBackground else activePlayerBackground,
+                    primaryTextColor = primaryTextColor,
+                    secondaryTextColor = secondaryTextColor
+                )
+            }
+        } else {
+            PlayerItem(
+                name = "You",
+                subtitle = "Level 24",
+                isHost = true,
+                isJoined = true,
+                isPlaceholder = false,
+                borderColor = activePlayerBorder,
+                backgroundColor = activePlayerBackground,
+                primaryTextColor = primaryTextColor,
+                secondaryTextColor = secondaryTextColor
+            )
 
-        // second joined player
-        PlayerItem(
-            name = "Alex",
-            subtitle = "Level 18",
-            isHost = false,
-            isJoined = true,
-            isPlaceholder = false,
-            borderColor = secondPlayerBorder,
-            backgroundColor = secondPlayerBackground,
-            primaryTextColor = primaryTextColor,
-            secondaryTextColor = secondaryTextColor
-        )
+            PlayerItem(
+                name = "Alex",
+                subtitle = "Level 18",
+                isHost = false,
+                isJoined = true,
+                isPlaceholder = false,
+                borderColor = secondPlayerBorder,
+                backgroundColor = secondPlayerBackground,
+                primaryTextColor = primaryTextColor,
+                secondaryTextColor = secondaryTextColor
+            )
+        }
 
-        // remaining placeholder slots
-        val placeholderCount = (maxPlayers - 2).coerceAtLeast(0)
+        val placeholderCount = if (isLobbyLoading) {
+            0
+        } else if (fetchedLobby != null) {
+            (maxPlayers - players.size).coerceAtLeast(0)
+        } else {
+            (maxPlayers - 2).coerceAtLeast(0)
+        }
         repeat(placeholderCount) {
             PlayerItem(
                 name = "Waiting for player...",
