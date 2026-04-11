@@ -50,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.theme.ThemeState
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 
 data class LobbyBrowseItem(
     val lobbyId: String,
@@ -67,30 +68,34 @@ fun BrowsingLobbiesScreen(
     lobbies: List<LobbyBrowseItem>,
     onJoinLobby: (String) -> Unit,
     onCreateNewLobby: () -> Unit,
-    onSettings: () -> Unit
+    onSettings: () -> Unit,
+    onBack: () -> Unit
 ) {
     val darkMode = ThemeState.isDarkMode.value
     var searchQuery by remember { mutableStateOf("") }
 
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(
-            if (darkMode) Color(0xFF24103F) else Color(0xFFF6F8FD),
-            if (darkMode) Color(0xFF111B37) else Color(0xFFEFF3FF),
-            if (darkMode) Color(0xFF0B132B) else Color(0xFFE7ECFA)
+            if (darkMode) MaterialTheme.colorScheme.background else Color(0xFFF5F7FB),
+            if (darkMode) MaterialTheme.colorScheme.surface else Color(0xFFEAEFFF)
         )
     )
 
-    val cardColor = if (darkMode) Color(0xFF18213D) else MaterialTheme.colorScheme.surface
-    val borderColor = if (darkMode) Color(0xFF2A3558) else Color(0xFFD7DFEE)
-    val primaryText = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+    val borderColor = if (darkMode) Color(0xFF394766) else Color(0xFFD8DEF0)
+    val primaryText = MaterialTheme.colorScheme.onSurface
     val secondaryText = if (darkMode) {
-        MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
     } else {
-        Color(0xFF5E6A86)
+        Color(0xFF6B7280)
     }
 
-    val onlineCardColor = if (darkMode) Color(0xFF1D4A3C) else Color(0xFFDDF7E8)
-    val onlineTextColor = if (darkMode) Color(0xFF8CFFB1) else Color(0xFF1E6B57)
+    val accentPurple = Color(0xFF9D3CFF)
+    val selectedCardColor = Color(0xF2B670FC)
+    val actionButtonColor = if (darkMode) Color(0xFF2A3552) else Color(0xFF2F3A57)
+
+    val onlineCardColor = cardColor
+    val onlineTextColor = secondaryText
 
     val filteredLobbies = lobbies.filter {
         searchQuery.isBlank() ||
@@ -113,14 +118,14 @@ fun BrowsingLobbiesScreen(
             Column {
                 Text(
                     text = "RUMMIKUB",
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF7C8CFF)
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
                     text = "Available Lobbies",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = primaryText
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.78f)
                 )
             }
 
@@ -145,7 +150,7 @@ fun BrowsingLobbiesScreen(
                     Icon(
                         imageVector = Icons.Filled.Settings,
                         contentDescription = "Settings",
-                        tint = primaryText
+                        tint = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
@@ -199,7 +204,7 @@ fun BrowsingLobbiesScreen(
                 shape = RoundedCornerShape(16.dp),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF3DDC72),
+                    containerColor = actionButtonColor,
                     contentColor = Color.White
                 )
             ) {
@@ -225,13 +230,13 @@ fun BrowsingLobbiesScreen(
         ) {
             Text(
                 text = "Open Games",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = primaryText
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.88f)
             )
             Text(
                 text = "${filteredLobbies.size} available",
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.labelMedium,
                 color = secondaryText
             )
         }
@@ -250,6 +255,8 @@ fun BrowsingLobbiesScreen(
                     borderColor = borderColor,
                     primaryText = primaryText,
                     secondaryText = secondaryText,
+                    selectedCardColor = selectedCardColor,
+                    actionButtonColor = actionButtonColor,
                     onJoinLobby = onJoinLobby
                 )
             }
@@ -269,7 +276,7 @@ fun BrowsingLobbiesScreen(
                 .height(58.dp),
             shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent,
+                containerColor = accentPurple,
                 contentColor = Color.White
             ),
             contentPadding = PaddingValues(0.dp)
@@ -278,12 +285,7 @@ fun BrowsingLobbiesScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(
-                                Color(0xFF306BFF),
-                                Color(0xFF9B42FF)
-                            )
-                        ),
+                        color = accentPurple,
                         shape = RoundedCornerShape(18.dp)
                     ),
                 contentAlignment = Alignment.Center
@@ -314,10 +316,12 @@ private fun LobbyBrowseCard(
     borderColor: Color,
     primaryText: Color,
     secondaryText: Color,
+    selectedCardColor: Color,
+    actionButtonColor: Color,
     onJoinLobby: (String) -> Unit
 ) {
-    val statusColor = if (lobby.isOpen) Color(0xFF5BE37A) else Color(0xFFFF8A8A)
-    val buttonColor = if (lobby.isOpen) lobby.accentColor else Color(0xFF555A6E)
+    val statusColor = if (lobby.isOpen) Color.White else secondaryText
+    val buttonColor = if (lobby.isOpen) selectedCardColor else actionButtonColor.copy(alpha = 0.55f)
     val buttonText = if (lobby.isOpen) "Join" else "Full"
 
     Card(
@@ -357,8 +361,12 @@ private fun LobbyBrowseCard(
                 ) {
                     BadgeChip(
                         text = if (lobby.currentPlayers >= lobby.maxPlayers) "FULL" else "OPEN",
-                        backgroundColor = lobby.accentColor.copy(alpha = 0.18f),
-                        textColor = lobby.accentColor
+                        backgroundColor = if (lobby.isOpen) {
+                            selectedCardColor
+                        } else {
+                            actionButtonColor.copy(alpha = 0.3f)
+                        },
+                        textColor = statusColor
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
@@ -414,7 +422,7 @@ private fun LobbyBrowseCard(
                     Icon(
                         imageVector = Icons.Filled.Groups,
                         contentDescription = null,
-                        tint = lobby.accentColor,
+                        tint = primaryText,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
@@ -430,7 +438,7 @@ private fun LobbyBrowseCard(
 
                 Text(
                     text = if (lobby.isOpen) "OPEN" else "FULL",
-                    color = statusColor,
+                    color = if (lobby.isOpen) selectedCardColor else secondaryText,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
