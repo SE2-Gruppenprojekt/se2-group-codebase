@@ -20,6 +20,8 @@ import at.aau.serg.android.ui.screens.lobby.LobbyScreen
 import at.aau.serg.android.ui.screens.lobby.LobbyViewModel
 import at.aau.serg.android.ui.screens.settings.SettingsScreen
 import at.aau.serg.android.ui.screens.waiting.WaitingRoomScreen
+import at.aau.serg.android.ui.state.LoadState
+import at.aau.serg.android.ui.lobby.LobbyUiState
 
 @Composable
 fun AppNavHost(
@@ -107,11 +109,29 @@ fun AppNavHost(
 
         // fancy create lobby screen
         composable("createLobbyFancy") {
+            val parentEntry = remember(navController.currentBackStackEntry) {
+                navController.getBackStackEntry("root")
+            }
+            val lobbyVM: LobbyViewModel = viewModel(parentEntry)
+            val lobbyLoadState by lobbyVM.loadState.collectAsState()
+
             NewLobbyScreen(
                 onBack = { navController.popBackStack() },
                 onSettings = { navController.navigate("settings") },
-                onCreateLobby = {
-                    navController.navigate("waitingRoom")
+                onCreateLobby = { maxPlayers, isPrivate ->
+                    lobbyVM.createLobby(
+                        displayName = "Host",
+                        maxPlayers = maxPlayers,
+                        isPrivate = isPrivate,
+                        allowGuests = true,
+                        onSuccess = { lobby ->
+                            LobbyUiState.lobbyName.value = "New Lobby"
+                            LobbyUiState.maxPlayers.intValue = lobby.settings.maxPlayers
+                            LobbyUiState.roomCode.value = lobby.lobbyId.take(6).uppercase()
+                            navController.navigate("waitingRoom/${lobby.lobbyId}")
+                        },
+                        onError = { }
+                    )
                 }
             )
         }

@@ -63,7 +63,7 @@ import at.aau.serg.android.ui.theme.ThemeState
 fun NewLobbyScreen(
     onBack: () -> Unit,
     onSettings: () -> Unit,
-    onCreateLobby: (String) -> Unit
+    onCreateLobby: (maxPlayers: Int, isPrivate: Boolean) -> Unit
 ) {
     val darkMode = ThemeState.isDarkMode.value
 
@@ -359,7 +359,7 @@ fun NewLobbyScreen(
                 LobbyUiState.stackEnabled.value = quickMode
                 LobbyUiState.roomCode.value = ""
 
-                onCreateLobby("New Lobby")
+                onCreateLobby(maxPlayers, isPrivate)
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -370,12 +370,6 @@ fun NewLobbyScreen(
                 contentColor = Color.White
             )
         ) {
-            Icon(
-                imageVector = Icons.Filled.Check,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "Create Lobby",
                 style = MaterialTheme.typography.titleMedium,
