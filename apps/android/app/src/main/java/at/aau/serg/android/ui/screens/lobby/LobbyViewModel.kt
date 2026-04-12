@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import shared.models.lobby.domain.Lobby
 import shared.models.lobby.request.CreateLobbyRequest
+import shared.models.lobby.request.JoinLobbyRequest
+import shared.models.lobby.response.LobbyListItemResponse
 
 class LobbyViewModel(
     private val api: LobbyAPI = LobbyAPI(
@@ -21,6 +23,17 @@ class LobbyViewModel(
 
     private val _lobby = MutableStateFlow<Lobby?>(null)
     val lobby = _lobby.asStateFlow()
+
+    private val _lobbies = MutableStateFlow<List<LobbyListItemResponse>>(emptyList())
+    val lobbies = _lobbies.asStateFlow()
+
+    fun loadLobbies(onError: () -> Unit = {}) {
+        launchRequest(
+            request = { api.getLobbies() },
+            onSuccess = { loaded -> _lobbies.value = loaded },
+            onError = { onError() }
+        )
+    }
 
     fun loadLobby(lobbyId: String) {
         launchRequest(
@@ -48,6 +61,28 @@ class LobbyViewModel(
                         maxPlayers = maxPlayers,
                         isPrivate = isPrivate,
                         allowGuests = allowGuests
+                    )
+                ).toDomain()
+            },
+            onSuccess = { lobby -> onSuccess(lobby) },
+            onError = { onError() }
+        )
+    }
+
+    fun joinLobby(
+        lobbyId: String,
+        userId: String = "test",
+        displayName: String = "Player",
+        onSuccess: (Lobby) -> Unit = {},
+        onError: () -> Unit = {}
+    ) {
+        launchRequest(
+            request = {
+                api.joinLobby(
+                    lobbyId,
+                    JoinLobbyRequest(
+                        userId = userId,
+                        displayName = displayName
                     )
                 ).toDomain()
             },
