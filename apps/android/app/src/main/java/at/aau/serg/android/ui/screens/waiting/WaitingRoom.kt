@@ -44,6 +44,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -61,6 +63,7 @@ import kotlin.random.Random
 fun WaitingRoomScreen(
     onBack: () -> Unit,
     onSettings: () -> Unit,
+    onGameStarted: () -> Unit = {},
     lobbyId: String? = null,
     viewModel: LobbyViewModel? = null
 ) {
@@ -76,10 +79,26 @@ fun WaitingRoomScreen(
     val fetchedLobbyState = viewModel?.lobby?.collectAsState()
     val fetchedLobby = fetchedLobbyState?.value
 
+    // observe WebSocket-State
+    val isDeleted by viewModel?.isDeleted?.collectAsState() ?: remember { mutableStateOf(false) }
+    val matchId by viewModel?.matchId?.collectAsState() ?: remember { mutableStateOf(null) }
+
+
     LaunchedEffect(lobbyId) {
         if (lobbyId != null && viewModel != null) {
-            viewModel.loadLobby(lobbyId)
+            viewModel.loadLobby(lobbyId) // REST: immediate initial state
+            viewModel.connectWebSocket(lobbyId) // WebSocket: live updates
         }
+    }
+
+    // Lobby deleted → go back
+    LaunchedEffect(isDeleted) {
+        if (isDeleted) onBack()
+    }
+
+    // game started → navigate on
+    LaunchedEffect(matchId) {
+        if (matchId != null) onGameStarted()
     }
 
     // shared lobby state

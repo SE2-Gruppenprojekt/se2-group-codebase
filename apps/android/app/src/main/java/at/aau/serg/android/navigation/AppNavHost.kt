@@ -193,6 +193,7 @@ fun AppNavHost(
             WaitingRoomScreen(
                 onBack = { navController.popBackStack() },
                 onSettings = { navController.navigate("settings") },
+                onGameStarted = { /* TODO: navController.navigate("game/$matchId") if Game-Screen finished */ },
                 lobbyId = lobbyId,
                 viewModel = vm
             )
