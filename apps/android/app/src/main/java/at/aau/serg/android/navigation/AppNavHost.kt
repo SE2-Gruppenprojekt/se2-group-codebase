@@ -2,10 +2,8 @@ package at.aau.serg.android.navigation
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -27,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import at.aau.serg.android.ui.screens.browselobbies.BrowsingLobbiesScreen
 import at.aau.serg.android.ui.screens.browselobbies.LobbyBrowseItem
+import shared.models.lobby.response.LobbyListItemResponse
 
 
 @Composable
@@ -144,61 +143,29 @@ fun AppNavHost(
 
         // second browse screen
         composable("browsingLobbies") {
+            val parentEntry = remember(navController.currentBackStackEntry) {
+                navController.getBackStackEntry("root")
+            }
+            val lobbyVM: LobbyViewModel = viewModel(parentEntry)
+            val lobbySummaries by lobbyVM.lobbies.collectAsState()
+            val browseLoadState by lobbyVM.loadState.collectAsState()
+
+            LaunchedEffect(Unit) {
+                lobbyVM.loadLobbies()
+            }
+
             BrowsingLobbiesScreen(
-                lobbies = listOf(
-                    LobbyBrowseItem(
-                        lobbyId = "A1B2C3",
-                        hostId = "Miko",
-                        currentPlayers = 3,
-                        maxPlayers = 4,
-                        turnTimerSeconds = 60,
-                        startingCards = 7,
-                        isOpen = true,
-                        accentColor = Color(0xFF3B82F6)
-                    ),
-                    LobbyBrowseItem(
-                        lobbyId = "D4E5F6",
-                        hostId = "Sarah",
-                        currentPlayers = 2,
-                        maxPlayers = 6,
-                        turnTimerSeconds = 90,
-                        startingCards = 14,
-                        isOpen = true,
-                        accentColor = Color(0xFFA855F7)
-                    ),
-                    LobbyBrowseItem(
-                        lobbyId = "G7H8J9",
-                        hostId = "Alex",
-                        currentPlayers = 1,
-                        maxPlayers = 4,
-                        turnTimerSeconds = 30,
-                        startingCards = 7,
-                        isOpen = true,
-                        accentColor = Color(0xFF22C55E)
-                    ),
-                    LobbyBrowseItem(
-                        lobbyId = "K1L2M3",
-                        hostId = "David",
-                        currentPlayers = 4,
-                        maxPlayers = 4,
-                        turnTimerSeconds = 45,
-                        startingCards = 7,
-                        isOpen = false,
-                        accentColor = Color(0xFFF97316)
-                    ),
-                    LobbyBrowseItem(
-                        lobbyId = "N4P5Q6",
-                        hostId = "Emma",
-                        currentPlayers = 0,
-                        maxPlayers = 4,
-                        turnTimerSeconds = 120,
-                        startingCards = 10,
-                        isOpen = true,
-                        accentColor = Color(0xFFEC4899)
+                lobbies = lobbySummaries.map { it.toBrowseItem() },
+                isLoading = browseLoadState is LoadState.Loading && lobbySummaries.isEmpty(),
+                errorMessage = (browseLoadState as? LoadState.Error)?.message,
+                onJoinLobby = { lobbyId ->
+                    lobbyVM.joinLobbyOrOpen(
+                        lobbyId = lobbyId,
+                        onSuccess = { joinedLobby ->
+                            navController.navigate("waitingRoom/${joinedLobby.lobbyId}")
+                        },
+                        onError = { }
                     )
-                ),
-                onJoinLobby = { _ ->
-                    // later real join logic
                 },
                 onCreateNewLobby = {
                     navController.navigate("createLobbyFancy")
@@ -238,4 +205,31 @@ fun AppNavHost(
             )
         }
     }
+}
+
+private fun LobbyListItemResponse.toBrowseItem(): LobbyBrowseItem {
+    return LobbyBrowseItem(
+        lobbyId = lobbyId,
+        hostId = hostUserId,
+        currentPlayers = currentPlayerCount,
+        maxPlayers = maxPlayers,
+        // The current backend lobby list does not expose these fields yet.
+        turnTimerSeconds = 60,
+        startingCards = 7,
+        isOpen = status == "OPEN" && currentPlayerCount < maxPlayers,
+        accentColor = lobbyAccentColor(lobbyId)
+    )
+}
+
+private fun lobbyAccentColor(lobbyId: String): Color {
+    val palette = listOf(
+        Color(0xFF3B82F6),
+        Color(0xFFA855F7),
+        Color(0xFF22C55E),
+        Color(0xFFF97316),
+        Color(0xFFEC4899),
+        Color(0xFF06B6D4),
+        Color(0xFFEAB308)
+    )
+    return palette[(lobbyId.hashCode() and Int.MAX_VALUE) % palette.size]
 }

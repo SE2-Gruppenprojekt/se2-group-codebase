@@ -30,6 +30,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -67,6 +68,8 @@ data class LobbyBrowseItem(
 @Composable
 fun BrowsingLobbiesScreen(
     lobbies: List<LobbyBrowseItem>,
+    isLoading: Boolean = false,
+    errorMessage: String? = null,
     onJoinLobby: (String) -> Unit,
     onCreateNewLobby: () -> Unit,
     onSettings: () -> Unit,
@@ -244,6 +247,26 @@ fun BrowsingLobbiesScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = accentPurple)
+            }
+        }
+
+        if (errorMessage != null) {
+            Text(
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+        }
+
         // lobby list
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -253,7 +276,6 @@ fun BrowsingLobbiesScreen(
                 LobbyBrowseCard(
                     lobby = lobby,
                     cardColor = cardColor,
-                    borderColor = borderColor,
                     primaryText = primaryText,
                     secondaryText = secondaryText,
                     onJoinLobby = onJoinLobby
@@ -312,7 +334,6 @@ fun BrowsingLobbiesScreen(
 private fun LobbyBrowseCard(
     lobby: LobbyBrowseItem,
     cardColor: Color,
-    borderColor: Color,
     primaryText: Color,
     secondaryText: Color,
     onJoinLobby: (String) -> Unit

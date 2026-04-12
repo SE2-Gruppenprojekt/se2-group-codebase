@@ -181,7 +181,7 @@ fun WaitingRoomScreen(
                 )
             )
             .verticalScroll(scrollState)
-            .padding(10.dp)
+            .padding(16.dp)
     ) {
         // top bar
         Row(

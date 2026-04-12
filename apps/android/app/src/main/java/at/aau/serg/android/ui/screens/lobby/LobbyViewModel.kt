@@ -4,6 +4,7 @@ import at.aau.serg.android.data.lobby.mapper.toDomain
 import at.aau.serg.android.network.RetrofitProvider
 import at.aau.serg.android.network.lobby.LobbyAPI
 import at.aau.serg.android.network.lobby.LobbyService
+import at.aau.serg.android.session.AppSession
 import at.aau.serg.android.util.DefaultDispatcherProvider
 import at.aau.serg.android.util.DispatcherProvider
 import at.aau.serg.android.viewmodel.BaseViewModel
@@ -11,6 +12,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import shared.models.lobby.domain.Lobby
 import shared.models.lobby.request.CreateLobbyRequest
+import shared.models.lobby.request.JoinLobbyRequest
+import shared.models.lobby.response.LobbyListItemResponse
 
 class LobbyViewModel(
     private val api: LobbyAPI = LobbyAPI(
@@ -22,6 +25,17 @@ class LobbyViewModel(
     private val _lobby = MutableStateFlow<Lobby?>(null)
     val lobby = _lobby.asStateFlow()
 
+    private val _lobbies = MutableStateFlow<List<LobbyListItemResponse>>(emptyList())
+    val lobbies = _lobbies.asStateFlow()
+
+    fun loadLobbies(onError: () -> Unit = {}) {
+        launchRequest(
+            request = { api.getLobbies() },
+            onSuccess = { loaded -> _lobbies.value = loaded },
+            onError = { onError() }
+        )
+    }
+
     fun loadLobby(lobbyId: String) {
         launchRequest(
             request = { api.getLobby(lobbyId).toDomain() },
@@ -31,8 +45,8 @@ class LobbyViewModel(
     }
 
     fun createLobby(
-        userId: String = "test",
-        displayName: String = "tester",
+        userId: String = AppSession.userId,
+        displayName: String = AppSession.displayName,
         maxPlayers: Int = 4,
         isPrivate: Boolean = false,
         allowGuests: Boolean = true,
@@ -56,13 +70,63 @@ class LobbyViewModel(
         )
     }
 
+    fun joinLobby(
+        lobbyId: String,
+        userId: String = AppSession.userId,
+        displayName: String = AppSession.displayName,
+        onSuccess: (Lobby) -> Unit = {},
+        onError: () -> Unit = {}
+    ) {
+        launchRequest(
+            request = {
+                api.joinLobby(
+                    lobbyId,
+                    JoinLobbyRequest(
+                        userId = userId,
+                        displayName = displayName
+                    )
+                ).toDomain()
+            },
+            onSuccess = { lobby -> onSuccess(lobby) },
+            onError = { onError() }
+        )
+    }
+
+    fun joinLobbyOrOpen(
+        lobbyId: String,
+        userId: String = AppSession.userId,
+        displayName: String = AppSession.displayName,
+        onSuccess: (Lobby) -> Unit = {},
+        onError: () -> Unit = {}
+    ) {
+        launchRequest(
+            request = {
+                val existingLobby = api.getLobby(lobbyId).toDomain()
+                if (existingLobby.players.any { it.userId == userId }) {
+                    existingLobby
+                } else {
+                    api.joinLobby(
+                        lobbyId,
+                        JoinLobbyRequest(
+                            userId = userId,
+                            displayName = displayName
+                        )
+                    ).toDomain()
+                }
+            },
+            onSuccess = { lobby -> onSuccess(lobby) },
+            onError = { onError() }
+        )
+    }
+
     fun leaveLobby(
         lobbyId: String,
+        userId: String = AppSession.userId,
         onSuccess: () -> Unit = {},
         onError: () -> Unit = {}
     ) {
         launchRequest(
-            request = { api.leaveLobby("test", lobbyId) },
+            request = { api.leaveLobby(userId, lobbyId) },
             onSuccess = { success ->
                 if (success) onSuccess() else onError()
             },
