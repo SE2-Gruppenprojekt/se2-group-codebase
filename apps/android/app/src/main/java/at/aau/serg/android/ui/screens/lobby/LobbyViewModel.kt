@@ -22,26 +22,47 @@ class LobbyViewModel(
     dispatchers: DispatcherProvider = DefaultDispatcherProvider
 ) : BaseViewModel(dispatchers) {
 
+    private val _state = MutableStateFlow<LobbyUiState>(LobbyUiState.Loading)
+    val state = _state.asStateFlow()
+
+    private val _lobbiesState = MutableStateFlow<LobbyUiState>(LobbyUiState.Loading)
+    val lobbiesState = _lobbiesState.asStateFlow()
+
     private val _lobby = MutableStateFlow<Lobby?>(null)
     val lobby = _lobby.asStateFlow()
 
     private val _lobbies = MutableStateFlow<List<LobbyListItemResponse>>(emptyList())
     val lobbies = _lobbies.asStateFlow()
 
+
     fun loadLobbies(onError: () -> Unit = {}) {
+        _lobbiesState.value = LobbyUiState.Loading
+
         launchRequest(
             request = { api.getLobbies() },
             onSuccess = { loaded -> _lobbies.value = loaded },
             onError = { onError() }
+            /*onSuccess = { loaded -> _lobbiesState.value = LobbyUiState.Success(loaded)
+             },
+            onError = {
+                _lobbiesState.value = LobbyUiState.Error("Could not load lobby")
+            }*/
         )
     }
 
     fun loadLobby(lobbyId: String) {
+        _state.value = LobbyUiState.Loading
+
         launchRequest(
             request = { api.getLobby(lobbyId).toDomain() },
             onSuccess = { loaded -> _lobby.value = loaded },
             onError = {}
         )
+            /*onSuccess = { lobby -> _state.value = LobbyUiState.Success(lobby) },
+            onError = {
+                _state.value = LobbyUiState.Error("Could not load lobby")
+            }
+        )*/
     }
 
     fun createLobby(
@@ -53,6 +74,9 @@ class LobbyViewModel(
         onSuccess: (Lobby) -> Unit = {},
         onError: () -> Unit = {}
     ) {
+
+        _state.value = LobbyUiState.Loading
+
         launchRequest(
             request = {
                 api.createLobby(
@@ -65,8 +89,9 @@ class LobbyViewModel(
                     )
                 ).toDomain()
             },
-            onSuccess = { lobby -> onSuccess(lobby) },
-            onError = { onError() }
+            onSuccess = { lobby -> _state.value = LobbyUiState.Success(lobby)
+                onSuccess(lobby) },
+            onError = { _state.value = LobbyUiState.Error("Could not create lobby") }
         )
     }
 
@@ -117,6 +142,13 @@ class LobbyViewModel(
             onSuccess = { lobby -> onSuccess(lobby) },
             onError = { onError() }
         )
+            /*onSuccess = { loaded ->
+                _lobbiesState.value = LobbiesUiState.Success(loaded)
+            },
+            onError = { _state.value = LobbyUiState.Error("Could not join lobby")
+
+            }
+        )*/
     }
 
     fun leaveLobby(
