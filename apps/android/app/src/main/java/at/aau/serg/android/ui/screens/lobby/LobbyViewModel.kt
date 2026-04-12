@@ -31,18 +31,23 @@ class LobbyViewModel(
     }
 
     fun createLobby(
+        userId: String = "test",
+        displayName: String = "tester",
+        maxPlayers: Int = 4,
+        isPrivate: Boolean = false,
+        allowGuests: Boolean = true,
         onSuccess: (Lobby) -> Unit = {},
         onError: () -> Unit = {}
     ) {
         launchRequest(
             request = {
                 api.createLobby(
-                    "test",
+                    userId,
                     CreateLobbyRequest(
-                        displayName = "tester",
-                        maxPlayers = 4,
-                        isPrivate = false,
-                        allowGuests = true
+                        displayName = displayName,
+                        maxPlayers = maxPlayers,
+                        isPrivate = isPrivate,
+                        allowGuests = allowGuests
                     )
                 ).toDomain()
             },

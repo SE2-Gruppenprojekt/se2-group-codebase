@@ -21,7 +21,7 @@ class LobbyService(
     private val lobbyBroadcastService: LobbyBroadcastService) {
 
     companion object {
-        const val MAX_PLAYERS = 4
+        const val MAX_PLAYERS = 8
         const val MIN_PLAYERS = 2
     }
 
