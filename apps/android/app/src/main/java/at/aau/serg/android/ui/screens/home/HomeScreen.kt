@@ -24,6 +24,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,20 +60,6 @@ fun HomeScreen(
             if (darkMode) Color(0xFF0E1429) else Color(0xFFE7ECFA)
         )
     )
-
-    // title color
-    val titleColor = if (darkMode) {
-        Color(0xFFEAEFFF)
-    } else {
-        Color(0xFF1D2750)
-    }
-
-    // subtitle color
-    val subtitleColor = if (darkMode) {
-        Color.White.copy(alpha = 0.78f)
-    } else {
-        Color(0xFF4D5A78)
-    }
 
     // error text color
     val errorColor = if (darkMode) {
@@ -115,15 +102,49 @@ fun HomeScreen(
             .background(backgroundGradient),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "RUMMIKUB",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    text = "Main Menu",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.78f)
+                )
+            }
+
+            IconButton(
+                onClick = onSettings,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = "Settings",
+                    tint = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+
         // main content section
         Column(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(horizontal = 28.dp, vertical = 32.dp),
+                .padding(horizontal = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             // app icon card
             Box(
@@ -149,23 +170,6 @@ fun HomeScreen(
             }
 
             Spacer(modifier = Modifier.height(22.dp))
-
-            // title
-            Text(
-                text = "RUMMIKUB",
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Black,
-                color = titleColor
-            )
-
-            // subtitle
-            Text(
-                text = "Classic Tile Game",
-                style = MaterialTheme.typography.bodyLarge,
-                color = subtitleColor
-            )
-
-            Spacer(modifier = Modifier.height(28.dp))
 
             // loading state
             if (state is LoadState.Loading) {
