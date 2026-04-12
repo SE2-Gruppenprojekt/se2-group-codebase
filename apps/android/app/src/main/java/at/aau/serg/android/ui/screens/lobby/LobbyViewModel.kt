@@ -4,6 +4,7 @@ import at.aau.serg.android.data.lobby.mapper.toDomain
 import at.aau.serg.android.network.RetrofitProvider
 import at.aau.serg.android.network.lobby.LobbyAPI
 import at.aau.serg.android.network.lobby.LobbyService
+import at.aau.serg.android.session.AppSession
 import at.aau.serg.android.util.DefaultDispatcherProvider
 import at.aau.serg.android.util.DispatcherProvider
 import at.aau.serg.android.viewmodel.BaseViewModel
@@ -44,8 +45,8 @@ class LobbyViewModel(
     }
 
     fun createLobby(
-        userId: String = "test",
-        displayName: String = "tester",
+        userId: String = AppSession.userId,
+        displayName: String = AppSession.displayName,
         maxPlayers: Int = 4,
         isPrivate: Boolean = false,
         allowGuests: Boolean = true,
@@ -71,8 +72,8 @@ class LobbyViewModel(
 
     fun joinLobby(
         lobbyId: String,
-        userId: String = "test",
-        displayName: String = "Player",
+        userId: String = AppSession.userId,
+        displayName: String = AppSession.displayName,
         onSuccess: (Lobby) -> Unit = {},
         onError: () -> Unit = {}
     ) {
@@ -91,13 +92,41 @@ class LobbyViewModel(
         )
     }
 
+    fun joinLobbyOrOpen(
+        lobbyId: String,
+        userId: String = AppSession.userId,
+        displayName: String = AppSession.displayName,
+        onSuccess: (Lobby) -> Unit = {},
+        onError: () -> Unit = {}
+    ) {
+        launchRequest(
+            request = {
+                val existingLobby = api.getLobby(lobbyId).toDomain()
+                if (existingLobby.players.any { it.userId == userId }) {
+                    existingLobby
+                } else {
+                    api.joinLobby(
+                        lobbyId,
+                        JoinLobbyRequest(
+                            userId = userId,
+                            displayName = displayName
+                        )
+                    ).toDomain()
+                }
+            },
+            onSuccess = { lobby -> onSuccess(lobby) },
+            onError = { onError() }
+        )
+    }
+
     fun leaveLobby(
         lobbyId: String,
+        userId: String = AppSession.userId,
         onSuccess: () -> Unit = {},
         onError: () -> Unit = {}
     ) {
         launchRequest(
-            request = { api.leaveLobby("test", lobbyId) },
+            request = { api.leaveLobby(userId, lobbyId) },
             onSuccess = { success ->
                 if (success) onSuccess() else onError()
             },
