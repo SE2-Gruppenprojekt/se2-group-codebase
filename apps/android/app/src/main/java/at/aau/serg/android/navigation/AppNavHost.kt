@@ -159,7 +159,7 @@ fun AppNavHost(
                 isLoading = browseLoadState is LoadState.Loading && lobbySummaries.isEmpty(),
                 errorMessage = (browseLoadState as? LoadState.Error)?.message,
                 onJoinLobby = { lobbyId ->
-                    lobbyVM.joinLobby(
+                    lobbyVM.joinLobbyOrOpen(
                         lobbyId = lobbyId,
                         onSuccess = { joinedLobby ->
                             navController.navigate("waitingRoom/${joinedLobby.lobbyId}")
