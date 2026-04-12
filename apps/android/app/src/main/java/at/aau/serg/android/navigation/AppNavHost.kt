@@ -156,6 +156,18 @@ fun AppNavHost(
             )
         }
 
+        composable("waitingRoom/{lobbyId}") { backStackEntry ->
+            val lobbyId = backStackEntry.arguments?.getString("lobbyId")!!
+            val vm: LobbyViewModel = viewModel()
+
+            WaitingRoomScreen(
+                onBack = { navController.popBackStack() },
+                onSettings = { navController.navigate("settings") },
+                lobbyId = lobbyId,
+                viewModel = vm
+            )
+        }
+
         // settings screen
         composable("settings") {
             SettingsScreen(
