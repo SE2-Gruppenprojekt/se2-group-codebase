@@ -9,13 +9,10 @@ import at.aau.serg.android.ui.screens.settings.components.BackButton
 import at.aau.serg.android.ui.screens.settings.components.DarkModeToggle
 import at.aau.serg.android.ui.screens.settings.components.SettingsHeader
 import at.aau.serg.android.ui.theme.ThemeState
-
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit
 ) {
-
-    var darkMode by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -32,7 +29,5 @@ fun SettingsScreen(
         Spacer(Modifier.height(16.dp))
 
         BackButton(onBack)
-
-
     }
 }
