@@ -36,7 +36,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -94,9 +93,6 @@ fun BrowsingLobbiesScreen(
     val selectedCardColor = Color(0xF2B670FC)
     val actionButtonColor = if (darkMode) Color(0xFF2A3552) else Color(0xFF2F3A57)
 
-    val onlineCardColor = cardColor
-    val onlineTextColor = secondaryText
-
     val filteredLobbies = lobbies.filter {
         searchQuery.isBlank() ||
             it.lobbyId.contains(searchQuery, ignoreCase = true) ||
@@ -144,30 +140,16 @@ fun BrowsingLobbiesScreen(
                 }
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+            IconButton(
+                onClick = onSettings,
+                modifier = Modifier.size(32.dp)
             ) {
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = onlineCardColor
-                ) {
-                    Text(
-                        text = "● Online",
-                        color = onlineTextColor,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                IconButton(onClick = onSettings) {
-                    Icon(
-                        imageVector = Icons.Filled.Settings,
-                        contentDescription = "Settings",
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = "Settings",
+                    tint = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.size(16.dp)
+                )
             }
         }
 
