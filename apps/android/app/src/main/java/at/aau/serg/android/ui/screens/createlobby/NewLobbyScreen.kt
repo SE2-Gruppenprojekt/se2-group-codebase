@@ -58,6 +58,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.lobby.LobbyUiState
 import at.aau.serg.android.ui.theme.ThemeState
+import androidx.compose.ui.platform.LocalContext
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
 
 @Composable
 fun NewLobbyScreen(
@@ -67,16 +72,20 @@ fun NewLobbyScreen(
     onCreateLobby: (maxPlayers: Int, isPrivate: Boolean) -> Unit
 ) {
     val darkMode = ThemeState.isDarkMode.value
+    val context = LocalContext.current
 
     // align dark mode with waiting room styling
     val bgTop = if (darkMode) MaterialTheme.colorScheme.background else Color(0xFFF5F7FB)
     val bgBottom = if (darkMode) MaterialTheme.colorScheme.surface else Color(0xFFEAEFFF)
     val cardColor = MaterialTheme.colorScheme.surface
-    val cardBorder = if (darkMode) Color(0xFF2A3558) else Color(0xFFD8DEF0)
+    val cardBorder = if (darkMode) Color(0xFF394766) else Color(0xFFD8DEF0)
     val primaryText = MaterialTheme.colorScheme.onSurface
-    val selectedColor = if (darkMode) Color(0xFF2A3552) else Color(0xFF2F3A57)
-    val selectedBorder = if (darkMode) Color(0xFF4A5676) else Color(0xFF47536F)
-    val selectedContentColor = if (darkMode) Color(0xFF1E2430) else Color.White
+
+    // improved selected colors for dark mode
+    val selectedColor = if (darkMode) Color(0xFF7C3AED) else Color(0xFF2F3A57)
+    val selectedBorder = if (darkMode) Color(0xFFB794F4) else Color(0xFF47536F)
+    val selectedContentColor = Color.White
+
     val actionGreen = Color(0xFF22C55E)
     val settingButtonColor = if (darkMode) Color(0xFF2A3552) else Color(0xFF2F3A57)
     val secondaryText = if (darkMode) {
@@ -188,7 +197,18 @@ fun NewLobbyScreen(
                         Spacer(modifier = Modifier.width(6.dp))
 
                         IconButton(
-                            onClick = { },
+                            onClick = {
+                                val clipboardManager =
+                                    context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                val clip = ClipData.newPlainText("Room Code", roomCode)
+                                clipboardManager.setPrimaryClip(clip)
+
+                                Toast.makeText(
+                                    context,
+                                    "Room code copied",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            },
                             modifier = Modifier.size(28.dp)
                         ) {
                             Icon(
@@ -206,7 +226,7 @@ fun NewLobbyScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         SectionTitle(
-            icon = { Icon(Icons.Filled.Groups, null, tint = Color(0xFF9D3CFF)) },
+            icon = { Icon(Icons.Filled.Groups, null, tint = Color(0x9C9D3CFF)) },
             title = "Maximum Players"
         )
 
@@ -238,7 +258,7 @@ fun NewLobbyScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         SectionTitle(
-            icon = { Icon(Icons.Filled.Lock, null, tint = Color(0xFF9D3CFF)) },
+            icon = { Icon(Icons.Filled.Lock, null, tint = Color(0x9E9D3CFF)) },
             title = "Privacy"
         )
 
