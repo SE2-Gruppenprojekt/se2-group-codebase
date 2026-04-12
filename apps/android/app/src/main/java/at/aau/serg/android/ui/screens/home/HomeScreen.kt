@@ -61,6 +61,18 @@ fun HomeScreen(
         )
     )
 
+    val titleColor = if (darkMode) {
+        Color(0xFFEAEFFF)
+    } else {
+        Color(0xFF1D2750)
+    }
+
+    val subtitleColor = if (darkMode) {
+        Color.White.copy(alpha = 0.78f)
+    } else {
+        Color(0xFF4D5A78)
+    }
+
     // error text color
     val errorColor = if (darkMode) {
         Color(0xFFFF8F8F)
@@ -170,6 +182,21 @@ fun HomeScreen(
             }
 
             Spacer(modifier = Modifier.height(22.dp))
+
+            Text(
+                text = "RUMMIKUB",
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Black,
+                color = titleColor
+            )
+
+            Text(
+                text = "Classic Tile Game",
+                style = MaterialTheme.typography.bodyLarge,
+                color = subtitleColor
+            )
+
+            Spacer(modifier = Modifier.height(28.dp))
 
             // loading state
             if (state is LoadState.Loading) {
