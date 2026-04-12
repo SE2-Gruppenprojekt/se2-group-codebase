@@ -42,7 +42,6 @@ fun HomeScreen(
     state: LoadState,
     modifier: Modifier = Modifier,
     onCreateLobby: () -> Unit,
-    onBrowseLobbies: () -> Unit,
     onBrowseFancyLobbies: () -> Unit,
     onShowLeaderboard: () -> Unit,
     onSettings: () -> Unit,
@@ -184,28 +183,9 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
-            // standard create lobby action
+            // create lobby screen
             HomeActionButton(
-                text = "Create Lobby",
-                onClick = onCreateLobby,
-                icon = { tint ->
-                    Icon(
-                        imageVector = Icons.Filled.Person,
-                        contentDescription = null,
-                        tint = tint,
-                        modifier = Modifier.size(24.dp)
-                    )
-                },
-                containerBrush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF4B68FF), Color(0xFF4B3FD4))
-                )
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // custom fancy lobby screen
-            HomeActionButton(
-                text = "Create fancy Lobby",
+                text = "Create a Lobby",
                 onClick = onNewLobbyScreen,
                 icon = { tint ->
                     Icon(
@@ -222,28 +202,9 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // browse open lobbies
+            // browse lobbies
             HomeActionButton(
                 text = "Browse Lobbies",
-                onClick = onBrowseLobbies,
-                icon = { tint ->
-                    Icon(
-                        imageVector = Icons.Filled.Groups,
-                        contentDescription = null,
-                        tint = tint,
-                        modifier = Modifier.size(24.dp)
-                    )
-                },
-                containerBrush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF9D3CFF), Color(0xFF7D23D7))
-                )
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // browse fancy lobbies
-            HomeActionButton(
-                text = "Browse fancy Lobbies",
                 onClick = onBrowseFancyLobbies,
                 icon = { tint ->
                     Icon(
@@ -254,7 +215,7 @@ fun HomeScreen(
                     )
                 },
                 containerBrush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xE87C3AED), Color(0xE62563EB))
+                    colors = listOf(Color(0xFF9D3CFF), Color(0xFF9D3CFF))
                 )
             )
 

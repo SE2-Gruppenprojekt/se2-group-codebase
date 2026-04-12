@@ -10,7 +10,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import at.aau.serg.android.ui.screens.browselobbies.BrowseLobbiesScreen
 import at.aau.serg.android.ui.screens.createlobby.CreateLobbyScreen
 import at.aau.serg.android.ui.screens.createlobby.NewLobbyScreen
 import at.aau.serg.android.ui.screens.home.HomeScreen
@@ -61,7 +60,6 @@ fun AppNavHost(
                         onError = { /* show error */ }
                     )
                 },
-                onBrowseLobbies = { navController.navigate("browseLobbies") },
                 onBrowseFancyLobbies = { navController.navigate("browsingLobbies") },
                 onShowLeaderboard = {
                     leaderboardVM.loadLeaderboard(
@@ -120,17 +118,6 @@ fun AppNavHost(
                 onCreateLobby = {
                     navController.navigate("waitingRoom")
                 }
-            )
-        }
-
-        // browse lobbies screen
-        composable("browseLobbies") {
-            BrowseLobbiesScreen(
-                lobbies = listOf("Lobby A", "Lobby B", "Lobby C"), // dummy data
-                onJoin = { lobby ->
-                    // later Backend Join
-                },
-                onBack = { navController.popBackStack() }
             )
         }
 
