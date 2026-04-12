@@ -21,9 +21,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Style
 import androidx.compose.material3.Button
@@ -46,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.theme.ThemeState
@@ -71,7 +72,7 @@ fun BrowsingLobbiesScreen(
     onBack: () -> Unit
 ) {
     val darkMode = ThemeState.isDarkMode.value
-    var searchQuery by remember { mutableStateOf("") }
+    var lobbyIdInput by remember { mutableStateOf("") }
 
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(
@@ -93,11 +94,7 @@ fun BrowsingLobbiesScreen(
     val selectedCardColor = Color(0xF2B670FC)
     val actionButtonColor = if (darkMode) Color(0xFF2A3552) else Color(0xFF2F3A57)
 
-    val filteredLobbies = lobbies.filter {
-        searchQuery.isBlank() ||
-            it.lobbyId.contains(searchQuery, ignoreCase = true) ||
-            it.hostId.contains(searchQuery, ignoreCase = true)
-    }
+    val enteredLobbyId = lobbyIdInput.trim().uppercase()
 
     Column(
         modifier = Modifier
@@ -155,32 +152,39 @@ fun BrowsingLobbiesScreen(
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        // search row
+        // direct join row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
+                value = lobbyIdInput,
+                onValueChange = { lobbyIdInput = it },
                 modifier = Modifier.weight(1f),
                 singleLine = true,
+                label = {
+                    Text(
+                        "Lobby ID",
+                        color = secondaryText
+                    )
+                },
                 placeholder = {
                     Text(
-                        "Search lobbies...",
+                        "Enter lobby ID to join...",
                         color = secondaryText
                     )
                 },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Filled.Search,
+                        imageVector = Icons.Filled.Tag,
                         contentDescription = null,
                         tint = secondaryText
                     )
                 },
                 keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Search
+                    capitalization = KeyboardCapitalization.Characters,
+                    imeAction = ImeAction.Done
                 ),
                 shape = RoundedCornerShape(18.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -195,9 +199,9 @@ fun BrowsingLobbiesScreen(
 
             Button(
                 onClick = {
-                    filteredLobbies.firstOrNull { it.isOpen }?.let { onJoinLobby(it.lobbyId) }
+                    onJoinLobby(enteredLobbyId)
                 },
-                enabled = filteredLobbies.any { it.isOpen },
+                enabled = enteredLobbyId.isNotEmpty(),
                 shape = RoundedCornerShape(16.dp),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -232,7 +236,7 @@ fun BrowsingLobbiesScreen(
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.88f)
             )
             Text(
-                text = "${filteredLobbies.size} available",
+                text = "${lobbies.size} available",
                 style = MaterialTheme.typography.labelMedium,
                 color = secondaryText
             )
@@ -245,7 +249,7 @@ fun BrowsingLobbiesScreen(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(filteredLobbies) { lobby ->
+            items(lobbies) { lobby ->
                 LobbyBrowseCard(
                     lobby = lobby,
                     cardColor = cardColor,
