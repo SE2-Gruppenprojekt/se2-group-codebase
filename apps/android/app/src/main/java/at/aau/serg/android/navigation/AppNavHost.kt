@@ -10,7 +10,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import at.aau.serg.android.ui.screens.browselobbies.BrowseLobbiesScreen
 import at.aau.serg.android.ui.screens.createlobby.CreateLobbyScreen
 import at.aau.serg.android.ui.screens.createlobby.NewLobbyScreen
 import at.aau.serg.android.ui.screens.home.HomeScreen
@@ -22,11 +21,18 @@ import at.aau.serg.android.ui.screens.settings.SettingsScreen
 import at.aau.serg.android.ui.screens.waiting.WaitingRoomScreen
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.lobby.LobbyUiState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
+import at.aau.serg.android.ui.screens.browselobbies.BrowsingLobbiesScreen
+import at.aau.serg.android.ui.screens.browselobbies.LobbyBrowseItem
+
 
 @Composable
 fun AppNavHost(
     navController: NavHostController,
-    innerPadding: PaddingValues = PaddingValues(0.dp)
+    innerPadding: PaddingValues = PaddingValues()
 ) {
     NavHost(
         navController = navController,
@@ -35,7 +41,6 @@ fun AppNavHost(
         modifier = Modifier.padding(innerPadding)
     ) {
 
-        // HOME SCREEN
         composable("home") {
             val parentEntry = remember(navController.currentBackStackEntry) {
                 navController.getBackStackEntry("root")
@@ -57,7 +62,7 @@ fun AppNavHost(
                         onError = { /* show error */ }
                     )
                 },
-                onBrowseLobbies = { navController.navigate("browseLobbies") },
+                onBrowseFancyLobbies = { navController.navigate("browsingLobbies") },
                 onShowLeaderboard = {
                     leaderboardVM.loadLeaderboard(
                         onSuccess = { navController.navigate("leaderboard") },
@@ -137,18 +142,76 @@ fun AppNavHost(
             )
         }
 
-        // browse lobbies screen
-        composable("browseLobbies") {
-            BrowseLobbiesScreen(
-                lobbies = listOf("Lobby A", "Lobby B", "Lobby C"), // dummy data
-                onJoin = { lobby ->
-                    // later Backend Join
+        // second browse screen
+        composable("browsingLobbies") {
+            BrowsingLobbiesScreen(
+                lobbies = listOf(
+                    LobbyBrowseItem(
+                        lobbyId = "A1B2C3",
+                        hostId = "Miko",
+                        currentPlayers = 3,
+                        maxPlayers = 4,
+                        turnTimerSeconds = 60,
+                        startingCards = 7,
+                        isOpen = true,
+                        accentColor = Color(0xFF3B82F6)
+                    ),
+                    LobbyBrowseItem(
+                        lobbyId = "D4E5F6",
+                        hostId = "Sarah",
+                        currentPlayers = 2,
+                        maxPlayers = 6,
+                        turnTimerSeconds = 90,
+                        startingCards = 14,
+                        isOpen = true,
+                        accentColor = Color(0xFFA855F7)
+                    ),
+                    LobbyBrowseItem(
+                        lobbyId = "G7H8J9",
+                        hostId = "Alex",
+                        currentPlayers = 1,
+                        maxPlayers = 4,
+                        turnTimerSeconds = 30,
+                        startingCards = 7,
+                        isOpen = true,
+                        accentColor = Color(0xFF22C55E)
+                    ),
+                    LobbyBrowseItem(
+                        lobbyId = "K1L2M3",
+                        hostId = "David",
+                        currentPlayers = 4,
+                        maxPlayers = 4,
+                        turnTimerSeconds = 45,
+                        startingCards = 7,
+                        isOpen = false,
+                        accentColor = Color(0xFFF97316)
+                    ),
+                    LobbyBrowseItem(
+                        lobbyId = "N4P5Q6",
+                        hostId = "Emma",
+                        currentPlayers = 0,
+                        maxPlayers = 4,
+                        turnTimerSeconds = 120,
+                        startingCards = 10,
+                        isOpen = true,
+                        accentColor = Color(0xFFEC4899)
+                    )
+                ),
+                onJoinLobby = { _ ->
+                    // later real join logic
                 },
-                onBack = { navController.popBackStack() }
+                onCreateNewLobby = {
+                    navController.navigate("createLobbyFancy")
+                },
+                onSettings = {
+                    navController.navigate("settings")
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
             )
         }
 
-        // waiting room screen
         composable("waitingRoom") {
             WaitingRoomScreen(
                 onBack = { navController.popBackStack() },
