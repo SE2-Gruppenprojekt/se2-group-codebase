@@ -1,6 +1,5 @@
-package at.aau.serg.android.ui.screens.settings.components
+package at.aau.serg.android.ui.general_components
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
