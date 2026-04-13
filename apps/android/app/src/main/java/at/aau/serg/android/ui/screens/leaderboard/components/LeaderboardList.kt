@@ -15,3 +15,6 @@ fun LeaderboardList(
         }
     }
 }
+
+
+annotation class LeaderboardList
