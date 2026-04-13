@@ -23,6 +23,10 @@ import java.time.Instant
 @ExtendWith(MockitoExtension::class)
 class LobbyBroadcastServiceTest {
 
+    companion object {
+        private const val TOPIC_LOBBIES_PATH = "/topic/lobbies"
+    }
+
     @Mock
     lateinit var messagingTemplate: SimpMessagingTemplate
 
@@ -51,16 +55,16 @@ class LobbyBroadcastServiceTest {
             createdAt = Instant.parse("2026-04-12T09:00:00Z")
         )
 
-        val payloadCaptor = ArgumentCaptor.forClass(Any::class.java)
+        val payloadCaptor = ArgumentCaptor.forClass(LobbyUpdatedEvent::class.java)
 
         lobbyBroadcastService.broadcastLobbyUpdated(lobby)
 
         verify(messagingTemplate).convertAndSend(
-            org.mockito.Mockito.eq("/topic/lobbies/lobby-1"),
+            org.mockito.Mockito.eq("$TOPIC_LOBBIES_PATH/lobby-1"),
             payloadCaptor.capture()
         )
 
-        val event = payloadCaptor.value as LobbyUpdatedEvent
+        val event = payloadCaptor.value
         assertEquals("lobby.updated", event.type)
         assertEquals("lobby-1", event.lobby.lobbyId)
         assertEquals("host-1", event.lobby.hostUserId)
@@ -76,16 +80,16 @@ class LobbyBroadcastServiceTest {
 
     @Test
     fun `broadcastLobbyDeleted sends deleted event to lobby topic`() {
-        val payloadCaptor = ArgumentCaptor.forClass(Any::class.java)
+        val payloadCaptor = ArgumentCaptor.forClass(LobbyDeletedEvent::class.java)
 
         lobbyBroadcastService.broadcastLobbyDeleted("lobby-1")
 
         verify(messagingTemplate).convertAndSend(
-            org.mockito.Mockito.eq("/topic/lobbies/lobby-1"),
+            org.mockito.Mockito.eq("$TOPIC_LOBBIES_PATH/lobby-1"),
             payloadCaptor.capture()
         )
 
-        val event = payloadCaptor.value as LobbyDeletedEvent
+        val event = payloadCaptor.value
         assertEquals("lobby.deleted", event.type)
         assertEquals("lobby-1", event.lobbyId)
 
@@ -94,16 +98,16 @@ class LobbyBroadcastServiceTest {
 
     @Test
     fun `broadcastLobbyStarted sends started event to lobby topic`() {
-        val payloadCaptor = ArgumentCaptor.forClass(Any::class.java)
+        val payloadCaptor = ArgumentCaptor.forClass(LobbyStartedEvent::class.java)
 
         lobbyBroadcastService.broadcastLobbyStarted("lobby-1", "match-1")
 
         verify(messagingTemplate).convertAndSend(
-            org.mockito.Mockito.eq("/topic/lobbies/lobby-1"),
+            org.mockito.Mockito.eq("$TOPIC_LOBBIES_PATH/lobby-1"),
             payloadCaptor.capture()
         )
 
-        val event = payloadCaptor.value as LobbyStartedEvent
+        val event = payloadCaptor.value
         assertEquals("lobby.started", event.type)
         assertEquals("lobby-1", event.lobbyId)
         assertEquals("match-1", event.matchId)
