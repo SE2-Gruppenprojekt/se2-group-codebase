@@ -23,8 +23,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import at.aau.serg.android.ui.screens.browselobbies.BrowsingLobbiesScreen
 import at.aau.serg.android.ui.screens.browselobbies.LobbyBrowseItem
+import at.aau.serg.android.ui.screens.browselobbies.components.BrowsingLobbiesScreen
 import shared.models.lobby.response.LobbyListItemResponse
 
 
