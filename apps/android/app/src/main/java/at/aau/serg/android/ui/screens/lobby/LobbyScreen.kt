@@ -1,11 +1,9 @@
 package at.aau.serg.android.ui.screens.lobby
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.navigation.NavHostController
 import at.aau.serg.android.ui.screens.lobby.components.LobbyContent
-
+import shared.models.lobby.domain.Lobby
 
 @Composable
 fun LobbyScreen(
@@ -15,12 +13,14 @@ fun LobbyScreen(
 ) {
     val lobbyState by viewModel.lobby.collectAsState()
 
+    // Lädt die Lobby-Daten beim ersten Laden
     LaunchedEffect(lobbyId) {
         viewModel.loadLobby(lobbyId)
     }
 
+    // Hier rufst du die externe LobbyContent Composable auf
     LobbyContent(
-        lobbyState = lobbyState,
+        lobby = lobbyState,       // <- hier Lobby statt state
         onLeaveLobby = { id ->
             viewModel.leaveLobby(
                 lobbyId = id,

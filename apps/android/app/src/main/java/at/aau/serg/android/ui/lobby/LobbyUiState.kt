@@ -11,3 +11,4 @@ object LobbyUiState {
     val stackEnabled = mutableStateOf(true)
     val roomCode = mutableStateOf("")
 }
+
