@@ -27,8 +27,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -47,8 +45,8 @@ fun WaitingRoomScreen(
     onBack: () -> Unit,
     onSettings: () -> Unit,
     onGameStarted: () -> Unit = {},
-    lobbyId: String? = null,
-    viewModel: LobbyViewModel? = null
+    lobbyId: String,
+    viewModel: LobbyViewModel
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -56,19 +54,15 @@ fun WaitingRoomScreen(
 
     val darkMode = ThemeState.isDarkMode.value
 
-    val fetchedLobbyState = viewModel?.lobby?.collectAsState()
-    val fetchedLobby = fetchedLobbyState?.value
+    val fetchedLobby by viewModel.lobby.collectAsState()
 
     // observe WebSocket-State
-    val isDeleted by viewModel?.isDeleted?.collectAsState() ?: remember { mutableStateOf(false) }
-    val matchId by viewModel?.matchId?.collectAsState() ?: remember { mutableStateOf(null) }
-
+    val isDeleted by viewModel.isDeleted.collectAsState()
+    val matchId by viewModel.matchId.collectAsState()
 
     LaunchedEffect(lobbyId) {
-        if (lobbyId != null && viewModel != null) {
-            viewModel.loadLobby(lobbyId) // REST: immediate initial state
-            viewModel.connectWebSocket(lobbyId) // WebSocket: live updates
-        }
+        viewModel.loadLobby(lobbyId) // REST: immediate initial state
+        viewModel.connectWebSocket(lobbyId) // WebSocket: live updates
     }
 
     // Lobby deleted → go back
@@ -81,24 +75,17 @@ fun WaitingRoomScreen(
         if (matchId != null) onGameStarted()
     }
 
-    // shared lobby state
-    val fallbackLobbyName by LobbyUiState.lobbyName
-    val fallbackMaxPlayers by LobbyUiState.maxPlayers
     // Lobby state
     val lobbyName by LobbyUiState.lobbyName
     val maxPlayers by LobbyUiState.maxPlayers
     val turnTimer by LobbyUiState.turnTimer
     val startingCards by LobbyUiState.startingCards
     val stackEnabled by LobbyUiState.stackEnabled
-
-    if (LobbyUiState.roomCode.value.isBlank() && lobbyId == null) {
-        LobbyUiState.roomCode.value = generateRoomCode()
-    }
     val roomCode by LobbyUiState.roomCode
 
     val players = fetchedLobby?.players ?: emptyList()
-    val joinedCount = if (fetchedLobby != null) players.size else 2
-    val isLoading = lobbyId != null && fetchedLobby == null
+    val joinedCount = fetchedLobby?.players?.size ?: 0
+    val isLoading = fetchedLobby == null
 
     // Colors (minimal, safe)
     val gradientTop = if (darkMode) Color(0xFF0F172A) else Color(0xFFF5F7FB)
