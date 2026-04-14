@@ -35,7 +35,7 @@ fun DirectJoinSection(
             onClick = onJoin,
             enabled = enabled
         ) {
-            Text("Join")
+            Text("Join by ID")
         }
     }
 }
