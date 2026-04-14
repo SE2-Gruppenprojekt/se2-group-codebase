@@ -23,8 +23,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import at.aau.serg.android.ui.screens.browselobbies.BrowsingLobbiesScreen
 import at.aau.serg.android.ui.screens.browselobbies.LobbyBrowseItem
+import at.aau.serg.android.ui.screens.browselobbies.components.BrowsingLobbiesScreen
 import shared.models.lobby.response.LobbyListItemResponse
 
 
@@ -40,6 +40,7 @@ fun AppNavHost(
         modifier = Modifier.padding(innerPadding)
     ) {
 
+        // HOME
         composable("home") {
             val parentEntry = remember(navController.currentBackStackEntry) {
                 navController.getBackStackEntry("root")
@@ -52,13 +53,11 @@ fun AppNavHost(
             HomeScreen(
                 state = state,
                 onCreateLobby = {
-                    // create lobby directly from backend
                     lobbyVM.createLobby(
                         onSuccess = { lobby ->
-                            // Navigate with ONLY the lobbyId
-                            navController.navigate("lobby/${lobby.lobbyId}")
+                            navController.navigate("waitingRoom/${lobby.lobbyId}")
                         },
-                        onError = { /* show error */ }
+                        onError = { }
                     )
                 },
                 onBrowseFancyLobbies = { navController.navigate("browsingLobbies") },
@@ -69,12 +68,15 @@ fun AppNavHost(
                     )
                 },
                 onSettings = { navController.navigate("settings") },
-                onWaitingRoom = { navController.navigate("waitingRoom") },
+                onWaitingRoom = {
+                    // FIX: muss LobbyID bekommen → placeholder nicht erlaubt
+                    // optional später entfernen
+                },
                 onNewLobbyScreen = { navController.navigate("createLobbyFancy") }
             )
         }
 
-        // LEADERBOARD SCREEN
+        // LEADERBOARD
         composable("leaderboard") {
             val parentEntry = remember(navController.currentBackStackEntry) {
                 navController.getBackStackEntry("root")
@@ -88,7 +90,7 @@ fun AppNavHost(
             )
         }
 
-        // LOBBY SCREEN — loads lobby inside the screen
+        // LOBBY SCREEN
         composable("lobby/{lobbyId}") { backStackEntry ->
             val lobbyId = backStackEntry.arguments?.getString("lobbyId")!!
             val vm: LobbyViewModel = viewModel()
@@ -100,18 +102,17 @@ fun AppNavHost(
             )
         }
 
-        // simple create lobby screen
+        // CREATE LOBBY (simple)
         composable("createLobby") {
             CreateLobbyScreen(
                 onBack = { navController.popBackStack() },
-                onCreate = { lobbyName ->
-                    // later Backend Call
+                onCreate = {
                     navController.popBackStack()
                 }
             )
         }
 
-        // fancy create lobby screen
+        // CREATE LOBBY FANCY
         composable("createLobbyFancy") {
             val parentEntry = remember(navController.currentBackStackEntry) {
                 navController.getBackStackEntry("root")
@@ -141,7 +142,7 @@ fun AppNavHost(
             )
         }
 
-        // second browse screen
+        // BROWSE LOBBIES
         composable("browsingLobbies") {
             val parentEntry = remember(navController.currentBackStackEntry) {
                 navController.getBackStackEntry("root")
@@ -179,13 +180,7 @@ fun AppNavHost(
             )
         }
 
-        composable("waitingRoom") {
-            WaitingRoomScreen(
-                onBack = { navController.popBackStack() },
-                onSettings = { navController.navigate("settings") }
-            )
-        }
-
+        // ✅ ONLY ONE WAITING ROOM ROUTE (FIXED)
         composable("waitingRoom/{lobbyId}") { backStackEntry ->
             val lobbyId = backStackEntry.arguments?.getString("lobbyId")!!
             val vm: LobbyViewModel = viewModel()
@@ -198,7 +193,7 @@ fun AppNavHost(
             )
         }
 
-        // settings screen
+        // SETTINGS
         composable("settings") {
             SettingsScreen(
                 onBack = { navController.popBackStack() }
@@ -207,13 +202,13 @@ fun AppNavHost(
     }
 }
 
-private fun LobbyListItemResponse.toBrowseItem(): LobbyBrowseItem {
+// mapper
+ fun LobbyListItemResponse.toBrowseItem(): LobbyBrowseItem {
     return LobbyBrowseItem(
         lobbyId = lobbyId,
         hostId = hostUserId,
         currentPlayers = currentPlayerCount,
         maxPlayers = maxPlayers,
-        // The current backend lobby list does not expose these fields yet.
         turnTimerSeconds = 60,
         startingCards = 7,
         isOpen = status == "OPEN" && currentPlayerCount < maxPlayers,

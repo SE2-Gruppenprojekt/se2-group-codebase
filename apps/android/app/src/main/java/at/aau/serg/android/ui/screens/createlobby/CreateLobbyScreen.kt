@@ -1,10 +1,19 @@
 package at.aau.serg.android.ui.screens.createlobby
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import at.aau.serg.android.ui.screens.createlobby.components.CreateLobbyActions
+import at.aau.serg.android.ui.screens.createlobby.components.CreateLobbyHeader
+import at.aau.serg.android.ui.screens.createlobby.components.LobbyNameField
 
 @Composable
 fun CreateLobbyScreen(
@@ -19,34 +28,17 @@ fun CreateLobbyScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.Center
     ) {
+        CreateLobbyHeader()
 
-        Text("Create Lobby", style = MaterialTheme.typography.headlineMedium)
-
-        Spacer(Modifier.height(16.dp))
-
-        OutlinedTextField(
+        LobbyNameField(
             value = lobbyName,
-            onValueChange = { lobbyName = it },
-            label = { Text("Lobby Name") },
-            modifier = Modifier.fillMaxWidth()
+            onValueChange = { lobbyName = it }
         )
 
-        Spacer(Modifier.height(16.dp))
-
-        Button(
-            onClick = { onCreate(lobbyName) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Create")
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        OutlinedButton(
-            onClick = onBack,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Back")
-        }
+        CreateLobbyActions(
+            lobbyName = lobbyName,
+            onCreate = onCreate,
+            onBack = onBack
+        )
     }
 }

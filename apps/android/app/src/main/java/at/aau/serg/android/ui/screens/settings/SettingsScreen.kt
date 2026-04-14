@@ -1,18 +1,18 @@
 package at.aau.serg.android.ui.screens.settings
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import at.aau.serg.android.ui.theme.ThemeState
+import at.aau.serg.android.ui.general_components.BackButton
+import at.aau.serg.android.ui.screens.settings.components.DarkModeToggle
+import at.aau.serg.android.ui.screens.settings.components.SettingsHeader
+import at.aau.serg.android.ui.screens.settings.components.SettingsTopBar
 
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit
 ) {
-
-    var darkMode by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -20,30 +20,13 @@ fun SettingsScreen(
             .padding(16.dp)
     ) {
 
-        Text("Settings", style = MaterialTheme.typography.headlineMedium)
+        SettingsTopBar(onBack)
 
         Spacer(Modifier.height(16.dp))
 
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Dark Mode")
-            Switch(
-                checked = ThemeState.isDarkMode.value,
-                onCheckedChange = {
-                    ThemeState.isDarkMode.value = it
-                }
-            )
-        }
+        DarkModeToggle()
 
         Spacer(Modifier.height(16.dp))
 
-        OutlinedButton(
-            onClick = onBack,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Back")
-        }
     }
 }
