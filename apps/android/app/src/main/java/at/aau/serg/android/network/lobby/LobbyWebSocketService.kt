@@ -18,7 +18,7 @@ class LobbyWebSocketService {
 
     private var session: StompSession? = null
 
-    // Suspend-Funktion — läuft bis die Coroutine gecancelled wird
+    // Suspend function — runs until the coroutine is cancelled
     suspend fun connect(
         lobbyId: String,
         onLobbyUpdated: (LobbyUpdatedPayload) -> Unit,
@@ -30,7 +30,7 @@ class LobbyWebSocketService {
 
         session!!
             .subscribeText("/topic/lobbies/$lobbyId")
-            .catch { e -> Log.e("LobbyWebSocket", "Fehler beim Empfangen", e) }
+            .catch { e -> Log.e("LobbyWebSocket", "Error receiving message", e) }
             .collect { message -> dispatch(message, onLobbyUpdated, onLobbyDeleted, onLobbyStarted) }
     }
 
@@ -38,7 +38,7 @@ class LobbyWebSocketService {
         try {
             session?.disconnect()
         } catch (e: Exception) {
-            Log.e("LobbyWebSocket", "Fehler beim Disconnect", e)
+            Log.e("LobbyWebSocket", "Error during disconnect", e)
         } finally {
             session = null
         }
@@ -66,7 +66,7 @@ class LobbyWebSocketService {
                 moshi.adapter(LobbyStartedPayload::class.java)
                     .fromJson(message)?.let(onLobbyStarted)
 
-            else -> Log.w("LobbyWebSocket", "Unbekanntes Event: $type")
+            else -> Log.w("LobbyWebSocket", "Unknown event: $type")
         }
     }
 }
