@@ -17,3 +17,5 @@ data class LobbyStartedPayload(
     val lobbyId: String,
     val matchId: String
 )
+
+data class LobbyEventType(val type: String)

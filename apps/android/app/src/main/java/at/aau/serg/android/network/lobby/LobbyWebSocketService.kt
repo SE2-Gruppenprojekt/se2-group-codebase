@@ -44,26 +44,29 @@ class LobbyWebSocketService {
         }
     }
 
+    private val typeAdapter = moshi.adapter(LobbyEventType::class.java)
+
     private fun dispatch(
         message: String,
         onLobbyUpdated: (LobbyUpdatedPayload) -> Unit,
         onLobbyDeleted: (LobbyDeletedPayload) -> Unit,
         onLobbyStarted: (LobbyStartedPayload) -> Unit
     ) {
-        when {
-            message.contains("\"type\":\"lobby.updated\"") ->
+        val type = typeAdapter.fromJson(message)?.type
+        when (type) {
+            "lobby.updated" ->
                 moshi.adapter(LobbyUpdatedPayload::class.java)
                     .fromJson(message)?.let(onLobbyUpdated)
 
-            message.contains("\"type\":\"lobby.deleted\"") ->
+            "lobby.deleted" ->
                 moshi.adapter(LobbyDeletedPayload::class.java)
                     .fromJson(message)?.let(onLobbyDeleted)
 
-            message.contains("\"type\":\"lobby.started\"") ->
+            "lobby.started" ->
                 moshi.adapter(LobbyStartedPayload::class.java)
                     .fromJson(message)?.let(onLobbyStarted)
 
-            else -> Log.w("LobbyWebSocket", "Unbekanntes Event: $message")
+            else -> Log.w("LobbyWebSocket", "Unbekanntes Event: $type")
         }
     }
 }
