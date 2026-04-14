@@ -8,6 +8,8 @@ import at.aau.serg.android.network.lobby.LobbyAPI
 import at.aau.serg.android.network.lobby.LobbyService
 import at.aau.serg.android.network.lobby.LobbyWebSocketService
 import at.aau.serg.android.session.AppSession
+import at.aau.serg.android.ui.lobby.LobbiesUiState
+import at.aau.serg.android.ui.lobby.LobbyUiStateLoading
 import at.aau.serg.android.util.DefaultDispatcherProvider
 import at.aau.serg.android.util.DispatcherProvider
 import at.aau.serg.android.viewmodel.BaseViewModel
@@ -27,6 +29,12 @@ class LobbyViewModel(
     private val webSocketService: LobbyWebSocketService = LobbyWebSocketService(),
     dispatchers: DispatcherProvider = DefaultDispatcherProvider
 ) : BaseViewModel(dispatchers) {
+
+    private val _state = MutableStateFlow<LobbyUiStateLoading>(LobbyUiStateLoading.Loading)
+    val state = _state.asStateFlow()
+
+    private val _lobbiesState = MutableStateFlow<LobbiesUiState>(LobbiesUiState.Loading)
+    val lobbiesState = _lobbiesState.asStateFlow()
 
     private val _lobby = MutableStateFlow<Lobby?>(null)
     val lobby = _lobby.asStateFlow()
@@ -73,18 +81,31 @@ class LobbyViewModel(
     }
 
     fun loadLobbies(onError: () -> Unit = {}) {
+        _lobbiesState.value = LobbiesUiState.Loading
         launchRequest(
             request = { api.getLobbies() },
-            onSuccess = { loaded -> _lobbies.value = loaded },
-            onError = { onError() }
+            onSuccess = { loaded ->
+                _lobbies.value = loaded
+                _lobbiesState.value = LobbiesUiState.Success(loaded)
+            },
+            onError = {
+                _lobbiesState.value = LobbiesUiState.Error("Could not load lobbies")
+                onError()
+            }
         )
     }
 
     fun loadLobby(lobbyId: String) {
+        _state.value = LobbyUiStateLoading.Loading
         launchRequest(
             request = { api.getLobby(lobbyId).toDomain() },
-            onSuccess = { loaded -> _lobby.value = loaded },
-            onError = {}
+            onSuccess = { lobby ->
+                _lobby.value = lobby
+                _state.value = LobbyUiStateLoading.Success(lobby)
+            },
+            onError = {
+                _state.value = LobbyUiStateLoading.Error("Could not load lobby")
+            }
         )
     }
 
@@ -97,20 +118,22 @@ class LobbyViewModel(
         onSuccess: (Lobby) -> Unit = {},
         onError: () -> Unit = {}
     ) {
+        _state.value = LobbyUiStateLoading.Loading
         launchRequest(
             request = {
                 api.createLobby(
                     userId,
-                    CreateLobbyRequest(
-                        displayName = displayName,
-                        maxPlayers = maxPlayers,
-                        isPrivate = isPrivate,
-                        allowGuests = allowGuests
-                    )
+                    CreateLobbyRequest(displayName, maxPlayers, isPrivate, allowGuests)
                 ).toDomain()
             },
-            onSuccess = { lobby -> onSuccess(lobby) },
-            onError = { onError() }
+            onSuccess = { lobby ->
+                _state.value = LobbyUiStateLoading.Success(lobby)
+                onSuccess(lobby)
+            },
+            onError = {
+                _state.value = LobbyUiStateLoading.Error("Could not create lobby")
+                onError()
+            }
         )
     }
 
@@ -122,15 +145,7 @@ class LobbyViewModel(
         onError: () -> Unit = {}
     ) {
         launchRequest(
-            request = {
-                api.joinLobby(
-                    lobbyId,
-                    JoinLobbyRequest(
-                        userId = userId,
-                        displayName = displayName
-                    )
-                ).toDomain()
-            },
+            request = { api.joinLobby(lobbyId, JoinLobbyRequest(userId, displayName)).toDomain() },
             onSuccess = { lobby -> onSuccess(lobby) },
             onError = { onError() }
         )
@@ -145,18 +160,9 @@ class LobbyViewModel(
     ) {
         launchRequest(
             request = {
-                val existingLobby = api.getLobby(lobbyId).toDomain()
-                if (existingLobby.players.any { it.userId == userId }) {
-                    existingLobby
-                } else {
-                    api.joinLobby(
-                        lobbyId,
-                        JoinLobbyRequest(
-                            userId = userId,
-                            displayName = displayName
-                        )
-                    ).toDomain()
-                }
+                val existing = api.getLobby(lobbyId).toDomain()
+                if (existing.players.any { it.userId == userId }) existing
+                else api.joinLobby(lobbyId, JoinLobbyRequest(userId, displayName)).toDomain()
             },
             onSuccess = { lobby -> onSuccess(lobby) },
             onError = { onError() }
@@ -171,9 +177,7 @@ class LobbyViewModel(
     ) {
         launchRequest(
             request = { api.leaveLobby(userId, lobbyId) },
-            onSuccess = { success ->
-                if (success) onSuccess() else onError()
-            },
+            onSuccess = { if (it) onSuccess() else onError() },
             onError = { onError() }
         )
     }

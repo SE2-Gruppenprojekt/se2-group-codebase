@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import at.aau.serg.android.ui.screens.browselobbies.components.*
 
 @Composable
 fun BrowseLobbiesScreen(
@@ -21,28 +22,25 @@ fun BrowseLobbiesScreen(
             .padding(16.dp)
     ) {
 
-        Text("Browse Lobbies", style = MaterialTheme.typography.headlineMedium)
+        // HEADER COMPONENT
+        BrowseLobbiesHeader()
 
         Spacer(Modifier.height(16.dp))
 
-        LazyColumn {
-            items(lobbies) { lobby ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(lobby)
-                        Button(onClick = { onJoin(lobby) }) {
-                            Text("Join")
-                        }
-                    }
+        // CONTENT
+        if (lobbies.isEmpty()) {
+            LobbyEmptyState()
+        } else {
+
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(lobbies) { lobby ->
+                    LobbyItem(
+                        lobby = lobby,
+                        onJoin = onJoin
+                    )
                 }
             }
         }
