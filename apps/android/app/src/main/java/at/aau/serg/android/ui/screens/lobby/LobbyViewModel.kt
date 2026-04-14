@@ -167,7 +167,9 @@ class LobbyViewModel(
                 if (existing.players.any { it.userId == userId }) existing
                 else api.joinLobby(lobbyId, JoinLobbyRequest(userId, displayName)).toDomain()
             },
-            onSuccess = { lobby -> onSuccess(lobby) },
+            onSuccess = { lobby ->
+                _lobby.value = lobby
+                onSuccess(lobby) },
             onError = { onError() }
         )
     }
