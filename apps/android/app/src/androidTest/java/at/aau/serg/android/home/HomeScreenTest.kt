@@ -1,4 +1,4 @@
-package at.aau.serg.android.ui.screens.home
+package at.aau.serg.android.home
 
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -11,6 +11,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+// Preexisting might need refactoring
 class HomeScreenTest {
 
     @get:Rule
