@@ -21,11 +21,8 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import shared.models.lobby.domain.Lobby
-import shared.models.lobby.domain.LobbyPlayer
-import shared.models.lobby.domain.LobbySettings
-import shared.models.lobby.domain.LobbyStatus
 import shared.models.lobby.request.CreateLobbyRequest
+import shared.models.lobby.response.LobbyListItemResponse
 import shared.models.lobby.response.LobbyResponse
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -37,7 +34,7 @@ class LobbyViewModelTest {
 
     // Test dispatcher provider
     private class TestDispatcherProvider(
-        private val dispatcher: CoroutineDispatcher
+        dispatcher: CoroutineDispatcher
     ) : DispatcherProvider {
         override val main = dispatcher
         override val io = dispatcher
@@ -120,4 +117,71 @@ class LobbyViewModelTest {
         assertTrue(callbackCalled)
     }
 
+    // --- BROWSE LOBBIES ---
+    @Test
+    fun loadLobbies_success() = runTest {
+        val list = listOf(
+            LobbyListItemResponse(
+                lobbyId = "1",
+                hostUserId = "host",
+                status = "OPEN",
+                currentPlayerCount = 1,
+                maxPlayers = 1,
+                isPrivate = false)
+        )
+
+        coEvery { api.getLobbies() } returns list
+        val vm = createVM()
+        vm.loadLobbies()
+        testDispatcher.scheduler.runCurrent()
+
+        assertEquals(list, vm.lobbies.value)
+        assertTrue(vm.lobbiesState.value is LobbiesUiState.Success)
+    }
+
+    @Test
+    fun loadLobbies_error() = runTest {
+        coEvery { api.getLobbies() } throws RuntimeException()
+        var callbackCalled = false
+        val vm = createVM()
+        vm.loadLobbies { callbackCalled = true }
+        testDispatcher.scheduler.runCurrent()
+
+        assertTrue(vm.lobbiesState.value is LobbiesUiState.Error)
+        assertTrue(callbackCalled)
+    }
+
+    @Test
+    fun loadLobby_success() = runTest {
+        val response = LobbyResponse(
+            lobbyId = "123",
+            hostUserId = "host1",
+            players = emptyList(),
+            status = "OPEN",
+            maxPlayers = 4,
+            isPrivate = false,
+            allowGuests = true
+        )
+
+        coEvery { api.getLobby("123") } returns response
+        val vm = createVM()
+        vm.loadLobby("123")
+        testDispatcher.scheduler.runCurrent()
+
+        val state = vm.state.value
+        assertTrue(state is LobbyUiStateLoading.Success)
+
+        val lobby = vm.lobby.value
+        assertEquals("123", lobby?.lobbyId)
+    }
+
+    @Test
+    fun loadLobby_error() = runTest {
+        coEvery { api.getLobby("123") } throws RuntimeException()
+        val vm = createVM()
+        vm.loadLobby("123")
+        testDispatcher.scheduler.runCurrent()
+
+        assertTrue(vm.state.value is LobbyUiStateLoading.Error)
+    }
 }
