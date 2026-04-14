@@ -1,16 +1,24 @@
 package at.aau.serg.android.ui.screens.lobby
 
+import android.util.Log
+import at.aau.serg.android.data.lobby.mapper.toDomain
 import at.aau.serg.android.network.lobby.LobbyAPI
+import at.aau.serg.android.network.lobby.LobbyDeletedPayload
+import at.aau.serg.android.network.lobby.LobbyStartedPayload
+import at.aau.serg.android.network.lobby.LobbyUpdatedPayload
 import at.aau.serg.android.network.lobby.LobbyWebSocketService
 import at.aau.serg.android.ui.lobby.LobbiesUiState
 import at.aau.serg.android.ui.lobby.LobbyUiStateLoading
-import at.aau.serg.android.ui.screens.leaderboard.LeaderboardViewModel
-import at.aau.serg.android.ui.screens.leaderboard.LeaderboardViewModelTest.TestDispatcherProvider
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.util.DispatcherProvider
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.invoke
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -50,6 +58,12 @@ class LobbyViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
+    }
+
+    @Before
+    fun mockLog() {
+        mockkStatic(Log::class)
+        every { Log.e(any(), any(), any()) } returns 0
     }
 
     @After
@@ -362,5 +376,118 @@ class LobbyViewModelTest {
         testDispatcher.scheduler.runCurrent()
 
         assertTrue(callbackCalled)
+    }
+
+    // --- WEBSOCKET  ---
+    @Test
+    fun connectWebSocket_OnLobbyUpdated() = runTest {
+        val vm = createVM()
+        val response = LobbyResponse(
+            lobbyId = "123",
+            hostUserId = "host1",
+            players = emptyList(),
+            status = "OPEN",
+            maxPlayers = 4,
+            isPrivate = false,
+            allowGuests = true
+        )
+        coEvery {
+            webSocket.connect(
+                lobbyId = "123",
+                onLobbyUpdated = captureLambda(),
+                onLobbyDeleted = any(),
+                onLobbyStarted = any()
+            )
+        } coAnswers {
+            lambda<(LobbyUpdatedPayload) -> Unit>().invoke(
+                LobbyUpdatedPayload(
+                    type = "lobby.update",
+                    lobby = response
+                )
+            )
+        }
+        vm.connectWebSocket("123")
+        testDispatcher.scheduler.runCurrent()
+
+        val expected = response.toDomain()
+        assertEquals(expected, vm.lobby.value)
+    }
+
+    @Test
+    fun connectWebSocket_OnLobbyDeleted() = runTest {
+        val vm = createVM()
+        coEvery {
+            webSocket.connect(
+                lobbyId = "123",
+                onLobbyUpdated = any(),
+                onLobbyDeleted = captureLambda(),
+                onLobbyStarted = any()
+            )
+        } coAnswers {
+            lambda<(LobbyDeletedPayload) -> Unit>().invoke(
+                LobbyDeletedPayload(
+                    type = "lobby.deleted",
+                    lobbyId = "123"
+                )
+            )
+        }
+        vm.connectWebSocket("123")
+        testDispatcher.scheduler.runCurrent()
+
+        assertTrue(vm.isDeleted.value)
+    }
+
+    @Test
+    fun connectWebSocket_setsMatchIdOnLobbyStarted() = runTest {
+        val vm = createVM()
+        coEvery {
+            webSocket.connect(
+                lobbyId = "123",
+                onLobbyUpdated = any(),
+                onLobbyDeleted = any(),
+                onLobbyStarted = captureLambda()
+            )
+        } coAnswers {
+            lambda<(LobbyStartedPayload) -> Unit>().invoke(
+                LobbyStartedPayload(
+                    type = "lobby.started",
+                    lobbyId = "123",
+                    matchId = "MATCH42"
+                )
+            )
+        }
+        vm.connectWebSocket("123")
+        testDispatcher.scheduler.runCurrent()
+
+        assertEquals("MATCH42", vm.matchId.value)
+    }
+
+    @Test
+    fun connectWebSocket_handlesException() = runTest {
+        val vm = createVM()
+        coEvery { webSocket.connect(any(), any(), any(), any()) } throws RuntimeException()
+        vm.connectWebSocket("123")
+        testDispatcher.scheduler.runCurrent()
+
+        // No crash, state unchanged
+        assertNull(vm.lobby.value)
+        assertFalse(vm.isDeleted.value)
+        assertNull(vm.matchId.value)
+    }
+
+    @Test
+    fun onCleared_cancelsWebSocketJobAndDisconnects() = runTest {
+        val vm = createVM()
+        // requires 'just Runs' because disconnect is a suspended function
+        coEvery { webSocket.disconnect() } just Runs
+        vm.connectWebSocket("123")
+        testDispatcher.scheduler.runCurrent()
+        // Android sets onCleared as protected so we can't access it directly
+        val method = androidx.lifecycle.ViewModel::class.java.getDeclaredMethod("onCleared")
+        method.isAccessible = true
+        method.invoke(vm)
+
+        testDispatcher.scheduler.runCurrent()
+        coVerify { webSocket.disconnect() }
     }
 }
