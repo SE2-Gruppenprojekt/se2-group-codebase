@@ -77,6 +77,9 @@ class LobbyViewModel(
     // clean up when screen is exited
     override fun onCleared() {
         webSocketJob?.cancel()
+        viewModelScope.launch {
+            webSocketService.disconnect()
+        }
         super.onCleared()
     }
 
