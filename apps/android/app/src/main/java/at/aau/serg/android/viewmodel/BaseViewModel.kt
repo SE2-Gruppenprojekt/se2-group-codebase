@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 abstract class BaseViewModel(
-    private val dispatchers: DispatcherProvider = DefaultDispatcherProvider
+    protected val dispatchers: DispatcherProvider = DefaultDispatcherProvider
 ) : ViewModel() {
 
     private val _loadState = MutableStateFlow<LoadState>(LoadState.Idle)

@@ -5,6 +5,29 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -21,8 +44,9 @@ import kotlin.random.Random
 fun WaitingRoomScreen(
     onBack: () -> Unit,
     onSettings: () -> Unit,
-    lobbyId: String? = null,
-    viewModel: LobbyViewModel? = null
+    onGameStarted: () -> Unit = {},
+    lobbyId: String,
+    viewModel: LobbyViewModel
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -30,13 +54,25 @@ fun WaitingRoomScreen(
 
     val darkMode = ThemeState.isDarkMode.value
 
-    val fetchedLobbyState = viewModel?.lobby?.collectAsState()
-    val fetchedLobby = fetchedLobbyState?.value
+    val fetchedLobby by viewModel.lobby.collectAsState()
+
+    // observe WebSocket-State
+    val isDeleted by viewModel.isDeleted.collectAsState()
+    val matchId by viewModel.matchId.collectAsState()
 
     LaunchedEffect(lobbyId) {
-        if (lobbyId != null && viewModel != null) {
-            viewModel.loadLobby(lobbyId)
-        }
+        viewModel.loadLobby(lobbyId) // REST: immediate initial state
+        viewModel.connectWebSocket(lobbyId) // WebSocket: live updates
+    }
+
+    // Lobby deleted → go back
+    LaunchedEffect(isDeleted) {
+        if (isDeleted) onBack()
+    }
+
+    // game started → navigate on
+    LaunchedEffect(matchId) {
+        if (matchId != null) onGameStarted()
     }
 
     // Lobby state
@@ -45,15 +81,11 @@ fun WaitingRoomScreen(
     val turnTimer by LobbyUiState.turnTimer
     val startingCards by LobbyUiState.startingCards
     val stackEnabled by LobbyUiState.stackEnabled
-
-    if (LobbyUiState.roomCode.value.isBlank() && lobbyId == null) {
-        LobbyUiState.roomCode.value = generateRoomCode()
-    }
     val roomCode by LobbyUiState.roomCode
 
     val players = fetchedLobby?.players ?: emptyList()
-    val joinedCount = if (fetchedLobby != null) players.size else 2
-    val isLoading = lobbyId != null && fetchedLobby == null
+    val joinedCount = fetchedLobby?.players?.size ?: 0
+    val isLoading = fetchedLobby == null
 
     // Colors (minimal, safe)
     val gradientTop = if (darkMode) Color(0xFF0F172A) else Color(0xFFF5F7FB)
