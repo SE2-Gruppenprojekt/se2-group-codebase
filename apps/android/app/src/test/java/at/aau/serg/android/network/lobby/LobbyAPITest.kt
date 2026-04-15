@@ -91,10 +91,11 @@ class LobbyAPITest {
             lobbyId = "1",
             hostUserId ="user123",
             status="OPEN",
-            emptyList(),
+            players = emptyList(),
             maxPlayers = 4,
             isPrivate = false,
-            allowGuests = true)
+            allowGuests = true
+        )
         coEvery { service.joinLobby("1", request) } returns expected
         val result = api.joinLobby("1", request)
 
