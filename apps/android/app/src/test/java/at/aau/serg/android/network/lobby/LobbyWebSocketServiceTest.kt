@@ -40,6 +40,12 @@ class LobbyWebSocketServiceTest {
         service = LobbyWebSocketService(client)
     }
 
+    @After
+    fun tearDown() {
+        unmockkAll()
+    }
+
+
     // --- CONNECT ---
     @Test
     fun connect_storesSessionAndCollectsMessages() = runBlocking {
