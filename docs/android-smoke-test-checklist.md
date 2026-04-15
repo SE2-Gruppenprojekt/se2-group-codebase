@@ -1,99 +1,99 @@
 # Frontend Smoke Test Checklist (Android)
 
-## Ziel
-Sicherstellen, dass UI, ViewModels und WebSocket-Updates korrekt im Android Client funktionieren.
+## Goal
+Ensure that UI, ViewModels and WebSocket updates work correctly in the Android client.
 
 ---
 
 ## 1. App Start
 
-- [x] App startet ohne Crash
-- [x] Navigation funktioniert (Home → Lobby → Waiting Room)
+- [x] App starts without crash
+- [x] Navigation works (Home → Lobby → Waiting Room)
 
 ---
 
-## 2. Lobby Übersicht (BrowseLobbiesScreen)
+## 2. Lobby Overview (BrowseLobbiesScreen)
 
-- [x] Lobbys werden geladen
-- [x] Loading State wird angezeigt (falls aktiv)
-- [x] Empty State erscheint korrekt
-- [x] Join Button funktioniert
+- [x] Lobbies are loaded
+- [x] Loading state is displayed (if active)
+- [x] Empty state appears correctly
+- [x] Join button works
 
 ---
 
-## 3. Lobby erstellen (CreateLobbyScreen / NewLobbyScreen)
+## 3. Create Lobby (CreateLobbyScreen / NewLobbyScreen)
 
-- [x] Lobby kann erstellt werden
-- [x] Loading Button funktioniert (isLoading State)
-- [x] Fehler werden angezeigt (falls API fail)
-- [x] Nach Create → Navigation funktioniert
+- [x] Lobby can be created
+- [x] Loading button works (isLoading state)
+- [x] Errors are displayed (if API fails)
+- [x] After create → navigation works
 
 ---
 
 ## 4. Waiting Room UI
 
-- [x] Lobby Daten werden angezeigt
-- [x] Room Code wird korrekt angezeigt
-- [x] Player Liste wird gerendert
-- [ ] Placeholder Slots funktionieren
+- [x] Lobby data is displayed
+- [x] Room code is displayed correctly
+- [x] Player list is rendered
+- [ ] Placeholder slots work
 
 ---
 
 ## 5. WebSocket Integration
 
-- [x] connectWebSocket wird beim Öffnen der Lobby ausgelöst
-- [x] Kein Crash bei Verbindung
-- [x] Keine "Unknown event" Logs
+- [x] connectWebSocket is triggered when opening the lobby
+- [x] No crash on connection
+- [x] No "Unknown event" logs
 
 ---
 
 ## 6. LIVE UPDATES (Core Feature)
 
 ### Player Join
-- [x] Neuer Spieler erscheint sofort im Waiting Room
-- [x] Kein manueller Refresh nötig
+- [x] New player appears immediately in Waiting Room
+- [x] No manual refresh needed
 
 ### Player Leave
-- [x] Spieler verschwindet sofort aus Liste
+- [x] Player disappears immediately from list
 
 ### Lobby Update
-- [x] Änderungen (maxPlayers, state) werden aktualisiert
+- [x] Changes (maxPlayers, state) are updated
 
 ---
 
 ## 7. Lobby Started Event
 
-- [ ] matchId wird empfangen
-- [ ] UI reagiert (Navigation / State Update)
+- [ ] matchId is received
+- [ ] UI reacts (Navigation / State Update)
 
 ---
 
 ## 8. Settings Screen
 
-- [x] Dark Mode Toggle funktioniert
-- [x] State bleibt erhalten
-- [x] UI reagiert sofort
+- [x] Dark mode toggle works
+- [x] State is preserved
+- [x] UI reacts immediately
 
 ---
 
 ## 9. Error Handling
 
-- [x] API Fehler zeigen Error State
-- [x] WebSocket disconnect bricht UI nicht
-- [x] Loading States verschwinden korrekt
+- [x] API errors show error state
+- [x] WebSocket disconnect does not break UI
+- [x] Loading states disappear correctly
 
 ---
 
 ## 10. Performance Basics
 
-- [x] Kein UI Freeze beim Join/Leave
-- [x] LazyColumn scrollt flüssig
-- [x] Keine mehrfachen WebSocket connects
+- [x] No UI freeze on join/leave
+- [x] LazyColumn scrolls smoothly
+- [x] No multiple WebSocket connects
 
 ---
 
 ## Definition of Done
 
-✔ UI funktioniert durchgehend
-✔ WebSocket Updates live sichtbar
-✔ Keine Crashes oder stuck loading states
+✔ UI works consistently
+✔ WebSocket updates visible live
+✔ No crashes or stuck loading states
