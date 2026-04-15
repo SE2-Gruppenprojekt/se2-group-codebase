@@ -15,7 +15,7 @@ import org.junit.Rule
 import org.junit.Test
 
 // UI-Component tests
-class CreateLobbyScreen {
+class CreateLobbyScreenTest {
 
     @get:Rule
     val composeRule = createComposeRule()
