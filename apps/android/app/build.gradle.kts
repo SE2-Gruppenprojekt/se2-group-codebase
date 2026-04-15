@@ -30,9 +30,6 @@ android {
                 "proguard-rules.pro"
             )
         }
-        debug {
-            enableAndroidTestCoverage = true
-        }
     }
 
     compileOptions {
