@@ -82,4 +82,9 @@ class SettingsScreenTest {
         assertFalse(ThemeState.isDarkMode.value)
     }
 
+    @After
+    fun tearDown() {
+        ThemeState.isDarkMode.value = false
+    }
+
 }
