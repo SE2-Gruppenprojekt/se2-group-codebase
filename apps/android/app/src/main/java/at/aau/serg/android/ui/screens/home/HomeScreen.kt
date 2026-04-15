@@ -253,26 +253,6 @@ fun HomeScreen(
                 modifier = Modifier.testTag("home_browse_lobbies_button")
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // go to waiting room
-            HomeActionButton(
-                text = "Waiting Room",
-                onClick = onWaitingRoom,
-                icon = { tint ->
-                    Icon(
-                        imageVector = Icons.Filled.ViewInAr,
-                        contentDescription = null,
-                        tint = tint,
-                        modifier = Modifier.size(24.dp)
-                    )
-                },
-                containerBrush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF4C59E8), Color(0xFF3154C8))
-                ),
-                modifier = Modifier.testTag("home_waiting_room_button")
-            )
-
             Spacer(modifier = Modifier.height(8.dp))
 
             // settings action
