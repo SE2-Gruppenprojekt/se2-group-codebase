@@ -175,7 +175,7 @@ fun GameScreen(
 
             LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(myTiles) { number ->
-                    TileItem(number = number, size = 52)
+                    TileItem(number = number, size = 44)
                 }
             }
 
@@ -284,7 +284,8 @@ private fun TileRow(tiles: List<Int>) {
 private fun TileItem(number: Int, size: Int) {
     Box(
         modifier = Modifier
-            .size(size.dp)
+            .width(size.dp)
+            .height((size * 1.4f).dp)
             .clip(RoundedCornerShape(10.dp))
             .background(tileColor(number)),
         contentAlignment = Alignment.Center
