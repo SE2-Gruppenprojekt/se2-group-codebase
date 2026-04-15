@@ -221,7 +221,7 @@ class LobbyViewModelTest {
 
     // --- JOIN LOBBY ---
     @Test
-    fun joinLobby_succes() = runTest {
+    fun joinLobby_success() = runTest {
         val request = JoinLobbyRequest(
             userId = "111",
             displayName="host1"
