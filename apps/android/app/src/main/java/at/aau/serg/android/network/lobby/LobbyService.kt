@@ -35,4 +35,11 @@ interface LobbyService {
         @Header("X-User-Id") userId: String,
         @Path("lobbyId") lobbyId: String
     ): Response<Unit>
+
+    @POST("lobbies/{lobbyId}/start")
+    suspend fun startMatch(
+        @Header("X-User-Id") userId: String,
+        @Path("lobbyId") lobbyId: String
+    ): Response<Unit>
+
 }

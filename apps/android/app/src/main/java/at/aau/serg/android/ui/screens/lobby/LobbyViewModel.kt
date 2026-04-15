@@ -186,4 +186,17 @@ class LobbyViewModel(
             onError = { onError() }
         )
     }
+
+    fun startMatch(
+        lobbyId: String,
+        userId: String = AppSession.userId,
+        onError: () -> Unit = {}
+    ) {
+        launchRequest(
+            request = { api.startMatch(userId, lobbyId) },
+            onSuccess = { },
+            onError = { onError() }
+        )
+    }
+
 }
