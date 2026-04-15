@@ -1,5 +1,6 @@
 package shared.models
 
+
 data class LeaderboardEntry(
     val rank: Int,
     val playerName: String,

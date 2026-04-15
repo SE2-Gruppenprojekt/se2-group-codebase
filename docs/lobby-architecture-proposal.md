@@ -142,7 +142,7 @@ apps/android/.../lobby/
 │   ├── CreateLobbyViewModel.kt
 │   ├── LobbyListScreen.kt
 │   ├── LobbyDetailScreen.kt
-│   ├── CreateLobbyScreen.kt
+│   ├── CreateLobbyScreenTest.kt
 │   └── components/
 └── navigation/
     └── LobbyNavigation.kt
