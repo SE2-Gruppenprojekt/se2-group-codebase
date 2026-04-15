@@ -10,7 +10,9 @@ import org.hildan.krossbow.stomp.StompSession
 import org.hildan.krossbow.stomp.subscribeText
 import org.hildan.krossbow.websocket.okhttp.OkHttpWebSocketClient
 
-class LobbyWebSocketService {
+class LobbyWebSocketService(
+    private val client: StompClient = StompClient(OkHttpWebSocketClient())
+) {
 
     private val moshi = Moshi.Builder()
         .addLast(KotlinJsonAdapterFactory())
@@ -25,7 +27,6 @@ class LobbyWebSocketService {
         onLobbyDeleted: (LobbyDeletedPayload) -> Unit,
         onLobbyStarted: (LobbyStartedPayload) -> Unit
     ) {
-        val client = StompClient(OkHttpWebSocketClient())
         session = client.connect("ws://10.0.2.2:8080/ws")
 
         session!!
@@ -68,5 +69,15 @@ class LobbyWebSocketService {
 
             else -> Log.w("LobbyWebSocket", "Unknown event: $type")
         }
+    }
+
+    // Test helper only
+    internal fun testDispatch(
+        message: String,
+        onLobbyUpdated: (LobbyUpdatedPayload) -> Unit = {},
+        onLobbyDeleted: (LobbyDeletedPayload) -> Unit = {},
+        onLobbyStarted: (LobbyStartedPayload) -> Unit = {}
+    ) {
+        dispatch(message, onLobbyUpdated, onLobbyDeleted, onLobbyStarted)
     }
 }
