@@ -20,6 +20,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            enableAndroidTestCoverage = true
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -36,6 +39,13 @@ android {
 
     buildFeatures {
         compose = true
+    }
+
+    packaging {
+        resources {
+            excludes += "META-INF/LICENSE.md"
+            excludes += "META-INF/LICENSE-notice.md"
+        }
     }
 }
 
@@ -89,6 +99,8 @@ dependencies {
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test)
     androidTestImplementation(libs.navigation.testing)
+    androidTestImplementation("io.mockk:mockk-android:1.13.10")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     debugImplementation(libs.compose.tooling)
     debugImplementation(libs.compose.test.manifest)

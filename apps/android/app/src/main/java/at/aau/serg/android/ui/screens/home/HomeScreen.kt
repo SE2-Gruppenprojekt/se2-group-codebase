@@ -15,8 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ViewInAr
@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.state.LoadState
@@ -228,7 +229,8 @@ fun HomeScreen(
                 },
                 containerBrush = Brush.horizontalGradient(
                     colors = listOf(Color(0xE24B68FF), Color(0xD74B3FD4))
-                )
+                ),
+                modifier = Modifier.testTag("home_create_lobby_button")
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -247,7 +249,8 @@ fun HomeScreen(
                 },
                 containerBrush = Brush.horizontalGradient(
                     colors = listOf(Color(0xFF9D3CFF), Color(0xFF9D3CFF))
-                )
+                ),
+                modifier = Modifier.testTag("home_browse_lobbies_button")
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -266,7 +269,8 @@ fun HomeScreen(
                 },
                 containerBrush = Brush.horizontalGradient(
                     colors = listOf(Color(0xFF4C59E8), Color(0xFF3154C8))
-                )
+                ),
+                modifier = Modifier.testTag("home_waiting_room_button")
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -284,7 +288,8 @@ fun HomeScreen(
                     )
                 },
                 containerBrush = settingsBrush,
-                contentColor = neutralButtonContentColor
+                contentColor = neutralButtonContentColor,
+                modifier = Modifier.testTag("home_settings_list_button")
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -302,7 +307,8 @@ fun HomeScreen(
                     )
                 },
                 containerBrush = leaderboardBrush,
-                contentColor = neutralButtonContentColor
+                contentColor = neutralButtonContentColor,
+                modifier = Modifier.testTag("home_leaderboard_button")
             )
 
             // push bottom profile bar down
@@ -388,12 +394,12 @@ private fun HomeActionButton(
     onClick: () -> Unit,
     icon: @Composable (Color) -> Unit,
     containerBrush: Brush,
-    contentColor: Color = Color.White
+    contentColor: Color = Color.White,
+    modifier: Modifier = Modifier
 ) {
-    // reusable home screen action button
     Button(
         onClick = onClick,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(56.dp),
         shape = RoundedCornerShape(16.dp),
@@ -409,7 +415,6 @@ private fun HomeActionButton(
             hoveredElevation = 0.dp
         )
     ) {
-        // custom gradient background inside button
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -421,10 +426,8 @@ private fun HomeActionButton(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // button icon
                 icon(contentColor)
                 Spacer(modifier = Modifier.size(12.dp))
-                // button label
                 Text(
                     text = text,
                     style = MaterialTheme.typography.titleMedium,
@@ -435,3 +438,4 @@ private fun HomeActionButton(
         }
     }
 }
+
