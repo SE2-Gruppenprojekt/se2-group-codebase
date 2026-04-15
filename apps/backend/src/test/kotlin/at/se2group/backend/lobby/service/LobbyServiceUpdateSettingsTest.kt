@@ -164,7 +164,7 @@ class LobbyServiceUpdateSettingsTest {
             lobbyService.updateLobbySettings("lobby-1", "host-1",request)
         }
 
-        assertEquals("Maximum players must be between 3 and 4", exception.message)
+        assertEquals("Maximum players must be between 3 and 8", exception.message)
         verify(lobbyRepository, never()).save(any())
         verifyNoInteractions(lobbyBroadcastService)
     }

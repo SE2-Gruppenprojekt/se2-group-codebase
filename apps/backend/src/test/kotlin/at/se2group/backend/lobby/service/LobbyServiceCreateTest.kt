@@ -89,7 +89,7 @@ class LobbyServiceCreateTest {
             lobbyService.createLobby("host alice", request)
         }
 
-        assertEquals("maxPlayers must be between 2 and 4", exception.message)
+        assertEquals("maxPlayers must be between 2 and 8", exception.message)
 
         verify(lobbyRepository, never()).save(any(LobbyEntity::class.java))
         verifyNoInteractions(lobbyBroadcastService)
@@ -108,7 +108,7 @@ class LobbyServiceCreateTest {
             lobbyService.createLobby("host alice", request)
         }
 
-        assertEquals("maxPlayers must be between 2 and 4", exception.message)
+        assertEquals("maxPlayers must be between 2 and 8", exception.message)
 
         verify(lobbyRepository, never()).save(any(LobbyEntity::class.java))
         verifyNoInteractions(lobbyBroadcastService)
