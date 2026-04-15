@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import at.aau.serg.android.ui.screens.browselobbies.LobbyBrowseItem
 import at.aau.serg.android.ui.screens.browselobbies.components.BrowsingLobbiesScreen
+import at.aau.serg.android.ui.screens.game.GameScreen
 import shared.models.lobby.response.LobbyListItemResponse
 
 
@@ -188,7 +189,7 @@ fun AppNavHost(
             WaitingRoomScreen(
                 onBack = { navController.popBackStack() },
                 onSettings = { navController.navigate("settings") },
-                onGameStarted = { /* TODO: navController.navigate("game/$matchId") if Game-Screen finished */ },
+                onGameStarted = { matchId -> navController.navigate("game/$matchId") },
                 lobbyId = lobbyId,
                 viewModel = vm
             )
@@ -200,6 +201,12 @@ fun AppNavHost(
                 onBack = { navController.popBackStack() }
             )
         }
+
+        // GAME
+        composable("game/{matchId}") {
+            GameScreen(onBack = { navController.popBackStack() })
+        }
+
     }
 }
 

@@ -44,7 +44,7 @@ import kotlin.random.Random
 fun WaitingRoomScreen(
     onBack: () -> Unit,
     onSettings: () -> Unit,
-    onGameStarted: () -> Unit = {},
+    onGameStarted: (String) -> Unit = {},
     lobbyId: String,
     viewModel: LobbyViewModel
 ) {
@@ -72,7 +72,8 @@ fun WaitingRoomScreen(
 
     // game started → navigate on
     LaunchedEffect(matchId) {
-        if (matchId != null) onGameStarted()
+        val id = matchId
+        if (id != null) onGameStarted(id)
     }
 
     // Lobby state
@@ -198,7 +199,8 @@ fun WaitingRoomScreen(
 
         // ACTIONS
         WaitingRoomActions(
-            onStart = { },
+            // TODO: replace with viewModel.startMatch(lobbyId) later — requires min. 2 players in lobby
+            onStart = { onGameStarted("test-match-id") },
             onInvite = { }
         )
 
