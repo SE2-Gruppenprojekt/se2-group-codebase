@@ -1,6 +1,5 @@
 package at.aau.serg.android.util
 
-
 import android.content.Context
 
 object UserPrefs {
@@ -18,5 +17,12 @@ object UserPrefs {
     fun getUsername(context: Context): String? {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .getString(KEY_USERNAME, null)
+    }
+
+    fun clear(context: Context) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .clear()
+            .apply()
     }
 }

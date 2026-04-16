@@ -1,6 +1,7 @@
 package at.aau.serg.android.viewmodel
 
 import android.content.Context
+import at.aau.serg.android.session.UserSession
 import at.aau.serg.android.util.UserPrefs
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -60,4 +61,8 @@ class UsernameViewModel : BaseViewModel() {
             }
         )
     }
+}
+
+fun logout(context: Context) {
+    UserSession.logout(context)
 }

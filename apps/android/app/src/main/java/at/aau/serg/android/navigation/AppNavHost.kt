@@ -31,6 +31,8 @@ import at.aau.serg.android.ui.screens.username.UsernameScreen
 import at.aau.serg.android.viewmodel.UsernameViewModel
 import androidx.compose.ui.platform.LocalContext
 import at.aau.serg.android.util.UserPrefs
+import androidx.compose.ui.platform.LocalContext
+import at.aau.serg.android.session.UserSession
 
 
 @Composable
@@ -38,9 +40,19 @@ fun AppNavHost(
     navController: NavHostController,
     innerPadding: PaddingValues = PaddingValues()
 ) {
+    val context = LocalContext.current
+
+    val startDestination =
+        if (UserSession.isLoggedIn(context)) "home"
+        else "username"
+
     NavHost(
         navController = navController,
-        startDestination = "username",
+        startDestination =
+            if (UserSession.isLoggedIn(context))
+            "home"
+        else
+            "username",
         route = "root",
         modifier = Modifier.padding(innerPadding)
     ) {
