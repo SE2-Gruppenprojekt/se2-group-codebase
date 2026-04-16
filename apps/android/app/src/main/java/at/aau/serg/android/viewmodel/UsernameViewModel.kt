@@ -1,7 +1,6 @@
 package at.aau.serg.android.viewmodel
 
 import android.content.Context
-import at.aau.serg.android.session.UserSession
 import at.aau.serg.android.util.UserPrefs
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -50,19 +49,28 @@ class UsernameViewModel : BaseViewModel() {
 
         launchRequest(
             request = {
-                // Username speichern (first launch handling)
                 UserPrefs.saveUsername(context, _username.value)
             },
             onSuccess = {
                 onSuccess()
             },
             onError = {
-                // handled in BaseViewModel
             }
         )
     }
-}
 
-fun logout(context: Context) {
-    UserSession.logout(context)
+    fun logout(context: Context) {
+        launchRequest(
+            request = {
+                UserPrefs.clear(context)
+            },
+            onSuccess = {
+                _username.value = ""
+                _usernameError.value = null
+            },
+            onError = {
+
+            }
+        )
+    }
 }
