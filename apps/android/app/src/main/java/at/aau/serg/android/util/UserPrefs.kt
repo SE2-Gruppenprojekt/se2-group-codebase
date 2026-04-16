@@ -25,4 +25,7 @@ object UserPrefs {
             .clear()
             .apply()
     }
+    fun logout(context: Context) {
+        UserPrefs.clear(context)
+    }
 }

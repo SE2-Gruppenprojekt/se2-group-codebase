@@ -229,7 +229,12 @@ fun AppNavHost(
             SettingsScreen(
                 onBack = { navController.popBackStack() },
                 onChangeUsername = {
-                    navController.navigate("username") {popUpTo("home")}
+                    navController.navigate("username")
+                },
+                onLogout = {
+                    navController.navigate("username") {
+                        popUpTo("root") { inclusive = true }
+                    }
                 }
             )
         }
