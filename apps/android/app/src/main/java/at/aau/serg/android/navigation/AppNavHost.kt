@@ -27,6 +27,8 @@ import at.aau.serg.android.ui.screens.browselobbies.LobbyBrowseItem
 import at.aau.serg.android.ui.screens.browselobbies.components.BrowsingLobbiesScreen
 import at.aau.serg.android.ui.screens.game.GameScreen
 import shared.models.lobby.response.LobbyListItemResponse
+import at.aau.serg.android.ui.screens.username.UsernameScreen
+import at.aau.serg.android.viewmodel.UsernameViewModel
 
 
 @Composable
@@ -36,10 +38,23 @@ fun AppNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = "home",
+        startDestination = "username",
         route = "root",
         modifier = Modifier.padding(innerPadding)
     ) {
+
+        composable("username") {
+            val vm: UsernameViewModel = viewModel()
+
+            UsernameScreen(
+                viewModel = vm,
+                onContinue = {
+                    navController.navigate("home") {
+                        popUpTo("username") { inclusive = true }
+                    }
+                }
+            )
+        }
 
         // HOME
         composable("home") {
