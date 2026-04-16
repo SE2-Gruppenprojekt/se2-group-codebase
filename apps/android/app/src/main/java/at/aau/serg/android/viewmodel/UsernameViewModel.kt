@@ -1,6 +1,7 @@
 package at.aau.serg.android.viewmodel
 
-
+import android.content.Context
+import at.aau.serg.android.util.UserPrefs
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -40,18 +41,22 @@ class UsernameViewModel : BaseViewModel() {
         }
     }
 
-    fun submit() {
+    fun submit(
+        context: Context,
+        onSuccess: () -> Unit
+    ) {
         if (!validateUsername()) return
 
         launchRequest(
             request = {
-                //später API hier einfügen
+                // Username speichern (first launch handling)
+                UserPrefs.saveUsername(context, _username.value)
             },
             onSuccess = {
-                // Erfolg
+                onSuccess()
             },
             onError = {
-                // Fehler handled BaseViewModel
+                // handled in BaseViewModel
             }
         )
     }

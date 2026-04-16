@@ -1,21 +1,12 @@
 package at.aau.serg.android.ui.screens.username
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,6 +21,7 @@ fun UsernameScreen(
     val username = viewModel.username.collectAsState().value
     val error = viewModel.usernameError.collectAsState().value
     val loadState = viewModel.loadState.collectAsState().value
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -52,7 +44,8 @@ fun UsernameScreen(
             value = username,
             onValueChange = { viewModel.onUsernameChanged(it) },
             label = { Text("Username") },
-            isError = error != null
+            isError = error != null,
+            modifier = Modifier.fillMaxWidth()
         )
 
         if (error != null) {
@@ -67,13 +60,12 @@ fun UsernameScreen(
 
         Button(
             onClick = {
-                viewModel.submit()
-                if (viewModel.usernameError.value == null) {
+                viewModel.submit(context) {
                     onContinue()
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = username.isNotBlank() && error == null
+            enabled = username.isNotBlank() && error == null && loadState !is LoadState.Loading
         ) {
             Text("Continue")
         }

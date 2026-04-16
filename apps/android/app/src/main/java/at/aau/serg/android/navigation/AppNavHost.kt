@@ -29,6 +29,8 @@ import at.aau.serg.android.ui.screens.game.GameScreen
 import shared.models.lobby.response.LobbyListItemResponse
 import at.aau.serg.android.ui.screens.username.UsernameScreen
 import at.aau.serg.android.viewmodel.UsernameViewModel
+import androidx.compose.ui.platform.LocalContext
+import at.aau.serg.android.util.UserPrefs
 
 
 @Composable
@@ -196,7 +198,7 @@ fun AppNavHost(
             )
         }
 
-        // ✅ ONLY ONE WAITING ROOM ROUTE (FIXED)
+        //ONLY ONE WAITING ROOM ROUTE (FIXED)
         composable("waitingRoom/{lobbyId}") { backStackEntry ->
             val lobbyId = backStackEntry.arguments?.getString("lobbyId")!!
             val vm: LobbyViewModel = viewModel()
@@ -251,3 +253,5 @@ private fun lobbyAccentColor(lobbyId: String): Color {
     )
     return palette[(lobbyId.hashCode() and Int.MAX_VALUE) % palette.size]
 }
+
+
