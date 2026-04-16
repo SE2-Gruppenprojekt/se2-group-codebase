@@ -227,7 +227,10 @@ fun AppNavHost(
         // SETTINGS
         composable("settings") {
             SettingsScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onChangeUsername = {
+                    navController.navigate("username") {popUpTo("home")}
+                }
             )
         }
 

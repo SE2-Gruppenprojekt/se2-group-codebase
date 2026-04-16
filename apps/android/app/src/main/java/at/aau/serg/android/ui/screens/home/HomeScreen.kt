@@ -38,6 +38,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.theme.ThemeState
+import androidx.compose.ui.platform.LocalContext
+import at.aau.serg.android.util.UserPrefs
+
 
 @Composable
 fun HomeScreen(
@@ -107,6 +110,9 @@ fun HomeScreen(
     val playerNameColor = if (darkMode) Color.White else Color(0xFF1E2847)
     val playerLevelColor = if (darkMode) Color(0xFFFFD93D) else Color(0xFFC08A00)
     val xpColor = if (darkMode) Color(0xFF9AA6C0) else Color(0xFF6A7692)
+
+    val context = LocalContext.current
+    val username = UserPrefs.getUsername(context) ?: "Guest"
 
     // root screen layout
     Column(
@@ -333,7 +339,7 @@ fun HomeScreen(
 
                 Column {
                     Text(
-                        text = "Player123",
+                        text = username,
                         color = playerNameColor,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold

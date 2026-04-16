@@ -18,10 +18,12 @@ fun UsernameScreen(
     viewModel: UsernameViewModel,
     onContinue: () -> Unit = {}
 ) {
-    val username = viewModel.username.collectAsState().value
-    val error = viewModel.usernameError.collectAsState().value
-    val loadState = viewModel.loadState.collectAsState().value
+    val username by viewModel.username.collectAsState()
+    val error by viewModel.usernameError.collectAsState()
+    val loadState by viewModel.loadState.collectAsState()
     val context = LocalContext.current
+
+    val isLoading = loadState is LoadState.Loading
 
     Column(
         modifier = Modifier
@@ -45,12 +47,13 @@ fun UsernameScreen(
             onValueChange = { viewModel.onUsernameChanged(it) },
             label = { Text("Username") },
             isError = error != null,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoading
         )
 
-        if (error != null) {
+        error?.let {
             Text(
-                text = error,
+                text = it,
                 color = Color.Red,
                 fontSize = 12.sp
             )
@@ -67,12 +70,15 @@ fun UsernameScreen(
             modifier = Modifier.fillMaxWidth(),
             enabled = username.isNotBlank() && error == null && loadState !is LoadState.Loading
         ) {
-            Text("Continue")
-        }
-
-        if (loadState is LoadState.Loading) {
-            Spacer(Modifier.height(16.dp))
-            CircularProgressIndicator()
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    color = Color.White,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text("Continue")
+            }
         }
     }
 }
