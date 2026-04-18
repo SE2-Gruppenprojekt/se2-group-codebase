@@ -143,7 +143,7 @@ class LobbyViewModelTest {
 
         val vm = createVM()
 
-        vm.createLobby(onError = { callbackCalled = true })
+        vm.createLobby(userId = "", displayName = "", onError = { callbackCalled = true })
 
         testDispatcher.scheduler.runCurrent()
 
@@ -290,7 +290,7 @@ class LobbyViewModelTest {
         coEvery { api.getLobby("123") } returns response
         var callbackCalled = false
         val vm = createVM()
-        vm.joinLobbyOrOpen("123", userId = "USER", onSuccess = { callbackCalled = true })
+        vm.joinLobbyOrOpen("123", userId = "USER", displayName = "", onSuccess = { callbackCalled = true })
         testDispatcher.scheduler.runCurrent()
 
         assertTrue(callbackCalled)
@@ -335,7 +335,7 @@ class LobbyViewModelTest {
 
         var callbackCalled = false
         val vm = createVM()
-        vm.joinLobbyOrOpen("123", userId = "USER", onSuccess = { callbackCalled = true })
+        vm.joinLobbyOrOpen("123", userId = "USER", displayName = "", onSuccess = { callbackCalled = true })
         testDispatcher.scheduler.runCurrent()
 
         assertTrue(callbackCalled)
@@ -350,7 +350,7 @@ class LobbyViewModelTest {
         coEvery { api.getLobby("123") } throws RuntimeException()
         var callbackCalled = false
         val vm = createVM()
-        vm.joinLobbyOrOpen("123", onError = { callbackCalled = true })
+        vm.joinLobbyOrOpen("123", userId = "", displayName = "", onError = { callbackCalled = true })
         testDispatcher.scheduler.runCurrent()
 
         assertTrue(callbackCalled)
