@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import at.aau.serg.android.ui.state.LoadState
+import at.aau.serg.android.ui.theme.ThemeState
 import at.aau.serg.android.viewmodel.UsernameViewModel
 
 private val suggestions = listOf(
@@ -44,12 +45,28 @@ fun UsernameScreen(
     val error by viewModel.usernameError.collectAsState()
     val loadState by viewModel.loadState.collectAsState()
     val context = LocalContext.current
-
     val isLoading = loadState is LoadState.Loading
 
-    val bgGradient = Brush.verticalGradient(
-        listOf(Color(0xFF1A1040), Color(0xFF0D0D2B), Color(0xFF0A0A1F))
-    )
+    val darkMode = ThemeState.isDarkMode.value
+
+    // colors
+    val bgGradient = if (darkMode)
+        Brush.verticalGradient(listOf(Color(0xFF1A1040), Color(0xFF0D0D2B), Color(0xFF0A0A1F)))
+    else
+        Brush.verticalGradient(listOf(Color(0xFFF0EEFF), Color(0xFFF8F7FF), Color(0xFFFFFFFF)))
+
+    val primaryText = if (darkMode) Color.White else Color(0xFF1A1040)
+    val secondaryText = if (darkMode) Color(0xFFB0B8D0) else Color(0xFF6B7280)
+    val subtleText = if (darkMode) Color(0xFF5A6480) else Color(0xFF9CA3AF)
+    val cardBg = if (darkMode) Color(0xFF141830) else Color(0xFFFFFFFF)
+    val cardBorder = if (darkMode) Color(0xFF2A2F4A) else Color(0xFFE5E7EB)
+    val fieldBg = if (darkMode) Color(0xFF141830) else Color(0xFFF9FAFB)
+    val fieldBorder = if (darkMode) Color(0xFF2A2F4A) else Color(0xFFD1D5DB)
+    val backIconTint = if (darkMode) Color.White else Color(0xFF1A1040)
+    val buttonDisabledBg = if (darkMode)
+        Brush.horizontalGradient(listOf(Color(0xFF3A3A5C), Color(0xFF3A3A5C)))
+    else
+        Brush.horizontalGradient(listOf(Color(0xFFD1D5DB), Color(0xFFD1D5DB)))
 
     Box(
         modifier = Modifier
@@ -70,7 +87,7 @@ fun UsernameScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = Color.White
+                        tint = backIconTint
                     )
                 }
             }
@@ -88,7 +105,7 @@ fun UsernameScreen(
             )
             Text(
                 text = "Welcome to the Game",
-                color = Color(0xFFB0B8D0),
+                color = secondaryText,
                 fontSize = 14.sp
             )
 
@@ -100,9 +117,10 @@ fun UsernameScreen(
                     .size(100.dp)
                     .clip(CircleShape)
                     .background(
-                        Brush.radialGradient(
-                            listOf(Color(0xFF3D3580), Color(0xFF1E1B4B))
-                        )
+                        if (darkMode)
+                            Brush.radialGradient(listOf(Color(0xFF3D3580), Color(0xFF1E1B4B)))
+                        else
+                            Brush.radialGradient(listOf(Color(0xFFEDE9FE), Color(0xFFDDD6FE)))
                     )
                     .border(2.dp, Color(0xFF6C63FF), CircleShape),
                 contentAlignment = Alignment.Center
@@ -110,7 +128,7 @@ fun UsernameScreen(
                 Icon(
                     imageVector = Icons.Filled.Person,
                     contentDescription = null,
-                    tint = Color(0xFF8B9EC7),
+                    tint = if (darkMode) Color(0xFF8B9EC7) else Color(0xFF6C63FF),
                     modifier = Modifier.size(56.dp)
                 )
             }
@@ -119,13 +137,13 @@ fun UsernameScreen(
 
             Text(
                 text = "Create Your Profile",
-                color = Color.White,
+                color = primaryText,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 text = "Choose a unique username to get started",
-                color = Color(0xFF8892AA),
+                color = subtleText,
                 fontSize = 13.sp,
                 textAlign = TextAlign.Center
             )
@@ -144,7 +162,7 @@ fun UsernameScreen(
                     Spacer(Modifier.width(6.dp))
                     Text(
                         text = "Username",
-                        color = Color.White,
+                        color = primaryText,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp
                     )
@@ -155,7 +173,7 @@ fun UsernameScreen(
                 OutlinedTextField(
                     value = username,
                     onValueChange = { viewModel.onUsernameChanged(it) },
-                    placeholder = { Text("Enter your username", color = Color(0xFF5A6480)) },
+                    placeholder = { Text("Enter your username", color = subtleText) },
                     isError = error != null,
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading,
@@ -164,42 +182,38 @@ fun UsernameScreen(
                         Icon(
                             imageVector = Icons.Filled.Edit,
                             contentDescription = null,
-                            tint = Color(0xFF5A6480),
+                            tint = subtleText,
                             modifier = Modifier.size(18.dp)
                         )
                     },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFF6C63FF),
-                        unfocusedBorderColor = Color(0xFF2A2F4A),
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
+                        unfocusedBorderColor = fieldBorder,
+                        focusedTextColor = primaryText,
+                        unfocusedTextColor = primaryText,
                         cursorColor = Color(0xFF6C63FF),
                         errorBorderColor = Color(0xFFEF4444),
-                        unfocusedContainerColor = Color(0xFF141830),
-                        focusedContainerColor = Color(0xFF141830)
+                        unfocusedContainerColor = fieldBg,
+                        focusedContainerColor = fieldBg
                     )
                 )
 
                 Spacer(Modifier.height(6.dp))
 
                 if (error != null) {
-                    Text(
-                        text = error!!,
-                        color = Color(0xFFEF4444),
-                        fontSize = 12.sp
-                    )
+                    Text(text = error!!, color = Color(0xFFEF4444), fontSize = 12.sp)
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Filled.Info,
                             contentDescription = null,
-                            tint = Color(0xFF5A6480),
+                            tint = subtleText,
                             modifier = Modifier.size(13.dp)
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
                             text = "3-16 characters, letters and numbers only",
-                            color = Color(0xFF5A6480),
+                            color = subtleText,
                             fontSize = 12.sp
                         )
                     }
@@ -209,12 +223,15 @@ fun UsernameScreen(
             Spacer(Modifier.height(20.dp))
 
             // SUGGESTIONS
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text("💡", fontSize = 14.sp)
                 Spacer(Modifier.width(6.dp))
                 Text(
                     text = "Quick Suggestions",
-                    color = Color.White,
+                    color = primaryText,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp
                 )
@@ -229,6 +246,9 @@ fun UsernameScreen(
                             SuggestionChip(
                                 name = name,
                                 icon = icon,
+                                cardBg = cardBg,
+                                cardBorder = cardBorder,
+                                textColor = primaryText,
                                 modifier = Modifier.weight(1f),
                                 onClick = { viewModel.onUsernameChanged(name) }
                             )
@@ -242,35 +262,45 @@ fun UsernameScreen(
             // FEATURE CARDS
             FeatureCard(
                 icon = Icons.Filled.EmojiEvents,
-                iconBg = Color(0xFF1E3A5F),
+                iconBg = if (darkMode) Color(0xFF1E3A5F) else Color(0xFFEFF6FF),
                 iconTint = Color(0xFF4FC3F7),
                 title = "Track Your Progress",
-                subtitle = "Earn achievements and climb the leaderboard"
+                subtitle = "Earn achievements and climb the leaderboard",
+                cardBg = cardBg,
+                cardBorder = cardBorder,
+                titleColor = primaryText,
+                subtitleColor = subtleText
             )
             Spacer(Modifier.height(8.dp))
             FeatureCard(
                 icon = Icons.Filled.Groups,
-                iconBg = Color(0xFF2D1B69),
+                iconBg = if (darkMode) Color(0xFF2D1B69) else Color(0xFFF5F3FF),
                 iconTint = Color(0xFF9B8FFF),
                 title = "Play With Friends",
-                subtitle = "Create private lobbies and invite players"
+                subtitle = "Create private lobbies and invite players",
+                cardBg = cardBg,
+                cardBorder = cardBorder,
+                titleColor = primaryText,
+                subtitleColor = subtleText
             )
             Spacer(Modifier.height(8.dp))
             FeatureCard(
                 icon = Icons.Filled.TrendingUp,
-                iconBg = Color(0xFF0F3D2A),
+                iconBg = if (darkMode) Color(0xFF0F3D2A) else Color(0xFFECFDF5),
                 iconTint = Color(0xFF4ADE80),
                 title = "View Statistics",
-                subtitle = "Analyze your gameplay and improve your skills"
+                subtitle = "Analyze your gameplay and improve your skills",
+                cardBg = cardBg,
+                cardBorder = cardBorder,
+                titleColor = primaryText,
+                subtitleColor = subtleText
             )
 
             Spacer(Modifier.height(28.dp))
 
             // CONTINUE BUTTON
             Button(
-                onClick = {
-                    viewModel.submit(context) { onContinue() }
-                },
+                onClick = { viewModel.submit(context) { onContinue() } },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -287,7 +317,7 @@ fun UsernameScreen(
                             if (username.isNotBlank() && error == null && !isLoading)
                                 Brush.horizontalGradient(listOf(Color(0xFF6C63FF), Color(0xFFAB5BF5)))
                             else
-                                Brush.horizontalGradient(listOf(Color(0xFF3A3A5C), Color(0xFF3A3A5C)))
+                                buttonDisabledBg
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -317,7 +347,7 @@ fun UsernameScreen(
             Row {
                 Text(
                     text = "By continuing, you agree to our ",
-                    color = Color(0xFF5A6480),
+                    color = subtleText,
                     fontSize = 12.sp
                 )
                 Text(
@@ -334,14 +364,17 @@ fun UsernameScreen(
 private fun SuggestionChip(
     name: String,
     icon: ImageVector,
+    cardBg: Color,
+    cardBorder: Color,
+    textColor: Color,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF141830))
-            .border(1.dp, Color(0xFF2A2F4A), RoundedCornerShape(12.dp))
+            .background(cardBg)
+            .border(1.dp, cardBorder, RoundedCornerShape(12.dp))
             .clickable { onClick() }
             .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -356,7 +389,7 @@ private fun SuggestionChip(
         Spacer(Modifier.width(6.dp))
         Text(
             text = name,
-            color = Color.White,
+            color = textColor,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium
         )
@@ -369,14 +402,18 @@ private fun FeatureCard(
     iconBg: Color,
     iconTint: Color,
     title: String,
-    subtitle: String
+    subtitle: String,
+    cardBg: Color,
+    cardBorder: Color,
+    titleColor: Color,
+    subtitleColor: Color
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(Color(0xFF141830))
-            .border(1.dp, Color(0xFF1E2340), RoundedCornerShape(14.dp))
+            .background(cardBg)
+            .border(1.dp, cardBorder, RoundedCornerShape(14.dp))
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -396,17 +433,8 @@ private fun FeatureCard(
         }
         Spacer(Modifier.width(14.dp))
         Column {
-            Text(
-                text = title,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-            )
-            Text(
-                text = subtitle,
-                color = Color(0xFF8892AA),
-                fontSize = 12.sp
-            )
+            Text(text = title, color = titleColor, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text(text = subtitle, color = subtitleColor, fontSize = 12.sp)
         }
     }
 }
