@@ -9,7 +9,6 @@ import org.junit.Test
 import at.aau.serg.android.ui.screens.home.HomeScreen
 import at.aau.serg.android.ui.state.LoadState
 
-// UI-Component tests
 class HomeScreenTest {
 
     @get:Rule
@@ -20,9 +19,7 @@ class HomeScreenTest {
         onCreateLobby: () -> Unit = {},
         onBrowseFancyLobbies: () -> Unit = {},
         onShowLeaderboard: () -> Unit = {},
-        onSettings: () -> Unit = {},
-        onWaitingRoom: () -> Unit = {},
-        onNewLobbyScreen: () -> Unit = {}
+        onSettings: () -> Unit = {}
     ) {
         composeRule.setContent {
             HomeScreen(
@@ -30,9 +27,7 @@ class HomeScreenTest {
                 onCreateLobby = onCreateLobby,
                 onBrowseFancyLobbies = onBrowseFancyLobbies,
                 onShowLeaderboard = onShowLeaderboard,
-                onSettings = onSettings,
-                onWaitingRoom = onWaitingRoom,
-                onNewLobbyScreen = onNewLobbyScreen
+                onSettings = onSettings
             )
         }
     }
@@ -40,11 +35,14 @@ class HomeScreenTest {
     // --- Button callbacks ---
 
     @Test
-    fun clickingCreateLobby_callsOnNewLobbyScreen() {
+    fun clickingCreateLobby_callsOnCreateLobby() {
         var called = false
-        setScreen(onNewLobbyScreen = { called = true })
 
-        composeRule.onNodeWithTag("home_create_lobby_button").performClick()
+        setScreen(onCreateLobby = { called = true })
+
+        composeRule
+            .onNodeWithTag("home_create_lobby_button")
+            .performClick()
 
         assertTrue(called)
     }
@@ -52,19 +50,12 @@ class HomeScreenTest {
     @Test
     fun clickingBrowseLobbies_callsOnBrowseFancyLobbies() {
         var called = false
+
         setScreen(onBrowseFancyLobbies = { called = true })
 
-        composeRule.onNodeWithTag("home_browse_lobbies_button").performClick()
-
-        assertTrue(called)
-    }
-
-    @Test
-    fun clickingWaitingRoom_callsOnWaitingRoom() {
-        var called = false
-        setScreen(onWaitingRoom = { called = true })
-
-        composeRule.onNodeWithTag("home_waiting_room_button").performClick()
+        composeRule
+            .onNodeWithTag("home_browse_lobbies_button")
+            .performClick()
 
         assertTrue(called)
     }
@@ -72,9 +63,12 @@ class HomeScreenTest {
     @Test
     fun clickingSettings_callsOnSettings() {
         var called = false
+
         setScreen(onSettings = { called = true })
 
-        composeRule.onNodeWithTag("home_settings_list_button").performClick()
+        composeRule
+            .onNodeWithTag("home_settings_list_button")
+            .performClick()
 
         assertTrue(called)
     }
@@ -82,9 +76,12 @@ class HomeScreenTest {
     @Test
     fun clickingLeaderboard_callsOnShowLeaderboard() {
         var called = false
+
         setScreen(onShowLeaderboard = { called = true })
 
-        composeRule.onNodeWithTag("home_leaderboard_button").performClick()
+        composeRule
+            .onNodeWithTag("home_leaderboard_button")
+            .performClick()
 
         assertTrue(called)
     }

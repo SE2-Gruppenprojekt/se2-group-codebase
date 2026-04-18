@@ -1,24 +1,35 @@
 package at.aau.serg.android.ui.screens.settings
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import at.aau.serg.android.datastore.proto.User
+import at.aau.serg.android.ui.components.UsernameInput
 import at.aau.serg.android.ui.screens.settings.components.DarkModeToggle
 import at.aau.serg.android.ui.screens.settings.components.SettingsTopBar
-import at.aau.serg.android.util.UserPrefs
+import shared.validation.user.DisplayNameValidator
 
 @Composable
 fun SettingsScreen(
+    user: User,
+    onUsernameChange: (String) -> Unit,
+    onLogout: () -> Unit,
     onBack: () -> Unit,
-    onChangeUsername: () -> Unit,
-    onLogout: () -> Unit
+    isDarkMode: Boolean,
+    onToggleDarkMode: () -> Unit
 ) {
 
-    val context = LocalContext.current
+    var username by remember(user.displayName) {
+        mutableStateOf(user.displayName)
+    }
+
+    val validation = remember(username) {
+        DisplayNameValidator.validate(username)
+    }
+
+    val isChanged = username != user.displayName
 
     Column(
         modifier = Modifier
@@ -26,28 +37,41 @@ fun SettingsScreen(
             .padding(16.dp)
     ) {
 
-        SettingsTopBar(onBack)
+        SettingsTopBar(onBack = onBack)
 
         Spacer(Modifier.height(16.dp))
 
         DarkModeToggle()
 
+        Spacer(Modifier.height(24.dp))
+
+        UsernameInput(
+            value = username,
+            onValueChange = {
+                username = it
+                onUsernameChange(it)
+            },
+            validation = validation
+        )
+
+        Spacer(Modifier.height(24.dp))
+
         Button(
             onClick = {
-                onChangeUsername()
+                if (validation.isValid) {
+                    onUsernameChange(username)
+                }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = isChanged && validation.isValid
         ) {
-            Text("Change Username")
+            Text("Save Username")
         }
 
         Spacer(Modifier.height(16.dp))
 
         Button(
-            onClick = {
-                UserPrefs.clear(context)
-                onLogout()
-            },
+            onClick = onLogout,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Logout")
