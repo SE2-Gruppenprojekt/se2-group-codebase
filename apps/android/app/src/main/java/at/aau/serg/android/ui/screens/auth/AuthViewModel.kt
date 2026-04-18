@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.datastore.user.UserStore
+import at.aau.serg.android.util.UserPrefs
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -63,6 +64,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     .setDisplayName(name)
                     .build()
             )
+
+            UserPrefs.saveUsername(getApplication(), name)
 
             onSuccess()
         }
