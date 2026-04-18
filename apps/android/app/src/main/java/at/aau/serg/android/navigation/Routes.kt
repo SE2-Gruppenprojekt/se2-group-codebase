@@ -14,4 +14,5 @@ object Routes {
     const val CREATE_LOBBY_FANCY = "createLobbyFancy"
     const val BROWSING_LOBBIES = "browsingLobbies"
     const val WAITING_ROOM = "waitingRoom"
+    const val CHANGE_USERNAME = "changeUsername"
 }

@@ -22,6 +22,8 @@ import at.aau.serg.android.ui.screens.leaderboard.LeaderboardScreen
 import at.aau.serg.android.ui.screens.leaderboard.LeaderboardViewModel
 import at.aau.serg.android.ui.screens.lobby.LobbyScreen
 import at.aau.serg.android.ui.screens.lobby.LobbyViewModel
+import at.aau.serg.android.ui.screens.auth.AuthScreen
+import at.aau.serg.android.ui.screens.auth.AuthViewModel
 import at.aau.serg.android.ui.screens.settings.SettingsScreen
 import at.aau.serg.android.ui.screens.settings.SettingsViewModel
 import at.aau.serg.android.ui.screens.waiting.WaitingRoomScreen
@@ -79,13 +81,8 @@ fun NavGraphBuilder.homeGraph(navController: NavHostController) {
 
             SettingsScreen(
                 user = user,
-                onUsernameChange = { newName ->
-                    vm.updateUsername(newName)
-                },
-                isDarkMode = ThemeState.isDarkMode.value,
-                onToggleDarkMode = {
-                    ThemeState.isDarkMode.value =
-                        !ThemeState.isDarkMode.value
+                onChangeUsername = {
+                    navController.navigate(Routes.CHANGE_USERNAME)
                 },
                 onBack = {
                     navController.popBackStack()
@@ -97,6 +94,15 @@ fun NavGraphBuilder.homeGraph(navController: NavHostController) {
                         }
                     }
                 }
+            )
+        }
+
+        composable(Routes.CHANGE_USERNAME) {
+            val vm: AuthViewModel = viewModel()
+            AuthScreen(
+                viewModel = vm,
+                onContinue = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
             )
         }
 
@@ -140,7 +146,10 @@ fun NavGraphBuilder.homeGraph(navController: NavHostController) {
         }
 
         composable("${Routes.GAME}/{matchId}") {
-            GameScreen(onBack = { navController.popBackStack() })
+            GameScreen(
+                onBack = { navController.popBackStack() },
+                onSettings = { navController.navigate(Routes.SETTINGS) }
+            )
         }
 
         composable(Routes.CREATE_LOBBY) {
