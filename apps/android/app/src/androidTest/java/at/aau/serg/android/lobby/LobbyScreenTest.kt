@@ -59,7 +59,7 @@ class LobbyScreenTest {
         composeRule.setContent {
             HomeScreen(
                 state = state,
-                onCreateLobby = {},
+                onNewLobbyScreen = {},
                 onBrowseFancyLobbies = {},
                 onShowLeaderboard = {},
                 onSettings = {}

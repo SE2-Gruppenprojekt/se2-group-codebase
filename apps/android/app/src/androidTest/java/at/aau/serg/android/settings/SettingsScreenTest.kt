@@ -18,20 +18,16 @@ class SettingsScreenTest {
             .setUid("1")
             .setDisplayName("TestUser")
             .build(),
-        isDarkMode: Boolean = false,
         onBack: () -> Unit = {},
         onLogout: () -> Unit = {},
-        onUsernameChange: (String) -> Unit = {},
-        onToggleDarkMode: () -> Unit = {}
+        onChangeUsername: () -> Unit = {}
     ) {
         composeRule.setContent {
             SettingsScreen(
                 user = user,
-                onUsernameChange = onUsernameChange,
+                onChangeUsername = onChangeUsername,
                 onLogout = onLogout,
-                onBack = onBack,
-                isDarkMode = isDarkMode,
-                onToggleDarkMode = onToggleDarkMode
+                onBack = onBack
             )
         }
     }
@@ -62,21 +58,19 @@ class SettingsScreenTest {
         assertTrue(called)
     }
 
-    // --- Username change ---
+    // --- Change Username ---
 
     @Test
-    fun usernameChange_triggersCallback() {
-        var changedValue = ""
+    fun clickingChangeUsername_callsCallback() {
+        var called = false
 
-        setScreen(onUsernameChange = {
-            changedValue = it
-        })
+        setScreen(onChangeUsername = { called = true })
 
         composeRule
-            .onNodeWithText("TestUser")
-            .performTextReplacement("NewName")
+            .onNodeWithText("Change Username")
+            .performClick()
 
-        assertTrue(changedValue == "NewName")
+        assertTrue(called)
     }
 
     // --- Logout ---
@@ -97,15 +91,11 @@ class SettingsScreenTest {
     // --- Dark mode toggle callback ---
 
     @Test
-    fun darkModeToggle_callsCallback() {
-        var toggled = false
-
-        setScreen(onToggleDarkMode = { toggled = true })
+    fun darkModeToggle_isDisplayed() {
+        setScreen()
 
         composeRule
-            .onNodeWithText("Dark Mode")
-            .performClick()
-
-        assertTrue(toggled)
+            .onNodeWithTag("settings_darkmode_switch")
+            .assertIsDisplayed()
     }
 }

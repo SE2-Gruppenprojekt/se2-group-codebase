@@ -16,7 +16,7 @@ class HomeScreenTest {
 
     private fun setScreen(
         state: LoadState = LoadState.Idle,
-        onCreateLobby: () -> Unit = {},
+        onNewLobbyScreen: () -> Unit = {},
         onBrowseFancyLobbies: () -> Unit = {},
         onShowLeaderboard: () -> Unit = {},
         onSettings: () -> Unit = {}
@@ -24,7 +24,7 @@ class HomeScreenTest {
         composeRule.setContent {
             HomeScreen(
                 state = state,
-                onCreateLobby = onCreateLobby,
+                onNewLobbyScreen = onNewLobbyScreen,
                 onBrowseFancyLobbies = onBrowseFancyLobbies,
                 onShowLeaderboard = onShowLeaderboard,
                 onSettings = onSettings
@@ -35,10 +35,10 @@ class HomeScreenTest {
     // --- Button callbacks ---
 
     @Test
-    fun clickingCreateLobby_callsOnCreateLobby() {
+    fun clickingCreateLobby_callsOnNewLobbyScreen() {
         var called = false
 
-        setScreen(onCreateLobby = { called = true })
+        setScreen(onNewLobbyScreen = { called = true })
 
         composeRule
             .onNodeWithTag("home_create_lobby_button")
