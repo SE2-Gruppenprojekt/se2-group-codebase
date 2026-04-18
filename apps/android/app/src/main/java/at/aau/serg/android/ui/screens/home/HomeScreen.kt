@@ -125,13 +125,13 @@ fun HomeScreen(
 
             IconButton(
                 onClick = onSettings,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(40.dp)
             ) {
                 Icon(
                     imageVector = Icons.Filled.Settings,
                     contentDescription = "Settings",
                     tint = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
@@ -187,7 +187,7 @@ fun HomeScreen(
             // loading state
             if (state is LoadState.Loading) {
                 CircularProgressIndicator(
-                    color = if (darkMode) Color.White else Color(0xFF456EFF)
+                    color = if (darkMode) Color.White else Color(0xFF9D3CFF)
                 )
                 Spacer(modifier = Modifier.height(14.dp))
             }

@@ -85,7 +85,7 @@ fun SettingsScreen(
         ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
                     .clickable(onClick = onBack),
                 contentAlignment = Alignment.Center
@@ -94,7 +94,7 @@ fun SettingsScreen(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
                     tint = primaryText,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(20.dp)
                 )
             }
             Spacer(Modifier.width(10.dp))

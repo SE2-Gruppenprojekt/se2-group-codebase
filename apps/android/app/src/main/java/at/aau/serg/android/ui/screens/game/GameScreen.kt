@@ -88,12 +88,13 @@ fun GameScreen(
         ) {
             IconButton(
                 onClick = onBack,
-                modifier = Modifier.align(Alignment.CenterStart)
+                modifier = Modifier.align(Alignment.CenterStart).size(40.dp)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = primaryText
+                    tint = primaryText,
+                    modifier = Modifier.size(20.dp)
                 )
             }
 
@@ -118,11 +119,16 @@ fun GameScreen(
                     fontSize = 16.sp
                 )
                 Spacer(Modifier.width(4.dp))
-                IconButton(onClick = onSettings) {
+                IconButton(
+                    onClick = onSettings,
+                    modifier = Modifier.size(40.dp)
+                ) {
                     Icon(
                         imageVector = Icons.Filled.Settings,
                         contentDescription = "Settings",
-                        tint = primaryText)
+                        tint = primaryText,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         }
@@ -213,7 +219,7 @@ fun GameScreen(
                         .weight(1f)
                         .height(52.dp),
                     shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9D3CFF))
                 ) {
                     Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White)
                     Spacer(Modifier.width(6.dp))
