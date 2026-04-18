@@ -1,5 +1,6 @@
 package at.aau.serg.android.viewmodel
 
+import at.aau.serg.android.core.viewmodel.BaseViewModel
 import at.aau.serg.android.errors.ErrorCatalog
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.util.DispatcherProvider
