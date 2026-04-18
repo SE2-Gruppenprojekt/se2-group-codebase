@@ -66,7 +66,8 @@ fun AppNavHost(
                     navController.navigate("home") {
                         popUpTo("username") { inclusive = true }
                     }
-                }
+                },
+                onBack = { navController.popBackStack() }
             )
         }
 
