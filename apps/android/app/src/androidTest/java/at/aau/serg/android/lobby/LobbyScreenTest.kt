@@ -62,9 +62,7 @@ class LobbyScreenTest {
                 onCreateLobby = {},
                 onBrowseFancyLobbies = {},
                 onShowLeaderboard = {},
-                onSettings = {},
-                onWaitingRoom = {},
-                onNewLobbyScreen = {}
+                onSettings = {}
             )
         }
     }

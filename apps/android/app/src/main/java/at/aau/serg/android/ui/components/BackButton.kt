@@ -1,4 +1,4 @@
-package at.aau.serg.android.ui.general_components
+package at.aau.serg.android.ui.components
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons

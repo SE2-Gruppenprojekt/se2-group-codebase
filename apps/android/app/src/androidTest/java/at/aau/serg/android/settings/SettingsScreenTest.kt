@@ -2,24 +2,37 @@ package at.aau.serg.android.settings
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.screens.settings.SettingsScreen
-import at.aau.serg.android.ui.theme.ThemeState
 import org.junit.Assert.assertTrue
-import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.Test
 
-// UI-Component tests
 class SettingsScreenTest {
 
     @get:Rule
     val composeRule = createComposeRule()
 
     private fun setScreen(
-        onBack: () -> Unit = {}
+        user: User = User.newBuilder()
+            .setUid("1")
+            .setDisplayName("TestUser")
+            .build(),
+        isDarkMode: Boolean = false,
+        onBack: () -> Unit = {},
+        onLogout: () -> Unit = {},
+        onUsernameChange: (String) -> Unit = {},
+        onToggleDarkMode: () -> Unit = {}
     ) {
         composeRule.setContent {
-            SettingsScreen(onBack = onBack)
+            SettingsScreen(
+                user = user,
+                onUsernameChange = onUsernameChange,
+                onLogout = onLogout,
+                onBack = onBack,
+                isDarkMode = isDarkMode,
+                onToggleDarkMode = onToggleDarkMode
+            )
         }
     }
 
@@ -28,7 +41,10 @@ class SettingsScreenTest {
     @Test
     fun displaysDarkModeToggle() {
         setScreen()
-        composeRule.onNodeWithText("Dark Mode").assertIsDisplayed()
+
+        composeRule
+            .onNodeWithText("Dark Mode")
+            .assertIsDisplayed()
     }
 
     // --- Back button ---
@@ -36,55 +52,60 @@ class SettingsScreenTest {
     @Test
     fun clickingBack_callsOnBack() {
         var called = false
+
         setScreen(onBack = { called = true })
 
-        composeRule.onNodeWithContentDescription("Back").performClick()
+        composeRule
+            .onNodeWithContentDescription("Back")
+            .performClick()
 
         assertTrue(called)
     }
 
-    // --- Dark mode toggle ---
+    // --- Username change ---
 
     @Test
-    fun darkModeToggle_reflectsInitialState() {
-        ThemeState.isDarkMode.value = true
-        setScreen()
-        composeRule.waitForIdle()
+    fun usernameChange_triggersCallback() {
+        var changedValue = ""
+
+        setScreen(onUsernameChange = {
+            changedValue = it
+        })
 
         composeRule
-            .onNodeWithTag("settings_darkmode_switch")
-            .assertIsOn()
+            .onNodeWithText("TestUser")
+            .performTextReplacement("NewName")
+
+        assertTrue(changedValue == "NewName")
     }
 
+    // --- Logout ---
+
     @Test
-    fun darkModeToggle_changesThemeState() {
-        ThemeState.isDarkMode.value = false
-        setScreen()
-        composeRule.waitForIdle()
+    fun clickingLogout_callsOnLogout() {
+        var called = false
+
+        setScreen(onLogout = { called = true })
 
         composeRule
-            .onNodeWithTag("settings_darkmode_switch")
+            .onNodeWithText("Logout")
             .performClick()
 
-        assertTrue(ThemeState.isDarkMode.value)
+        assertTrue(called)
     }
+
+    // --- Dark mode toggle callback ---
 
     @Test
-    fun darkModeToggle_canTurnOffDarkMode() {
-        ThemeState.isDarkMode.value = true
-        setScreen()
-        composeRule.waitForIdle()
+    fun darkModeToggle_callsCallback() {
+        var toggled = false
+
+        setScreen(onToggleDarkMode = { toggled = true })
 
         composeRule
-            .onNodeWithTag("settings_darkmode_switch")
+            .onNodeWithText("Dark Mode")
             .performClick()
 
-        assertFalse(ThemeState.isDarkMode.value)
+        assertTrue(toggled)
     }
-
-    @After
-    fun tearDown() {
-        ThemeState.isDarkMode.value = false
-    }
-
 }

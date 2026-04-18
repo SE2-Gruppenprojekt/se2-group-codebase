@@ -12,7 +12,7 @@ import at.aau.serg.android.ui.lobby.LobbiesUiState
 import at.aau.serg.android.ui.lobby.LobbyUiStateLoading
 import at.aau.serg.android.util.DefaultDispatcherProvider
 import at.aau.serg.android.util.DispatcherProvider
-import at.aau.serg.android.viewmodel.BaseViewModel
+import at.aau.serg.android.core.viewmodel.BaseViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -113,8 +113,8 @@ class LobbyViewModel(
     }
 
     fun createLobby(
-        userId: String = AppSession.userId,
-        displayName: String = AppSession.displayName,
+        userId: String,
+        displayName: String,
         maxPlayers: Int = 4,
         isPrivate: Boolean = false,
         allowGuests: Boolean = true,
@@ -142,8 +142,8 @@ class LobbyViewModel(
 
     fun joinLobby(
         lobbyId: String,
-        userId: String = AppSession.userId,
-        displayName: String = AppSession.displayName,
+        userId: String,
+        displayName: String,
         onSuccess: (Lobby) -> Unit = {},
         onError: () -> Unit = {}
     ) {
@@ -156,8 +156,8 @@ class LobbyViewModel(
 
     fun joinLobbyOrOpen(
         lobbyId: String,
-        userId: String = AppSession.userId,
-        displayName: String = AppSession.displayName,
+        userId: String,
+        displayName: String,
         onSuccess: (Lobby) -> Unit = {},
         onError: () -> Unit = {}
     ) {
@@ -176,7 +176,7 @@ class LobbyViewModel(
 
     fun leaveLobby(
         lobbyId: String,
-        userId: String = AppSession.userId,
+        userId: String,
         onSuccess: () -> Unit = {},
         onError: () -> Unit = {}
     ) {
@@ -189,7 +189,7 @@ class LobbyViewModel(
 
     fun startMatch(
         lobbyId: String,
-        userId: String = AppSession.userId,
+        userId: String,
         onError: () -> Unit = {}
     ) {
         launchRequest(

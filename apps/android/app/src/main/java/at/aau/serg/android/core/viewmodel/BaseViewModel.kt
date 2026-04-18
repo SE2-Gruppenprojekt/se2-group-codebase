@@ -1,11 +1,11 @@
-package at.aau.serg.android.viewmodel
+package at.aau.serg.android.core.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import at.aau.serg.android.errors.ErrorMapper
 import at.aau.serg.android.ui.state.LoadState
-import at.aau.serg.android.util.DispatcherProvider
 import at.aau.serg.android.util.DefaultDispatcherProvider
+import at.aau.serg.android.util.DispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
