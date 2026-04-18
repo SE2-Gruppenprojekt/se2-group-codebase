@@ -21,6 +21,13 @@ coreKtx = "1.18.0"
 lifecycle = "2.10.0"
 activityCompose = "1.13.0"
 
+# Android Persistence
+datastore = "1.1.1"
+protobuf = "3.25.1"
+protoc = "3.25.1"
+protobufPlugin = "0.9.6"
+
+
 # Testing Libraries
 junit = "4.13.2"
 androidxJunit = "1.3.0"
@@ -48,6 +55,11 @@ runtime = "1.10.6"
 [libraries]
 # AndroidX Core
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+
+# Android Persistence
+datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+datastore-core = { module = "androidx.datastore:datastore-core", version.ref = "datastore" }
+protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobuf" }
 
 # Lifecycle
 lifecycle-runtime = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
@@ -112,6 +124,7 @@ androidx-runtime = { group = "androidx.compose.runtime", name = "runtime", versi
 [plugins]
 # Android
 android-application = { id = "com.android.application", version.ref = "agp" }
+protobuf = { id = "com.google.protobuf", version.ref = "protobufPlugin" }
 
 # Kotlin
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
