@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import at.aau.serg.android.ui.theme.ThemeState
 
 // hardcoded tile colors by number (placeholder)
 private fun tileColor(number: Int): Brush {
@@ -40,8 +42,26 @@ private fun tileColor(number: Int): Brush {
 
 @Composable
 fun GameScreen(
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    onSettings: () -> Unit = {}
 ) {
+    val darkMode = ThemeState.isDarkMode.value
+
+    // colors
+    val bgColor = if (darkMode) Color(0xFF0F172A) else Color(0xFFF1F5F9)
+    val headerBg = if (darkMode) Color(0xFF1E293B) else Color.White
+    val headerBorder = if (darkMode) Color.Transparent else Color(0xFFE2E8F0)
+    val primaryText = if (darkMode) Color.White else Color(0xFF1E293B)
+    val secondaryText = if (darkMode) Color(0xFF94A3B8) else Color(0xFF64748B)
+    val cardBg = if (darkMode) Color(0xFF1E293B) else Color.White
+    val cardBorder = if (darkMode) Color(0xFF334155) else Color(0xFFE2E8F0)
+    val boardBg = if (darkMode) Color(0xFF0F2D27) else Color(0xFFDCFCE7)
+    val boardBorder = if (darkMode) Color.White.copy(alpha = 0.2f) else Color(0xFF86EFAC)
+    val handBg = if (darkMode) Color(0xFF1E293B) else Color.White
+    val iconBtnBg = if (darkMode) Color(0xFF334155) else Color(0xFFE2E8F0)
+    val iconBtnTint = if (darkMode) Color.White else Color(0xFF475569)
+    val timerColor = if (darkMode) Color(0xFFF97316) else Color(0xFFEA580C)
+
     // placeholder data
     val boardSets = listOf(
         listOf(7, 8, 9, 10, 11),
@@ -56,13 +76,14 @@ fun GameScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0F172A))
+            .background(bgColor)
     ) {
         // HEADER
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFF1E293B))
+                .background(headerBg)
+                .border(width = 1.dp, color = headerBorder)
                 .padding(horizontal = 12.dp, vertical = 10.dp)
         ) {
             IconButton(
@@ -72,22 +93,18 @@ fun GameScreen(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = Color.White
+                    tint = primaryText
                 )
             }
 
             Column(modifier = Modifier.align(Alignment.Center)) {
-                Text(
-                    text = "Game #4821",
-                    color = Color.White,
+                Text(text = "Game #4821",
+                    color = primaryText,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-                Text(
-                    text = "Round 2 of 3",
-                    color = Color(0xFF94A3B8),
-                    fontSize = 12.sp
-                )
+                    fontSize = 18.sp)
+                Text(text = "Round 2 of 3",
+                    color = secondaryText,
+                    fontSize = 12.sp)
             }
 
             Row(
@@ -96,16 +113,17 @@ fun GameScreen(
             ) {
                 Text(
                     text = "3:45",
-                    color = Color.White,
+                    color = primaryText,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
                 Spacer(Modifier.width(4.dp))
-                Icon(
-                    imageVector = Icons.Filled.MoreVert,
-                    contentDescription = "Menu",
-                    tint = Color.White
-                )
+                IconButton(onClick = onSettings) {
+                    Icon(
+                        imageVector = Icons.Filled.Settings,
+                        contentDescription = "Settings",
+                        tint = primaryText)
+                }
             }
         }
 
@@ -121,6 +139,10 @@ fun GameScreen(
                     name = name,
                     tiles = tiles,
                     score = score,
+                    cardBg = cardBg,
+                    cardBorder = cardBorder,
+                    primaryText = primaryText,
+                    secondaryText = secondaryText,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -133,13 +155,13 @@ fun GameScreen(
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF0F2D27))
+                .background(boardBg)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
                 boardSets.forEach { set ->
-                    TileRow(tiles = set)
+                    TileRow(tiles = set, borderColor = boardBorder)
                 }
             }
         }
@@ -150,7 +172,7 @@ fun GameScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFF1E293B))
+                .background(handBg)
                 .padding(horizontal = 12.dp, vertical = 10.dp)
         ) {
             Row(
@@ -159,13 +181,12 @@ fun GameScreen(
             ) {
                 Text(
                     text = "${myTiles.size}  Your Tiles",
-                    color = Color.White,
+                    color = primaryText,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
+                    fontSize = 14.sp)
                 Text(
                     text = "Turn ends in:  0:45",
-                    color = Color(0xFFF97316),
+                    color = timerColor,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
                 )
@@ -181,7 +202,6 @@ fun GameScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // ACTION BUTTONS
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -205,9 +225,9 @@ fun GameScreen(
                     modifier = Modifier
                         .size(52.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFF334155))
+                        .background(iconBtnBg)
                 ) {
-                    Icon(Icons.Filled.Add, contentDescription = "Add", tint = Color.White)
+                    Icon(Icons.Filled.Add, contentDescription = "Add", tint = iconBtnTint)
                 }
 
                 IconButton(
@@ -215,9 +235,9 @@ fun GameScreen(
                     modifier = Modifier
                         .size(52.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFF334155))
+                        .background(iconBtnBg)
                 ) {
-                    Icon(Icons.Filled.Refresh, contentDescription = "Reset", tint = Color.White)
+                    Icon(Icons.Filled.Refresh, contentDescription = "Reset", tint = iconBtnTint)
                 }
             }
         }
@@ -229,13 +249,17 @@ private fun PlayerCard(
     name: String,
     tiles: String,
     score: Int,
+    cardBg: Color,
+    cardBorder: Color,
+    primaryText: Color,
+    secondaryText: Color,
     modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF1E293B))
-            .border(1.dp, Color(0xFF334155), RoundedCornerShape(12.dp))
+            .background(cardBg)
+            .border(1.dp, cardBorder, RoundedCornerShape(12.dp))
             .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -245,20 +269,20 @@ private fun PlayerCard(
                 modifier = Modifier
                     .size(32.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFF334155)),
+                    .background(cardBorder),
                 contentAlignment = Alignment.Center
             ) {
                 Text("👤", fontSize = 16.sp)
             }
             Spacer(Modifier.width(8.dp))
             Column {
-                Text(name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                Text(tiles, color = Color(0xFF94A3B8), fontSize = 11.sp)
+                Text(name, color = primaryText, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                Text(tiles, color = secondaryText, fontSize = 11.sp)
             }
         }
         Text(
             text = score.toString(),
-            color = Color.White,
+            color = primaryText,
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp
         )
@@ -266,11 +290,11 @@ private fun PlayerCard(
 }
 
 @Composable
-private fun TileRow(tiles: List<Int>) {
+private fun TileRow(tiles: List<Int>, borderColor: Color) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
-            .border(2.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+            .border(2.dp, borderColor, RoundedCornerShape(12.dp))
             .padding(8.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {

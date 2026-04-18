@@ -242,7 +242,10 @@ fun AppNavHost(
 
         // GAME
         composable("game/{matchId}") {
-            GameScreen(onBack = { navController.popBackStack() })
+            GameScreen(
+                onBack = { navController.popBackStack() },
+                onSettings = { navController.navigate("settings") }
+            )
         }
 
     }
