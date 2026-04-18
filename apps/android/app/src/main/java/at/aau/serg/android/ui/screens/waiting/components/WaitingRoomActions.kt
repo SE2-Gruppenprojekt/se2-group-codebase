@@ -2,10 +2,14 @@ package at.aau.serg.android.ui.screens.waiting.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+
+private val Purple = Color(0xFF9D3CFF)
 
 @Composable
 fun WaitingRoomActions(
@@ -18,14 +22,16 @@ fun WaitingRoomActions(
     ) {
         Button(
             onClick = onStart,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            colors = ButtonDefaults.buttonColors(containerColor = Purple)
         ) {
             Text("Start Game")
         }
 
         Button(
             onClick = onInvite,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            colors = ButtonDefaults.buttonColors(containerColor = Purple)
         ) {
             Text("Invite")
         }
