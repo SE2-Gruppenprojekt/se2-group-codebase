@@ -93,11 +93,16 @@ class WaitingRoomScreenTest {
         LobbyUiState.roomCode.value = roomCode
         LobbyUiState.maxPlayers.intValue = 4
 
+        var gameStarted = false
+
         composeRule.setContent {
             WaitingRoomScreen(
                 onBack = onBack,
                 onSettings = {},
-                onGameStarted = onGameStarted,
+                onGameStarted = { matchId ->
+                    assertTrue(matchId.isNotBlank())
+                    gameStarted = true
+                },
                 lobbyId = lobbyId,
                 viewModel = viewModel
             )
