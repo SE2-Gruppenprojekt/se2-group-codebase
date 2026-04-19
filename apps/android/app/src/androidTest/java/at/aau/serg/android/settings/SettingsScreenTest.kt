@@ -92,7 +92,7 @@ class SettingsScreenTest {
         assertTrue(called)
     }
 
-    // --- Dark mode toggle callback ---
+    // --- Dark mode toggle ---
 
     @Test
     fun darkModeToggle_isDisplayed() {
@@ -101,5 +101,18 @@ class SettingsScreenTest {
         composeRule
             .onNodeWithTag("settings_darkmode_switch")
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun darkModeToggle_callsOnToggleDarkMode() {
+        var toggled = false
+
+        setScreen(onToggleDarkMode = { toggled = true })
+
+        composeRule
+            .onNodeWithTag("settings_darkmode_switch")
+            .performClick()
+
+        assertTrue(toggled)
     }
 }
