@@ -9,6 +9,7 @@ import at.aau.serg.android.util.UserPrefs
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import shared.validation.ValidationResult
@@ -35,7 +36,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         viewModelScope.launch {
-            val current = user.value.displayName
+            val current = userStore.data.first().displayName
             _username.value = current
             _validation.value = DisplayNameValidator.validate(current)
         }
