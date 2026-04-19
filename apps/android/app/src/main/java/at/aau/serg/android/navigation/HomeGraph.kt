@@ -87,6 +87,8 @@ fun NavGraphBuilder.homeGraph(navController: NavHostController) {
                 onBack = {
                     navController.popBackStack()
                 },
+                isDarkMode = ThemeState.isDarkMode.value,
+                onToggleDarkMode = { ThemeState.isDarkMode.value = it },
                 onLogout = {
                     vm.logout {
                         navController.navigate(Routes.AUTH) {

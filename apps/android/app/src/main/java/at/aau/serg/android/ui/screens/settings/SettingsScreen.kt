@@ -46,16 +46,16 @@ import at.aau.serg.android.ui.theme.AuthLightBackground
 import at.aau.serg.android.ui.theme.AuthLightCard
 import at.aau.serg.android.ui.theme.AuthLightPrimaryText
 import at.aau.serg.android.ui.theme.AuthLightSecondaryText
-import at.aau.serg.android.ui.theme.ThemeState
-
 @Composable
 fun SettingsScreen(
     user: User,
     onChangeUsername: () -> Unit,
     onLogout: () -> Unit,
     onBack: () -> Unit,
+    isDarkMode: Boolean,
+    onToggleDarkMode: (Boolean) -> Unit,
 ) {
-    val darkMode = ThemeState.isDarkMode.value
+    val darkMode = isDarkMode
 
     val background   = if (darkMode) AuthDarkBackground    else AuthLightBackground
     val card         = if (darkMode) AuthDarkCard          else AuthLightCard
@@ -159,8 +159,8 @@ fun SettingsScreen(
                     )
                 }
                 Switch(
-                    checked = ThemeState.isDarkMode.value,
-                    onCheckedChange = { ThemeState.isDarkMode.value = it },
+                    checked = isDarkMode,
+                    onCheckedChange = onToggleDarkMode,
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
                         checkedTrackColor = AuthButtonGradientStart,

@@ -20,14 +20,18 @@ class SettingsScreenTest {
             .build(),
         onBack: () -> Unit = {},
         onLogout: () -> Unit = {},
-        onChangeUsername: () -> Unit = {}
+        onChangeUsername: () -> Unit = {},
+        isDarkMode: Boolean = false,
+        onToggleDarkMode: (Boolean) -> Unit = {}
     ) {
         composeRule.setContent {
             SettingsScreen(
                 user = user,
                 onChangeUsername = onChangeUsername,
                 onLogout = onLogout,
-                onBack = onBack
+                onBack = onBack,
+                isDarkMode = isDarkMode,
+                onToggleDarkMode = onToggleDarkMode
             )
         }
     }
