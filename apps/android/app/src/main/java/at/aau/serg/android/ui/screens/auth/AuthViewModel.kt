@@ -35,11 +35,11 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     val validation: StateFlow<ValidationResult> = _validation
 
     init {
-        viewModelScope.launch {
-            val current = userStore.data.first().displayName
-            _username.value = current
-            _validation.value = DisplayNameValidator.validate(current)
-        }
+        user.collect { u ->
+                val current = u.displayName
+                _username.value = current
+                _validation.value = DisplayNameValidator.validate(current)
+            }
     }
 
     fun onUsernameChanged(value: String) {
