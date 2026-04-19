@@ -23,7 +23,7 @@ fun WaitingRoomActions(
         Button(
             onClick = onStart,
             modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(containerColor = Purple)
+            colors = ButtonDefaults.buttonColors(containerColor = Purple, contentColor = Color.White)
         ) {
             Text("Start Game")
         }
@@ -31,7 +31,7 @@ fun WaitingRoomActions(
         Button(
             onClick = onInvite,
             modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(containerColor = Purple)
+            colors = ButtonDefaults.buttonColors(containerColor = Purple, contentColor = Color.White)
         ) {
             Text("Invite")
         }

@@ -3,9 +3,11 @@ package at.aau.serg.android.ui.screens.browselobbies.components
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import at.aau.serg.android.ui.screens.browselobbies.LobbyBrowseItem
 
 @Composable
@@ -27,7 +29,11 @@ fun LobbyBrowseCard(
 
                 Button(
                     onClick = { onJoinLobby(lobby.lobbyId) },
-                    enabled = lobby.isOpen
+                    enabled = lobby.isOpen,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF9D3CFF),
+                        contentColor = Color.White
+                    )
                 ) {
                     Text(if (lobby.isOpen) "Join" else "Full")
                 }
