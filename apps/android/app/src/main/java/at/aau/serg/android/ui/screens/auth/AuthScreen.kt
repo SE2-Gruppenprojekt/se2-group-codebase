@@ -145,17 +145,19 @@ fun AuthScreen(
     val titleGradient = Brush.horizontalGradient(listOf(AuthGradientStart, AuthGradientEnd))
     val buttonGradient = Brush.horizontalGradient(listOf(AuthButtonGradientStart, AuthButtonGradientEnd))
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.background)
             .testTag(AuthTestTags.SCREEN)
     ) {
+        // scrollable content
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 32.dp),
+                .padding(horizontal = 24.dp)
+                .padding(top = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
@@ -379,9 +381,16 @@ fun AuthScreen(
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
+        }
 
-            // --- Continue button ---
+        // --- Continue button + footer pinned at bottom ---
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -415,9 +424,8 @@ fun AuthScreen(
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(12.dp))
 
-            // --- Footer ---
             Text(
                 text = buildAnnotatedString {
                     append("By continuing, you agree to our ")
@@ -427,8 +435,6 @@ fun AuthScreen(
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center
             )
-
-            Spacer(Modifier.height(16.dp))
         }
     }
 }
