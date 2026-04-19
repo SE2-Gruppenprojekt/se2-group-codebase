@@ -379,39 +379,6 @@ fun AuthScreen(
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
-
-            // --- Feature cards ---
-            FeatureCard(
-                title = "Track Your Progress",
-                subtitle = "Earn achievements and climb the leaderboard",
-                icon = Icons.Filled.EmojiEvents,
-                iconTint = Color(0xFF4F7FE8),
-                cardBg = colors.cardBlue,
-                borderColor = colors.borderBlue,
-                primaryText = colors.primaryText
-            )
-            Spacer(Modifier.height(8.dp))
-            FeatureCard(
-                title = "Play With Friends",
-                subtitle = "Create private lobbies and invite players",
-                icon = Icons.Filled.Groups,
-                iconTint = Color(0xFF8B5CF6),
-                cardBg = colors.cardPurple,
-                borderColor = colors.borderPurple,
-                primaryText = colors.primaryText
-            )
-            Spacer(Modifier.height(8.dp))
-            FeatureCard(
-                title = "View Statistics",
-                subtitle = "Analyze your gameplay and improve your skills",
-                icon = Icons.Filled.TrendingUp,
-                iconTint = Color(0xFF2BC46D),
-                cardBg = colors.cardGreen,
-                borderColor = colors.borderGreen,
-                primaryText = colors.primaryText
-            )
-
             Spacer(Modifier.height(24.dp))
 
             // --- Continue button ---
