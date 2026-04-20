@@ -53,7 +53,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import at.aau.serg.android.ui.lobby.LobbyUiState
+import at.aau.serg.android.ui.screens.lobby.waiting.components.LobbyUiState
 import at.aau.serg.android.ui.theme.ThemeState
 import androidx.compose.ui.platform.LocalContext
 import android.content.ClipData

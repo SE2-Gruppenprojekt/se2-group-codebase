@@ -1,4 +1,4 @@
-package at.aau.serg.android.ui.lobby
+package at.aau.serg.android.ui.screens.lobby.waiting.components
 
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -11,4 +11,3 @@ object LobbyUiState {
     val stackEnabled = mutableStateOf(true)
     val roomCode = mutableStateOf("")
 }
-

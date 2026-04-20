@@ -6,8 +6,6 @@ import at.aau.serg.android.core.network.lobby.LobbyDeletedPayload
 import at.aau.serg.android.core.network.lobby.LobbyStartedPayload
 import at.aau.serg.android.core.network.lobby.LobbyUpdatedPayload
 import at.aau.serg.android.core.network.lobby.LobbyWebSocketService
-import at.aau.serg.android.ui.lobby.LobbiesUiState
-import at.aau.serg.android.ui.lobby.LobbyUiStateLoading
 import at.aau.serg.android.ui.screens.lobby.main.LobbyViewModel
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.util.DispatcherProvider
