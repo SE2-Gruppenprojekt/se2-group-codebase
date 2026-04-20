@@ -3,7 +3,7 @@ package at.aau.serg.android.ui.screens.settings
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import at.aau.serg.android.datastore.user.UserStore
+import at.aau.serg.android.core.datastore.user.UserStore
 import at.aau.serg.android.datastore.proto.User
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn

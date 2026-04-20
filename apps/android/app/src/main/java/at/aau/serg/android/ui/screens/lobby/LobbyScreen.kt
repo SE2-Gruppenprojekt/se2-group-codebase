@@ -6,6 +6,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
+import at.aau.serg.android.core.datastore.DataStoreProvider
+import at.aau.serg.android.core.datastore.getStore
+import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.screens.lobby.components.LobbyContent
 
 @Composable
@@ -16,14 +19,14 @@ fun LobbyScreen(
 ) {
 
     val dataStoreProvider = remember {
-        at.aau.serg.android.datastore.core.DataStoreProvider
+        DataStoreProvider
             .getInstance(navController.context)
     }
 
-    val userStore = dataStoreProvider.userStore
+    val userStore = dataStoreProvider.getStore<User>()
 
     val user by userStore.data.collectAsState(
-        initial = at.aau.serg.android.datastore.proto.User.getDefaultInstance()
+        initial = User.getDefaultInstance()
     )
 
     val lobbyState by viewModel.lobby.collectAsState()
