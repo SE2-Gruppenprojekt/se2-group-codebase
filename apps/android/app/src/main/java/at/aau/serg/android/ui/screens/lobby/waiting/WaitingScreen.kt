@@ -1,81 +1,60 @@
 package at.aau.serg.android.ui.screens.lobby.waiting
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.screens.lobby.main.LobbyViewModel
-import at.aau.serg.android.ui.screens.lobby.waiting.components.LobbyUiState
-import at.aau.serg.android.ui.screens.lobby.waiting.components.WaitingScreenPlayerSection
-import at.aau.serg.android.ui.screens.lobby.waiting.components.WaitingScreenRoomCard
-import at.aau.serg.android.ui.screens.lobby.waiting.components.WaitingScreenSettingsSection
-import at.aau.serg.android.ui.screens.lobby.waiting.components.WaitingScreenTopBar
+import at.aau.serg.android.ui.screens.lobby.waiting.components.*
+import at.aau.serg.android.ui.screens.lobby.waiting.components.LobbyUiState.stackEnabled
+import at.aau.serg.android.ui.screens.lobby.waiting.components.LobbyUiState.startingCards
+import at.aau.serg.android.ui.screens.lobby.waiting.components.LobbyUiState.turnTimer
 import at.aau.serg.android.ui.theme.ThemeState
-import kotlin.random.Random
 
 @Composable
 fun WaitingRoomScreen(
     onBack: () -> Unit,
     onSettings: () -> Unit,
     lobbyId: String? = null,
-    viewModel: LobbyViewModel? = null
+    viewModel: LobbyViewModel
 ) {
     val scrollState = rememberScrollState()
     val darkMode = ThemeState.isDarkMode.value
+    val context = LocalContext.current
 
-    val fetchedLobbyState = viewModel?.lobby?.collectAsState()
-    val fetchedLobby = fetchedLobbyState?.value
+    val lobby by viewModel.lobby.collectAsState()
 
     LaunchedEffect(lobbyId) {
-        if (lobbyId != null && viewModel != null) {
-            viewModel.loadLobby(lobbyId)
-        }
+        lobbyId?.let { viewModel.loadLobby(it) }
     }
 
-    val lobbyName by LobbyUiState.lobbyName
-    val maxPlayers by LobbyUiState.maxPlayers
-    val turnTimer by LobbyUiState.turnTimer
-    val startingCards by LobbyUiState.startingCards
-    val stackEnabled by LobbyUiState.stackEnabled
-
-    if (LobbyUiState.roomCode.value.isBlank() && lobbyId == null) {
-        LobbyUiState.roomCode.value = generateRoomCode()
-    }
-    val roomCode by LobbyUiState.roomCode
-
-    val players = fetchedLobby?.players ?: emptyList()
+    val players = lobby?.players ?: emptyList()
     val joinedCount = players.size
-    val isLoading = lobbyId != null && fetchedLobby == null
+    val maxPlayers = lobby?.settings?.maxPlayers ?: 0
+    val lobbyName = lobby?.name ?: "Lobby"
+    val roomCode = lobby?.lobbyId?.take(6)?.uppercase() ?: "------"
+
+    val isLoading = lobby == null
 
     val gradientTop = if (darkMode) {
         MaterialTheme.colorScheme.background
-    } else {
-        Color(0xFFF5F7FB)
-    }
+    } else Color(0xFFF5F7FB)
 
     val gradientBottom = if (darkMode) {
         MaterialTheme.colorScheme.surface
-    } else {
-        Color(0xFFEAEFFF)
-    }
+    } else Color(0xFFEAEFFF)
 
     val cardColor = MaterialTheme.colorScheme.surface
     val primaryTextColor = MaterialTheme.colorScheme.onSurface
     val secondaryTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+    val buttonColor = MaterialTheme.colorScheme.primary
 
     Column(
         modifier = Modifier
@@ -87,11 +66,10 @@ fun WaitingRoomScreen(
             .padding(16.dp)
     ) {
 
-
         WaitingScreenTopBar(
             onBack = onBack,
             onSettings = onSettings,
-            lobbyName = lobbyName
+            lobbyName = lobbyName as String
         )
 
         Spacer(Modifier.height(12.dp))
@@ -100,7 +78,7 @@ fun WaitingRoomScreen(
             roomCode = roomCode,
             joinedCount = joinedCount,
             maxPlayers = maxPlayers,
-            context = LocalContext.current,
+            context = context,
             primaryTextColor = primaryTextColor,
             secondaryTextColor = secondaryTextColor,
             cardColor = cardColor
@@ -111,7 +89,7 @@ fun WaitingRoomScreen(
         WaitingScreenPlayerSection(
             isLoading = isLoading,
             players = players,
-            fetchedLobby = fetchedLobby,
+            fetchedLobby = lobby,
             maxPlayers = maxPlayers,
             joinedCount = joinedCount,
             primaryTextColor = primaryTextColor,
@@ -121,8 +99,6 @@ fun WaitingRoomScreen(
 
         Spacer(Modifier.height(18.dp))
 
-
-        val buttonColor = MaterialTheme.colorScheme.primary
         WaitingScreenSettingsSection(
             turnTimer = turnTimer,
             startingCards = startingCards,
@@ -157,11 +133,4 @@ fun WaitingRoomScreen(
 
         Spacer(Modifier.height(24.dp))
     }
-}
-
-fun generateRoomCode(length: Int = 6): String {
-        val chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-        return (1..length)
-            .map { chars[Random.nextInt(chars.length)] }
-            .joinToString("")
 }
