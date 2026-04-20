@@ -15,5 +15,6 @@ data class GamePlayer(
         require(userId.isNotBlank()) { "userId must not be blank" }
         require(displayName.isNotBlank()) { "displayName must not be blank" }
         require(turnOrder >= 0) { "turnOrder must not be negative" }
+        require(score >= 0) { "score must not be negative" }
     }
 }

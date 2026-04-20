@@ -46,6 +46,18 @@ class GameDomainModelTest {
     }
 
     @Test
+    fun `rejects game player with negative score`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            GamePlayer(
+                userId = "user-1",
+                displayName = "Alice",
+                turnOrder = 0,
+                score = -1
+            )
+        }
+    }
+
+    @Test
     fun `creates confirmed game with player and current turn`() {
         val player = GamePlayer(
             userId = "user-1",
