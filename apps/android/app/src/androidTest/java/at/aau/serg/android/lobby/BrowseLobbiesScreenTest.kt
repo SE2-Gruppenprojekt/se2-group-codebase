@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import at.aau.serg.android.ui.screens.browselobbies.LobbyBrowseItem
+import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseItem
 import at.aau.serg.android.ui.screens.browselobbies.components.BrowsingLobbiesScreen
 import org.junit.Assert.assertEquals
 import org.junit.Rule

@@ -1,14 +1,14 @@
 package at.aau.serg.android.ui.screens.lobby
 
 import android.util.Log
-import at.aau.serg.android.data.lobby.mapper.toDomain
-import at.aau.serg.android.network.lobby.LobbyAPI
-import at.aau.serg.android.network.lobby.LobbyDeletedPayload
-import at.aau.serg.android.network.lobby.LobbyStartedPayload
-import at.aau.serg.android.network.lobby.LobbyUpdatedPayload
-import at.aau.serg.android.network.lobby.LobbyWebSocketService
+import at.aau.serg.android.core.network.lobby.LobbyAPI
+import at.aau.serg.android.core.network.lobby.LobbyDeletedPayload
+import at.aau.serg.android.core.network.lobby.LobbyStartedPayload
+import at.aau.serg.android.core.network.lobby.LobbyUpdatedPayload
+import at.aau.serg.android.core.network.lobby.LobbyWebSocketService
 import at.aau.serg.android.ui.lobby.LobbiesUiState
 import at.aau.serg.android.ui.lobby.LobbyUiStateLoading
+import at.aau.serg.android.ui.screens.lobby.main.LobbyViewModel
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.util.DispatcherProvider
 import io.mockk.Runs
@@ -34,6 +34,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import at.aau.serg.android.core.network.mapper.toDomain
 import shared.models.lobby.request.CreateLobbyRequest
 import shared.models.lobby.request.JoinLobbyRequest
 import shared.models.lobby.response.LobbyListItemResponse

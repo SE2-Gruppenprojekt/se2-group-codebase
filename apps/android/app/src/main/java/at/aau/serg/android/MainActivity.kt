@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.rememberNavController
-import at.aau.serg.android.navigation.AppNavHost
+import at.aau.serg.android.ui.navigation.AppNavHost
 import at.aau.serg.android.ui.theme.TempappTheme
 import at.aau.serg.android.ui.theme.ThemeState
 

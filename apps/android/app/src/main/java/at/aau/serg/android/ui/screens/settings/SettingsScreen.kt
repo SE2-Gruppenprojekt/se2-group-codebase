@@ -36,7 +36,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import at.aau.serg.android.datastore.proto.User
+import at.aau.serg.android.ui.screens.auth.AuthViewModel
+import at.aau.serg.android.ui.screens.home.HomeViewModel
 import at.aau.serg.android.ui.theme.AuthButtonGradientStart
 import at.aau.serg.android.ui.theme.AuthDarkBackground
 import at.aau.serg.android.ui.theme.AuthDarkCard
@@ -48,7 +51,7 @@ import at.aau.serg.android.ui.theme.AuthLightPrimaryText
 import at.aau.serg.android.ui.theme.AuthLightSecondaryText
 @Composable
 fun SettingsScreen(
-    user: User,
+    viewModel: SettingsViewModel = viewModel(),
     onChangeUsername: () -> Unit,
     onLogout: () -> Unit,
     onBack: () -> Unit,

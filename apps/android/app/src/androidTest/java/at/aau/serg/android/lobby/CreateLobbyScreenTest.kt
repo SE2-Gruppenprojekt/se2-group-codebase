@@ -1,6 +1,6 @@
 package at.aau.serg.android.lobby
 
-import at.aau.serg.android.ui.screens.createlobby.NewLobbyScreen
+import at.aau.serg.android.ui.screens.lobby.create.NewLobbyScreen
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
