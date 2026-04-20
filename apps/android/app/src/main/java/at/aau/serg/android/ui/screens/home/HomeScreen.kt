@@ -12,22 +12,22 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ViewInAr
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.theme.ThemeState
-import at.aau.serg.android.util.UserPrefs
 
 @Composable
 fun HomeScreen(
-    state: LoadState,
+    viewModel: HomeViewModel,
     modifier: Modifier = Modifier,
     onBrowseFancyLobbies: () -> Unit,
     onShowLeaderboard: () -> Unit,
@@ -90,8 +90,8 @@ fun HomeScreen(
     val playerLevelColor = if (darkMode) Color(0xFFFFD93D) else Color(0xFFC08A00)
     val xpColor = if (darkMode) Color(0xFF9AA6C0) else Color(0xFF6A7692)
 
-    val context = LocalContext.current
-    val username = UserPrefs.getUsername(context) ?: "Guest"
+    val uiState by viewModel.uiState.collectAsState()
+    val username = uiState.username
 
     // root screen layout
     Column(
@@ -184,23 +184,27 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            // loading state
-            if (state is LoadState.Loading) {
-                CircularProgressIndicator(
-                    color = if (darkMode) Color.White else Color(0xFF9D3CFF)
-                )
-                Spacer(modifier = Modifier.height(14.dp))
+            when (val state = uiState.loadState) {
+                // loading state
+                LoadState.Loading -> {
+                    CircularProgressIndicator(
+                        color = if (darkMode) Color.White else Color(0xFF9D3CFF)
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+                }
+                // error state
+                is LoadState.Error -> {
+                    Text(
+                        text = state.message,
+                        color = errorColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+                }
+
+                else -> Unit
             }
 
-            // error state
-            if (state is LoadState.Error) {
-                Text(
-                    text = state.message,
-                    color = errorColor,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(modifier = Modifier.height(14.dp))
-            }
 
             // create lobby screen
             HomeActionButton(
