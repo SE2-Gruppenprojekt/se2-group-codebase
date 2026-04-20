@@ -1,21 +1,18 @@
 package at.se2group.backend.domain
 
-data class Tile(
-    val tileId: String,
-    val color: TileColor? = null,
-    val number: Int? = null,
-    val isJoker: Boolean = false
-) {
-    init {
-        require(tileId.isNotBlank()) { "tileId must not be blank" }
+sealed interface Tile {
+    val color: TileColor
+}
 
-        if (isJoker) {
-            require(color == null) { "joker tiles must not have a color" }
-            require(number == null) { "joker tiles must not have a number" }
-        } else {
-            require(color != null) { "numbered tiles must have a color" }
-            require(number != null) { "numbered tiles must have a number" }
-            require(number in 1..13) { "tile number must be between 1 and 13" }
-        }
+data class NumberedTile(
+    override val color: TileColor,
+    val number: Int
+) : Tile {
+    init {
+        require(number in 1..13) { "tile number must be between 1 and 13" }
     }
 }
+
+data class JokerTile(
+    override val color: TileColor
+) : Tile
