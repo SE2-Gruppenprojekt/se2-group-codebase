@@ -27,27 +27,43 @@ class GameDomainModelTest {
 
     @Test
     fun `rejects numbered tile outside valid range`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
             NumberedTile(
                 color = TileColor.RED,
                 number = 14
             )
         }
+
+        assertEquals("tile number must be between 1 and 13", exception.message)
+    }
+
+    @Test
+    fun `rejects numbered tile below valid range`() {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            NumberedTile(
+                color = TileColor.BLUE,
+                number = 0
+            )
+        }
+
+        assertEquals("tile number must be between 1 and 13", exception.message)
     }
 
     @Test
     fun `rejects board set without tiles`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
             BoardSet(
                 boardSetId = "set-1",
                 tiles = emptyList()
             )
         }
+
+        assertEquals("board sets must contain at least one tile", exception.message)
     }
 
     @Test
     fun `rejects game player with negative score`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
             GamePlayer(
                 userId = "user-1",
                 displayName = "Alice",
@@ -55,6 +71,8 @@ class GameDomainModelTest {
                 score = -1
             )
         }
+
+        assertEquals("score must not be negative", exception.message)
     }
 
     @Test
@@ -86,7 +104,7 @@ class GameDomainModelTest {
             turnOrder = 0
         )
 
-        assertThrows(IllegalArgumentException::class.java) {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
             ConfirmedGame(
                 gameId = "game-1",
                 lobbyId = "lobby-1",
@@ -94,6 +112,11 @@ class GameDomainModelTest {
                 currentPlayerUserId = "user-2"
             )
         }
+
+        assertEquals(
+            "currentPlayerUserId must belong to one of the game players",
+            exception.message
+        )
     }
 
     @Test
@@ -101,7 +124,7 @@ class GameDomainModelTest {
         val createdAt = Instant.parse("2026-04-20T10:00:00Z")
         val updatedAt = Instant.parse("2026-04-20T09:59:59Z")
 
-        assertThrows(IllegalArgumentException::class.java) {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
             TurnDraft(
                 gameId = "game-1",
                 playerUserId = "user-1",
@@ -109,5 +132,7 @@ class GameDomainModelTest {
                 updatedAt = updatedAt
             )
         }
+
+        assertEquals("updatedAt must not be before createdAt", exception.message)
     }
 }
