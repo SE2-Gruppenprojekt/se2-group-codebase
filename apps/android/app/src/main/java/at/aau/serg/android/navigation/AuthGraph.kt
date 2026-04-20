@@ -1,14 +1,22 @@
 package at.aau.serg.android.navigation
 
+import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import at.aau.serg.android.core.ui.GenericViewModelFactory
+import at.aau.serg.android.core.datastore.DataStoreProvider
+import at.aau.serg.android.core.datastore.getStore
+import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.screens.auth.AuthScreen
 import at.aau.serg.android.ui.screens.auth.AuthViewModel
 
-fun NavGraphBuilder.authGraph(navController: NavHostController) {
+fun NavGraphBuilder.authGraph(
+    navController: NavHostController,
+    provider: DataStoreProvider
+) {
 
     navigation(
         startDestination = Routes.USERNAME,
@@ -16,7 +24,11 @@ fun NavGraphBuilder.authGraph(navController: NavHostController) {
     ) {
 
         composable(Routes.USERNAME) {
-            val vm: AuthViewModel = viewModel()
+            val userStore = remember { provider.getStore<User>() }
+
+            val vm: AuthViewModel = viewModel(
+                factory = GenericViewModelFactory { AuthViewModel(userStore) }
+            )
 
             AuthScreen(
                 viewModel = vm,

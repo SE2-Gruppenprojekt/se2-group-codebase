@@ -9,27 +9,33 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
+import at.aau.serg.android.core.ui.GenericViewModelFactory
 import at.aau.serg.android.data.lobby.mapper.toBrowseItem
-import at.aau.serg.android.datastore.core.DataStoreProvider
+import at.aau.serg.android.core.datastore.DataStoreProvider
+import at.aau.serg.android.core.datastore.getStore
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.lobby.LobbiesUiState
+import at.aau.serg.android.ui.screens.auth.AuthScreen
+import at.aau.serg.android.ui.screens.auth.AuthViewModel
 import at.aau.serg.android.ui.screens.browselobbies.components.BrowsingLobbiesScreen
 import at.aau.serg.android.ui.screens.createlobby.CreateLobbyScreen
 import at.aau.serg.android.ui.screens.createlobby.NewLobbyScreen
 import at.aau.serg.android.ui.screens.game.GameScreen
 import at.aau.serg.android.ui.screens.home.HomeScreen
+import at.aau.serg.android.ui.screens.home.HomeViewModel
 import at.aau.serg.android.ui.screens.leaderboard.LeaderboardScreen
 import at.aau.serg.android.ui.screens.leaderboard.LeaderboardViewModel
 import at.aau.serg.android.ui.screens.lobby.LobbyScreen
 import at.aau.serg.android.ui.screens.lobby.LobbyViewModel
-import at.aau.serg.android.ui.screens.auth.AuthScreen
-import at.aau.serg.android.ui.screens.auth.AuthViewModel
 import at.aau.serg.android.ui.screens.settings.SettingsScreen
 import at.aau.serg.android.ui.screens.settings.SettingsViewModel
 import at.aau.serg.android.ui.screens.waiting.WaitingRoomScreen
 import at.aau.serg.android.ui.theme.ThemeState
 
-fun NavGraphBuilder.homeGraph(navController: NavHostController) {
+fun NavGraphBuilder.homeGraph(
+    navController: NavHostController,
+    provider: DataStoreProvider
+) {
 
     navigation(
         startDestination = Routes.HOME_SCREEN,
@@ -44,10 +50,14 @@ fun NavGraphBuilder.homeGraph(navController: NavHostController) {
 
             val leaderboardVM: LeaderboardViewModel = viewModel(parent)
 
-            val state by leaderboardVM.loadState.collectAsState()
+            val userStore = remember { provider.getStore<User>() }
+
+            val homeVM: HomeViewModel = viewModel(
+                factory = GenericViewModelFactory { HomeViewModel(userStore) }
+            )
 
             HomeScreen(
-                state = state,
+                viewModel = homeVM,
                 onNewLobbyScreen = {
                     navController.navigate(Routes.CREATE_LOBBY_FANCY)
                 },
@@ -66,12 +76,9 @@ fun NavGraphBuilder.homeGraph(navController: NavHostController) {
             )
         }
 
+
         composable(Routes.SETTINGS) {
-
-            val dataStoreProvider =
-                DataStoreProvider.getInstance(navController.context)
-
-            val userStore = dataStoreProvider.userStore
+            val userStore = remember { provider.getStore<User>() }
 
             val user by userStore.data.collectAsState(
                 initial = User.getDefaultInstance()
@@ -100,7 +107,11 @@ fun NavGraphBuilder.homeGraph(navController: NavHostController) {
         }
 
         composable(Routes.CHANGE_USERNAME) {
-            val vm: AuthViewModel = viewModel()
+            val userStore = remember { provider.getStore<User>() }
+
+            val vm: AuthViewModel = viewModel(
+                factory = GenericViewModelFactory { AuthViewModel(userStore) }
+            )
             AuthScreen(
                 viewModel = vm,
                 onContinue = { navController.popBackStack() },
@@ -169,11 +180,8 @@ fun NavGraphBuilder.homeGraph(navController: NavHostController) {
 
             val lobbyVM: LobbyViewModel = viewModel(parent)
 
-            val dataStoreProvider = remember {
-                DataStoreProvider.getInstance(navController.context)
-            }
 
-            val userStore = dataStoreProvider.userStore
+            val userStore = remember { provider.getStore<User>() }
 
             val user by userStore.data.collectAsState(
                 initial = User.getDefaultInstance()
@@ -207,11 +215,7 @@ fun NavGraphBuilder.homeGraph(navController: NavHostController) {
 
             val lobbyVM: LobbyViewModel = viewModel(parent)
 
-            val dataStoreProvider = remember {
-                DataStoreProvider.getInstance(navController.context)
-            }
-
-            val userStore = dataStoreProvider.userStore
+            val userStore = remember { provider.getStore<User>() }
 
             val user by userStore.data.collectAsState(
                 initial = User.getDefaultInstance()
