@@ -1,6 +1,10 @@
 package at.aau.serg.android.ui.screens.lobby.waiting.components
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
@@ -12,48 +16,29 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 
 @Composable
-fun WaitingRoomHeader(
+fun WaitingScreenTopBar(
     lobbyName: String,
     onBack: () -> Unit,
     onSettings: () -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(
-                onClick = onBack,
-                modifier = Modifier.size(40.dp)
-            ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.size(20.dp)
-                )
+            IconButton(onClick = onBack) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
             }
-
             Column {
                 Text("RUMMIKUB", fontWeight = FontWeight.Bold)
-                Text(lobbyName)
+                Text(lobbyName, style = MaterialTheme.typography.labelSmall)
             }
         }
-
-        IconButton(
-            onClick = onSettings,
-            modifier = Modifier.size(40.dp)
-        ) {
-            Icon(
-                Icons.Filled.Settings,
-                contentDescription = "Settings",
-                tint = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.size(20.dp)
-            )
+        IconButton(onClick = onSettings) {
+            Icon(Icons.Filled.Settings, null)
         }
     }
 }
