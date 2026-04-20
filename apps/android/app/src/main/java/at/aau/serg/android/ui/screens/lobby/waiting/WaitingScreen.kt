@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.screens.lobby.main.LobbyViewModel
 import at.aau.serg.android.ui.screens.lobby.waiting.components.*
+import at.aau.serg.android.ui.screens.lobby.waiting.components.LobbyUiState.lobbyName
 import at.aau.serg.android.ui.screens.lobby.waiting.components.LobbyUiState.stackEnabled
 import at.aau.serg.android.ui.screens.lobby.waiting.components.LobbyUiState.startingCards
 import at.aau.serg.android.ui.screens.lobby.waiting.components.LobbyUiState.turnTimer
@@ -38,7 +39,6 @@ fun WaitingRoomScreen(
     val players = lobby?.players ?: emptyList()
     val joinedCount = players.size
     val maxPlayers = lobby?.settings?.maxPlayers ?: 0
-    val lobbyName = lobby?.name ?: "Lobby"
     val roomCode = lobby?.lobbyId?.take(6)?.uppercase() ?: "------"
 
     val isLoading = lobby == null

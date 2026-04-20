@@ -8,8 +8,6 @@ import at.aau.serg.android.core.network.RetrofitProvider
 import at.aau.serg.android.core.network.lobby.LobbyAPI
 import at.aau.serg.android.core.network.lobby.LobbyService
 import at.aau.serg.android.core.network.lobby.LobbyWebSocketService
-import at.aau.serg.android.ui.lobby.LobbiesUiState
-import at.aau.serg.android.ui.lobby.LobbyUiStateLoading
 import at.aau.serg.android.util.DefaultDispatcherProvider
 import at.aau.serg.android.util.DispatcherProvider
 import kotlinx.coroutines.Job
@@ -20,6 +18,7 @@ import shared.models.lobby.domain.Lobby
 import shared.models.lobby.request.CreateLobbyRequest
 import shared.models.lobby.request.JoinLobbyRequest
 import shared.models.lobby.response.LobbyListItemResponse
+import at.aau.serg.android.core.network.mapper.toDomain
 
 class LobbyViewModel(
     private val api: LobbyAPI = LobbyAPI(
@@ -32,8 +31,12 @@ class LobbyViewModel(
     private val _state = MutableStateFlow<LobbyUiStateLoading>(LobbyUiStateLoading.Loading)
     val state = _state.asStateFlow()
 
-    private val _lobbiesState = MutableStateFlow<LobbiesUiState>(LobbiesUiState.Loading)
-    val lobbiesState = _lobbiesState.asStateFlow()
+    private val _isLoadingLobbies = MutableStateFlow(false)
+    val isLoadingLobbies = _isLoadingLobbies.asStateFlow()
+
+    private val _lobbiesError = MutableStateFlow<String?>(null)
+    val lobbiesError = _lobbiesError.asStateFlow()
+
 
     private val _lobby = MutableStateFlow<Lobby?>(null)
     val lobby = _lobby.asStateFlow()
@@ -73,6 +76,12 @@ class LobbyViewModel(
         }
     }
 
+    sealed class LobbyUiStateLoading {
+        object Loading : LobbyUiStateLoading()
+        data class Success(val lobby: Lobby) : LobbyUiStateLoading()
+        data class Error(val message: String) : LobbyUiStateLoading()
+    }
+
     // clean up when screen is exited
     override fun onCleared() {
         webSocketJob?.cancel()
@@ -82,20 +91,7 @@ class LobbyViewModel(
         super.onCleared()
     }
 
-    fun loadLobbies(onError: () -> Unit = {}) {
-        _lobbiesState.value = LobbiesUiState.Loading
-        launchRequest(
-            request = { api.getLobbies() },
-            onSuccess = { loaded ->
-                _lobbies.value = loaded
-                _lobbiesState.value = LobbiesUiState.Success(loaded)
-            },
-            onError = {
-                _lobbiesState.value = LobbiesUiState.Error("Could not load lobbies")
-                onError()
-            }
-        )
-    }
+
 
     fun loadLobby(lobbyId: String) {
         _state.value = LobbyUiStateLoading.Loading
@@ -186,6 +182,25 @@ class LobbyViewModel(
         )
     }
 
+
+    fun loadLobbies() {
+        _isLoadingLobbies.value = true
+        _lobbiesError.value = null
+
+        launchRequest(
+            request = { api.getLobbies() },
+            onSuccess = { result ->
+                _lobbies.value = result
+                _isLoadingLobbies.value = false
+            },
+            onError = {
+                _isLoadingLobbies.value = false
+                _lobbiesError.value = "Failed to load lobbies"
+            }
+        )
+    }
+
+
     fun startMatch(
         lobbyId: String,
         userId: String,
@@ -198,4 +213,7 @@ class LobbyViewModel(
         )
     }
 
+
 }
+
+

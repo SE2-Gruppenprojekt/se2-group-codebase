@@ -14,7 +14,6 @@ import at.aau.serg.android.core.datastore.getStore
 import at.aau.serg.android.core.datastore.user.UserStore
 import at.aau.serg.android.core.util.GenericViewModelFactory
 import at.aau.serg.android.datastore.proto.User
-import at.aau.serg.android.ui.lobby.LobbiesUiState
 import at.aau.serg.android.ui.screens.auth.AuthScreen
 import at.aau.serg.android.ui.screens.auth.AuthViewModel
 import at.aau.serg.android.ui.screens.game.GameScreen
@@ -216,17 +215,19 @@ fun NavGraphBuilder.homeGraph(
                 initial = User.getDefaultInstance()
             )
 
-            val lobbySummaries by lobbyVM.lobbies.collectAsState()
-            val loadState by lobbyVM.lobbiesState.collectAsState()
+            val lobbies by lobbyVM.lobbies.collectAsState()
+            val isLoading by lobbyVM.isLoadingLobbies.collectAsState()
+            val errorMessage by lobbyVM.lobbiesError.collectAsState()
 
             LaunchedEffect(Unit) {
                 lobbyVM.loadLobbies()
             }
 
             LobbyBrowseScreen(
-                lobbies = lobbySummaries.map { it.toUi() },
-                isLoading = loadState is LobbiesUiState.Loading,
-                errorMessage = (loadState as? LobbiesUiState.Error)?.message,
+                lobbies = lobbies.map { it.toUi() },
+                isLoading = isLoading,
+                errorMessage = errorMessage,
+
                 onJoinLobby = { lobbyId ->
                     lobbyVM.joinLobbyOrOpen(
                         lobbyId = lobbyId,
@@ -238,16 +239,22 @@ fun NavGraphBuilder.homeGraph(
                         onError = {}
                     )
                 },
+
                 onCreateNewLobby = {
                     navController.navigate(Routes.CREATE_LOBBY_FANCY)
                 },
+
                 onSettings = {
                     navController.navigate(Routes.SETTINGS)
                 },
+
                 onBack = {
                     navController.popBackStack()
                 }
             )
+
+
         }
     }
+
 }
