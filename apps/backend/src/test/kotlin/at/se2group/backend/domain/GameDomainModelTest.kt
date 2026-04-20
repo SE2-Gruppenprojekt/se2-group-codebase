@@ -77,6 +77,24 @@ class GameDomainModelTest {
     }
 
     @Test
+    fun `rejects confirmed game when current player is not part of game`() {
+        val player = GamePlayer(
+            userId = "user-1",
+            displayName = "Alice",
+            turnOrder = 0
+        )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            ConfirmedGame(
+                gameId = "game-1",
+                lobbyId = "lobby-1",
+                players = listOf(player),
+                currentPlayerUserId = "user-2"
+            )
+        }
+    }
+
+    @Test
     fun `rejects turn draft with updated time before creation time`() {
         val createdAt = Instant.parse("2026-04-20T10:00:00Z")
         val updatedAt = Instant.parse("2026-04-20T09:59:59Z")

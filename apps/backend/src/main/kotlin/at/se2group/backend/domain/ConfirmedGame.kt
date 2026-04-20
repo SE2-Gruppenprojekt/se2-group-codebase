@@ -19,5 +19,8 @@ data class ConfirmedGame(
         require(lobbyId.isNotBlank()) { "lobbyId must not be blank" }
         require(players.isNotEmpty()) { "games must contain at least one player" }
         require(currentPlayerUserId.isNotBlank()) { "currentPlayerUserId must not be blank" }
+        require(players.any { it.userId == currentPlayerUserId }) {
+            "currentPlayerUserId must belong to one of the game players"
+        }
     }
 }
