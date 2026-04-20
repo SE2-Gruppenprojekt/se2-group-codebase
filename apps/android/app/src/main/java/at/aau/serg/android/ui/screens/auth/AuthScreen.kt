@@ -134,9 +134,10 @@ fun AuthScreen(
     onContinue: () -> Unit,
     onBack: (() -> Unit)? = null
 ) {
+    val uiState by viewModel.uiState.collectAsState()
 
-    val username by viewModel.username.collectAsState()
-    val validation by viewModel.validation.collectAsState()
+    val username = uiState.username
+    val validation = uiState.validation
 
     val isValid = validation.isValid
     val darkMode = ThemeState.isDarkMode.value

@@ -1,74 +1,61 @@
 package at.aau.serg.android.ui.screens.auth
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import at.aau.serg.android.core.datastore.ProtoStore
 import at.aau.serg.android.datastore.proto.User
-import at.aau.serg.android.datastore.user.UserStore
-import at.aau.serg.android.util.UserPrefs
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import shared.validation.ValidationResult
 import shared.validation.user.DisplayNameValidator
 import java.util.UUID
 
-class AuthViewModel(application: Application) : AndroidViewModel(application) {
+class AuthViewModel(
+    private val userStore: ProtoStore<User>
+) : ViewModel() {
 
-    private val userStore = UserStore(application)
-
-    val user = userStore.data.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.Companion.WhileSubscribed(5_000),
-        initialValue = User.getDefaultInstance()
-    )
-
-    private val _username = MutableStateFlow("")
-    val username: StateFlow<String> = _username
-
-    private val _validation = MutableStateFlow(
-        DisplayNameValidator.validate("")
-    )
-    val validation: StateFlow<ValidationResult> = _validation
+    private val _uiState = MutableStateFlow(AuthUiState())
+    val uiState: StateFlow<AuthUiState> = _uiState
 
     init {
         viewModelScope.launch {
-            user.collect { u ->
-                val current = u.displayName
-                _username.value = current
-                _validation.value = DisplayNameValidator.validate(current)
+            userStore.data.collect { user ->
+                updateUsernameInternal(user.displayName, user.uid)
             }
         }
     }
 
     fun onUsernameChanged(value: String) {
-        _username.value = value
-        _validation.value = DisplayNameValidator.validate(value)
+        updateUsernameInternal(value, _uiState.value.uid)
     }
 
-    fun canContinue(): Boolean = _validation.value.isValid
+    private fun updateUsernameInternal(name: String, uid: String) {
+        val trimmed = name.trim()
+        val validation = DisplayNameValidator.validate(trimmed)
+
+        _uiState.update {
+            it.copy(
+                username = trimmed,
+                validation = validation,
+                uid = uid
+            )
+        }
+    }
 
     fun submit(onSuccess: () -> Unit) {
-        val name = _username.value.trim()
-
-        if (!DisplayNameValidator.validate(name).isValid) return
+        val state = _uiState.value
+        if (!state.validation.isValid) return
 
         viewModelScope.launch {
-            val uid = user.value.uid.ifBlank {
-                UUID.randomUUID().toString()
-            }
+            val uid = state.uid.ifBlank { UUID.randomUUID().toString() }
 
             userStore.save(
-                user.value.toBuilder()
+                User.newBuilder()
                     .setUid(uid)
-                    .setDisplayName(name)
+                    .setDisplayName(state.username)
                     .build()
             )
-
-            UserPrefs.saveUsername(getApplication(), name)
 
             onSuccess()
         }
