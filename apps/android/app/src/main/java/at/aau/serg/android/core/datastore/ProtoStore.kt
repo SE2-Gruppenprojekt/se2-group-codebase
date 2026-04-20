@@ -1,4 +1,4 @@
-package at.aau.serg.android.datastore.core
+package at.aau.serg.android.core.datastore
 
 import kotlinx.coroutines.flow.Flow
 
