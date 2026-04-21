@@ -1,12 +1,12 @@
 package at.aau.serg.android.ui.screens.lobby.create
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,8 +20,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Public
@@ -37,10 +37,9 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -48,28 +47,30 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import at.aau.serg.android.ui.screens.lobby.waiting.components.LobbyUiState
+import androidx.lifecycle.viewmodel.compose.viewModel
+import at.aau.serg.android.ui.screens.lobby.create.components.NumericSettingRow
+import at.aau.serg.android.ui.screens.lobby.create.components.ToggleSettingRow
+import at.aau.serg.android.ui.screens.lobby.create.components.LargeSelectableBox
+import at.aau.serg.android.ui.screens.lobby.create.components.SelectableBox
+import at.aau.serg.android.ui.screens.lobby.create.components.SectionTitle
+import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.theme.ThemeState
-import androidx.compose.ui.platform.LocalContext
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.widget.Toast
 
 @Composable
 fun NewLobbyScreen(
+    viewModel: LobbyCreateViewModel = viewModel(),
     onBack: () -> Unit,
-    onSettings: () -> Unit,
-    isLoading: Boolean = false,
-    onCreateLobby: (maxPlayers: Int, isPrivate: Boolean) -> Unit
+    onSettings: () -> Unit
 ) {
     val darkMode = ThemeState.isDarkMode.value
     val context = LocalContext.current
+
+    val uiState by viewModel.uiState.collectAsState()
 
     // align dark mode with waiting room styling
     val bgTop = if (darkMode) MaterialTheme.colorScheme.background else Color(0xFFF5F7FB)
@@ -93,8 +94,13 @@ fun NewLobbyScreen(
     val roomCode = remember { "XK7P2M" }
 
     // local form state
-    var maxPlayers by remember { mutableIntStateOf(6) }
-    var isPrivate by remember { mutableStateOf(false) }
+    val maxPlayers = uiState.maxPlayers
+    val isPrivate = uiState.isPrivate
+
+    /*
+        TODO: if those are implemented in backend move them to state
+                else delete later
+     */
     var turnTimer by remember { mutableIntStateOf(60) }
     var startingTiles by remember { mutableIntStateOf(14) }
     var winScore by remember { mutableIntStateOf(500) }
@@ -234,11 +240,13 @@ fun NewLobbyScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             listOf(2, 4, 6, 8).forEach { count ->
-                // equal-width player count boxes
+
                 SelectableBox(
                     text = count.toString(),
-                    selected = maxPlayers == count,
-                    onClick = { maxPlayers = count },
+                    selected = uiState.maxPlayers == count,
+                    onClick = {
+                        viewModel.onEvent(LobbyCreateEvent.SetMaxPlayers(count))
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .height(40.dp),
@@ -269,7 +277,9 @@ fun NewLobbyScreen(
                 title = "Public",
                 icon = { tint -> Icon(Icons.Filled.Public, null, tint = tint) },
                 selected = !isPrivate,
-                onClick = { isPrivate = false },
+                onClick = {
+                    viewModel.onEvent(LobbyCreateEvent.SetIsPrivate(false))
+                },
                 modifier = Modifier
                     .weight(1f)
                     .height(72.dp),
@@ -285,7 +295,9 @@ fun NewLobbyScreen(
                 title = "Private",
                 icon = { tint -> Icon(Icons.Filled.Lock, null, tint = tint) },
                 selected = isPrivate,
-                onClick = { isPrivate = true },
+                onClick = {
+                    viewModel.onEvent(LobbyCreateEvent.SetIsPrivate(true))
+                },
                 modifier = Modifier
                     .weight(1f)
                     .height(72.dp),
@@ -369,20 +381,12 @@ fun NewLobbyScreen(
 
         Button(
             onClick = {
-                // store selected values for waiting room
-                LobbyUiState.lobbyName.value = "New Lobby"
-                LobbyUiState.maxPlayers.intValue = maxPlayers
-                LobbyUiState.turnTimer.intValue = turnTimer
-                LobbyUiState.startingCards.intValue = startingTiles
-                LobbyUiState.stackEnabled.value = quickMode
-                LobbyUiState.roomCode.value = ""
-
-                onCreateLobby(maxPlayers, isPrivate)
+                viewModel.onEvent(LobbyCreateEvent.CreateLobby)
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
-            enabled = !isLoading,
+            enabled = uiState.loadState != LoadState.Loading,
             shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF9D3CFF),
@@ -390,11 +394,11 @@ fun NewLobbyScreen(
             )
         ) {
             Text(
-                text = if (isLoading) "Loading" else "Create Lobby",
+                text = if (uiState.loadState == LoadState.Loading) "Loading" else "Create Lobby",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
-            if (!isLoading) {
+            if (uiState.loadState != LoadState.Loading) {
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(
                     imageVector = Icons.Filled.Check,
@@ -405,274 +409,5 @@ fun NewLobbyScreen(
         }
 
         Spacer(modifier = Modifier.height(20.dp))
-    }
-}
-
-@Composable
-private fun SectionTitle(
-    icon: @Composable () -> Unit,
-    title: String
-) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(modifier = Modifier.size(16.dp), contentAlignment = Alignment.Center) {
-            icon()
-        }
-        Spacer(modifier = Modifier.width(6.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.88f)
-        )
-    }
-}
-
-@Composable
-private fun SettingCard(
-    cardColor: Color,
-    content: @Composable () -> Unit
-) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = cardColor),
-        shape = RoundedCornerShape(20.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            content()
-        }
-    }
-}
-
-@Composable
-private fun SelectableBox(
-    text: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    cardColor: Color,
-    selectedColor: Color,
-    borderColor: Color,
-    selectedBorder: Color,
-    textColor: Color,
-    selectedTextColor: Color
-) {
-    Card(
-        modifier = modifier
-            .border(
-                width = 2.dp,
-                color = if (selected) selectedBorder else borderColor,
-                shape = RoundedCornerShape(18.dp)
-            )
-            .clickable { onClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = if (selected) selectedColor else cardColor
-        ),
-        shape = RoundedCornerShape(18.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = text,
-                color = if (selected) selectedTextColor else textColor,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
-
-@Composable
-private fun LargeSelectableBox(
-    title: String,
-    icon: @Composable (Color) -> Unit,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    cardColor: Color,
-    selectedColor: Color,
-    borderColor: Color,
-    selectedBorder: Color,
-    textColor: Color,
-    selectedTextColor: Color
-) {
-    Card(
-        modifier = modifier
-            .border(
-                width = 2.dp,
-                color = if (selected) selectedBorder else borderColor,
-                shape = RoundedCornerShape(20.dp)
-            )
-            .clickable { onClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = if (selected) selectedColor else cardColor
-        ),
-        shape = RoundedCornerShape(20.dp)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            val contentColor = if (selected) selectedTextColor else textColor
-            Box(modifier = Modifier.size(16.dp), contentAlignment = Alignment.Center) {
-                icon(contentColor)
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = title,
-                color = contentColor,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-    }
-}
-
-@Composable
-private fun NumericSettingRow(
-    icon: @Composable () -> Unit,
-    title: String,
-    value: String,
-    onMinus: () -> Unit,
-    onPlus: () -> Unit,
-    modifier: Modifier = Modifier,
-    cardColor: Color,
-    textColor: Color,
-    buttonColor: Color
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = cardColor),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-                .padding(horizontal = 14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.size(16.dp), contentAlignment = Alignment.Center) {
-                    icon()
-                }
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = title,
-                    color = textColor,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Button(
-                    onClick = onMinus,
-                    modifier = Modifier.size(28.dp),
-                    contentPadding = PaddingValues(0.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = buttonColor,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text(
-                        "-",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(10.dp))
-
-                Text(
-                    text = value,
-                    color = textColor,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.width(10.dp))
-
-                Button(
-                    onClick = onPlus,
-                    modifier = Modifier.size(28.dp),
-                    contentPadding = PaddingValues(0.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = buttonColor,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text(
-                        "+",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ToggleSettingRow(
-    icon: @Composable () -> Unit,
-    title: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-    cardColor: Color,
-    textColor: Color,
-    switchColor: Color
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = cardColor),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-                .padding(horizontal = 14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.size(16.dp), contentAlignment = Alignment.Center) {
-                    icon()
-                }
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = title,
-                    color = textColor,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange,
-                modifier = Modifier.scale(0.78f),
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = switchColor,
-                    uncheckedThumbColor = Color.White.copy(alpha = 0.9f),
-                    uncheckedTrackColor = switchColor.copy(alpha = 0.55f),
-                    uncheckedBorderColor = Color.Transparent,
-                    checkedBorderColor = Color.Transparent
-                )
-            )
-        }
     }
 }
