@@ -83,7 +83,7 @@ class GameDomainModelTest {
             turnOrder = 0
         )
 
-        val game = ConfirmedGame(
+        val game = Game(
             gameId = "game-1",
             lobbyId = "lobby-1",
             players = listOf(player),
@@ -105,7 +105,7 @@ class GameDomainModelTest {
         )
 
         val exception = assertThrows(IllegalArgumentException::class.java) {
-            ConfirmedGame(
+            Game(
                 gameId = "game-1",
                 lobbyId = "lobby-1",
                 players = listOf(player),

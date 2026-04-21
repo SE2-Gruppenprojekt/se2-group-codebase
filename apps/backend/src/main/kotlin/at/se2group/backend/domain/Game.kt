@@ -2,7 +2,7 @@ package at.se2group.backend.domain
 
 import java.time.Instant
 
-data class ConfirmedGame(
+data class Game(
     val gameId: String,
     val lobbyId: String,
     val players: List<GamePlayer>,
