@@ -37,9 +37,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import at.aau.serg.android.datastore.proto.User
-import at.aau.serg.android.ui.screens.auth.AuthViewModel
-import at.aau.serg.android.ui.screens.home.HomeViewModel
 import at.aau.serg.android.ui.theme.AuthButtonGradientStart
 import at.aau.serg.android.ui.theme.AuthDarkBackground
 import at.aau.serg.android.ui.theme.AuthDarkCard
@@ -49,6 +46,7 @@ import at.aau.serg.android.ui.theme.AuthLightBackground
 import at.aau.serg.android.ui.theme.AuthLightCard
 import at.aau.serg.android.ui.theme.AuthLightPrimaryText
 import at.aau.serg.android.ui.theme.AuthLightSecondaryText
+
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel(),
@@ -79,6 +77,7 @@ fun SettingsScreen(
             .background(background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 28.dp)
+            .testTag(SettingsTestTags.SCREEN)
     ) {
 
         // --- Header ---
@@ -90,7 +89,8 @@ fun SettingsScreen(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .clickable(onClick = onBack),
+                    .clickable(onClick = onBack)
+                    .testTag(SettingsTestTags.BACK_BUTTON),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -170,7 +170,7 @@ fun SettingsScreen(
                         uncheckedThumbColor = Color.White,
                         uncheckedTrackColor = secondaryText.copy(alpha = 0.35f)
                     ),
-                    modifier = Modifier.testTag("settings_darkmode_switch")
+                    modifier = Modifier.testTag(SettingsTestTags.DARK_MODE_SWITCH)
                 )
             }
         }
@@ -198,7 +198,8 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(onClick = onChangeUsername)
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                    .padding(horizontal = 16.dp, vertical = 14.dp)
+                    .testTag(SettingsTestTags.CHANGE_USERNAME_BUTTON),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
@@ -248,7 +249,8 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(onClick = onLogout)
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                    .padding(horizontal = 16.dp, vertical = 14.dp)
+                    .testTag(SettingsTestTags.LOGOUT_BUTTON),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
