@@ -97,7 +97,8 @@ fun HomeScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(backgroundGradient),
+            .background(backgroundGradient)
+            .testTag(HomeTestTags.SCREEN),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
@@ -125,7 +126,9 @@ fun HomeScreen(
 
             IconButton(
                 onClick = onSettings,
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier
+                    .size(40.dp)
+                    .testTag(HomeTestTags.SETTINGS_BUTTON)
             ) {
                 Icon(
                     imageVector = Icons.Filled.Settings,
@@ -188,6 +191,7 @@ fun HomeScreen(
                 // loading state
                 LoadState.Loading -> {
                     CircularProgressIndicator(
+                        modifier = Modifier.testTag(HomeTestTags.LOADING),
                         color = if (darkMode) Color.White else Color(0xFF9D3CFF)
                     )
                     Spacer(modifier = Modifier.height(14.dp))
@@ -197,12 +201,12 @@ fun HomeScreen(
                     Text(
                         text = state.message,
                         color = errorColor,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.testTag(HomeTestTags.ERROR_TEXT)
                     )
                     Spacer(modifier = Modifier.height(14.dp))
                 }
-
-                else -> Unit
+                else -> Unit // includes Idle + Success
             }
 
 
@@ -216,7 +220,7 @@ fun HomeScreen(
                 containerBrush = Brush.horizontalGradient(
                     colors = listOf(Color(0xE24B68FF), Color(0xD74B3FD4))
                 ),
-                modifier = Modifier.testTag("home_create_lobby_button")
+                modifier = Modifier.testTag(HomeTestTags.CREATE_LOBBY_BUTTON)
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -231,7 +235,7 @@ fun HomeScreen(
                 containerBrush = Brush.horizontalGradient(
                     colors = listOf(Color(0xFF9D3CFF), Color(0xFF9D3CFF))
                 ),
-                modifier = Modifier.testTag("home_browse_lobbies_button")
+                modifier = Modifier.testTag(HomeTestTags.BROWSE_LOBBIES_BUTTON)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -244,7 +248,7 @@ fun HomeScreen(
                     Icon(Icons.Filled.Settings, null, tint = tint, modifier = Modifier.size(22.dp))
                 },
                 containerBrush = settingsBrush,
-                modifier = Modifier.testTag("home_settings_list_button"),
+                modifier = Modifier.testTag(HomeTestTags.SETTINGS_LIST_BUTTON),
                 contentColor = neutralButtonContentColor
             )
 
@@ -258,7 +262,7 @@ fun HomeScreen(
                     Icon(Icons.Filled.EmojiEvents, null, tint = tint, modifier = Modifier.size(22.dp))
                 },
                 containerBrush = leaderboardBrush,
-                modifier = Modifier.testTag("home_leaderboard_button"),
+                modifier = Modifier.testTag(HomeTestTags.LEADERBOARD_BUTTON),
                 contentColor = neutralButtonContentColor
             )
 
@@ -304,7 +308,8 @@ fun HomeScreen(
                     Text(
                         text = username,
                         color = playerNameColor,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.testTag(HomeTestTags.USERNAME_TEXT)
                     )
                     Text(
                         text = "#482731",
