@@ -4,6 +4,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -58,6 +60,7 @@ fun NavGraphBuilder.homeGraph(
 
             HomeScreen(
                 viewModel = homeVM,
+                modifier = Modifier.testTag(AppNavTestTags.HOME_GRAPH),
                 onNewLobbyScreen = {
                     navController.navigate(Routes.CREATE_LOBBY_FANCY)
                 },
@@ -72,7 +75,7 @@ fun NavGraphBuilder.homeGraph(
                 },
                 onSettings = {
                     navController.navigate(Routes.SETTINGS)
-                }
+                },
             )
         }
 
@@ -223,9 +226,6 @@ fun NavGraphBuilder.homeGraph(
                     navController.popBackStack()
                 }
             )
-
-
         }
     }
-
 }

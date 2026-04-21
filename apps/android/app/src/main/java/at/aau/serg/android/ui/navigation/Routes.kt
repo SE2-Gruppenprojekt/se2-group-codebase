@@ -5,10 +5,14 @@ object Routes {
     const val AUTH = "auth_graph"
     const val HOME = "home_graph"
 
+    // Start of AUTH_GRAPH
     // auth / profile
     const val USERNAME = "username"
     const val CHANGE_USERNAME = "changeUsername"
+    // End of AUTH_GRAPH
 
+
+    // Start of HOME_GRAPH
     // home
     const val HOME_SCREEN = "home"
     const val SETTINGS = "settings"
@@ -23,4 +27,5 @@ object Routes {
 
     // game
     const val GAME = "game"
+    // End of HOME_GRAPH
 }

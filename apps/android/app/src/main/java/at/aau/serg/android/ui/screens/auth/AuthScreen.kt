@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
@@ -116,6 +117,7 @@ private fun authColors(darkMode: Boolean): AuthColors = if (darkMode) {
 @Composable
 fun AuthScreen(
     viewModel: AuthViewModel = viewModel(),
+    modifier: Modifier = Modifier,
     onContinue: () -> Unit,
     onBack: (() -> Unit)? = null
 ) {
@@ -159,7 +161,7 @@ fun AuthScreen(
                             .background(colors.card)
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = colors.primaryText,
                             modifier = Modifier.size(20.dp)
