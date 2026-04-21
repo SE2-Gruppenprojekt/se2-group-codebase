@@ -4,8 +4,11 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import at.aau.serg.android.core.datastore.InMemoryProtoStore
+import at.aau.serg.android.core.network.lobby.LobbyAPI
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.state.LoadState
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -14,6 +17,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import shared.models.lobby.response.LobbyResponse
 
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -22,13 +26,35 @@ class LobbyCreateScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
 
+    private lateinit var api: LobbyAPI
     private lateinit var store: InMemoryProtoStore<User>
     private lateinit var viewModel: LobbyCreateViewModel
 
     @Before
     fun setup() {
         store = InMemoryProtoStore(User.getDefaultInstance())
-        viewModel = LobbyCreateViewModel(store)
+        api = mockk()
+
+        val fakeLobby = LobbyResponse(
+            lobbyId = "lobby-123",
+            hostUserId = "user-1",
+            status = "OPEN",
+            players = emptyList(),
+            maxPlayers = 4,
+            isPrivate = false,
+            allowGuests = true
+        )
+        coEvery {
+            api.createLobby(
+                any(),
+                any()
+            )
+        } returns fakeLobby
+
+        viewModel = LobbyCreateViewModel(
+            userStore = store,
+            api = api
+        )
     }
 
     @Test

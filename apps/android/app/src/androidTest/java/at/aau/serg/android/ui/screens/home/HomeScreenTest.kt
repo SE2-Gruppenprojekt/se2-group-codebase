@@ -12,8 +12,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import at.aau.serg.android.ui.screens.home.HomeTestTags
-import at.aau.serg.android.ui.state.LoadState
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeScreenTest {
