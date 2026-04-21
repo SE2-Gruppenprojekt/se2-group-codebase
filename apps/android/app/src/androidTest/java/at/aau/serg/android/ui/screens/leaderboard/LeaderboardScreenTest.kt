@@ -1,4 +1,4 @@
-package at.aau.serg.android.leaderboard
+package at.aau.serg.android.ui.screens.leaderboard
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule

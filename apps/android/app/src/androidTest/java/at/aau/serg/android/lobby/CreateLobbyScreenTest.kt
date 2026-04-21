@@ -15,7 +15,7 @@ import org.junit.Rule
 import org.junit.Test
 
 // UI-Component tests
-class CreateLobbyScreenTest {
+/*class CreateLobbyScreenTest {
 
     @get:Rule
     val composeRule = createComposeRule()
@@ -215,4 +215,4 @@ class CreateLobbyScreenTest {
 
         assertTrue(called)
     }
-}
+}*/

@@ -1,10 +1,10 @@
 package at.aau.serg.android.core.datastore
 
 import android.content.Context
-import at.aau.serg.android.core.datastore.user.UserStore
+import androidx.test.platform.app.InstrumentationRegistry
 import at.aau.serg.android.datastore.proto.User
-import io.mockk.every
-import io.mockk.mockk
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Before
@@ -17,21 +17,19 @@ class DataStoreProviderTest {
 
     @Before
     fun setup() {
-        context = mockk(relaxed = true)
-        every { context.applicationContext } returns context
-
+        context = InstrumentationRegistry.getInstrumentation().targetContext
         provider = DataStoreProvider.getInstance(context)
     }
 
     @Test
-    fun getStore_returnsUserStore_forUserClass() {
+    fun getStore_returnsProtoStore_forUserClass() = runTest {
         val store = provider.getStore(User::class)
 
-        assertEquals(UserStore::class, store::class)
+        assert(store is ProtoStore<*>)
     }
 
     @Test
-    fun getStore_reified_returnsSameInstance() {
+    fun getStore_reified_returnsSameInstance() = runTest {
         val store1 = provider.getStore(User::class)
         val store2 = provider.getStore<User>()
 
@@ -39,10 +37,28 @@ class DataStoreProviderTest {
     }
 
     @Test
-    fun getInstance_returnsSameSingletonInstance() {
+    fun getInstance_returnsSameSingletonInstance() = runTest {
         val instance1 = DataStoreProvider.getInstance(context)
         val instance2 = DataStoreProvider.getInstance(context)
 
         assertSame(instance1, instance2)
+    }
+
+    @Test
+    fun userStore_wipe_resetsToDefault() = runTest {
+        val store = provider.getStore<User>()
+
+        store.save(
+            User.newBuilder()
+                .setUid("abc")
+                .setDisplayName("test")
+                .build()
+        )
+
+        store.wipe()
+
+        val result = store.data.first()
+
+        assertEquals(User.getDefaultInstance(), result)
     }
 }

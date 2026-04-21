@@ -5,6 +5,7 @@ import at.aau.serg.android.core.network.lobby.LobbyService
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -117,6 +118,28 @@ class LobbyAPITest {
     fun leaveLobby_returnsFalseWhenNotSuccessful() = runBlocking {
         coEvery { service.leaveLobby("user123", "1") } returns Response.error(400, ResponseBody.create(null, ""))
         val result = api.leaveLobby("user123", "1")
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun startMatch_returnsTrueWhenSuccessful() = runTest {
+        coEvery {
+            service.startMatch("user123", "1")
+        } returns Response.success(Unit)
+
+        val result = api.startMatch("user123", "1")
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun startMatch_returnsFalseWhenNotSuccessful() = runTest {
+        coEvery {
+            service.startMatch("user123", "1")
+        } returns Response.error(400, ResponseBody.create(null, ""))
+
+        val result = api.startMatch("user123", "1")
 
         assertFalse(result)
     }

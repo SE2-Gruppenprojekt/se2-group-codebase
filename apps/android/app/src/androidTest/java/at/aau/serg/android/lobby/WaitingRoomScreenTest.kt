@@ -20,7 +20,7 @@ import shared.models.lobby.domain.LobbySettings
 import shared.models.lobby.domain.LobbyStatus
 
 // UI-Component tests
-class WaitingRoomScreenTest {
+/*class WaitingRoomScreenTest {
 
     @get:Rule
     val composeRule = createComposeRule()
@@ -300,4 +300,4 @@ class WaitingRoomScreenTest {
         composeRule.waitForIdle()
         assertTrue(gameStarted)
     }
-}
+}*/

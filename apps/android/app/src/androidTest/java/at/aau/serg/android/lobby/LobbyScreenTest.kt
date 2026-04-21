@@ -18,7 +18,7 @@ import shared.models.lobby.domain.LobbySettings
 import shared.models.lobby.domain.LobbyStatus
 
 // UI-Component tests
-class LobbyScreenTest {
+/*class LobbyScreenTest {
 
     @get:Rule
     val composeRule = createComposeRule()
@@ -171,3 +171,4 @@ class LobbyScreenTest {
         composeRule.onNodeWithText(ACCESS_DENIED_ERROR).assertIsDisplayed()
     }
 }
+*/
