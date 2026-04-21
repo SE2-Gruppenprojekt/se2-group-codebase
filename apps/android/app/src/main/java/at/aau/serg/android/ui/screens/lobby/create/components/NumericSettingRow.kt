@@ -1,26 +1,13 @@
 package at.aau.serg.android.ui.screens.lobby.create.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -32,10 +19,20 @@ fun NumericSettingRow(
     onMinus: () -> Unit,
     onPlus: () -> Unit,
     modifier: Modifier = Modifier,
+
     cardColor: Color,
     textColor: Color,
-    buttonColor: Color
+    buttonColor: Color,
+
+    // optional test tags
+    valueTag: String? = null,
+    minusTag: String? = null,
+    plusTag: String? = null
 ) {
+
+    fun Modifier.withTag(tag: String?) =
+        if (tag != null) this.then(Modifier.testTag(tag)) else this
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -51,11 +48,18 @@ fun NumericSettingRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+
+            // Left side (icon + title)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.size(16.dp), contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier.size(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
                     icon()
                 }
+
                 Spacer(modifier = Modifier.width(10.dp))
+
                 Text(
                     text = title,
                     color = textColor,
@@ -64,10 +68,14 @@ fun NumericSettingRow(
                 )
             }
 
+            // Right side (controls)
             Row(verticalAlignment = Alignment.CenterVertically) {
+
                 Button(
                     onClick = onMinus,
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier
+                        .size(28.dp)
+                        .withTag(minusTag),
                     contentPadding = PaddingValues(0.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -86,6 +94,7 @@ fun NumericSettingRow(
 
                 Text(
                     text = value,
+                    modifier = Modifier.withTag(valueTag),
                     color = textColor,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold
@@ -95,7 +104,9 @@ fun NumericSettingRow(
 
                 Button(
                     onClick = onPlus,
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier
+                        .size(28.dp)
+                        .withTag(plusTag),
                     contentPadding = PaddingValues(0.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(

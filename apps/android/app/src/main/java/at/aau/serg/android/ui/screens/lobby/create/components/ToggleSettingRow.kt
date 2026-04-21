@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -33,7 +34,8 @@ fun ToggleSettingRow(
     modifier: Modifier = Modifier,
     cardColor: Color,
     textColor: Color,
-    switchColor: Color
+    switchColor: Color,
+    switchTestTag: String? = null
 ) {
     Card(
         modifier = modifier
@@ -66,7 +68,9 @@ fun ToggleSettingRow(
             Switch(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
-                modifier = Modifier.scale(0.78f),
+                modifier = Modifier
+                    .then(if (switchTestTag != null) Modifier.testTag(switchTestTag) else Modifier)
+                    .scale(0.78f),
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
                     checkedTrackColor = switchColor,

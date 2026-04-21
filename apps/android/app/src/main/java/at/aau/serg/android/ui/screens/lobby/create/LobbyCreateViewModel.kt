@@ -64,14 +64,59 @@ class LobbyCreateViewModel(
     fun onEvent(event: LobbyCreateEvent) {
         when (event) {
 
-            is LobbyCreateEvent.SetMaxPlayers ->
-                _uiState.update { it.copy(maxPlayers = event.value) }
-
-            is LobbyCreateEvent.SetIsPrivate ->
-                _uiState.update { it.copy(isPrivate = event.value) }
-
             LobbyCreateEvent.CreateLobby -> {
                 createLobby()
+            }
+
+            is LobbyCreateEvent.SetMaxPlayers -> {
+                _uiState.update {
+                    it.copy(maxPlayers = event.value)
+                }
+            }
+
+            is LobbyCreateEvent.SetIsPrivate -> {
+                _uiState.update {
+                    it.copy(isPrivate = event.value)
+                }
+            }
+
+            is LobbyCreateEvent.SetQuickMode -> {
+                _uiState.update {
+                    it.copy(quickMode = event.value)
+                }
+            }
+
+            is LobbyCreateEvent.SetRequireInitialMeld -> {
+                _uiState.update {
+                    it.copy(requireInitialMeld = event.value)
+                }
+            }
+
+            is LobbyCreateEvent.ChangeTurnTimer -> {
+                _uiState.update {
+                    it.copy(
+                        turnTimer = (it.turnTimer + event.delta)
+                            .coerceAtLeast(0)
+                    )
+                }
+            }
+
+            is LobbyCreateEvent.ChangeStartingTiles -> {
+                _uiState.update {
+                    it.copy(
+                        startingTiles = (it.startingTiles + event.delta)
+                            .coerceAtLeast(0)
+                    )
+                }
+            }
+
+            is LobbyCreateEvent.ChangeWinScore -> {
+                _uiState.update {
+                    it.copy(
+                        winScore = (it.winScore + event.delta)
+                            .coerceAtLeast(0)
+                    )
+                }
             }
         }
     }

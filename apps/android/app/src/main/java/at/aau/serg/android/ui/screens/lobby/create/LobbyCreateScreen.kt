@@ -41,28 +41,26 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import at.aau.serg.android.ui.screens.lobby.create.components.NumericSettingRow
-import at.aau.serg.android.ui.screens.lobby.create.components.ToggleSettingRow
 import at.aau.serg.android.ui.screens.lobby.create.components.LargeSelectableBox
-import at.aau.serg.android.ui.screens.lobby.create.components.SelectableBox
+import at.aau.serg.android.ui.screens.lobby.create.components.NumericSettingRow
 import at.aau.serg.android.ui.screens.lobby.create.components.SectionTitle
+import at.aau.serg.android.ui.screens.lobby.create.components.SelectableBox
+import at.aau.serg.android.ui.screens.lobby.create.components.ToggleSettingRow
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.theme.ThemeState
 
 @Composable
-fun NewLobbyScreen(
+fun LobbyCreateScreen(
     viewModel: LobbyCreateViewModel = viewModel(),
     onBack: () -> Unit,
     onSettings: () -> Unit
@@ -94,21 +92,15 @@ fun NewLobbyScreen(
     val roomCode = remember { "XK7P2M" }
 
     // local form state
-    val maxPlayers = uiState.maxPlayers
-    val isPrivate = uiState.isPrivate
 
     /*
         TODO: if those are implemented in backend move them to state
                 else delete later
      */
-    var turnTimer by remember { mutableIntStateOf(60) }
-    var startingTiles by remember { mutableIntStateOf(14) }
-    var winScore by remember { mutableIntStateOf(500) }
-    var quickMode by remember { mutableStateOf(false) }
-    var requireInitialMeld by remember { mutableStateOf(true) }
 
     Column(
         modifier = Modifier
+            .testTag(LobbyCreateTestTags.SCREEN)
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
@@ -126,7 +118,9 @@ fun NewLobbyScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     onClick = onBack,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier
+                        .testTag(LobbyCreateTestTags.BACK_BUTTON)
+                        .size(40.dp)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -141,19 +135,23 @@ fun NewLobbyScreen(
                         text = "RUMMIKUB",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.testTag(LobbyCreateTestTags.TITLE)
                     )
                     Text(
                         text = "Create New Lobby",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.78f)
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.78f),
+                        modifier = Modifier.testTag(LobbyCreateTestTags.SUBTITLE)
                     )
                 }
             }
 
             IconButton(
                 onClick = onSettings,
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier
+                    .testTag(LobbyCreateTestTags.SETTINGS_BUTTON)
+                    .size(40.dp)
             ) {
                 Icon(
                     imageVector = Icons.Filled.Settings,
@@ -167,7 +165,9 @@ fun NewLobbyScreen(
         Spacer(modifier = Modifier.height(18.dp))
 
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .testTag(LobbyCreateTestTags.ROOM_CODE_CARD)
+                .fillMaxWidth(),
             colors = CardDefaults.cardColors(
                 containerColor = cardColor
             ),
@@ -192,6 +192,7 @@ fun NewLobbyScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = roomCode,
+                            modifier = Modifier.testTag(LobbyCreateTestTags.ROOM_CODE_TEXT),
                             style = MaterialTheme.typography.titleMedium,
                             color = primaryText,
                             fontWeight = FontWeight.Bold
@@ -212,7 +213,9 @@ fun NewLobbyScreen(
                                     Toast.LENGTH_SHORT
                                 ).show()
                             },
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier
+                                .testTag(LobbyCreateTestTags.COPY_ROOM_CODE_BUTTON)
+                                .size(28.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.ContentCopy,
@@ -249,7 +252,16 @@ fun NewLobbyScreen(
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .height(40.dp),
+                        .height(40.dp)
+                        .testTag(
+                            when (count) {
+                                2 -> LobbyCreateTestTags.MAX_PLAYERS_OPTION_2
+                                4 -> LobbyCreateTestTags.MAX_PLAYERS_OPTION_4
+                                6 -> LobbyCreateTestTags.MAX_PLAYERS_OPTION_6
+                                8 -> LobbyCreateTestTags.MAX_PLAYERS_OPTION_8
+                                else -> ""
+                            }
+                        ),
                     cardColor = cardColor,
                     selectedColor = selectedColor,
                     borderColor = cardBorder,
@@ -276,11 +288,12 @@ fun NewLobbyScreen(
             LargeSelectableBox(
                 title = "Public",
                 icon = { tint -> Icon(Icons.Filled.Public, null, tint = tint) },
-                selected = !isPrivate,
+                selected = !uiState.isPrivate,
                 onClick = {
                     viewModel.onEvent(LobbyCreateEvent.SetIsPrivate(false))
                 },
                 modifier = Modifier
+                    .testTag(LobbyCreateTestTags.PRIVACY_PUBLIC)
                     .weight(1f)
                     .height(72.dp),
                 cardColor = cardColor,
@@ -294,11 +307,12 @@ fun NewLobbyScreen(
             LargeSelectableBox(
                 title = "Private",
                 icon = { tint -> Icon(Icons.Filled.Lock, null, tint = tint) },
-                selected = isPrivate,
+                selected = uiState.isPrivate,
                 onClick = {
                     viewModel.onEvent(LobbyCreateEvent.SetIsPrivate(true))
                 },
                 modifier = Modifier
+                    .testTag(LobbyCreateTestTags.PRIVACY_PRIVATE)
                     .weight(1f)
                     .height(72.dp),
                 cardColor = cardColor,
@@ -322,59 +336,88 @@ fun NewLobbyScreen(
         NumericSettingRow(
             icon = { Icon(Icons.Filled.Timer, null, tint = primaryText) },
             title = "Turn Timer",
-            value = "${turnTimer}s",
-            onMinus = { if (turnTimer > 10) turnTimer -= 10 },
-            onPlus = { turnTimer += 10 },
-            modifier = Modifier.padding(bottom = 4.dp),
+            value = "${uiState.turnTimer}s",
+            onMinus = {
+                viewModel.onEvent(LobbyCreateEvent.ChangeTurnTimer(-10))
+            },
+            onPlus = {
+                viewModel.onEvent(LobbyCreateEvent.ChangeTurnTimer(10))
+            },
+            modifier = Modifier
+                .testTag(LobbyCreateTestTags.TURN_TIMER_ROW)
+                .padding(bottom = 4.dp),
             cardColor = cardColor,
             textColor = primaryText,
-            buttonColor = settingButtonColor
+            buttonColor = settingButtonColor,
+            valueTag = LobbyCreateTestTags.TURN_TIMER_VALUE,
+            minusTag = LobbyCreateTestTags.TURN_TIMER_MINUS,
+            plusTag = LobbyCreateTestTags.TURN_TIMER_PLUS,
         )
 
         NumericSettingRow(
             icon = { Icon(Icons.Filled.Groups, null, tint = primaryText) },
             title = "Starting Tiles",
-            value = startingTiles.toString(),
-            onMinus = { if (startingTiles > 1) startingTiles -= 1 },
-            onPlus = { startingTiles += 1 },
-            modifier = Modifier.padding(bottom = 4.dp),
+            value = uiState.startingTiles.toString(),
+            onMinus = {
+                viewModel.onEvent(LobbyCreateEvent.ChangeStartingTiles(-10))
+            },
+            onPlus = {
+                viewModel.onEvent(LobbyCreateEvent.ChangeStartingTiles(10))
+            },
+            modifier = Modifier
+                .testTag(LobbyCreateTestTags.STARTING_TILES_ROW)
+                .padding(bottom = 4.dp),
             cardColor = cardColor,
             textColor = primaryText,
-            buttonColor = settingButtonColor
+            buttonColor = settingButtonColor,
+            valueTag = LobbyCreateTestTags.STARTING_TILES_VALUE,
+            minusTag = LobbyCreateTestTags.STARTING_TILES_MINUS,
+            plusTag = LobbyCreateTestTags.STARTING_TILES_PLUS,
         )
 
         NumericSettingRow(
             icon = { Icon(Icons.Filled.Star, null, tint = primaryText) },
             title = "Win Score",
-            value = winScore.toString(),
-            onMinus = { if (winScore > 100) winScore -= 100 },
-            onPlus = { winScore += 100 },
-            modifier = Modifier.padding(bottom = 4.dp),
+            value = uiState.winScore.toString(),
+            onMinus = {
+                viewModel.onEvent(LobbyCreateEvent.ChangeWinScore(-100))
+            },
+            onPlus = {
+                viewModel.onEvent(LobbyCreateEvent.ChangeWinScore(100))
+            },
+            modifier = Modifier
+                .testTag(LobbyCreateTestTags.WIN_SCORE_ROW)
+                .padding(bottom = 4.dp),
             cardColor = cardColor,
             textColor = primaryText,
-            buttonColor = settingButtonColor
+            buttonColor = settingButtonColor,
+            valueTag = LobbyCreateTestTags.WIN_SCORE_VALUE,
+            minusTag = LobbyCreateTestTags.WIN_SCORE_MINUS,
+            plusTag = LobbyCreateTestTags.WIN_SCORE_PLUS,
         )
 
         ToggleSettingRow(
             icon = { Icon(Icons.Filled.Speed, null, tint = primaryText) },
             title = "Quick Mode",
-            checked = quickMode,
-            onCheckedChange = { quickMode = it },
+            checked = uiState.quickMode,
+            onCheckedChange = { viewModel.onEvent(LobbyCreateEvent.SetQuickMode(it)) },
             modifier = Modifier.padding(bottom = 4.dp),
             cardColor = cardColor,
             textColor = primaryText,
-            switchColor = settingButtonColor
+            switchColor = settingButtonColor,
+            switchTestTag = LobbyCreateTestTags.QUICK_MODE_TOGGLE
         )
 
         ToggleSettingRow(
             icon = { Icon(Icons.Filled.Visibility, null, tint = primaryText) },
             title = "Require Initial Meld",
-            checked = requireInitialMeld,
-            onCheckedChange = { requireInitialMeld = it },
+            checked = uiState.requireInitialMeld,
+            onCheckedChange = { viewModel.onEvent(LobbyCreateEvent.SetRequireInitialMeld(it)) },
             modifier = Modifier.padding(bottom = 4.dp),
             cardColor = cardColor,
             textColor = primaryText,
-            switchColor = settingButtonColor
+            switchColor = settingButtonColor,
+            switchTestTag = LobbyCreateTestTags.REQUIRE_INITIAL_MELD_TOGGLE
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -384,6 +427,7 @@ fun NewLobbyScreen(
                 viewModel.onEvent(LobbyCreateEvent.CreateLobby)
             },
             modifier = Modifier
+                .testTag(LobbyCreateTestTags.CREATE_BUTTON)
                 .fillMaxWidth()
                 .height(56.dp),
             enabled = uiState.loadState != LoadState.Loading,
@@ -396,7 +440,8 @@ fun NewLobbyScreen(
             Text(
                 text = if (uiState.loadState == LoadState.Loading) "Loading" else "Create Lobby",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.testTag(LobbyCreateTestTags.CREATE_BUTTON_TEXT)
             )
             if (uiState.loadState != LoadState.Loading) {
                 Spacer(modifier = Modifier.width(8.dp))
