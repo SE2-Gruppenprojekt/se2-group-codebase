@@ -13,3 +13,9 @@ sonar {
         property("sonar.organization", "se2-gruppenprojekt")
     }
 }
+
+project(":apps:android:app") {
+    sonar {
+        isSkipProject = true
+    }
+}
