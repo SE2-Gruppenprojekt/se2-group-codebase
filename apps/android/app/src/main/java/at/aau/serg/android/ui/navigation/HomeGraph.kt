@@ -25,7 +25,7 @@ import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseScreen
 import at.aau.serg.android.ui.screens.lobby.browse.toUi
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateViewModel
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateEffect
-import at.aau.serg.android.ui.screens.lobby.create.NewLobbyScreen
+import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateScreen
 import at.aau.serg.android.ui.screens.lobby.main.LobbyViewModel
 import at.aau.serg.android.ui.screens.lobby.waiting.WaitingRoomScreen
 import at.aau.serg.android.ui.screens.settings.SettingsScreen
@@ -166,7 +166,7 @@ fun NavGraphBuilder.homeGraph(
                 }
             }
 
-            NewLobbyScreen(
+            LobbyCreateScreen(
                 viewModel = vm,
                 onBack = { navController.popBackStack() },
                 onSettings = { navController.navigate(Routes.SETTINGS) }
@@ -187,29 +187,18 @@ fun NavGraphBuilder.homeGraph(
                 initial = User.getDefaultInstance()
             )
 
-<<<<<<< Updated upstream
             val lobbies by lobbyVM.lobbies.collectAsState()
             val isLoading by lobbyVM.isLoadingLobbies.collectAsState()
             val errorMessage by lobbyVM.lobbiesError.collectAsState()
-=======
-            val lobbySummaries by lobbyVM.lobbies.collectAsState()
->>>>>>> Stashed changes
 
             LaunchedEffect(Unit) {
                 lobbyVM.loadLobbies()
             }
 
             LobbyBrowseScreen(
-<<<<<<< Updated upstream
                 lobbies = lobbies.map { it.toUi() },
                 isLoading = isLoading,
                 errorMessage = errorMessage,
-
-=======
-                lobbies = lobbySummaries.map { it.toUi() },
-                isLoading = false,
-                errorMessage = null,
->>>>>>> Stashed changes
                 onJoinLobby = { lobbyId ->
                     lobbyVM.joinLobbyOrOpen(
                         lobbyId = lobbyId,
