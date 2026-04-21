@@ -87,7 +87,8 @@ dependencies {
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.material.icons.extended)
+
 
     // Kotlinx Serialization
     implementation(libs.kotlinx.serialization.json)
@@ -104,11 +105,14 @@ dependencies {
     implementation(libs.activity.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.runtime)
+    implementation(libs.androidx.ui.test.junit4)
 
     // Unit tests
     testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.robolectric)
     implementation(libs.navigation.compose)
 
     // Instrumented tests
@@ -117,8 +121,9 @@ dependencies {
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test)
     androidTestImplementation(libs.navigation.testing)
-    androidTestImplementation("io.mockk:mockk-android:1.13.10")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    androidTestImplementation(libs.mockk.android)
+
+    debugImplementation(libs.compose.test.manifest)
 
     debugImplementation(libs.compose.tooling)
     debugImplementation(libs.compose.test.manifest)
