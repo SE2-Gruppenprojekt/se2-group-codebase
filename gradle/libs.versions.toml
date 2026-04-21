@@ -24,9 +24,7 @@ activityCompose = "1.13.0"
 # Android Persistence
 datastore = "1.1.1"
 protobuf = "3.25.1"
-protoc = "3.25.1"
 protobufPlugin = "0.9.6"
-
 
 # Testing Libraries
 junit = "4.13.2"
@@ -34,26 +32,19 @@ androidxJunit = "1.1.5"
 espresso = "3.5.0"
 kotlinxCoroutinesTest = "1.8.1"
 mockk = "1.13.10"
-navigation = "2.7.7"
+navigation = "2.9.7"
 androidxTestCore = "1.5.0"
-robolectric = "4.11.1"
 
 # Networking & Serialization
 ktor = "2.3.10"
 kotlinxSerialization = "1.7.3"
 
 # WebSocket / STOMP
-krossbowStompCore = "9.3.0"
-krossbowWebsocketBuiltin = "9.3.0"
-krossbowWebsocketOkhttp = "9.3.0"
+krossbow = "9.3.0"
 
 # Retrofit
 retrofit = "2.11.0"
 moshi = "1.15.1"
-navigationCompose = "2.9.7"
-runtime = "1.10.6"
-uiTestJunit4 = "1.10.6"
-foundation = "1.10.6"
 
 
 [libraries]
@@ -97,7 +88,6 @@ mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "moc
 navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
 navigation-testing = { group = "androidx.navigation", name = "navigation-testing", version.ref = "navigation" }
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
-robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 
 # Spring Boot (Backend)
 spring-boot-starter-web = { group = "org.springframework.boot", name = "spring-boot-starter-web" }
@@ -107,9 +97,9 @@ jackson-module-kotlin = { group = "com.fasterxml.jackson.module", name = "jackso
 kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect" }
 
 # Krossbow (WebSocket / STOMP)
-krossbow-stomp-core = { module = "org.hildan.krossbow:krossbow-stomp-core", version.ref = "krossbowStompCore" }
-krossbow-websocket-builtin = { module = "org.hildan.krossbow:krossbow-websocket-builtin", version.ref = "krossbowWebsocketBuiltin" }
-krossbow-websocket-okhttp = { module = "org.hildan.krossbow:krossbow-websocket-okhttp", version.ref = "krossbowWebsocketOkhttp" }
+krossbow-stomp-core = { module = "org.hildan.krossbow:krossbow-stomp-core", version.ref = "krossbow" }
+krossbow-websocket-builtin = { module = "org.hildan.krossbow:krossbow-websocket-builtin", version.ref = "krossbow" }
+krossbow-websocket-okhttp = { module = "org.hildan.krossbow:krossbow-websocket-okhttp", version.ref = "krossbow" }
 
 # Ktor HTTP Client
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
@@ -127,10 +117,6 @@ retrofit-moshi = { group = "com.squareup.retrofit2", name = "converter-moshi", v
 
 moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "moshi" }
 moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
-androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
-androidx-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
-androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "uiTestJunit4" }
-androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 
 [plugins]
