@@ -53,6 +53,7 @@ moshi = "1.15.1"
 navigationCompose = "2.9.7"
 runtime = "1.10.6"
 uiTestJunit4 = "1.10.6"
+foundation = "1.10.6"
 
 
 [libraries]
@@ -129,6 +130,7 @@ moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.re
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 androidx-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "uiTestJunit4" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 
 [plugins]

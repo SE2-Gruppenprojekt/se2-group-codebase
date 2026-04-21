@@ -106,6 +106,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.runtime)
     implementation(libs.androidx.ui.test.junit4)
+    implementation(libs.androidx.foundation)
 
     // Unit tests
     testImplementation(libs.junit4)
