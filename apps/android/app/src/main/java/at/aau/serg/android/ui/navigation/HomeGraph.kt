@@ -23,7 +23,8 @@ import at.aau.serg.android.ui.screens.leaderboard.LeaderboardScreen
 import at.aau.serg.android.ui.screens.leaderboard.LeaderboardViewModel
 import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseScreen
 import at.aau.serg.android.ui.screens.lobby.browse.toUi
-import at.aau.serg.android.ui.screens.lobby.create.CreateLobbyScreen
+import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateViewModel
+import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateEffect
 import at.aau.serg.android.ui.screens.lobby.create.NewLobbyScreen
 import at.aau.serg.android.ui.screens.lobby.main.LobbyViewModel
 import at.aau.serg.android.ui.screens.lobby.waiting.WaitingRoomScreen
@@ -131,16 +132,6 @@ fun NavGraphBuilder.homeGraph(
             )
         }
 
-        /*composable("${Routes.LOBBY}/{lobbyId}") {
-            val vm: LobbyViewModel = viewModel()
-
-            LobbyScreen(
-                navController = navController,
-                viewModel = vm,
-                lobbyId = it.arguments?.getString("lobbyId")!!
-            )
-        }*/
-
         composable("${Routes.WAITING_ROOM}/{lobbyId}") {
             val vm: LobbyViewModel = viewModel()
 
@@ -159,45 +150,26 @@ fun NavGraphBuilder.homeGraph(
             )
         }
 
-        composable(Routes.CREATE_LOBBY) {
-            CreateLobbyScreen(
-                onBack = { navController.popBackStack() },
-                onCreate = { navController.popBackStack() }
-            )
-        }
-
         composable(Routes.CREATE_LOBBY_FANCY) {
-
-            val parent = remember(navController.currentBackStackEntry) {
-                navController.getBackStackEntry(Routes.HOME)
-            }
-
-            val lobbyVM: LobbyViewModel = viewModel(parent)
-
-
             val userStore = remember { provider.getStore<User>() }
 
-            val user by userStore.data.collectAsState(
-                initial = User.getDefaultInstance()
+            val vm: LobbyCreateViewModel = viewModel(
+                factory = GenericViewModelFactory { LobbyCreateViewModel(userStore) }
             )
 
-            NewLobbyScreen(
-                onBack = { navController.popBackStack() },
-                onSettings = { navController.navigate(Routes.SETTINGS) },
-                isLoading = false,
-                onCreateLobby = { maxPlayers, isPrivate ->
-                    lobbyVM.createLobby(
-                        userId = user.uid,
-                        displayName = user.displayName,
-                        maxPlayers = maxPlayers,
-                        isPrivate = isPrivate,
-                        allowGuests = true,
-                        onSuccess = {
-                            navController.navigate("${Routes.WAITING_ROOM}/${it.lobbyId}")
-                        },
-                        onError = {}
-                    )
+            LaunchedEffect(Unit) {
+                vm.effects.collect { effect ->
+                    when (effect) {
+                        is LobbyCreateEffect.NavigateToWaitingRoom ->
+                            navController.navigate("${Routes.WAITING_ROOM}/${effect.lobbyId}")
+                    }
                 }
+            }
+
+            NewLobbyScreen(
+                viewModel = vm,
+                onBack = { navController.popBackStack() },
+                onSettings = { navController.navigate(Routes.SETTINGS) }
             )
         }
 
@@ -215,19 +187,29 @@ fun NavGraphBuilder.homeGraph(
                 initial = User.getDefaultInstance()
             )
 
+<<<<<<< Updated upstream
             val lobbies by lobbyVM.lobbies.collectAsState()
             val isLoading by lobbyVM.isLoadingLobbies.collectAsState()
             val errorMessage by lobbyVM.lobbiesError.collectAsState()
+=======
+            val lobbySummaries by lobbyVM.lobbies.collectAsState()
+>>>>>>> Stashed changes
 
             LaunchedEffect(Unit) {
                 lobbyVM.loadLobbies()
             }
 
             LobbyBrowseScreen(
+<<<<<<< Updated upstream
                 lobbies = lobbies.map { it.toUi() },
                 isLoading = isLoading,
                 errorMessage = errorMessage,
 
+=======
+                lobbies = lobbySummaries.map { it.toUi() },
+                isLoading = false,
+                errorMessage = null,
+>>>>>>> Stashed changes
                 onJoinLobby = { lobbyId ->
                     lobbyVM.joinLobbyOrOpen(
                         lobbyId = lobbyId,
