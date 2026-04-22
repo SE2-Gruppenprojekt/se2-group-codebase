@@ -24,7 +24,6 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Timer
@@ -55,7 +54,7 @@ import at.aau.serg.android.ui.screens.lobby.create.components.NumericSettingRow
 import at.aau.serg.android.ui.screens.lobby.create.components.SectionTitle
 import at.aau.serg.android.ui.screens.lobby.create.components.SelectableBox
 import at.aau.serg.android.ui.screens.lobby.create.components.ToggleSettingRow
-import at.aau.serg.android.ui.components.BackButton
+import at.aau.serg.android.ui.components.TopBar
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.theme.ThemeState
 
@@ -110,48 +109,15 @@ fun LobbyCreateScreen(
             .verticalScroll(rememberScrollState()) // allow smaller screens to scroll
             .padding(16.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                BackButton(
-                    onBack = onBack,
-                    modifier = Modifier.testTag(LobbyCreateTestTags.BACK_BUTTON)
-                )
-
-                Column {
-                    Text(
-                        text = "RUMMIKUB",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.testTag(LobbyCreateTestTags.TITLE)
-                    )
-                    Text(
-                        text = "Create New Lobby",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.78f),
-                        modifier = Modifier.testTag(LobbyCreateTestTags.SUBTITLE)
-                    )
-                }
-            }
-
-            IconButton(
-                onClick = onSettings,
-                modifier = Modifier
-                    .testTag(LobbyCreateTestTags.SETTINGS_BUTTON)
-                    .size(40.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    contentDescription = "Settings",
-                    tint = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
+        TopBar(
+            subtitle = "Create New Lobby",
+            onBack = onBack,
+            onSettings = onSettings,
+            backButtonModifier = Modifier.testTag(LobbyCreateTestTags.BACK_BUTTON),
+            titleModifier = Modifier.testTag(LobbyCreateTestTags.TITLE),
+            subtitleModifier = Modifier.testTag(LobbyCreateTestTags.SUBTITLE),
+            settingsButtonModifier = Modifier.testTag(LobbyCreateTestTags.SETTINGS_BUTTON)
+        )
 
         Spacer(modifier = Modifier.height(18.dp))
 

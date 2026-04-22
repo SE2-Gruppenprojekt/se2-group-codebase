@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.screens.lobby.main.LobbyViewModel
+import at.aau.serg.android.ui.components.TopBar
 import at.aau.serg.android.ui.screens.lobby.waiting.components.*
 import at.aau.serg.android.ui.screens.lobby.waiting.components.LobbyUiState.lobbyName
 import at.aau.serg.android.ui.screens.lobby.waiting.components.LobbyUiState.stackEnabled
@@ -66,10 +67,10 @@ fun WaitingRoomScreen(
             .padding(16.dp)
     ) {
 
-        WaitingScreenTopBar(
+        TopBar(
+            subtitle = lobbyName as String,
             onBack = onBack,
-            onSettings = onSettings,
-            lobbyName = lobbyName as String
+            onSettings = onSettings
         )
 
         Spacer(Modifier.height(12.dp))

@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import at.aau.serg.android.ui.components.TopBar
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.theme.ThemeState
 import at.aau.serg.android.ui.util.ErrorUiMapper
@@ -103,42 +104,12 @@ fun HomeScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        // top app header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = "RUMMIKUB",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Text(
-                    text = "Main Menu",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.78f)
-                )
-            }
-
-            IconButton(
-                onClick = onSettings,
-                modifier = Modifier
-                    .size(40.dp)
-                    .testTag(HomeTestTags.SETTINGS_BUTTON)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    contentDescription = "Settings",
-                    tint = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
+        TopBar(
+            subtitle = "Main Menu",
+            onSettings = onSettings,
+            modifier = Modifier.padding(16.dp),
+            settingsButtonModifier = Modifier.testTag(HomeTestTags.SETTINGS_BUTTON)
+        )
 
         // main content section
         Column(
