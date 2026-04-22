@@ -69,7 +69,7 @@ fun WaitingRoomScreen(
         WaitingScreenTopBar(
             onBack = onBack,
             onSettings = onSettings,
-            lobbyName = lobbyName as String
+            lobbyName = lobbyName.toString()
         )
 
         Spacer(Modifier.height(12.dp))
