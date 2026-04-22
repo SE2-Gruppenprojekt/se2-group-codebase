@@ -139,11 +139,31 @@ fun NavGraphBuilder.homeGraph(
 
         composable("${Routes.WAITING_ROOM}/{lobbyId}") {
             val vm: LobbyViewModel = viewModel()
+            val lobbyId = it.arguments?.getString("lobbyId")!!
+
+            val userStore = remember { provider.getStore<User>() }
+            val user by userStore.data.collectAsState(initial = User.getDefaultInstance())
+
+            val matchId by vm.matchId.collectAsState()
+
+            LaunchedEffect(lobbyId) {
+                vm.connectWebSocket(lobbyId)
+            }
+
+            LaunchedEffect(matchId) {
+                matchId?.let { id ->
+                    navController.navigate("${Routes.GAME}/$id") {
+                        popUpTo("${Routes.WAITING_ROOM}/{lobbyId}") { inclusive = true }
+                    }
+                }
+            }
 
             WaitingRoomScreen(
                 onBack = { navController.popBackStack() },
                 onSettings = { navController.navigate(Routes.SETTINGS) },
-                lobbyId = it.arguments?.getString("lobbyId")!!,
+                onStartGame = { vm.startMatch(lobbyId = lobbyId, userId = user.uid) },
+                lobbyId = lobbyId,
+                userId = user.uid,
                 viewModel = vm
             )
         }
