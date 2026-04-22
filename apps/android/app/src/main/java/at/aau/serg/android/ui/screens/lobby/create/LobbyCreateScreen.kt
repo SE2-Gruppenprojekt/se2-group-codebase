@@ -19,7 +19,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Groups
@@ -56,6 +55,7 @@ import at.aau.serg.android.ui.screens.lobby.create.components.NumericSettingRow
 import at.aau.serg.android.ui.screens.lobby.create.components.SectionTitle
 import at.aau.serg.android.ui.screens.lobby.create.components.SelectableBox
 import at.aau.serg.android.ui.screens.lobby.create.components.ToggleSettingRow
+import at.aau.serg.android.ui.components.BackButton
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.theme.ThemeState
 
@@ -116,19 +116,10 @@ fun LobbyCreateScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = onBack,
-                    modifier = Modifier
-                        .testTag(LobbyCreateTestTags.BACK_BUTTON)
-                        .size(40.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+                BackButton(
+                    onBack = onBack,
+                    modifier = Modifier.testTag(LobbyCreateTestTags.BACK_BUTTON)
+                )
 
                 Column {
                     Text(

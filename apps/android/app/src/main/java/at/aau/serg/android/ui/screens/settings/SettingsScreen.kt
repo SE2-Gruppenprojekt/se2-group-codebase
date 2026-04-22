@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import at.aau.serg.android.ui.components.BackButton
 import at.aau.serg.android.ui.theme.AuthButtonGradientStart
 import at.aau.serg.android.ui.theme.AuthDarkBackground
 import at.aau.serg.android.ui.theme.AuthDarkCard
@@ -85,21 +86,11 @@ fun SettingsScreen(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onBack)
-                    .testTag(SettingsTestTags.BACK_BUTTON),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = primaryText,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            BackButton(
+                onBack = onBack,
+                modifier = Modifier.testTag(SettingsTestTags.BACK_BUTTON),
+                tint = primaryText
+            )
             Spacer(Modifier.width(10.dp))
             Text(
                 text = "Settings",

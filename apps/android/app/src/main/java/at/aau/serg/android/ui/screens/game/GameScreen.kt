@@ -9,8 +9,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import at.aau.serg.android.ui.components.BackButton
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
@@ -86,17 +86,11 @@ fun GameScreen(
                 .border(width = 1.dp, color = headerBorder)
                 .padding(horizontal = 12.dp, vertical = 10.dp)
         ) {
-            IconButton(
-                onClick = onBack,
-                modifier = Modifier.align(Alignment.CenterStart).size(40.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = primaryText,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            BackButton(
+                onBack = onBack,
+                modifier = Modifier.align(Alignment.CenterStart),
+                tint = primaryText
+            )
 
             Column(modifier = Modifier.align(Alignment.Center)) {
                 Text(text = "Game #4821",

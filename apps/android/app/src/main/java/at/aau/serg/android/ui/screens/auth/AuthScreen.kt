@@ -19,8 +19,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LightbulbCircle
@@ -53,6 +51,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import at.aau.serg.android.ui.components.BackButton
 import at.aau.serg.android.ui.theme.AuthButtonGradientEnd
 import at.aau.serg.android.ui.theme.AuthButtonGradientStart
 import at.aau.serg.android.ui.theme.AuthDarkBackground
@@ -152,21 +151,14 @@ fun AuthScreen(
             // --- Back button (only when navigated from within the app) ---
             if (onBack != null) {
                 Box(modifier = Modifier.fillMaxWidth()) {
-                    IconButton(
-                        onClick = onBack,
+                    BackButton(
+                        onBack = onBack,
                         modifier = Modifier
                             .align(Alignment.CenterStart)
-                            .size(40.dp)
                             .clip(CircleShape)
-                            .background(colors.card)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = colors.primaryText,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+                            .background(colors.card),
+                        tint = colors.primaryText
+                    )
                 }
                 Spacer(Modifier.height(12.dp))
             }
