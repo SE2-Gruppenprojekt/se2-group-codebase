@@ -36,4 +36,4 @@ jobs:
       - name: Analyze backend with SonarQube
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew :apps:backend:sonar --info
+        run: ./gradlew :apps:backend:sonar -Dsonar.qualitygate.wait=true --info
