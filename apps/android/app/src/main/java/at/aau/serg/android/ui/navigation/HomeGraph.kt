@@ -23,7 +23,9 @@ import at.aau.serg.android.ui.screens.home.HomeScreen
 import at.aau.serg.android.ui.screens.home.HomeViewModel
 import at.aau.serg.android.ui.screens.leaderboard.LeaderboardScreen
 import at.aau.serg.android.ui.screens.leaderboard.LeaderboardViewModel
+import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseEffect
 import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseScreen
+import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseViewModel
 import at.aau.serg.android.ui.screens.lobby.browse.toUi
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateViewModel
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateEffect
@@ -183,6 +185,7 @@ fun NavGraphBuilder.homeGraph(
             }
 
             val lobbyVM: LobbyViewModel = viewModel(parent)
+            val browseVM: LobbyBrowseViewModel = viewModel()
 
             val userStore = remember { provider.getStore<User>() }
 
@@ -194,38 +197,39 @@ fun NavGraphBuilder.homeGraph(
             val isLoading by lobbyVM.isLoadingLobbies.collectAsState()
             val errorMessage by lobbyVM.lobbiesError.collectAsState()
 
+            LaunchedEffect(lobbies, isLoading, errorMessage) {
+                browseVM.update(lobbies.map { it.toUi() }, isLoading, errorMessage)
+            }
+
             LaunchedEffect(Unit) {
                 lobbyVM.loadLobbies()
             }
 
-            LobbyBrowseScreen(
-                lobbies = lobbies.map { it.toUi() },
-                isLoading = isLoading,
-                errorMessage = errorMessage,
-                onJoinLobby = { lobbyId ->
-                    lobbyVM.joinLobbyOrOpen(
-                        lobbyId = lobbyId,
-                        userId = user.uid,
-                        displayName = user.displayName,
-                        onSuccess = {
-                            navController.navigate("${Routes.WAITING_ROOM}/${it.lobbyId}")
-                        },
-                        onError = {}
-                    )
-                },
-
-                onCreateNewLobby = {
-                    navController.navigate(Routes.CREATE_LOBBY_FANCY)
-                },
-
-                onSettings = {
-                    navController.navigate(Routes.SETTINGS)
-                },
-
-                onBack = {
-                    navController.popBackStack()
+            LaunchedEffect(Unit) {
+                browseVM.effects.collect { effect ->
+                    when (effect) {
+                        is LobbyBrowseEffect.JoinLobby -> {
+                            lobbyVM.joinLobbyOrOpen(
+                                lobbyId = effect.lobbyId,
+                                userId = user.uid,
+                                displayName = user.displayName,
+                                onSuccess = {
+                                    navController.navigate("${Routes.WAITING_ROOM}/${it.lobbyId}")
+                                },
+                                onError = {}
+                            )
+                        }
+                        LobbyBrowseEffect.NavigateToCreate ->
+                            navController.navigate(Routes.CREATE_LOBBY_FANCY)
+                        LobbyBrowseEffect.NavigateToSettings ->
+                            navController.navigate(Routes.SETTINGS)
+                        LobbyBrowseEffect.NavigateBack ->
+                            navController.popBackStack()
+                    }
                 }
-            )
+            }
+
+            LobbyBrowseScreen(viewModel = browseVM)
         }
     }
 }

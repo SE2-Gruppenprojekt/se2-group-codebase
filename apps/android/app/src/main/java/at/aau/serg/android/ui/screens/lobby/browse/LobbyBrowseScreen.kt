@@ -1,7 +1,6 @@
 package at.aau.serg.android.ui.screens.lobby.browse
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,17 +18,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Tag
-import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.filled.Style
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,34 +32,28 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import at.aau.serg.android.ui.components.BackButton
+import at.aau.serg.android.ui.screens.lobby.browse.components.LobbyBrowseCard
 import at.aau.serg.android.ui.theme.ThemeState
 
 @Composable
 fun LobbyBrowseScreen(
-    lobbies: List<LobbyBrowseItem>,
-    isLoading: Boolean = false,
-    errorMessage: String? = null,
-    onJoinLobby: (String) -> Unit,
-    onCreateNewLobby: () -> Unit,
-    onSettings: () -> Unit,
-    onBack: () -> Unit
+    viewModel: LobbyBrowseViewModel = viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     val darkMode = ThemeState.isDarkMode.value
-    var lobbyIdInput by remember { mutableStateOf("") }
 
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(
@@ -86,10 +74,11 @@ fun LobbyBrowseScreen(
     val accentPurple = Color(0xFF9D3CFF)
     val actionButtonColor = if (darkMode) Color(0xFF2A3552) else Color(0xFF2F3A57)
 
-    val enteredLobbyId = lobbyIdInput.trim().uppercase()
+    val enteredLobbyId = uiState.lobbyIdInput.trim().uppercase()
 
     Column(
         modifier = Modifier
+            .testTag(LobbyBrowseTestTags.SCREEN)
             .fillMaxSize()
             .background(backgroundGradient)
             .padding(16.dp)
@@ -101,27 +90,33 @@ fun LobbyBrowseScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-
-                BackButton(onBack)
+                BackButton(
+                    onBack = { viewModel.onEvent(LobbyBrowseEvent.OnBack) },
+                    modifier = Modifier.testTag(LobbyBrowseTestTags.BACK_BUTTON)
+                )
 
                 Column {
                     Text(
                         text = "RUMMIKUB",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.testTag(LobbyBrowseTestTags.TITLE)
                     )
                     Text(
                         text = "Available Lobbies",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.78f)
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.78f),
+                        modifier = Modifier.testTag(LobbyBrowseTestTags.SUBTITLE)
                     )
                 }
             }
 
             IconButton(
-                onClick = onSettings,
-                modifier = Modifier.size(40.dp)
+                onClick = { viewModel.onEvent(LobbyBrowseEvent.OnSettings) },
+                modifier = Modifier
+                    .testTag(LobbyBrowseTestTags.SETTINGS_BUTTON)
+                    .size(40.dp)
             ) {
                 Icon(
                     imageVector = Icons.Filled.Settings,
@@ -141,22 +136,14 @@ fun LobbyBrowseScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedTextField(
-                value = lobbyIdInput,
-                onValueChange = { lobbyIdInput = it },
-                modifier = Modifier.weight(1f),
+                value = uiState.lobbyIdInput,
+                onValueChange = { viewModel.onEvent(LobbyBrowseEvent.OnLobbyIdChanged(it)) },
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(LobbyBrowseTestTags.LOBBY_ID_INPUT),
                 singleLine = true,
-                label = {
-                    Text(
-                        "Lobby ID",
-                        color = secondaryText
-                    )
-                },
-                placeholder = {
-                    Text(
-                        "Enter lobby ID to join...",
-                        color = secondaryText
-                    )
-                },
+                label = { Text("Lobby ID", color = secondaryText) },
+                placeholder = { Text("Enter lobby ID to join...", color = secondaryText) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Filled.Tag,
@@ -180,16 +167,15 @@ fun LobbyBrowseScreen(
             )
 
             Button(
-                onClick = {
-                    onJoinLobby(enteredLobbyId)
-                },
+                onClick = { viewModel.onEvent(LobbyBrowseEvent.OnJoinLobby(enteredLobbyId)) },
                 enabled = enteredLobbyId.isNotEmpty(),
                 shape = RoundedCornerShape(16.dp),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = actionButtonColor,
                     contentColor = Color.White
-                )
+                ),
+                modifier = Modifier.testTag(LobbyBrowseTestTags.JOIN_BUTTON)
             ) {
                 Icon(
                     imageVector = Icons.Filled.PersonAdd,
@@ -197,10 +183,7 @@ fun LobbyBrowseScreen(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    "Join",
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Join", fontWeight = FontWeight.Bold)
             }
         }
 
@@ -218,7 +201,7 @@ fun LobbyBrowseScreen(
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.88f)
             )
             Text(
-                text = "${lobbies.size} available",
+                text = "${uiState.lobbies.size} available",
                 style = MaterialTheme.typography.labelMedium,
                 color = secondaryText
             )
@@ -226,7 +209,7 @@ fun LobbyBrowseScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        if (isLoading) {
+        if (uiState.isLoading) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -237,7 +220,7 @@ fun LobbyBrowseScreen(
             }
         }
 
-        if (errorMessage != null) {
+        uiState.errorMessage?.let { errorMessage ->
             Text(
                 text = errorMessage,
                 color = MaterialTheme.colorScheme.error,
@@ -248,16 +231,18 @@ fun LobbyBrowseScreen(
 
         // lobby list
         LazyColumn(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .testTag(LobbyBrowseTestTags.LOBBY_LIST),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(lobbies) { lobby ->
+            items(uiState.lobbies) { lobby ->
                 LobbyBrowseCard(
                     lobby = lobby,
                     cardColor = cardColor,
                     primaryText = primaryText,
                     secondaryText = secondaryText,
-                    onJoinLobby = onJoinLobby
+                    onJoinLobby = { viewModel.onEvent(LobbyBrowseEvent.OnJoinLobby(it)) }
                 )
             }
 
@@ -270,8 +255,9 @@ fun LobbyBrowseScreen(
 
         // create button
         Button(
-            onClick = onCreateNewLobby,
+            onClick = { viewModel.onEvent(LobbyBrowseEvent.OnCreateNewLobby) },
             modifier = Modifier
+                .testTag(LobbyBrowseTestTags.CREATE_BUTTON)
                 .fillMaxWidth()
                 .height(58.dp),
             shape = RoundedCornerShape(18.dp),
@@ -290,13 +276,8 @@ fun LobbyBrowseScreen(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = null
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(imageVector = Icons.Filled.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Create New Lobby",
@@ -306,173 +287,5 @@ fun LobbyBrowseScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun LobbyBrowseCard(
-    lobby: LobbyBrowseItem,
-    cardColor: Color,
-    primaryText: Color,
-    secondaryText: Color,
-    onJoinLobby: (String) -> Unit
-) {
-    val accentColor = lobby.accentColor
-    val subtleCardColor = accentColor.copy(alpha = 0.14f).compositeOver(cardColor)
-    val disabledButtonColor = if (ThemeState.isDarkMode.value) Color(0xFF555A6E) else Color(0xFFD7DCE5)
-    val buttonColor = if (lobby.isOpen) accentColor else disabledButtonColor
-    val buttonText = if (lobby.isOpen) "Join" else "Full"
-    val metaColor = secondaryText.copy(alpha = 0.75f)
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(
-                width = 1.5.dp,
-                color = accentColor.copy(alpha = 0.95f),
-                shape = RoundedCornerShape(20.dp)
-            ),
-        colors = CardDefaults.cardColors(
-            containerColor = subtleCardColor
-        ),
-        shape = RoundedCornerShape(20.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
-        ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(78.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        text = "#${lobby.lobbyId}",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = primaryText
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    BadgeChip(
-                        text = if (lobby.isOpen) "OPEN" else "FULL",
-                        backgroundColor = accentColor,
-                        textColor = Color.White
-                    )
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Timer,
-                        contentDescription = null,
-                        tint = metaColor,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${lobby.turnTimerSeconds}s",
-                        color = metaColor,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Icon(
-                        imageVector = Icons.Filled.Style,
-                        contentDescription = null,
-                        tint = metaColor,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${lobby.startingCards} cards",
-                        color = metaColor,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(
-                horizontalAlignment = Alignment.End
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Groups,
-                        contentDescription = null,
-                        tint = accentColor,
-                        modifier = Modifier.size(15.dp)
-                    )
-                    Spacer(modifier = Modifier.width(3.dp))
-                    Text(
-                        text = "${lobby.currentPlayers}/${lobby.maxPlayers}",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = primaryText
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Button(
-                    onClick = { onJoinLobby(lobby.lobbyId) },
-                    enabled = lobby.isOpen,
-                    shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = buttonColor,
-                        contentColor = Color.White,
-                        disabledContainerColor = disabledButtonColor,
-                        disabledContentColor = Color.White.copy(alpha = 0.8f)
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.PersonAdd,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = buttonText,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun BadgeChip(
-    text: String,
-    backgroundColor: Color,
-    textColor: Color
-) {
-    Box(
-        modifier = Modifier
-            .background(
-                color = backgroundColor,
-                shape = RoundedCornerShape(8.dp)
-            )
-            .padding(horizontal = 6.dp, vertical = 2.dp)
-    ) {
-        Text(
-            text = text,
-            color = textColor,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold
-        )
     }
 }
