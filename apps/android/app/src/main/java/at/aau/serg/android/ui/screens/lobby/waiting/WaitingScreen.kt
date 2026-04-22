@@ -149,6 +149,7 @@ fun WaitingRoomScreen(
 
             Button(
                 onClick = onStartGame,
+                enabled = isWebSocketConnected,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
