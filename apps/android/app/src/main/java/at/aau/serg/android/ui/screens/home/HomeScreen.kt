@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.theme.ThemeState
+import at.aau.serg.android.ui.util.ErrorUiMapper
 
 @Composable
 fun HomeScreen(
@@ -199,7 +200,7 @@ fun HomeScreen(
                 // error state
                 is LoadState.Error -> {
                     Text(
-                        text = state.message,
+                        text = ErrorUiMapper.toMessage(state.error),
                         color = errorColor,
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.testTag(HomeTestTags.ERROR_TEXT)

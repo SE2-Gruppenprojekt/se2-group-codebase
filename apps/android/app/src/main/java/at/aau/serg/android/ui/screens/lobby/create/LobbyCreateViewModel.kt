@@ -6,7 +6,7 @@ import at.aau.serg.android.core.datastore.ProtoStore
 import at.aau.serg.android.core.network.RetrofitProvider
 import at.aau.serg.android.core.network.lobby.LobbyAPI
 import at.aau.serg.android.core.network.lobby.LobbyService
-import at.aau.serg.android.core.network.lobby.LobbyWebSocketService
+import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
 import at.aau.serg.android.core.network.mapper.toDomain
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.state.LoadState
@@ -33,32 +33,39 @@ class LobbyCreateViewModel(
     val effects = _effects.asSharedFlow()
 
     private fun createLobby() = viewModelScope.launch {
-        val user = userStore.data.first()
-        val state = _uiState.value
-
         _uiState.update {
             it.copy(loadState = LoadState.Loading)
         }
 
-        val lobby = api.createLobby(
-            user.uid,
-            CreateLobbyRequest(
-                displayName = user.displayName,
-                maxPlayers = state.maxPlayers,
-                isPrivate = state.isPrivate,
-                allowGuests = true
-            )
-        ).toDomain()
+        val user = userStore.data.first()
+        val state = _uiState.value
 
-        _uiState.update {
-            it.copy(
-                loadState = LoadState.Success
+        try {
+            val lobby = api.createLobby(
+                user.uid,
+                CreateLobbyRequest(
+                    displayName = user.displayName,
+                    maxPlayers = state.maxPlayers,
+                    isPrivate = state.isPrivate,
+                    allowGuests = true
+                )
+            ).toDomain()
+
+            _uiState.update {
+                it.copy(loadState = LoadState.Success)
+            }
+
+            _effects.emit(
+                LobbyCreateEffect.NavigateToWaitingRoom(lobby.lobbyId)
             )
+
+        } catch (e: Throwable) {
+            val appError = NetworkErrorMapper.map(e)
+
+            _uiState.update {
+                it.copy(loadState = LoadState.Error(appError))
+            }
         }
-
-        _effects.emit(
-            LobbyCreateEffect.NavigateToWaitingRoom(lobby.lobbyId)
-        )
     }
 
     fun onEvent(event: LobbyCreateEvent) {

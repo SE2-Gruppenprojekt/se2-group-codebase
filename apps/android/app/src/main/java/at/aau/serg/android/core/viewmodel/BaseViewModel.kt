@@ -36,7 +36,7 @@ abstract class BaseViewModel(
                 val domainError = NetworkErrorMapper.map(e)
                 val uiMessage = ErrorUiMapper.toMessage(domainError)
 
-                _loadState.value = LoadState.Error(uiMessage)
+                //_loadState.value = LoadState.Error(null)
                 onError()
             }
         }

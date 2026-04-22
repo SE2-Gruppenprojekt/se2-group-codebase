@@ -1,5 +1,6 @@
 package at.aau.serg.android.ui.screens.lobby.create
 
+import at.aau.serg.android.MainDispatcherRule
 import at.aau.serg.android.core.datastore.ProtoStore
 import at.aau.serg.android.core.network.lobby.LobbyAPI
 import at.aau.serg.android.datastore.proto.User
@@ -14,11 +15,14 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import shared.models.lobby.response.LobbyResponse
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LobbyCreateViewModelTest {
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var userStore: ProtoStore<User>
     private lateinit var api: LobbyAPI
@@ -135,5 +139,18 @@ class LobbyCreateViewModelTest {
         advanceUntilIdle()
         val state = viewModel.uiState.value
         assertEquals (LoadState.Success, state.loadState)
+    }
+
+    @Test
+    fun createLobby_emitsErrorState_onFailure() = runTest {
+        coEvery { api.createLobby(any(), any()) } throws RuntimeException("Failure")
+
+        viewModel.onEvent(LobbyCreateEvent.CreateLobby)
+
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+
+        assertTrue(state.loadState is LoadState.Error)
     }
 }

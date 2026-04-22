@@ -1,5 +1,6 @@
 package at.aau.serg.android.ui.screens.lobby.create
 
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -11,6 +12,7 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertTrue
@@ -349,6 +351,10 @@ class LobbyCreateScreenTest {
 
     @Test
     fun create_button_disabled_when_loading() = runTest {
+        coEvery { api.createLobby(any(), any()) } coAnswers {
+            suspendCancellableCoroutine { /* never resumes */ }
+        }
+
         composeRule.setContent {
             LobbyCreateScreen(viewModel, {}, {})
         }
@@ -359,8 +365,9 @@ class LobbyCreateScreenTest {
 
         composeRule
             .onNodeWithTag(LobbyCreateTestTags.CREATE_BUTTON)
-            .assertExists()
+            .assertIsNotEnabled()
     }
+
 
     @Test
     fun winScore_increases_and_decreases_and_clamps_to_zero() = runTest {
