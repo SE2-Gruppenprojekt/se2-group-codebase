@@ -11,8 +11,10 @@ import at.aau.serg.android.core.network.lobby.LobbyWebSocketService
 import at.aau.serg.android.util.DefaultDispatcherProvider
 import at.aau.serg.android.util.DispatcherProvider
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import shared.models.lobby.domain.Lobby
 import shared.models.lobby.request.CreateLobbyRequest
@@ -51,28 +53,37 @@ class LobbyViewModel(
     private val _matchId = MutableStateFlow<String?>(null)
     val matchId = _matchId.asStateFlow()
 
+    private val _isWebSocketConnected = MutableStateFlow(false)
+    val isWebSocketConnected = _isWebSocketConnected.asStateFlow()
+
     private var webSocketJob: Job? = null
 
-    // connect WebSocket
+    // connect WebSocket with automatic reconnect on failure
     fun connectWebSocket(lobbyId: String) {
         webSocketJob?.cancel()
         webSocketJob = viewModelScope.launch(dispatchers.io) {
-            try {
-                webSocketService.connect(
-                    lobbyId = lobbyId,
-                    onLobbyUpdated = { payload ->
-                        _lobby.value = payload.lobby.toDomain()
-                    },
-                    onLobbyDeleted = {
-                        _isDeleted.value = true
-                    },
-                    onLobbyStarted = { payload ->
-                        _matchId.value = payload.matchId
-                    }
-                )
-            } catch (e: Exception) {
-                Log.e("LobbyViewModel", "WebSocket-Error", e)
+            while (isActive) {
+                _isWebSocketConnected.value = false
+                try {
+                    webSocketService.connect(
+                        lobbyId = lobbyId,
+                        onConnected = { _isWebSocketConnected.value = true },
+                        onLobbyUpdated = { payload ->
+                            _lobby.value = payload.lobby.toDomain()
+                        },
+                        onLobbyDeleted = {
+                            _isDeleted.value = true
+                        },
+                        onLobbyStarted = { payload ->
+                            _matchId.value = payload.matchId
+                        }
+                    )
+                } catch (e: Exception) {
+                    Log.e("LobbyViewModel", "WebSocket disconnected, reconnecting in 2s", e)
+                    if (isActive) delay(2000)
+                }
             }
+            _isWebSocketConnected.value = false
         }
     }
 

@@ -22,11 +22,13 @@ class LobbyWebSocketService(
     // Suspend function — runs until the coroutine is cancelled
     suspend fun connect(
         lobbyId: String,
+        onConnected: () -> Unit = {},
         onLobbyUpdated: (LobbyUpdatedPayload) -> Unit,
         onLobbyDeleted: (LobbyDeletedPayload) -> Unit,
         onLobbyStarted: (LobbyStartedPayload) -> Unit
     ) {
         session = client.connect("ws://10.0.2.2:8080/ws")
+        onConnected()
 
         session!!
             .subscribeText("/topic/lobbies/$lobbyId")

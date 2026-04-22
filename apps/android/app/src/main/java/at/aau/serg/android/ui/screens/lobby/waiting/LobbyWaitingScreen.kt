@@ -24,7 +24,9 @@ fun WaitingRoomScreen(
     onBack: () -> Unit,
     onSettings: () -> Unit,
     lobbyId: String? = null,
-    viewModel: LobbyViewModel
+    viewModel: LobbyViewModel,
+    onStartGame: () -> Unit,
+    userId: String
 ) {
     val scrollState = rememberScrollState()
     val darkMode = ThemeState.isDarkMode.value

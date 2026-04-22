@@ -20,13 +20,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -44,7 +42,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import at.aau.serg.android.ui.components.BackButton
+import at.aau.serg.android.ui.components.TopBar
 import at.aau.serg.android.ui.screens.lobby.browse.components.LobbyBrowseCard
 import at.aau.serg.android.ui.theme.ThemeState
 
@@ -83,49 +81,15 @@ fun LobbyBrowseScreen(
             .background(backgroundGradient)
             .padding(16.dp)
     ) {
-        // header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                BackButton(
-                    onBack = { viewModel.onEvent(LobbyBrowseEvent.OnBack) },
-                    modifier = Modifier.testTag(LobbyBrowseTestTags.BACK_BUTTON)
-                )
-
-                Column {
-                    Text(
-                        text = "RUMMIKUB",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.testTag(LobbyBrowseTestTags.TITLE)
-                    )
-                    Text(
-                        text = "Available Lobbies",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.78f),
-                        modifier = Modifier.testTag(LobbyBrowseTestTags.SUBTITLE)
-                    )
-                }
-            }
-
-            IconButton(
-                onClick = { viewModel.onEvent(LobbyBrowseEvent.OnSettings) },
-                modifier = Modifier
-                    .testTag(LobbyBrowseTestTags.SETTINGS_BUTTON)
-                    .size(40.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    contentDescription = "Settings",
-                    tint = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
+        TopBar(
+            subtitle = "Available Lobbies",
+            onBack = { viewModel.onEvent(LobbyBrowseEvent.OnBack) },
+            onSettings = { viewModel.onEvent(LobbyBrowseEvent.OnSettings) },
+            backButtonModifier = Modifier.testTag(LobbyBrowseTestTags.BACK_BUTTON),
+            titleModifier = Modifier.testTag(LobbyBrowseTestTags.TITLE),
+            subtitleModifier = Modifier.testTag(LobbyBrowseTestTags.SUBTITLE),
+            settingsButtonModifier = Modifier.testTag(LobbyBrowseTestTags.SETTINGS_BUTTON)
+        )
 
         Spacer(modifier = Modifier.height(18.dp))
 

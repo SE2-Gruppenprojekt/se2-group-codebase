@@ -45,7 +45,7 @@ fun WaitingScreenSettingsSection(
 
         SettingRow(
             title = "Turn Timer",
-            value = "${turnTimer}s",
+            value = "${turnTimer.intValue}s",
             onMinus = onTurnTimerMinus,
             onPlus = onTurnTimerPlus,
             cardColor = cardColor,
@@ -55,7 +55,7 @@ fun WaitingScreenSettingsSection(
 
         SettingRow(
             title = "Starting Cards",
-            value = "$startingCards",
+            value = "${startingCards.intValue}",
             onMinus = onStartingCardsMinus,
             onPlus = onStartingCardsPlus,
             cardColor = cardColor,
