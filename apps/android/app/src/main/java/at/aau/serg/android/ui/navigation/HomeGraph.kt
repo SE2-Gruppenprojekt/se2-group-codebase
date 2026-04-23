@@ -78,6 +78,9 @@ fun NavGraphBuilder.homeGraph(
                 onSettings = {
                     navController.navigate(Routes.SETTINGS)
                 },
+                onWaitingRoom = {
+                    navController.navigate(Routes.BROWSING_LOBBIES)
+                }
             )
         }
 
