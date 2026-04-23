@@ -71,85 +71,88 @@ fun WaitingRoomScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(listOf(gradientTop, gradientBottom))
-            )
-            .verticalScroll(scrollState)
-            .padding(16.dp)
+            .background(Brush.verticalGradient(listOf(gradientTop, gradientBottom)))
     ) {
+        // scrollable content
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(scrollState)
+                .padding(16.dp)
+        ) {
+            TopBar(
+                subtitle = lobbyName.value,
+                onBack = onBack,
+                onSettings = onSettings
+            )
 
-        TopBar(
-            subtitle = lobbyName.value,
-            onBack = onBack,
-            onSettings = onSettings
-        )
+            Spacer(Modifier.height(12.dp))
 
-        Spacer(Modifier.height(12.dp))
+            WaitingScreenRoomCard(
+                roomCode = roomCode,
+                joinedCount = joinedCount,
+                maxPlayers = maxPlayers,
+                context = context,
+                primaryTextColor = primaryTextColor,
+                secondaryTextColor = secondaryTextColor,
+                cardColor = cardColor
+            )
 
-        WaitingScreenRoomCard(
-            roomCode = roomCode,
-            joinedCount = joinedCount,
-            maxPlayers = maxPlayers,
-            context = context,
-            primaryTextColor = primaryTextColor,
-            secondaryTextColor = secondaryTextColor,
-            cardColor = cardColor
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        WaitingScreenPlayerSection(
-            isLoading = isLoading,
-            players = players,
-            fetchedLobby = lobby,
-            maxPlayers = maxPlayers,
-            joinedCount = joinedCount,
-            primaryTextColor = primaryTextColor,
-            secondaryTextColor = secondaryTextColor,
-            darkMode = darkMode
-        )
-
-        Spacer(Modifier.height(18.dp))
-
-        WaitingScreenSettingsSection(
-            turnTimer = turnTimer,
-            startingCards = startingCards,
-            stackEnabled = stackEnabled,
-
-            onTurnTimerMinus = {
-                if (LobbyUiState.turnTimer.intValue > 10) {
-                    LobbyUiState.turnTimer.intValue -= 10
-                }
-            },
-            onTurnTimerPlus = {
-                LobbyUiState.turnTimer.intValue += 10
-            },
-
-            onStartingCardsMinus = {
-                if (LobbyUiState.startingCards.intValue > 1) {
-                    LobbyUiState.startingCards.intValue -= 1
-                }
-            },
-            onStartingCardsPlus = {
-                LobbyUiState.startingCards.intValue += 1
-            },
-
-            onStackToggle = {
-                LobbyUiState.stackEnabled.value = it
-            },
-
-            cardColor = cardColor,
-            primaryTextColor = primaryTextColor,
-            buttonColor = buttonColor
-        )
-
-        if (lobby?.hostUserId == userId) {
             Spacer(Modifier.height(16.dp))
 
+            WaitingScreenPlayerSection(
+                isLoading = isLoading,
+                players = players,
+                fetchedLobby = lobby,
+                maxPlayers = maxPlayers,
+                joinedCount = joinedCount,
+                primaryTextColor = primaryTextColor,
+                secondaryTextColor = secondaryTextColor,
+                darkMode = darkMode
+            )
+
+            Spacer(Modifier.height(18.dp))
+
+            WaitingScreenSettingsSection(
+                turnTimer = turnTimer,
+                startingCards = startingCards,
+                stackEnabled = stackEnabled,
+
+                onTurnTimerMinus = {
+                    if (LobbyUiState.turnTimer.intValue > 10) {
+                        LobbyUiState.turnTimer.intValue -= 10
+                    }
+                },
+                onTurnTimerPlus = {
+                    LobbyUiState.turnTimer.intValue += 10
+                },
+
+                onStartingCardsMinus = {
+                    if (LobbyUiState.startingCards.intValue > 1) {
+                        LobbyUiState.startingCards.intValue -= 1
+                    }
+                },
+                onStartingCardsPlus = {
+                    LobbyUiState.startingCards.intValue += 1
+                },
+
+                onStackToggle = {
+                    LobbyUiState.stackEnabled.value = it
+                },
+
+                cardColor = cardColor,
+                primaryTextColor = primaryTextColor,
+                buttonColor = buttonColor
+            )
+        }
+
+        // start game button pinned to bottom (host only)
+        if (lobby?.hostUserId == userId) {
             Button(
                 onClick = onStartGame,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp)
                     .height(56.dp),
                 shape = RoundedCornerShape(18.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -170,7 +173,5 @@ fun WaitingRoomScreen(
                 )
             }
         }
-
-        Spacer(Modifier.height(24.dp))
     }
 }
