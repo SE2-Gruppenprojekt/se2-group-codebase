@@ -32,6 +32,7 @@ import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateEffect
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateScreen
 import at.aau.serg.android.ui.screens.lobby.main.LobbyViewModel
 import at.aau.serg.android.ui.screens.lobby.waiting.WaitingRoomScreen
+import shared.models.lobby.domain.LobbyStatus
 import at.aau.serg.android.ui.screens.settings.SettingsScreen
 import at.aau.serg.android.ui.screens.settings.SettingsViewModel
 import at.aau.serg.android.ui.theme.ThemeState
@@ -77,9 +78,6 @@ fun NavGraphBuilder.homeGraph(
                 },
                 onSettings = {
                     navController.navigate(Routes.SETTINGS)
-                },
-                onWaitingRoom = {
-                    navController.navigate(Routes.BROWSING_LOBBIES)
                 }
             )
         }
@@ -147,15 +145,26 @@ fun NavGraphBuilder.homeGraph(
             val userStore = remember { provider.getStore<User>() }
             val user by userStore.data.collectAsState(initial = User.getDefaultInstance())
 
+            val lobby by vm.lobby.collectAsState()
             val matchId by vm.matchId.collectAsState()
 
             LaunchedEffect(lobbyId) {
                 vm.connectWebSocket(lobbyId)
             }
 
+            // trigger 1: backend sends lobby.updated with status IN_GAME
+            LaunchedEffect(lobby?.status) {
+                if (lobby?.status == LobbyStatus.IN_GAME) {
+                    navController.navigate("${Routes.GAME}/$lobbyId") {
+                        popUpTo("${Routes.WAITING_ROOM}/{lobbyId}") { inclusive = true }
+                    }
+                }
+            }
+
+            // trigger 2: backend sends lobby.started with matchId
             LaunchedEffect(matchId) {
-                matchId?.let { id ->
-                    navController.navigate("${Routes.GAME}/$id") {
+                matchId?.let {
+                    navController.navigate("${Routes.GAME}/$lobbyId") {
                         popUpTo("${Routes.WAITING_ROOM}/{lobbyId}") { inclusive = true }
                     }
                 }
@@ -164,7 +173,14 @@ fun NavGraphBuilder.homeGraph(
             WaitingRoomScreen(
                 onBack = { navController.popBackStack() },
                 onSettings = { navController.navigate(Routes.SETTINGS) },
-                onStartGame = { vm.startMatch(lobbyId = lobbyId, userId = user.uid) },
+                onStartGame = {
+                    // notify other players in background
+                    vm.startMatch(lobbyId = lobbyId, userId = user.uid)
+                    // navigate immediately without waiting for API or WebSocket
+                    navController.navigate("${Routes.GAME}/$lobbyId") {
+                        popUpTo("${Routes.WAITING_ROOM}/{lobbyId}") { inclusive = true }
+                    }
+                },
                 lobbyId = lobbyId,
                 userId = user.uid,
                 viewModel = vm

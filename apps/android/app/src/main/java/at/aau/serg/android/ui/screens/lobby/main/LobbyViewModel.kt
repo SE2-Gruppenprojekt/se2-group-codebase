@@ -215,11 +215,12 @@ class LobbyViewModel(
     fun startMatch(
         lobbyId: String,
         userId: String,
+        onSuccess: () -> Unit = {},
         onError: () -> Unit = {}
     ) {
         launchRequest(
             request = { api.startMatch(userId, lobbyId) },
-            onSuccess = { },
+            onSuccess = { succeeded -> if (succeeded) onSuccess() else onError() },
             onError = { onError() }
         )
     }

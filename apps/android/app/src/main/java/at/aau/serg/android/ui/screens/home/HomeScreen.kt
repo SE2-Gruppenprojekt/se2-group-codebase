@@ -34,8 +34,7 @@ fun HomeScreen(
     onBrowseFancyLobbies: () -> Unit,
     onShowLeaderboard: () -> Unit,
     onSettings: () -> Unit,
-    onNewLobbyScreen: () -> Unit,
-    onWaitingRoom: () -> Unit
+    onNewLobbyScreen: () -> Unit
 ) {
     val darkMode = ThemeState.isDarkMode.value
 
@@ -212,25 +211,6 @@ fun HomeScreen(
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-
-            //waitingRoom
-            HomeActionButton(
-                text = "Waiting Room",
-                onClick = onWaitingRoom,
-                icon = { tint ->
-                    Icon(
-                        Icons.Filled.Settings,
-                        contentDescription = null,
-                        tint = tint,
-                        modifier = Modifier.size(22.dp)
-                    )
-                },
-                containerBrush = settingsBrush,
-                modifier = Modifier.testTag(HomeTestTags.SETTINGS_LIST_BUTTON),
-                contentColor = neutralButtonContentColor
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
 
             // settings action
             HomeActionButton(
