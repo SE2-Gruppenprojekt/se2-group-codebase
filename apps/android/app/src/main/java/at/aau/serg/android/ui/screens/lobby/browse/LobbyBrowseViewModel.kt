@@ -2,6 +2,11 @@ package at.aau.serg.android.ui.screens.lobby.browse
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import at.aau.serg.android.core.network.RetrofitProvider
+import at.aau.serg.android.core.network.lobby.LobbyAPI
+import at.aau.serg.android.core.network.lobby.LobbyService
+import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
+import at.aau.serg.android.ui.state.LoadState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,7 +14,11 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class LobbyBrowseViewModel : ViewModel() {
+class LobbyBrowseViewModel(
+    private val api: LobbyAPI = LobbyAPI(
+        RetrofitProvider.retrofit.create(LobbyService::class.java)
+    )
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LobbyBrowseUiState())
     val uiState: StateFlow<LobbyBrowseUiState> = _uiState
@@ -17,10 +26,8 @@ class LobbyBrowseViewModel : ViewModel() {
     private val _effects = MutableSharedFlow<LobbyBrowseEffect>()
     val effects = _effects.asSharedFlow()
 
-    fun update(lobbies: List<LobbyBrowseItem>, isLoading: Boolean, errorMessage: String?) {
-        _uiState.update {
-            it.copy(lobbies = lobbies, isLoading = isLoading, errorMessage = errorMessage)
-        }
+    init {
+        loadLobbies()
     }
 
     fun onEvent(event: LobbyBrowseEvent) {
@@ -47,6 +54,31 @@ class LobbyBrowseViewModel : ViewModel() {
                 viewModelScope.launch {
                     _effects.emit(LobbyBrowseEffect.NavigateBack)
                 }
+            }
+        }
+    }
+
+    fun loadLobbies() = viewModelScope.launch {
+
+        _uiState.update {
+            it.copy(loadState = LoadState.Loading)
+        }
+
+        try {
+            val lobbies = api.getLobbies().map { it.toUi() }
+
+            _uiState.update {
+                it.copy(
+                    lobbies = lobbies,
+                    loadState = LoadState.Success
+                )
+            }
+
+        } catch (e: Throwable) {
+            val appError = NetworkErrorMapper.map(e)
+
+            _uiState.update {
+                it.copy(loadState = LoadState.Error(appError))
             }
         }
     }

@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import at.aau.serg.android.ui.components.TopBar
 import at.aau.serg.android.ui.screens.lobby.browse.components.LobbyBrowseCard
+import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.theme.ThemeState
 
 @Composable
@@ -173,7 +174,7 @@ fun LobbyBrowseScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        if (uiState.isLoading) {
+        if (uiState.loadState == LoadState.Loading) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

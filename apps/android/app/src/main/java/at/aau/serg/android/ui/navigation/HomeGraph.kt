@@ -218,45 +218,15 @@ fun NavGraphBuilder.homeGraph(
         }
 
         composable(Routes.BROWSING_LOBBIES) {
-
-            val parent = remember(navController.currentBackStackEntry) {
-                navController.getBackStackEntry(Routes.HOME)
-            }
-
-            val lobbyVM: LobbyViewModel = viewModel(parent)
-            val browseVM: LobbyBrowseViewModel = viewModel()
-
-            val userStore = remember { provider.getStore<User>() }
-
-            val user by userStore.data.collectAsState(
-                initial = User.getDefaultInstance()
+            val vm: LobbyBrowseViewModel = viewModel(
+                factory = GenericViewModelFactory { LobbyBrowseViewModel() }
             )
 
-            val lobbies by lobbyVM.lobbies.collectAsState()
-            val isLoading by lobbyVM.isLoadingLobbies.collectAsState()
-            val errorMessage by lobbyVM.lobbiesError.collectAsState()
-
-            LaunchedEffect(lobbies, isLoading, errorMessage) {
-                browseVM.update(lobbies.map { it.toUi() }, isLoading, errorMessage)
-            }
-
             LaunchedEffect(Unit) {
-                lobbyVM.loadLobbies()
-            }
-
-            LaunchedEffect(Unit) {
-                browseVM.effects.collect { effect ->
+                vm.effects.collect { effect ->
                     when (effect) {
                         is LobbyBrowseEffect.JoinLobby -> {
-                            lobbyVM.joinLobbyOrOpen(
-                                lobbyId = effect.lobbyId,
-                                userId = user.uid,
-                                displayName = user.displayName,
-                                onSuccess = {
-                                    navController.navigate("${Routes.WAITING_ROOM}/${it.lobbyId}")
-                                },
-                                onError = {}
-                            )
+                            navController.navigate("${Routes.WAITING_ROOM}/${effect.lobbyId}")
                         }
                         LobbyBrowseEffect.NavigateToCreate ->
                             navController.navigate(Routes.CREATE_LOBBY_FANCY)
@@ -268,7 +238,7 @@ fun NavGraphBuilder.homeGraph(
                 }
             }
 
-            LobbyBrowseScreen(viewModel = browseVM)
+            LobbyBrowseScreen(viewModel = vm)
         }
     }
 }
