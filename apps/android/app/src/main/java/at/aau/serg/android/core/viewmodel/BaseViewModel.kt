@@ -2,8 +2,9 @@ package at.aau.serg.android.core.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import at.aau.serg.android.errors.ErrorMapper
+import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
 import at.aau.serg.android.ui.state.LoadState
+import at.aau.serg.android.ui.util.ErrorUiMapper
 import at.aau.serg.android.util.DefaultDispatcherProvider
 import at.aau.serg.android.util.DispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,7 +33,10 @@ abstract class BaseViewModel(
                 onSuccess(result)
 
             } catch (e: Exception) {
-                _loadState.value = LoadState.Error(ErrorMapper.map(e))
+                val domainError = NetworkErrorMapper.map(e)
+                val uiMessage = ErrorUiMapper.toMessage(domainError)
+
+                _loadState.value = LoadState.Error(domainError)
                 onError()
             }
         }

@@ -19,18 +19,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.LightbulbCircle
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -56,6 +51,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import at.aau.serg.android.ui.components.BackButton
 import at.aau.serg.android.ui.theme.AuthButtonGradientEnd
 import at.aau.serg.android.ui.theme.AuthButtonGradientStart
 import at.aau.serg.android.ui.theme.AuthDarkBackground
@@ -83,20 +79,9 @@ import at.aau.serg.android.ui.theme.AuthLightInput
 import at.aau.serg.android.ui.theme.AuthLightPrimaryText
 import at.aau.serg.android.ui.theme.AuthLightSecondaryText
 import at.aau.serg.android.ui.theme.ThemeState
+import at.aau.serg.android.ui.theme.AuthColors
+import at.aau.serg.android.ui.screens.auth.components.SuggestionChip
 
-private data class AuthColors(
-    val background: Color,
-    val card: Color,
-    val input: Color,
-    val primaryText: Color,
-    val secondaryText: Color,
-    val cardBlue: Color,
-    val borderBlue: Color,
-    val cardPurple: Color,
-    val borderPurple: Color,
-    val cardGreen: Color,
-    val borderGreen: Color,
-)
 
 private fun authColors(darkMode: Boolean): AuthColors = if (darkMode) {
     AuthColors(
@@ -131,12 +116,14 @@ private fun authColors(darkMode: Boolean): AuthColors = if (darkMode) {
 @Composable
 fun AuthScreen(
     viewModel: AuthViewModel = viewModel(),
+    modifier: Modifier = Modifier,
     onContinue: () -> Unit,
     onBack: (() -> Unit)? = null
 ) {
+    val uiState by viewModel.uiState.collectAsState()
 
-    val username by viewModel.username.collectAsState()
-    val validation by viewModel.validation.collectAsState()
+    val username = uiState.username
+    val validation = uiState.validation
 
     val isValid = validation.isValid
     val darkMode = ThemeState.isDarkMode.value
@@ -164,21 +151,14 @@ fun AuthScreen(
             // --- Back button (only when navigated from within the app) ---
             if (onBack != null) {
                 Box(modifier = Modifier.fillMaxWidth()) {
-                    IconButton(
-                        onClick = onBack,
+                    BackButton(
+                        onBack = onBack,
                         modifier = Modifier
                             .align(Alignment.CenterStart)
-                            .size(40.dp)
                             .clip(CircleShape)
-                            .background(colors.card)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = colors.primaryText,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+                            .background(colors.card),
+                        tint = colors.primaryText
+                    )
                 }
                 Spacer(Modifier.height(12.dp))
             }
@@ -355,10 +335,10 @@ fun AuthScreen(
             Spacer(Modifier.height(10.dp))
 
             val suggestions = listOf(
-                "Player_7429" to Icons.Filled.SportsEsports,
-                "TileKing92" to Icons.Filled.Star,
-                "ProGamer_X" to Icons.Filled.WorkspacePremium,
-                "Blaze2024" to Icons.Filled.LocalFireDepartment,
+                "Player7429" to Icons.Filled.SportsEsports,
+                "Gamer456" to Icons.Filled.Star,
+                "TempUser123" to Icons.Filled.WorkspacePremium,
+                "BestGamerEver" to Icons.Filled.LocalFireDepartment,
             )
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -435,80 +415,6 @@ fun AuthScreen(
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center
             )
-        }
-    }
-}
-
-@Composable
-private fun SuggestionChip(
-    label: String,
-    icon: ImageVector,
-    colors: AuthColors,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(colors.card)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = AuthGradientStart,
-            modifier = Modifier.size(16.dp)
-        )
-        Spacer(Modifier.width(6.dp))
-        Text(
-            text = label,
-            color = colors.primaryText,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
-
-@Composable
-private fun FeatureCard(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    iconTint: Color,
-    cardBg: Color,
-    borderColor: Color,
-    primaryText: Color
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(cardBg)
-            .border(1.dp, borderColor, RoundedCornerShape(14.dp))
-            .padding(14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .background(borderColor.copy(alpha = 0.15f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = iconTint,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-        Spacer(Modifier.width(14.dp))
-        Column {
-            Text(text = title, color = primaryText, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-            Text(text = subtitle, color = Color(0xFF9AA6C0), fontSize = 12.sp)
         }
     }
 }

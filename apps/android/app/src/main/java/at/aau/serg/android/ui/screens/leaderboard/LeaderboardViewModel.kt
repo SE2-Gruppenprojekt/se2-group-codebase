@@ -1,8 +1,8 @@
 package at.aau.serg.android.ui.screens.leaderboard
 
-import at.aau.serg.android.network.RetrofitProvider
-import at.aau.serg.android.network.leaderboard.LeaderboardAPI
-import at.aau.serg.android.network.leaderboard.LeaderboardService
+import at.aau.serg.android.core.network.RetrofitProvider
+import at.aau.serg.android.core.network.leaderboard.LeaderboardAPI
+import at.aau.serg.android.core.network.leaderboard.LeaderboardService
 import at.aau.serg.android.core.viewmodel.BaseViewModel
 import at.aau.serg.android.util.DispatcherProvider
 import at.aau.serg.android.util.DefaultDispatcherProvider

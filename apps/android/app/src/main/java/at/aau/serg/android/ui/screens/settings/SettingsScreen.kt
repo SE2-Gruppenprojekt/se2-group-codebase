@@ -36,7 +36,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import at.aau.serg.android.datastore.proto.User
+import androidx.lifecycle.viewmodel.compose.viewModel
+import at.aau.serg.android.ui.components.BackButton
 import at.aau.serg.android.ui.theme.AuthButtonGradientStart
 import at.aau.serg.android.ui.theme.AuthDarkBackground
 import at.aau.serg.android.ui.theme.AuthDarkCard
@@ -46,9 +47,10 @@ import at.aau.serg.android.ui.theme.AuthLightBackground
 import at.aau.serg.android.ui.theme.AuthLightCard
 import at.aau.serg.android.ui.theme.AuthLightPrimaryText
 import at.aau.serg.android.ui.theme.AuthLightSecondaryText
+
 @Composable
 fun SettingsScreen(
-    user: User,
+    viewModel: SettingsViewModel = viewModel(),
     onChangeUsername: () -> Unit,
     onLogout: () -> Unit,
     onBack: () -> Unit,
@@ -76,6 +78,7 @@ fun SettingsScreen(
             .background(background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 28.dp)
+            .testTag(SettingsTestTags.SCREEN)
     ) {
 
         // --- Header ---
@@ -83,20 +86,11 @@ fun SettingsScreen(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onBack),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = primaryText,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            BackButton(
+                onBack = onBack,
+                modifier = Modifier.testTag(SettingsTestTags.BACK_BUTTON),
+                tint = primaryText
+            )
             Spacer(Modifier.width(10.dp))
             Text(
                 text = "Settings",
@@ -167,7 +161,7 @@ fun SettingsScreen(
                         uncheckedThumbColor = Color.White,
                         uncheckedTrackColor = secondaryText.copy(alpha = 0.35f)
                     ),
-                    modifier = Modifier.testTag("settings_darkmode_switch")
+                    modifier = Modifier.testTag(SettingsTestTags.DARK_MODE_SWITCH)
                 )
             }
         }
@@ -195,7 +189,8 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(onClick = onChangeUsername)
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                    .padding(horizontal = 16.dp, vertical = 14.dp)
+                    .testTag(SettingsTestTags.CHANGE_USERNAME_BUTTON),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
@@ -245,7 +240,8 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(onClick = onLogout)
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                    .padding(horizontal = 16.dp, vertical = 14.dp)
+                    .testTag(SettingsTestTags.LOGOUT_BUTTON),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
