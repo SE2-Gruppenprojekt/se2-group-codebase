@@ -2,17 +2,7 @@ package at.aau.serg.android.ui.screens.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
@@ -20,14 +10,10 @@ import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ViewInAr
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,21 +22,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import at.aau.serg.android.ui.components.TopBar
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.theme.ThemeState
+import at.aau.serg.android.ui.util.ErrorUiMapper
 
 @Composable
 fun HomeScreen(
-    state: LoadState,
+    viewModel: HomeViewModel,
     modifier: Modifier = Modifier,
-    onCreateLobby: () -> Unit,
     onBrowseFancyLobbies: () -> Unit,
     onShowLeaderboard: () -> Unit,
     onSettings: () -> Unit,
-    onWaitingRoom: () -> Unit,
     onNewLobbyScreen: () -> Unit
 ) {
-    // read current theme mode
     val darkMode = ThemeState.isDarkMode.value
 
     // background gradient for light and dark mode
@@ -62,12 +47,10 @@ fun HomeScreen(
         )
     )
 
-    val titleColor = if (darkMode) {
-        Color(0xFFEAEFFF)
-    } else {
-        Color(0xFF1D2750)
-    }
+    // title color
+    val titleColor = if (darkMode) Color(0xFFEAEFFF) else Color(0xFF1D2750)
 
+    // subtitle color
     val subtitleColor = if (darkMode) {
         Color.White.copy(alpha = 0.78f)
     } else {
@@ -101,6 +84,7 @@ fun HomeScreen(
 
     // shared ui colors for neutral buttons and bottom profile bar
     val neutralButtonContentColor = if (darkMode) Color.White else Color(0xFF23314C)
+
     val playerBarBackground = if (darkMode) Color(0xFF151D34) else Color(0xFFF3F6FC)
     val playerBarBorder = if (darkMode) Color.White.copy(alpha = 0.05f) else Color(0xFFD5DDEA)
     val playerIconBackground = if (darkMode) Color(0xFF27324A) else Color(0xFFE3E9F4)
@@ -108,46 +92,24 @@ fun HomeScreen(
     val playerLevelColor = if (darkMode) Color(0xFFFFD93D) else Color(0xFFC08A00)
     val xpColor = if (darkMode) Color(0xFF9AA6C0) else Color(0xFF6A7692)
 
+    val uiState by viewModel.uiState.collectAsState()
+    val username = uiState.username
+
     // root screen layout
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(backgroundGradient),
+            .background(backgroundGradient)
+            .testTag(HomeTestTags.SCREEN),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = "RUMMIKUB",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Text(
-                    text = "Main Menu",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.78f)
-                )
-            }
 
-            IconButton(
-                onClick = onSettings,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    contentDescription = "Settings",
-                    tint = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-        }
+        TopBar(
+            subtitle = "Main Menu",
+            onSettings = onSettings,
+            modifier = Modifier.padding(16.dp),
+            settingsButtonModifier = Modifier.testTag(HomeTestTags.SETTINGS_BUTTON)
+        )
 
         // main content section
         Column(
@@ -157,6 +119,7 @@ fun HomeScreen(
                 .padding(horizontal = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
             Spacer(modifier = Modifier.height(18.dp))
 
             // app icon card
@@ -166,10 +129,7 @@ fun HomeScreen(
                     .clip(RoundedCornerShape(28.dp))
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(
-                                Color(0xFF4F8DFF),
-                                Color(0xFF9B42FF)
-                            )
+                            listOf(Color(0xFF4F8DFF), Color(0xFF9B42FF))
                         )
                     ),
                 contentAlignment = Alignment.Center
@@ -199,38 +159,40 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            // loading state
-            if (state is LoadState.Loading) {
-                CircularProgressIndicator(color = if (darkMode) Color.White else Color(0xFF456EFF))
-                Spacer(modifier = Modifier.height(14.dp))
+            when (val state = uiState.loadState) {
+                // loading state
+                LoadState.Loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.testTag(HomeTestTags.LOADING),
+                        color = if (darkMode) Color.White else Color(0xFF9D3CFF)
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+                }
+                // error state
+                is LoadState.Error -> {
+                    Text(
+                        text = ErrorUiMapper.toMessage(state.error),
+                        color = errorColor,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.testTag(HomeTestTags.ERROR_TEXT)
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+                }
+                else -> Unit // includes Idle + Success
             }
 
-            // error state
-            if (state is LoadState.Error) {
-                Text(
-                    text = state.message,
-                    color = errorColor,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(modifier = Modifier.height(14.dp))
-            }
 
             // create lobby screen
             HomeActionButton(
                 text = "Create a Lobby",
                 onClick = onNewLobbyScreen,
                 icon = { tint ->
-                    Icon(
-                        imageVector = Icons.Filled.Person,
-                        contentDescription = null,
-                        tint = tint,
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Icon(Icons.Filled.Person, null, tint = tint, modifier = Modifier.size(24.dp))
                 },
                 containerBrush = Brush.horizontalGradient(
                     colors = listOf(Color(0xE24B68FF), Color(0xD74B3FD4))
                 ),
-                modifier = Modifier.testTag("home_create_lobby_button")
+                modifier = Modifier.testTag(HomeTestTags.CREATE_LOBBY_BUTTON)
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -240,17 +202,12 @@ fun HomeScreen(
                 text = "Browse Lobbies",
                 onClick = onBrowseFancyLobbies,
                 icon = { tint ->
-                    Icon(
-                        imageVector = Icons.Filled.Groups,
-                        contentDescription = null,
-                        tint = tint,
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Icon(Icons.Filled.Groups, null, tint = tint, modifier = Modifier.size(24.dp))
                 },
                 containerBrush = Brush.horizontalGradient(
                     colors = listOf(Color(0xFF9D3CFF), Color(0xFF9D3CFF))
                 ),
-                modifier = Modifier.testTag("home_browse_lobbies_button")
+                modifier = Modifier.testTag(HomeTestTags.BROWSE_LOBBIES_BUTTON)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -260,38 +217,28 @@ fun HomeScreen(
                 text = "Settings",
                 onClick = onSettings,
                 icon = { tint ->
-                    Icon(
-                        imageVector = Icons.Filled.Settings,
-                        contentDescription = null,
-                        tint = tint,
-                        modifier = Modifier.size(22.dp)
-                    )
+                    Icon(Icons.Filled.Settings, null, tint = tint, modifier = Modifier.size(22.dp))
                 },
                 containerBrush = settingsBrush,
-                contentColor = neutralButtonContentColor,
-                modifier = Modifier.testTag("home_settings_list_button")
+                modifier = Modifier.testTag(HomeTestTags.SETTINGS_LIST_BUTTON),
+                contentColor = neutralButtonContentColor
             )
 
             Spacer(modifier = Modifier.height(6.dp))
+
 
             // leaderboard action
             HomeActionButton(
                 text = "Leaderboard",
                 onClick = onShowLeaderboard,
                 icon = { tint ->
-                    Icon(
-                        imageVector = Icons.Filled.EmojiEvents,
-                        contentDescription = null,
-                        tint = tint,
-                        modifier = Modifier.size(22.dp)
-                    )
+                    Icon(Icons.Filled.EmojiEvents, null, tint = tint, modifier = Modifier.size(22.dp))
                 },
                 containerBrush = leaderboardBrush,
-                contentColor = neutralButtonContentColor,
-                modifier = Modifier.testTag("home_leaderboard_button")
+                modifier = Modifier.testTag(HomeTestTags.LEADERBOARD_BUTTON),
+                contentColor = neutralButtonContentColor
             )
 
-            // push bottom profile bar down
             Spacer(modifier = Modifier.weight(1f))
         }
 
@@ -310,10 +257,9 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // left side player identity
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+
+            // player info
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -322,9 +268,9 @@ fun HomeScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Person,
-                        contentDescription = null,
-                        tint = if (darkMode) Color.White.copy(alpha = 0.92f) else Color(0xFF58657F),
+                        Icons.Filled.Person,
+                        null,
+                        tint = playerNameColor,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -333,35 +279,28 @@ fun HomeScreen(
 
                 Column {
                     Text(
-                        text = "Player123",
+                        text = username,
                         color = playerNameColor,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.testTag(HomeTestTags.USERNAME_TEXT)
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "#482731",
-                        color = xpColor,
-                        style = MaterialTheme.typography.bodyMedium
+                        color = xpColor
                     )
                 }
             }
 
-            // right side level and xp
-            Column(
-                horizontalAlignment = Alignment.End
-            ) {
+            // level info
+            Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "Level 12",
                     color = playerLevelColor,
-                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "850 XP",
-                    color = xpColor,
-                    style = MaterialTheme.typography.bodyMedium
+                    color = xpColor
                 )
             }
         }
@@ -374,8 +313,8 @@ private fun HomeActionButton(
     onClick: () -> Unit,
     icon: @Composable (Color) -> Unit,
     containerBrush: Brush,
-    contentColor: Color = Color.White,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    contentColor: Color = Color.White
 ) {
     Button(
         onClick = onClick,
@@ -387,13 +326,8 @@ private fun HomeActionButton(
             containerColor = Color.Transparent,
             contentColor = Color.White
         ),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 0.dp,
-            pressedElevation = 0.dp,
-            focusedElevation = 0.dp,
-            hoveredElevation = 0.dp
-        )
+        contentPadding = PaddingValues(0.dp),
+        elevation = ButtonDefaults.buttonElevation(0.dp)
     ) {
         Box(
             modifier = Modifier
@@ -418,4 +352,3 @@ private fun HomeActionButton(
         }
     }
 }
-

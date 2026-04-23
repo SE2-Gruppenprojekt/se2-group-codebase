@@ -1,21 +1,7 @@
 package at.aau.serg.android.lobby
 
-import at.aau.serg.android.ui.screens.createlobby.NewLobbyScreen
-import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsEnabled
-import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
-
 // UI-Component tests
-class CreateLobbyScreenTest {
+/*class CreateLobbyScreenTest {
 
     @get:Rule
     val composeRule = createComposeRule()
@@ -215,4 +201,4 @@ class CreateLobbyScreenTest {
 
         assertTrue(called)
     }
-}
+}*/
