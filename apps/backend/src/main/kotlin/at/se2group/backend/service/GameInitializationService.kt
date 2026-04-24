@@ -2,9 +2,15 @@ package at.se2group.backend.service
 
 import at.se2group.backend.domain.Lobby
 import at.se2group.backend.domain.Game
+import at.se2group.backend.domain.JokerTile
+import at.se2group.backend.domain.NumberedTile
+import at.se2group.backend.domain.Tile
+import at.se2group.backend.domain.TileColor
+import at.se2group.backend.domain.TileRules
 import at.se2group.backend.domain.TurnDraft
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.util.UUID
 
 /**
  * Service responsible for creating the initial game state from a lobby that has already been
@@ -59,17 +65,36 @@ class GameInitializationService {
      * A future implementation will typically:
      * - create all normal colored numbered tiles
      * - create the joker tiles
-     * - assign unique IDs to each tile
      * - shuffle the final list before returning it
      *
      * This logic is kept in its own method so tile creation stays separate from the larger game
      * initialization flow.
      *
      * @return the shuffled tile pool for one new match
-     * @throws UnsupportedOperationException because tile generation is not implemented yet
      */
-    fun createShuffledTilePool(): List<Any> {
-        throw UnsupportedOperationException("Not implemented yet")
+    fun createShuffledTilePool(): List<Tile> {
+        val tiles = mutableListOf<Tile>()
+
+        repeat(TileRules.NUMBERED_TILE_COPY_COUNT) {
+            for (color in TileColor.entries) {
+                for (number in TileRules.MIN_TILE_NUMBER..TileRules.MAX_TILE_NUMBER) {
+                    tiles += NumberedTile(
+                        tileId = UUID.randomUUID().toString(),
+                        color = color,
+                        number = number
+                    )
+                }
+            }
+        }
+
+        tiles += TileRules.jokerColors.map { color ->
+            JokerTile(
+                tileId = UUID.randomUUID().toString(),
+                color = color
+            )
+        }
+
+        return tiles.shuffled()
     }
 
     /**
