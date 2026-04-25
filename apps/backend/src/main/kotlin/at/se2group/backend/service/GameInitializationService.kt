@@ -51,38 +51,9 @@ class GameInitializationService {
      */
     @Transactional
     fun createGameFromLobby(lobby: Lobby): GameStartResult {
+        throw UnsupportedOperationException("Game initialization is not implemented yet")
     }
 
-    /**
-     * Generates the full tile pool for one new match and returns it in shuffled order.
-     *
-     * A future implementation will typically:
-     * - create all normal colored numbered tiles
-     * - create the joker tiles
-     * - shuffle the final list before returning it
-     *
-     * This logic is kept in its own method so tile creation stays separate from the larger game
-     * initialization flow.
-     *
-     * @return the shuffled tile pool for one new match
-     */
-    fun createShuffledTilePool(): List<Tile> {
-    }
-
-    /**
-     * Determines which player should receive the first turn of the match.
-     *
-     * The exact rule can later be implemented in different ways, for example random selection,
-     * a simple MVP rule, or a more game-accurate opening rule.
-     *
-     * Keeping this logic separate makes the startup flow easier to read and test.
-     *
-     * @param players the players that will participate in the new game
-     * @return the user ID of the player who should start
-     * @throws UnsupportedOperationException because the selection logic is not implemented yet
-     */
-    fun determineFirstPlayerId(players: List<Any>): String {
-    }
 }
 
 /**
