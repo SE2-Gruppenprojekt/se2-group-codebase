@@ -157,7 +157,7 @@ class LobbyService(
 
         val gameStart = gameInitializationService.createGameFromLobby(saved)
 
-        lobbyBroadcastService.broadcastLobbyStarted(saved.lobbyId, gameStart.game.gameId)
+        lobbyBroadcastService.broadcastLobbyStarted(saved.lobbyId, gameStart.confirmedGame.gameId)
         return saved
     }
 

@@ -2,7 +2,7 @@ package at.se2group.backend.domain
 
 import java.time.Instant
 
-data class Game(
+data class ConfirmedGame(
     val gameId: String,
     val lobbyId: String,
     val players: List<GamePlayer>,
@@ -20,7 +20,7 @@ data class Game(
         require(players.isNotEmpty()) { "games must contain at least one player" }
         require(currentPlayerUserId.isNotBlank()) { "currentPlayerUserId must not be blank" }
         require(players.any { it.userId == currentPlayerUserId }) {
-            "currentPlayerUserId must belong to one of the game players"
+            "currentPlayerUserId must belong to one of the confirmedGame players"
         }
     }
 }

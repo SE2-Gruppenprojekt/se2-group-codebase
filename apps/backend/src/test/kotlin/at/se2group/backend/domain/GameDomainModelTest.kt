@@ -91,17 +91,17 @@ class GameDomainModelTest {
             turnOrder = 0
         )
 
-        val game = Game(
-            gameId = "game-1",
+        val confirmedGame = ConfirmedGame(
+            gameId = "confirmedGame-1",
             lobbyId = "lobby-1",
             players = listOf(player),
             currentPlayerUserId = "user-1",
             status = GameStatus.ACTIVE
         )
 
-        assertEquals("game-1", game.gameId)
-        assertEquals(GameStatus.ACTIVE, game.status)
-        assertEquals("user-1", game.currentPlayerUserId)
+        assertEquals("confirmedGame-1", confirmedGame.gameId)
+        assertEquals(GameStatus.ACTIVE, confirmedGame.status)
+        assertEquals("user-1", confirmedGame.currentPlayerUserId)
     }
 
     @Test
@@ -113,8 +113,8 @@ class GameDomainModelTest {
         )
 
         val exception = assertThrows(IllegalArgumentException::class.java) {
-            Game(
-                gameId = "game-1",
+            ConfirmedGame(
+                gameId = "confirmedGame-1",
                 lobbyId = "lobby-1",
                 players = listOf(player),
                 currentPlayerUserId = "user-2"
@@ -122,7 +122,7 @@ class GameDomainModelTest {
         }
 
         assertEquals(
-            "currentPlayerUserId must belong to one of the game players",
+            "currentPlayerUserId must belong to one of the confirmedGame players",
             exception.message
         )
     }
@@ -134,7 +134,7 @@ class GameDomainModelTest {
 
         val exception = assertThrows(IllegalArgumentException::class.java) {
             TurnDraft(
-                gameId = "game-1",
+                gameId = "confirmedGame-1",
                 playerUserId = "user-1",
                 createdAt = createdAt,
                 updatedAt = updatedAt
