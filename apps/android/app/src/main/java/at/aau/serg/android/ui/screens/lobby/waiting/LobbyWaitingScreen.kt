@@ -3,175 +3,161 @@ package at.aau.serg.android.ui.screens.lobby.waiting
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import at.aau.serg.android.ui.components.TopBar
-import at.aau.serg.android.ui.screens.lobby.main.LobbyViewModel
-import at.aau.serg.android.ui.screens.lobby.waiting.components.*
-import at.aau.serg.android.ui.screens.lobby.waiting.components.LobbyUiState.lobbyName
-import at.aau.serg.android.ui.screens.lobby.waiting.components.LobbyUiState.stackEnabled
-import at.aau.serg.android.ui.screens.lobby.waiting.components.LobbyUiState.startingCards
-import at.aau.serg.android.ui.screens.lobby.waiting.components.LobbyUiState.turnTimer
+import androidx.compose.ui.platform.testTag
+import androidx.lifecycle.viewmodel.compose.viewModel
+import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateViewModel
 import at.aau.serg.android.ui.theme.ThemeState
+import shared.models.lobby.domain.Lobby
+
 
 @Composable
-fun WaitingRoomScreen(
-    onBack: () -> Unit,
-    onSettings: () -> Unit,
-    lobbyId: String? = null,
-    viewModel: LobbyViewModel,
-    onStartGame: () -> Unit,
-    userId: String
+fun LobbyWaitingScreen(
+    viewModel: LobbyWaitingViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    LobbyWaitingScreenContent(
+        uiState = uiState,
+        onEvent = viewModel::onEvent
+    )
+}
+
+@Composable
+fun LobbyWaitingScreenContent(
+    uiState: LobbyWaitingUiState,
+    onEvent: (LobbyWaitingEvent) -> Unit
 ) {
     val scrollState = rememberScrollState()
     val darkMode = ThemeState.isDarkMode.value
-    val context = LocalContext.current
 
-    val lobby by viewModel.lobby.collectAsState()
-    val isWebSocketConnected by viewModel.isWebSocketConnected.collectAsState()
+    val players = uiState.lobby?.players ?: emptyList()
+    val joinedCount = uiState.lobby?.players?.size
+    val maxPlayers = uiState.lobby?.settings?.maxPlayers ?: 0
+    val roomCode = uiState.lobby?.lobbyId?.take(6)?.uppercase() ?: "------"
 
-    LaunchedEffect(lobbyId) {
-        lobbyId?.let { viewModel.loadLobby(it) }
-    }
-
-    val players = lobby?.players ?: emptyList()
-    val joinedCount = players.size
-    val maxPlayers = lobby?.settings?.maxPlayers ?: 0
-    val roomCode = lobby?.lobbyId?.take(6)?.uppercase() ?: "------"
-
-    val isLoading = lobby == null
-
-    val gradientTop = if (darkMode) {
-        MaterialTheme.colorScheme.background
-    } else Color(0xFFF5F7FB)
-
-    val gradientBottom = if (darkMode) {
-        MaterialTheme.colorScheme.surface
-    } else Color(0xFFEAEFFF)
-
-    val cardColor = MaterialTheme.colorScheme.surface
-    val primaryTextColor = MaterialTheme.colorScheme.onSurface
-    val secondaryTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-    val buttonColor = MaterialTheme.colorScheme.primary
+    val gradientTop = if (darkMode) MaterialTheme.colorScheme.background else Color(0xFFF5F7FB)
+    val gradientBottom = if (darkMode) MaterialTheme.colorScheme.surface else Color(0xFFEAEFFF)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(gradientTop, gradientBottom)))
     ) {
-        // scrollable content
+
         Column(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(scrollState)
                 .padding(16.dp)
         ) {
-            TopBar(
-                subtitle = lobbyName.value,
-                onBack = onBack,
-                onSettings = onSettings
-            )
 
             Spacer(Modifier.height(12.dp))
 
-            WaitingScreenRoomCard(
-                roomCode = roomCode,
-                joinedCount = joinedCount,
-                maxPlayers = maxPlayers,
-                context = context,
-                primaryTextColor = primaryTextColor,
-                secondaryTextColor = secondaryTextColor,
-                cardColor = cardColor
+            Text(
+                text = "Room Code: $roomCode",
+                modifier = Modifier.testTag(LobbyWaitingTestTags.ROOM_CODE)
             )
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                text = "Players: $joinedCount / $maxPlayers",
+                modifier = Modifier.testTag(LobbyWaitingTestTags.PLAYER_LIST)
+            )
+
+            Spacer(Modifier.height(20.dp))
+
+            Text(
+                text = "Turn Timer: ${uiState.turnTimer}",
+                modifier = Modifier.testTag(LobbyWaitingTestTags.TURN_TIMER_VALUE)
+            )
+
+            Row {
+                Button(
+                    onClick = { onEvent(LobbyWaitingEvent.OnTurnTimerDecrease) },
+                    modifier = Modifier.testTag(LobbyWaitingTestTags.TURN_TIMER_MINUS)
+                ) {
+                    Text("-")
+                }
+
+                Spacer(Modifier.width(8.dp))
+
+                Button(
+                    onClick = { onEvent(LobbyWaitingEvent.OnTurnTimerIncrease) },
+                    modifier = Modifier.testTag(LobbyWaitingTestTags.TURN_TIMER_PLUS)
+                ) {
+                    Text("+")
+                }
+            }
 
             Spacer(Modifier.height(16.dp))
 
-            WaitingScreenPlayerSection(
-                isLoading = isLoading,
-                players = players,
-                fetchedLobby = lobby,
-                maxPlayers = maxPlayers,
-                joinedCount = joinedCount,
-                primaryTextColor = primaryTextColor,
-                secondaryTextColor = secondaryTextColor,
-                darkMode = darkMode
+            Text(
+                text = "Starting Cards: ${uiState.startingCards}",
+                modifier = Modifier.testTag(LobbyWaitingTestTags.STARTING_CARDS_VALUE)
             )
 
-            Spacer(Modifier.height(18.dp))
+            Row {
+                Button(
+                    onClick = { onEvent(LobbyWaitingEvent.OnStartingCardsDecrease) },
+                    modifier = Modifier.testTag(LobbyWaitingTestTags.STARTING_CARDS_MINUS)
+                ) {
+                    Text("-")
+                }
 
-            WaitingScreenSettingsSection(
-                turnTimer = turnTimer,
-                startingCards = startingCards,
-                stackEnabled = stackEnabled,
+                Spacer(Modifier.width(8.dp))
 
-                onTurnTimerMinus = {
-                    if (LobbyUiState.turnTimer.intValue > 10) {
-                        LobbyUiState.turnTimer.intValue -= 10
-                    }
-                },
-                onTurnTimerPlus = {
-                    LobbyUiState.turnTimer.intValue += 10
-                },
+                Button(
+                    onClick = { onEvent(LobbyWaitingEvent.OnStartingCardsIncrease) },
+                    modifier = Modifier.testTag(LobbyWaitingTestTags.STARTING_CARDS_PLUS)
+                ) {
+                    Text("+")
+                }
+            }
 
-                onStartingCardsMinus = {
-                    if (LobbyUiState.startingCards.intValue > 1) {
-                        LobbyUiState.startingCards.intValue -= 1
-                    }
-                },
-                onStartingCardsPlus = {
-                    LobbyUiState.startingCards.intValue += 1
-                },
+            Spacer(Modifier.height(16.dp))
 
-                onStackToggle = {
-                    LobbyUiState.stackEnabled.value = it
-                },
+            Row {
+                Text(
+                    text = "Stack Enabled: ${uiState.stackEnabled}",
+                    modifier = Modifier.testTag(LobbyWaitingTestTags.SETTINGS_SECTION)
+                )
 
-                cardColor = cardColor,
-                primaryTextColor = primaryTextColor,
-                buttonColor = buttonColor
-            )
+                Spacer(Modifier.width(8.dp))
+
+                Switch(
+                    checked = uiState.stackEnabled,
+                    onCheckedChange = {
+                        onEvent(LobbyWaitingEvent.OnStackToggle(it))
+                    },
+                    modifier = Modifier.testTag(LobbyWaitingTestTags.STACK_SWITCH)
+                )
+            }
         }
 
-        // start game button pinned to bottom (host only)
-        if (lobby?.hostUserId == userId) {
+        if (uiState.lobby?.hostUserId == uiState.user?.uid) {
             Button(
-                onClick = onStartGame,
+                onClick = { onEvent(LobbyWaitingEvent.onMatchStart) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp)
-                    .height(56.dp),
-                shape = RoundedCornerShape(18.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF9D3CFF),
-                    contentColor = Color.White
-                )
+                    .padding(16.dp)
+                    .height(56.dp)
+                    .testTag("waiting_start_game_button")
             ) {
-                Icon(
-                    imageVector = Icons.Filled.PlayArrow,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(Modifier.width(8.dp))
                 Text(
                     text = "Start Game",
-                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
         }
     }
+
 }

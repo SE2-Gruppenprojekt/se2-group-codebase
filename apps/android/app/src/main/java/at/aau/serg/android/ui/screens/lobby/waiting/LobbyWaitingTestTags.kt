@@ -2,7 +2,6 @@ package at.aau.serg.android.ui.screens.lobby.waiting
 
 object LobbyWaitingTestTags {
 
-        const val TOP_BAR = "waiting_top_bar"
         const val ROOM_CODE = "waiting_room_code"
         const val PLAYER_LIST = "waiting_player_list"
         const val PLAYER_ITEM = "waiting_player_item"

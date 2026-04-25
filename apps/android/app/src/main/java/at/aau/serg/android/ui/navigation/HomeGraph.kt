@@ -26,13 +26,12 @@ import at.aau.serg.android.ui.screens.leaderboard.LeaderboardViewModel
 import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseEffect
 import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseScreen
 import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseViewModel
-import at.aau.serg.android.ui.screens.lobby.browse.toUi
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateViewModel
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateEffect
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateScreen
-import at.aau.serg.android.ui.screens.lobby.main.LobbyViewModel
-import at.aau.serg.android.ui.screens.lobby.waiting.WaitingRoomScreen
-import shared.models.lobby.domain.LobbyStatus
+import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingEffect
+import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingScreen
+import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingViewModel
 import at.aau.serg.android.ui.screens.settings.SettingsScreen
 import at.aau.serg.android.ui.screens.settings.SettingsViewModel
 import at.aau.serg.android.ui.theme.ThemeState
@@ -138,55 +137,6 @@ fun NavGraphBuilder.homeGraph(
             )
         }
 
-        composable("${Routes.WAITING_ROOM}/{lobbyId}") {
-            val vm: LobbyViewModel = viewModel()
-            val lobbyId = it.arguments?.getString("lobbyId")!!
-
-            val userStore = remember { provider.getStore<User>() }
-            val user by userStore.data.collectAsState(initial = User.getDefaultInstance())
-
-            val lobby by vm.lobby.collectAsState()
-            val matchId by vm.matchId.collectAsState()
-
-            LaunchedEffect(lobbyId) {
-                vm.connectWebSocket(lobbyId)
-            }
-
-            // trigger 1: backend sends lobby.updated with status IN_GAME
-            LaunchedEffect(lobby?.status) {
-                if (lobby?.status == LobbyStatus.IN_GAME) {
-                    navController.navigate("${Routes.GAME}/$lobbyId") {
-                        popUpTo("${Routes.WAITING_ROOM}/{lobbyId}") { inclusive = true }
-                    }
-                }
-            }
-
-            // trigger 2: backend sends lobby.started with matchId
-            LaunchedEffect(matchId) {
-                matchId?.let {
-                    navController.navigate("${Routes.GAME}/$lobbyId") {
-                        popUpTo("${Routes.WAITING_ROOM}/{lobbyId}") { inclusive = true }
-                    }
-                }
-            }
-
-            WaitingRoomScreen(
-                onBack = { navController.popBackStack() },
-                onSettings = { navController.navigate(Routes.SETTINGS) },
-                onStartGame = {
-                    // notify other players in background
-                    vm.startMatch(lobbyId = lobbyId, userId = user.uid)
-                    // navigate immediately without waiting for API or WebSocket
-                    navController.navigate("${Routes.GAME}/$lobbyId") {
-                        popUpTo("${Routes.WAITING_ROOM}/{lobbyId}") { inclusive = true }
-                    }
-                },
-                lobbyId = lobbyId,
-                userId = user.uid,
-                viewModel = vm
-            )
-        }
-
         composable("${Routes.GAME}/{matchId}") {
             GameScreen(
                 onBack = { navController.popBackStack() },
@@ -240,5 +190,31 @@ fun NavGraphBuilder.homeGraph(
 
             LobbyBrowseScreen(viewModel = vm)
         }
+
+        composable(Routes.WAITING_ROOM) {
+            val userStore = remember { provider.getStore<User>() }
+
+            val vm: LobbyWaitingViewModel = viewModel(
+                factory = GenericViewModelFactory { LobbyWaitingViewModel(userStore) }
+            )
+
+            LaunchedEffect(Unit) {
+                vm.effects.collect { effect ->
+                    when (effect) {
+                        is LobbyWaitingEffect.NavigateToMatch ->
+                            navController.navigate("${Routes.GAME}/{matchId}")
+
+                        LobbyWaitingEffect.NavigateToSettings ->
+                            navController.navigate(Routes.SETTINGS)
+
+                        LobbyWaitingEffect.NavigateBack ->
+                            navController.popBackStack()
+                    }
+                }
+            }
+
+            LobbyWaitingScreen(viewModel = vm)
+        }
+
     }
 }

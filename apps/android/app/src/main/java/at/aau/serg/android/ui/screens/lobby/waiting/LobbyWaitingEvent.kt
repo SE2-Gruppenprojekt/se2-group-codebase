@@ -14,4 +14,7 @@ sealed class LobbyWaitingEvent {
 
     object OnBackClicked : LobbyWaitingEvent()
     object OnSettingsClicked : LobbyWaitingEvent()
+
+    object onMatchStart : LobbyWaitingEvent()
+
 }

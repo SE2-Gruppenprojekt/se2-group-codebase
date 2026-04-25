@@ -2,69 +2,46 @@ package at.aau.serg.android.ui.screens.lobby.waiting
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import at.aau.serg.android.core.datastore.ProtoStore
+import at.aau.serg.android.core.network.RetrofitProvider
+import at.aau.serg.android.core.network.lobby.LobbyAPI
+import at.aau.serg.android.core.network.lobby.LobbyService
+import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
+import at.aau.serg.android.core.network.mapper.toDomain
+import at.aau.serg.android.datastore.proto.User
+import at.aau.serg.android.ui.state.LoadState
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.update
-import at.aau.serg.android.ui.screens.lobby.main.LobbyViewModel
+import shared.models.lobby.domain.Lobby
 
 class LobbyWaitingViewModel(
-    private val lobbyViewModel: LobbyViewModel
+    private val userStore: ProtoStore<User>,
+    private val api: LobbyAPI = LobbyAPI(
+        RetrofitProvider.retrofit.create(LobbyService::class.java)
+    ),
+
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(LobbyWaitingUiState())
-    val uiState = _uiState.asStateFlow()
+    val _uiState = MutableStateFlow(LobbyWaitingUiState())
+    val uiState: StateFlow<LobbyWaitingUiState> = _uiState.asStateFlow()
 
     private val _effect = MutableSharedFlow<LobbyWaitingEffect>()
-    val effect = _effect.asSharedFlow()
+    val effects: SharedFlow<LobbyWaitingEffect> = _effect.asSharedFlow()
 
     init {
-        observeLobby()
-        observeMatchStart()
-        observeLobbyDeleted()
-    }
-
-    private fun observeLobby() {
         viewModelScope.launch {
-            lobbyViewModel.lobby.collect { lobby ->
-                _uiState.update { current ->
-                    current.copy(
-                        lobbyName = lobby?.lobbyId ?: "",
-                        players = lobby?.players ?: emptyList(),
-                        isLoading = lobby == null
-                    )
-                }
-            }
-        }
-    }
-
-    private fun observeMatchStart() {
-        viewModelScope.launch {
-            lobbyViewModel.matchId.collect { matchId ->
-                if (matchId != null) {
-                    _effect.emit(
-                        LobbyWaitingEffect.NavigateToMatch(matchId)
-                    )
-                }
-            }
-        }
-    }
-
-    private fun observeLobbyDeleted() {
-        viewModelScope.launch {
-            lobbyViewModel.isDeleted.collect { deleted ->
-                if (deleted) {
-                    _effect.emit(LobbyWaitingEffect.NavigateBack)
-                }
+            userStore.data.collect { user ->
+                _uiState.update { it.copy(user = user) }
             }
         }
     }
 
     fun onEvent(event: LobbyWaitingEvent) {
+
         when (event) {
 
             is LobbyWaitingEvent.OnLoadLobby -> {
-                lobbyViewModel.loadLobby(event.lobbyId)
-                lobbyViewModel.connectWebSocket(event.lobbyId)
+                loadLobby(event.lobbyId)
             }
 
             LobbyWaitingEvent.OnTurnTimerIncrease -> {
@@ -108,8 +85,76 @@ class LobbyWaitingViewModel(
             }
 
             LobbyWaitingEvent.OnSettingsClicked -> {
-                // optional
+                viewModelScope.launch {
+                    _effect.emit(LobbyWaitingEffect.NavigateToSettings)
+                }
+            }
+
+            LobbyWaitingEvent.onMatchStart -> {
+               startMatch()
+            }
+        }
+    }
+
+    private fun loadLobby(lobbyId: String) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(loadState = LoadState.Loading)
+            }
+
+            try {
+                val lobby: Lobby = api.getLobby(lobbyId).toDomain()
+
+                _uiState.update {
+                    it.copy(
+                        loadState = LoadState.Success,
+                        lobby = lobby,
+
+                    )
+                }
+
+            } catch (e: Throwable) {
+                val appError = NetworkErrorMapper.map(e)
+
+                _uiState.update {
+                    it.copy(loadState = LoadState.Error(appError))
+                }
+            }
+        }
+    }
+
+    private fun startMatch() {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(loadState = LoadState.Loading)
+            }
+
+            val user = userStore.data.first()
+            val state = _uiState.value
+
+
+            try {
+                val result = api.startMatch(user.uid, state.lobby?.lobbyId ?: " ")
+                _uiState.update {
+                    it.copy(
+                        loadState = LoadState.Success
+
+                        )
+                }
+
+                viewModelScope.launch {
+                    _effect.emit(LobbyWaitingEffect.NavigateToMatch)
+                }
+
+            } catch (e: Throwable) {
+                val appError = NetworkErrorMapper.map(e)
+
+                _uiState.update {
+                    it.copy(loadState = LoadState.Error(appError))
+                }
             }
         }
     }
 }
+
+

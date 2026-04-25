@@ -1,10 +1,13 @@
 package at.aau.serg.android.ui.screens.lobby.waiting
 
+import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseEffect
+
 sealed class LobbyWaitingEffect {
 
-    data class NavigateToMatch(val matchId: String) : LobbyWaitingEffect()
+    object NavigateToMatch: LobbyWaitingEffect()
 
     object NavigateBack : LobbyWaitingEffect()
 
-    data class ShowError(val message: String) : LobbyWaitingEffect()
+
+    object NavigateToSettings : LobbyWaitingEffect()
 }
