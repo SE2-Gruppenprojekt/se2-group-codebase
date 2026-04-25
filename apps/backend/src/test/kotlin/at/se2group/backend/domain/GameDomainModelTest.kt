@@ -8,59 +8,29 @@ import java.time.Instant
 class GameDomainModelTest {
 
     @Test
-    fun `creates numbered tile with id color and number`() {
+    fun `creates numbered tile with color and number`() {
         val tile = NumberedTile(
-            tileId = "tile-1",
             color = TileColor.BLUE,
             number = 7
         )
 
-        assertEquals("tile-1", tile.tileId)
         assertEquals(TileColor.BLUE, tile.color)
         assertEquals(7, tile.number)
     }
 
     @Test
-    fun `creates joker tile with id and valid joker color`() {
+    fun `creates joker tile with color`() {
         val tile = JokerTile(
-            tileId = "joker-1",
             color = TileRules.jokerColors.first()
         )
 
-        assertEquals("joker-1", tile.tileId)
         assertEquals(TileRules.jokerColors.first(), tile.color)
-    }
-
-    @Test
-    fun `rejects numbered tile with blank id`() {
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            NumberedTile(
-                tileId = "",
-                color = TileColor.BLUE,
-                number = 7
-            )
-        }
-
-        assertEquals("tileId must not be blank", exception.message)
-    }
-
-    @Test
-    fun `rejects joker tile with blank id`() {
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            JokerTile(
-                tileId = "",
-                color = TileRules.jokerColors.first()
-            )
-        }
-
-        assertEquals("tileId must not be blank", exception.message)
     }
 
     @Test
     fun `rejects numbered tile above valid range`() {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             NumberedTile(
-                tileId = "tile-1",
                 color = TileColor.RED,
                 number = TileRules.MAX_TILE_NUMBER + 1
             )
@@ -76,7 +46,6 @@ class GameDomainModelTest {
     fun `rejects numbered tile below valid range`() {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             NumberedTile(
-                tileId = "tile-1",
                 color = TileColor.BLUE,
                 number = TileRules.MIN_TILE_NUMBER - 1
             )
