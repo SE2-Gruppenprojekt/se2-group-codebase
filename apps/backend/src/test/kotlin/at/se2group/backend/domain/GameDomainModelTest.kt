@@ -20,26 +20,21 @@ class GameDomainModelTest {
 
     @Test
     fun `creates joker tile with color`() {
-        val tile = JokerTile(
-            color = TileRules.jokerColors.first()
-        )
+        val tile = JokerTile(color = TileColor.RED)
 
-        assertEquals(TileRules.jokerColors.first(), tile.color)
+        assertEquals(TileColor.RED, tile.color)
     }
 
     @Test
-    fun `rejects numbered tile above valid range`() {
+    fun `rejects numbered tile outside valid range`() {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             NumberedTile(
                 color = TileColor.RED,
-                number = TileRules.MAX_TILE_NUMBER + 1
+                number = 14
             )
         }
 
-        assertEquals(
-            "tile number must be between ${TileRules.MIN_TILE_NUMBER} and ${TileRules.MAX_TILE_NUMBER}",
-            exception.message
-        )
+        assertEquals("tile number must be between 1 and 13", exception.message)
     }
 
     @Test
@@ -47,14 +42,11 @@ class GameDomainModelTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             NumberedTile(
                 color = TileColor.BLUE,
-                number = TileRules.MIN_TILE_NUMBER - 1
+                number = 0
             )
         }
 
-        assertEquals(
-            "tile number must be between ${TileRules.MIN_TILE_NUMBER} and ${TileRules.MAX_TILE_NUMBER}",
-            exception.message
-        )
+        assertEquals("tile number must be between 1 and 13", exception.message)
     }
 
     @Test
@@ -84,28 +76,28 @@ class GameDomainModelTest {
     }
 
     @Test
-    fun `creates game with player and current turn`() {
+    fun `creates confirmed game with player and current turn`() {
         val player = GamePlayer(
             userId = "user-1",
             displayName = "Alice",
             turnOrder = 0
         )
 
-        val confirmedGame = ConfirmedGame(
-            gameId = "confirmedGame-1",
+        val game = ConfirmedGame(
+            gameId = "game-1",
             lobbyId = "lobby-1",
             players = listOf(player),
             currentPlayerUserId = "user-1",
             status = GameStatus.ACTIVE
         )
 
-        assertEquals("confirmedGame-1", confirmedGame.gameId)
-        assertEquals(GameStatus.ACTIVE, confirmedGame.status)
-        assertEquals("user-1", confirmedGame.currentPlayerUserId)
+        assertEquals("game-1", game.gameId)
+        assertEquals(GameStatus.ACTIVE, game.status)
+        assertEquals("user-1", game.currentPlayerUserId)
     }
 
     @Test
-    fun `rejects game when current player is not part of game`() {
+    fun `rejects confirmed game when current player is not part of game`() {
         val player = GamePlayer(
             userId = "user-1",
             displayName = "Alice",
@@ -114,7 +106,7 @@ class GameDomainModelTest {
 
         val exception = assertThrows(IllegalArgumentException::class.java) {
             ConfirmedGame(
-                gameId = "confirmedGame-1",
+                gameId = "game-1",
                 lobbyId = "lobby-1",
                 players = listOf(player),
                 currentPlayerUserId = "user-2"
@@ -122,7 +114,7 @@ class GameDomainModelTest {
         }
 
         assertEquals(
-            "currentPlayerUserId must belong to one of the confirmedGame players",
+            "currentPlayerUserId must belong to one of the game players",
             exception.message
         )
     }
@@ -134,7 +126,7 @@ class GameDomainModelTest {
 
         val exception = assertThrows(IllegalArgumentException::class.java) {
             TurnDraft(
-                gameId = "confirmedGame-1",
+                gameId = "game-1",
                 playerUserId = "user-1",
                 createdAt = createdAt,
                 updatedAt = updatedAt
