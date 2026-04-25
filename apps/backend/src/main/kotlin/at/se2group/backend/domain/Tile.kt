@@ -1,7 +1,7 @@
 package at.se2group.backend.domain
 
 sealed interface Tile {
-    abstract val color: TileColor
+    val color: TileColor
 }
 
 data class NumberedTile(
