@@ -51,7 +51,6 @@ class GameInitializationService {
      */
     @Transactional
     fun createGameFromLobby(lobby: Lobby): GameStartResult {
-        throw UnsupportedOperationException("Not implemented yet")
     }
 
     /**
@@ -68,7 +67,6 @@ class GameInitializationService {
      * @return the shuffled tile pool for one new match
      */
     fun createShuffledTilePool(): List<Tile> {
-        throw UnsupportedOperationException("Not implemented yet")
     }
 
     /**
@@ -84,7 +82,6 @@ class GameInitializationService {
      * @throws UnsupportedOperationException because the selection logic is not implemented yet
      */
     fun determineFirstPlayerId(players: List<Any>): String {
-        throw UnsupportedOperationException("Not implemented yet")
     }
 }
 
