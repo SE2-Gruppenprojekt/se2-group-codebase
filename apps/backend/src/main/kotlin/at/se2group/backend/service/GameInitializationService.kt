@@ -18,9 +18,6 @@ import java.util.UUID
  * - create the initial confirmed [ConfirmedGame]
  * - create the initial [TurnDraft]
  * - return both values as a [GameStartResult]
- *
- * This class is currently only a skeleton. The methods are intentionally unimplemented so the
- * startup flow can be added step by step later.
  */
 @Service
 class GameInitializationService(
@@ -53,7 +50,6 @@ class GameInitializationService(
      *
      * @param lobby the validated lobby from which the confirmedGame should be created
      * @return the created confirmedGame and first draft
-     * @throws UnsupportedOperationException because the startup flow is not implemented yet
      */
     @Transactional
     fun createGameFromLobby(lobby: Lobby): GameStartResult {
@@ -75,7 +71,8 @@ class GameInitializationService(
         val playersWithHands = tileShuffleService.distributedHands(basePlayers, tiles)
         val drawPile = tileShuffleService.createDrawPile(tiles, playersWithHands)
 
-        val firstPlayerId = playersWithHands.random().userId
+        val firstPlayer = playersWithHands.minByOrNull { it.turnOrder }
+            ?: throw IllegalArgumentException("players must not be empty")
 
         val confirmedGame = ConfirmedGame(
             gameId = UUID.randomUUID().toString(),
@@ -83,16 +80,15 @@ class GameInitializationService(
             players = playersWithHands,
             boardSets = emptyList(),
             drawPile = drawPile,
-            currentPlayerUserId = firstPlayerId,
+            currentPlayerUserId = firstPlayer.userId,
             status = GameStatus.ACTIVE
         )
 
-        val starter = confirmedGame.players.first { it.userId == firstPlayerId }
         val draft = TurnDraft(
             gameId = confirmedGame.gameId,
-            playerUserId = starter.userId,
+            playerUserId = firstPlayer.userId,
             boardSets = emptyList(),
-            rackTiles = starter.rackTiles
+            rackTiles = firstPlayer.rackTiles
         )
         return GameStartResult(confirmedGame, draft )
     }

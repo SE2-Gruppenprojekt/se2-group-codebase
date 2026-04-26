@@ -83,18 +83,16 @@ class GameInitializationServiceTest {
         assertEquals(14, firstPlayer.rackTiles.size)
         assertEquals(14, secondPlayer.rackTiles.size)
         assertEquals(28, result.confirmedGame.players.sumOf { it.rackTiles.size })
+        assertEquals("host-1", result.confirmedGame.currentPlayerUserId)
 
         val allDistributedTiles = result.confirmedGame.players.flatMap { it.rackTiles }
         val allGameTiles = allDistributedTiles + result.confirmedGame.drawPile
         assertEquals(40, allGameTiles.size)
         assertEquals(orderedPool.toSet(), allGameTiles.toSet())
 
-        val starter = result.confirmedGame.players.first {
-            it.userId == result.confirmedGame.currentPlayerUserId
-        }
         assertEquals(result.confirmedGame.gameId, result.turnDraft?.gameId)
-        assertEquals(starter.userId, result.turnDraft?.playerUserId)
-        assertEquals(starter.rackTiles, result.turnDraft?.rackTiles)
+        assertEquals(firstPlayer.userId, result.turnDraft?.playerUserId)
+        assertEquals(firstPlayer.rackTiles, result.turnDraft?.rackTiles)
         assertEquals(emptyList<Nothing>(), result.turnDraft?.boardSets)
 
         verify(tilePoolGenerationService).createTilePool()
