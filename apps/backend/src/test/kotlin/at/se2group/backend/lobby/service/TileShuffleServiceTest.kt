@@ -8,6 +8,7 @@ import at.se2group.backend.service.TileShuffleService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertIterableEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class TileShuffleServiceTest {
 
@@ -38,6 +39,21 @@ class TileShuffleServiceTest {
         assertIterableEquals(tiles.subList(14, 28), result[1].rackTiles)
         assertEquals("user-1", result[0].userId)
         assertEquals("user-2", result[1].userId)
+    }
+
+    @Test
+    fun `distributedHands rejects when there are not enough tiles for all players`() {
+        val players = listOf(
+            GamePlayer(userId = "user-1", displayName = "Alice", turnOrder = 0),
+            GamePlayer(userId = "user-2", displayName = "Bob", turnOrder = 1)
+        )
+        val tiles = createNumberedTiles(1, 27)
+
+        val exception = assertThrows<IllegalArgumentException> {
+            tileShuffleService.distributedHands(players, tiles)
+        }
+
+        assertEquals("Not enough tiles to distribute 14 tiles to 2 players", exception.message)
     }
 
     @Test

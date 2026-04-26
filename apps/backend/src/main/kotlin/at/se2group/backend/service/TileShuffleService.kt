@@ -18,6 +18,10 @@ class TileShuffleService {
         players: List<GamePlayer>,
         tiles: List<Tile>
     ): List<GamePlayer> {
+        val requiredTiles = players.size * HAND_SIZE
+        require(tiles.size >= requiredTiles) {
+            "Not enough tiles to distribute $HAND_SIZE tiles to ${players.size} players"
+        }
 
         var index = 0
 
