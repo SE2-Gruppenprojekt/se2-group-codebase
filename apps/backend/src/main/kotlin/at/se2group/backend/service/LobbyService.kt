@@ -155,7 +155,8 @@ class LobbyService(
 
         val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
 
-        lobbyBroadcastService.broadcastLobbyStarted(saved.lobbyId, saved.lobbyId)
+        val gameStart = gameInitializationService.createGameFromLobby(saved)
+        lobbyBroadcastService.broadcastLobbyStarted(saved.lobbyId, gameStart.confirmedGame.gameId)
         return saved
     }
 

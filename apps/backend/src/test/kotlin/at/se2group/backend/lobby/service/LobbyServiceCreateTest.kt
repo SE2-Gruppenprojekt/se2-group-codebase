@@ -5,6 +5,7 @@ import at.se2group.backend.dto.CreateLobbyRequest
 import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.persistence.LobbyRepository
 import at.se2group.backend.service.LobbyBroadcastService
+import at.se2group.backend.service.GameInitializationService
 import at.se2group.backend.service.LobbyService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -31,6 +32,9 @@ class LobbyServiceCreateTest {
 
     @Mock
     lateinit var lobbyBroadcastService: LobbyBroadcastService
+
+    @Mock
+    lateinit var gameInitializationService: GameInitializationService
 
     @InjectMocks
     lateinit var lobbyService: LobbyService
