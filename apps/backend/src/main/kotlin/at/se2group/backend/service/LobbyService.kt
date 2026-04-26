@@ -18,7 +18,8 @@ import java.time.Instant
 @Transactional(readOnly = true)
 class LobbyService(
     private val lobbyRepository: LobbyRepository,
-    private val lobbyBroadcastService: LobbyBroadcastService) {
+    private val lobbyBroadcastService: LobbyBroadcastService,
+    private val gameInitializationService: GameInitializationService) {
 
     companion object {
         const val MAX_PLAYERS = 8
@@ -153,7 +154,9 @@ class LobbyService(
         )
 
         val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
-        lobbyBroadcastService.broadcastLobbyStarted(saved.lobbyId, saved.lobbyId)
+
+        val gameStart = gameInitializationService.createGameFromLobby(saved)
+        lobbyBroadcastService.broadcastLobbyStarted(saved.lobbyId, gameStart.confirmedGame.gameId)
         return saved
     }
 
@@ -216,27 +219,27 @@ class LobbyService(
         return saved
     }
 
-     @Transactional
-     fun unreadyLobby(lobbyId: String, userId: String): Lobby {
-         val lobby = getLobby(lobbyId)
+    @Transactional
+    fun unreadyLobby(lobbyId: String, userId: String): Lobby {
+        val lobby = getLobby(lobbyId)
 
-         if(lobby.status != LobbyStatus.OPEN) {
-             throw IllegalStateException("You cannot change the ready status, while lobby is not open")
-         }
+        if(lobby.status != LobbyStatus.OPEN) {
+            throw IllegalStateException("You cannot change the ready status, while lobby is not open")
+        }
 
-         if(lobby.players.none {it.userId == userId}) {
-             throw IllegalArgumentException("No player found in this lobby")
-         }
+        if(lobby.players.none {it.userId == userId}) {
+            throw IllegalArgumentException("No player found in this lobby")
+        }
 
-         val updatedLobby = lobby.copy(
-             players = lobby.players.map {
-                 if (it.userId == userId) it.copy(isReady = false) else it
-             }
-         )
-         val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
-         lobbyBroadcastService.broadcastLobbyUpdated(saved)
-         return saved
-     }
+        val updatedLobby = lobby.copy(
+            players = lobby.players.map {
+                if (it.userId == userId) it.copy(isReady = false) else it
+            }
+        )
+        val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        return saved
+    }
 
     fun deleteLobby(lobbyId: String, userId: String) {
         val lobby = getLobby(lobbyId)
