@@ -1,5 +1,7 @@
 package at.aau.serg.android.ui.screens.lobby.waiting
 
+import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseEvent
+
 sealed class LobbyWaitingEvent {
 
     object OnTurnTimerIncrease : LobbyWaitingEvent()
@@ -16,5 +18,8 @@ sealed class LobbyWaitingEvent {
     object OnSettingsClicked : LobbyWaitingEvent()
 
     object onMatchStart : LobbyWaitingEvent()
+
+    object OnSettings : LobbyWaitingEvent()
+    object OnBack : LobbyWaitingEvent()
 
 }

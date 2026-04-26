@@ -13,7 +13,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
+import at.aau.serg.android.ui.components.TopBar
+import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseEvent
+import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateTestTags
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateViewModel
+import at.aau.serg.android.ui.screens.lobby.waiting.components.LobbyUiState.lobbyName
 import at.aau.serg.android.ui.theme.ThemeState
 import shared.models.lobby.domain.Lobby
 
@@ -26,14 +30,18 @@ fun LobbyWaitingScreen(
 
     LobbyWaitingScreenContent(
         uiState = uiState,
-        onEvent = viewModel::onEvent
+        onEvent = viewModel::onEvent,
+        onBack = { viewModel.onEvent(LobbyWaitingEvent.OnBack) },
+        onSettings = { viewModel.onEvent(LobbyWaitingEvent.OnSettings) },
     )
 }
 
 @Composable
 fun LobbyWaitingScreenContent(
     uiState: LobbyWaitingUiState,
-    onEvent: (LobbyWaitingEvent) -> Unit
+    onEvent: (LobbyWaitingEvent) -> Unit,
+    onBack:() -> Unit,
+    onSettings:() -> Unit
 ) {
     val scrollState = rememberScrollState()
     val darkMode = ThemeState.isDarkMode.value
@@ -52,12 +60,18 @@ fun LobbyWaitingScreenContent(
             .background(Brush.verticalGradient(listOf(gradientTop, gradientBottom)))
     ) {
 
+
         Column(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(scrollState)
                 .padding(16.dp)
         ) {
+            TopBar(
+                subtitle = lobbyName.value,
+                onBack = onBack,
+                onSettings = onSettings
+            )
 
             Spacer(Modifier.height(12.dp))
 
