@@ -18,8 +18,7 @@ import java.time.Instant
 @Transactional(readOnly = true)
 class LobbyService(
     private val lobbyRepository: LobbyRepository,
-    private val lobbyBroadcastService: LobbyBroadcastService,
-    private val gameInitializationService: GameInitializationService) {
+    private val lobbyBroadcastService: LobbyBroadcastService) {
 
     companion object {
         const val MAX_PLAYERS = 8
@@ -156,8 +155,6 @@ class LobbyService(
         val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
 
         lobbyBroadcastService.broadcastLobbyStarted(saved.lobbyId, saved.lobbyId)
-        val gameStart = gameInitializationService.createGameFromLobby(saved)
-        lobbyBroadcastService.broadcastLobbyStarted(saved.lobbyId, gameStart.confirmedGame.gameId)
         return saved
     }
 
