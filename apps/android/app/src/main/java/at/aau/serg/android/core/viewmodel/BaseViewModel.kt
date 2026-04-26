@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
 import at.aau.serg.android.ui.state.LoadState
+import at.aau.serg.android.ui.util.DefaultDispatcherProvider
+import at.aau.serg.android.ui.util.DispatcherProvider
 import at.aau.serg.android.ui.util.ErrorUiMapper
-import at.aau.serg.android.util.DefaultDispatcherProvider
-import at.aau.serg.android.util.DispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
