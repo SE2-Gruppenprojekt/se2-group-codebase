@@ -114,7 +114,7 @@ fun LobbyBrowseScreenContent(
         ) {
             OutlinedTextField(
                 value = uiState.lobbyIdInput,
-                onValueChange = { viewModel.onEvent(LobbyBrowseEvent.OnLobbyIdChanged(it)) },
+                onValueChange = { onEvent(LobbyBrowseEvent.OnLobbyIdChanged(it)) },
                 modifier = Modifier
                     .weight(1f)
                     .testTag(LobbyBrowseTestTags.LOBBY_ID_INPUT),
@@ -232,7 +232,6 @@ fun LobbyBrowseScreenContent(
 
         // create button
         Button(
-            onClick = { viewModel.onEvent(LobbyBrowseEvent.OnCreateNewLobby) },
             onClick = { onEvent(LobbyBrowseEvent.OnCreateNewLobby) },
             modifier = Modifier
                 .testTag(LobbyBrowseTestTags.CREATE_BUTTON)

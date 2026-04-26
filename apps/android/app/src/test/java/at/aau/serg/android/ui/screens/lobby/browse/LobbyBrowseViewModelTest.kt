@@ -47,7 +47,6 @@ class LobbyBrowseViewModelTest {
     }
 
     @Test
-    @Test
     fun initialState_hasNullErrorMessage() {
         assertNull(viewModel.uiState.value.errorMessage)
     }
