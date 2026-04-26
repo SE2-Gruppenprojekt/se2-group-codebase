@@ -4,11 +4,11 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import at.aau.serg.android.core.datastore.InMemoryProtoStore
 import at.aau.serg.android.datastore.proto.User
+import at.aau.serg.android.ui.state.LoadState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -19,33 +19,35 @@ class HomeScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
 
-    private lateinit var store: InMemoryProtoStore<User>
-    private lateinit var viewModel: HomeViewModel
+    private var fakeUser: User = User.newBuilder()
+        .setUid("1")
+        .setDisplayName("Alice")
+        .build()
+
+    private fun setScreen(
+        user: User = fakeUser,
+        loadState: LoadState = LoadState.Success,
+        onEvent: (HomeEvent) -> Unit = {}
+    ) {
+        composeRule.setContent {
+            HomeScreenContent(
+                uiState = HomeUiState(
+                    user = user,
+                    loadState = loadState
+                ),
+                onEvent = onEvent
+            )
+        }
+    }
 
     @Before
     fun setup() {
-        store = InMemoryProtoStore(
-            User.newBuilder()
-                .setUid("1")
-                .setDisplayName("Alice")
-                .build()
-        )
-
-        viewModel = HomeViewModel(store)
     }
+
 
     @Test
     fun screen_is_displayed() {
-        composeRule.setContent {
-            HomeScreen(
-                viewModel = viewModel,
-                onNewLobbyScreen = {},
-                onBrowseFancyLobbies = {},
-                onShowLeaderboard = {},
-                onSettings = {}
-            )
-        }
-
+        setScreen()
         composeRule
             .onNodeWithTag(HomeTestTags.SCREEN)
             .assertExists()
@@ -53,15 +55,7 @@ class HomeScreenTest {
 
     @Test
     fun username_isDisplayed() = runTest {
-        composeRule.setContent {
-            HomeScreen(
-                viewModel = viewModel,
-                onNewLobbyScreen = {},
-                onBrowseFancyLobbies = {},
-                onShowLeaderboard = {},
-                onSettings = {}
-            )
-        }
+        setScreen()
 
         composeRule
             .onNodeWithText("Alice")
@@ -70,15 +64,7 @@ class HomeScreenTest {
 
     @Test
     fun username_is_displayed_with_tag() {
-        composeRule.setContent {
-            HomeScreen(
-                viewModel = viewModel,
-                onNewLobbyScreen = {},
-                onBrowseFancyLobbies = {},
-                onShowLeaderboard = {},
-                onSettings = {}
-            )
-        }
+        setScreen()
 
         composeRule
             .onNodeWithTag(HomeTestTags.USERNAME_TEXT)
@@ -86,86 +72,36 @@ class HomeScreenTest {
     }
 
     @Test
-    fun createLobbyButton_triggersCallback() = runTest {
-        var clicked = false
+    fun buttons_trigger_events() {
+        val events = mutableListOf<HomeEvent>()
 
-        composeRule.setContent {
-            HomeScreen(
-                viewModel = viewModel,
-                onNewLobbyScreen = { clicked = true },
-                onBrowseFancyLobbies = {},
-                onShowLeaderboard = {},
-                onSettings = {}
-            )
-        }
+        setScreen(onEvent = { events.add(it) })
 
         composeRule
-            .onNodeWithTag(HomeTestTags.CREATE_LOBBY_BUTTON)
+            .onNodeWithTag(HomeTestTags.ACTION_CREATE_LOBBY)
             .performClick()
-
-        assertTrue(clicked)
-    }
-
-    @Test
-    fun browseLobbyButton_triggersCallback() {
-        var clicked = false
-
-        composeRule.setContent {
-            HomeScreen(
-                viewModel = viewModel,
-                onNewLobbyScreen = {},
-                onBrowseFancyLobbies = { clicked = true },
-                onShowLeaderboard = {},
-                onSettings = {}
-            )
-        }
 
         composeRule
-            .onNodeWithTag(HomeTestTags.BROWSE_LOBBIES_BUTTON)
+            .onNodeWithTag(HomeTestTags.ACTION_BROWSE_LOBBY)
             .performClick()
-
-        assertTrue(clicked)
-    }
-
-    @Test
-    fun settingsButton_triggersCallback() {
-        var clicked = false
-
-        composeRule.setContent {
-            HomeScreen(
-                viewModel = viewModel,
-                onNewLobbyScreen = {},
-                onBrowseFancyLobbies = {},
-                onShowLeaderboard = {},
-                onSettings = { clicked = true }
-            )
-        }
 
         composeRule
-            .onNodeWithTag(HomeTestTags.SETTINGS_BUTTON)
+            .onNodeWithTag(HomeTestTags.ACTION_SETTINGS)
             .performClick()
-
-        assertTrue(clicked)
-    }
-
-    @Test
-    fun leaderboardButton_triggersCallback() {
-        var clicked = false
-
-        composeRule.setContent {
-            HomeScreen(
-                viewModel = viewModel,
-                onNewLobbyScreen = {},
-                onBrowseFancyLobbies = {},
-                onShowLeaderboard = { clicked = true },
-                onSettings = {}
-            )
-        }
 
         composeRule
-            .onNodeWithTag(HomeTestTags.LEADERBOARD_BUTTON)
+            .onNodeWithTag(HomeTestTags.TOPBAR_SETTINGS_BUTTON)
             .performClick()
 
-        assertTrue(clicked)
+
+        assertEquals(
+            listOf(
+                HomeEvent.OnCreateLobby,
+                HomeEvent.OnBrowseLobby,
+                HomeEvent.OnSettings,
+                HomeEvent.OnSettings
+            ),
+            events
+        )
     }
 }
