@@ -49,25 +49,34 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import at.aau.serg.android.ui.components.TopBar
 import at.aau.serg.android.ui.screens.lobby.create.components.LargeSelectableBox
 import at.aau.serg.android.ui.screens.lobby.create.components.NumericSettingRow
 import at.aau.serg.android.ui.screens.lobby.create.components.SectionTitle
 import at.aau.serg.android.ui.screens.lobby.create.components.SelectableBox
 import at.aau.serg.android.ui.screens.lobby.create.components.ToggleSettingRow
-import at.aau.serg.android.ui.components.TopBar
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.theme.ThemeState
 
 @Composable
 fun LobbyCreateScreen(
-    viewModel: LobbyCreateViewModel = viewModel(),
-    onBack: () -> Unit,
-    onSettings: () -> Unit
+    viewModel: LobbyCreateViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    LobbyCreateScreenContent(
+        uiState = uiState,
+        onEvent = viewModel::onEvent
+    )
+}
+
+@Composable
+fun LobbyCreateScreenContent(
+    uiState: LobbyCreateUiState,
+    onEvent: (LobbyCreateEvent) -> Unit
 ) {
     val darkMode = ThemeState.isDarkMode.value
     val context = LocalContext.current
-
-    val uiState by viewModel.uiState.collectAsState()
 
     // align dark mode with waiting room styling
     val bgTop = if (darkMode) MaterialTheme.colorScheme.background else Color(0xFFF5F7FB)
@@ -90,13 +99,6 @@ fun LobbyCreateScreen(
     }
     val roomCode = remember { "XK7P2M" }
 
-    // local form state
-
-    /*
-        TODO: if those are implemented in backend move them to state
-                else delete later
-     */
-
     Column(
         modifier = Modifier
             .testTag(LobbyCreateTestTags.SCREEN)
@@ -111,8 +113,8 @@ fun LobbyCreateScreen(
     ) {
         TopBar(
             subtitle = "Create New Lobby",
-            onBack = onBack,
-            onSettings = onSettings,
+            onBack = { onEvent(LobbyCreateEvent.OnBack) },
+            onSettings = { onEvent(LobbyCreateEvent.OnSettings) },
             backButtonModifier = Modifier.testTag(LobbyCreateTestTags.BACK_BUTTON),
             titleModifier = Modifier.testTag(LobbyCreateTestTags.TITLE),
             subtitleModifier = Modifier.testTag(LobbyCreateTestTags.SUBTITLE),
@@ -205,20 +207,12 @@ fun LobbyCreateScreen(
                     text = count.toString(),
                     selected = uiState.maxPlayers == count,
                     onClick = {
-                        viewModel.onEvent(LobbyCreateEvent.SetMaxPlayers(count))
+                        onEvent(LobbyCreateEvent.SetMaxPlayers(count))
                     },
                     modifier = Modifier
                         .weight(1f)
                         .height(40.dp)
-                        .testTag(
-                            when (count) {
-                                2 -> LobbyCreateTestTags.MAX_PLAYERS_OPTION_2
-                                4 -> LobbyCreateTestTags.MAX_PLAYERS_OPTION_4
-                                6 -> LobbyCreateTestTags.MAX_PLAYERS_OPTION_6
-                                8 -> LobbyCreateTestTags.MAX_PLAYERS_OPTION_8
-                                else -> ""
-                            }
-                        ),
+                        .testTag("${LobbyCreateTestTags.MaxPlayers.OPTION_PREFIX}_$count"),
                     cardColor = cardColor,
                     selectedColor = selectedColor,
                     borderColor = cardBorder,
@@ -247,7 +241,7 @@ fun LobbyCreateScreen(
                 icon = { tint -> Icon(Icons.Filled.Public, null, tint = tint) },
                 selected = !uiState.isPrivate,
                 onClick = {
-                    viewModel.onEvent(LobbyCreateEvent.SetIsPrivate(false))
+                    onEvent(LobbyCreateEvent.SetIsPrivate(false))
                 },
                 modifier = Modifier
                     .testTag(LobbyCreateTestTags.PRIVACY_PUBLIC)
@@ -266,7 +260,7 @@ fun LobbyCreateScreen(
                 icon = { tint -> Icon(Icons.Filled.Lock, null, tint = tint) },
                 selected = uiState.isPrivate,
                 onClick = {
-                    viewModel.onEvent(LobbyCreateEvent.SetIsPrivate(true))
+                    onEvent(LobbyCreateEvent.SetIsPrivate(true))
                 },
                 modifier = Modifier
                     .testTag(LobbyCreateTestTags.PRIVACY_PRIVATE)
@@ -295,10 +289,10 @@ fun LobbyCreateScreen(
             title = "Turn Timer",
             value = "${uiState.turnTimer}s",
             onMinus = {
-                viewModel.onEvent(LobbyCreateEvent.ChangeTurnTimer(-10))
+                onEvent(LobbyCreateEvent.ChangeTurnTimer(-10))
             },
             onPlus = {
-                viewModel.onEvent(LobbyCreateEvent.ChangeTurnTimer(10))
+                onEvent(LobbyCreateEvent.ChangeTurnTimer(10))
             },
             modifier = Modifier
                 .testTag(LobbyCreateTestTags.TURN_TIMER_ROW)
@@ -316,10 +310,10 @@ fun LobbyCreateScreen(
             title = "Starting Tiles",
             value = uiState.startingTiles.toString(),
             onMinus = {
-                viewModel.onEvent(LobbyCreateEvent.ChangeStartingTiles(-10))
+                onEvent(LobbyCreateEvent.ChangeStartingTiles(-10))
             },
             onPlus = {
-                viewModel.onEvent(LobbyCreateEvent.ChangeStartingTiles(10))
+                onEvent(LobbyCreateEvent.ChangeStartingTiles(10))
             },
             modifier = Modifier
                 .testTag(LobbyCreateTestTags.STARTING_TILES_ROW)
@@ -337,10 +331,10 @@ fun LobbyCreateScreen(
             title = "Win Score",
             value = uiState.winScore.toString(),
             onMinus = {
-                viewModel.onEvent(LobbyCreateEvent.ChangeWinScore(-100))
+                onEvent(LobbyCreateEvent.ChangeWinScore(-100))
             },
             onPlus = {
-                viewModel.onEvent(LobbyCreateEvent.ChangeWinScore(100))
+                onEvent(LobbyCreateEvent.ChangeWinScore(100))
             },
             modifier = Modifier
                 .testTag(LobbyCreateTestTags.WIN_SCORE_ROW)
@@ -357,7 +351,7 @@ fun LobbyCreateScreen(
             icon = { Icon(Icons.Filled.Speed, null, tint = primaryText) },
             title = "Quick Mode",
             checked = uiState.quickMode,
-            onCheckedChange = { viewModel.onEvent(LobbyCreateEvent.SetQuickMode(it)) },
+            onCheckedChange = { onEvent(LobbyCreateEvent.SetQuickMode(it)) },
             modifier = Modifier.padding(bottom = 4.dp),
             cardColor = cardColor,
             textColor = primaryText,
@@ -369,7 +363,7 @@ fun LobbyCreateScreen(
             icon = { Icon(Icons.Filled.Visibility, null, tint = primaryText) },
             title = "Require Initial Meld",
             checked = uiState.requireInitialMeld,
-            onCheckedChange = { viewModel.onEvent(LobbyCreateEvent.SetRequireInitialMeld(it)) },
+            onCheckedChange = { onEvent(LobbyCreateEvent.SetRequireInitialMeld(it)) },
             modifier = Modifier.padding(bottom = 4.dp),
             cardColor = cardColor,
             textColor = primaryText,
@@ -381,7 +375,7 @@ fun LobbyCreateScreen(
 
         Button(
             onClick = {
-                viewModel.onEvent(LobbyCreateEvent.CreateLobby)
+                onEvent(LobbyCreateEvent.CreateLobby)
             },
             modifier = Modifier
                 .testTag(LobbyCreateTestTags.CREATE_BUTTON)
