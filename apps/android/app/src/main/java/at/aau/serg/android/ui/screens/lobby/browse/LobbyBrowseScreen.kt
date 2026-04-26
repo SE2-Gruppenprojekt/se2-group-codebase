@@ -52,6 +52,18 @@ fun LobbyBrowseScreen(
     viewModel: LobbyBrowseViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    LobbyBrowseScreenContent(
+        uiState = uiState,
+        onEvent = viewModel::onEvent
+    )
+}
+
+@Composable
+fun LobbyBrowseScreenContent(
+    uiState: LobbyBrowseUiState,
+    onEvent: (LobbyBrowseEvent) -> Unit
+) {
     val darkMode = ThemeState.isDarkMode.value
 
     val backgroundGradient = Brush.verticalGradient(
@@ -84,8 +96,8 @@ fun LobbyBrowseScreen(
     ) {
         TopBar(
             subtitle = "Available Lobbies",
-            onBack = { viewModel.onEvent(LobbyBrowseEvent.OnBack) },
-            onSettings = { viewModel.onEvent(LobbyBrowseEvent.OnSettings) },
+            onBack = { onEvent(LobbyBrowseEvent.OnBack) },
+            onSettings = { onEvent(LobbyBrowseEvent.OnSettings) },
             backButtonModifier = Modifier.testTag(LobbyBrowseTestTags.BACK_BUTTON),
             titleModifier = Modifier.testTag(LobbyBrowseTestTags.TITLE),
             subtitleModifier = Modifier.testTag(LobbyBrowseTestTags.SUBTITLE),
@@ -102,7 +114,7 @@ fun LobbyBrowseScreen(
         ) {
             OutlinedTextField(
                 value = uiState.lobbyIdInput,
-                onValueChange = { viewModel.onEvent(LobbyBrowseEvent.OnLobbyIdChanged(it)) },
+                onValueChange = { onEvent(LobbyBrowseEvent.OnLobbyIdChanged(it)) },
                 modifier = Modifier
                     .weight(1f)
                     .testTag(LobbyBrowseTestTags.LOBBY_ID_INPUT),
@@ -132,7 +144,7 @@ fun LobbyBrowseScreen(
             )
 
             Button(
-                onClick = { viewModel.onEvent(LobbyBrowseEvent.OnJoinLobby(enteredLobbyId)) },
+                onClick = { onEvent(LobbyBrowseEvent.OnJoinLobby(enteredLobbyId)) },
                 enabled = enteredLobbyId.isNotEmpty(),
                 shape = RoundedCornerShape(16.dp),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
@@ -207,7 +219,7 @@ fun LobbyBrowseScreen(
                     cardColor = cardColor,
                     primaryText = primaryText,
                     secondaryText = secondaryText,
-                    onJoinLobby = { viewModel.onEvent(LobbyBrowseEvent.OnJoinLobby(it)) }
+                    onJoinLobby = { onEvent(LobbyBrowseEvent.OnJoinLobby(it)) }
                 )
             }
 
@@ -220,7 +232,7 @@ fun LobbyBrowseScreen(
 
         // create button
         Button(
-            onClick = { viewModel.onEvent(LobbyBrowseEvent.OnCreateNewLobby) },
+            onClick = { onEvent(LobbyBrowseEvent.OnCreateNewLobby) },
             modifier = Modifier
                 .testTag(LobbyBrowseTestTags.CREATE_BUTTON)
                 .fillMaxWidth()

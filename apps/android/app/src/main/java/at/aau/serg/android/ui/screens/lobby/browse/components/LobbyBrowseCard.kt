@@ -29,9 +29,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseItem
+import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseTestTags
 import at.aau.serg.android.ui.theme.ThemeState
 
 @Composable
@@ -51,6 +53,7 @@ fun LobbyBrowseCard(
 
     Card(
         modifier = Modifier
+            .testTag("${LobbyBrowseTestTags.LobbyItem.CARD_PREFIX}_${lobby.lobbyId}")
             .fillMaxWidth()
             .border(
                 width = 1.5.dp,
@@ -143,6 +146,9 @@ fun LobbyBrowseCard(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Button(
+                    modifier = Modifier.testTag(
+                        "${LobbyBrowseTestTags.LobbyItem.JOIN_BUTTON_PREFIX}_${lobby.lobbyId}"
+                    ),
                     onClick = { onJoinLobby(lobby.lobbyId) },
                     enabled = lobby.isOpen,
                     shape = RoundedCornerShape(12.dp),

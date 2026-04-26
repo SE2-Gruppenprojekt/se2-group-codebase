@@ -9,6 +9,8 @@ import at.aau.serg.android.core.network.lobby.LobbyService
 import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
 import at.aau.serg.android.core.network.mapper.toDomain
 import at.aau.serg.android.datastore.proto.User
+import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseEffect
+import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseEvent
 import at.aau.serg.android.ui.state.LoadState
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -93,6 +95,18 @@ class LobbyWaitingViewModel(
             LobbyWaitingEvent.onMatchStart -> {
                startMatch()
             }
+
+            LobbyWaitingEvent.OnSettings -> {
+                viewModelScope.launch {
+                    _effect.emit(LobbyWaitingEffect.NavigateToSettings)
+                }
+            }
+            LobbyWaitingEvent.OnBack -> {
+                viewModelScope.launch {
+                    _effect.emit(LobbyWaitingEffect.NavigateBack)
+                }
+            }
+
         }
     }
 
