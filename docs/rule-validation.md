@@ -1065,29 +1065,138 @@ This lets the backend:
 
 ## 10.2 `RuleViolation`
 
-A violation should be explicit and machine-readable.
+A `RuleViolation` should be the standard structured result object for **game-rule validation failures**.
 
-### Example
+It should **not** be used for every possible backend failure.
+For example:
+
+- missing game
+- missing draft
+- unauthorized player
+- stale draft version
+- broken internal persistence state
+
+are usually better represented as exceptions.
+
+`RuleViolation` is best used for **collectable validation problems** where the backend wants to continue validating and report multiple issues together, especially during **end-turn validation**.
+
+### Purpose
+
+A `RuleViolation` should:
+
+- identify what rule failed
+- provide a human-readable explanation
+- optionally point to the affected location in the draft/board
+- be stable enough for frontend handling and debugging
+
+### Recommended class shape
 
 ```kotlin
 data class RuleViolation(
     val code: String,
     val message: String,
-    val path: String? = null
+    val path: String? = null,
+    val setIndex: Int? = null,
+    val tileIds: List<String> = emptyList()
 )
 ```
 
-Possible codes:
+### Field meaning
 
-- `GROUP_MIN_SIZE`
-- `RUN_COLOR_MISMATCH`
+#### `code`
+
+A machine-readable stable identifier for the violation.
+
+Examples:
+
 - `SET_NOT_CLASSIFIABLE`
 - `SET_CLASSIFICATION_AMBIGUOUS`
-- `TILE_DUPLICATED`
+- `GROUP_MIN_SIZE`
+- `GROUP_DUPLICATE_COLOR`
+- `RUN_COLOR_MISMATCH`
+- `RUN_DUPLICATE_NUMBER`
+- `RUN_NOT_ASCENDING`
 - `INITIAL_MELD_TOO_SMALL`
-- `NOT_ACTIVE_PLAYER`
+- `TILE_DUPLICATED`
+- `TILE_MISSING`
 
-This becomes useful for both debugging and frontend error messaging.
+The `code` should be stable and predictable so the frontend can react to it if needed.
+
+#### `message`
+
+A human-readable explanation of the problem.
+
+Examples:
+
+- `"Run tiles must have the same color"`
+- `"Initial meld must score at least 30 points"`
+- `"Submitted draft does not preserve the allowed tile set"`
+
+This is what you would usually log or return directly in an API error body.
+
+#### `path`
+
+An optional logical location string describing where the problem occurred.
+
+Examples:
+
+- `"boardSets[0]"`
+- `"boardSets[2].tiles[1]"`
+- `"rackTiles"`
+
+This is especially useful when many violations are returned together.
+
+#### `setIndex`
+
+An optional numeric shortcut for the affected set.
+
+This is helpful when the frontend wants to highlight one full board set without parsing the `path` string.
+
+#### `tileIds`
+
+An optional list of affected tile identifiers.
+
+This is useful when:
+
+- the same set contains many tiles but only some are problematic
+- the frontend wants to highlight specific tiles
+- debugging tile conservation issues
+
+### Example instance
+
+```kotlin
+RuleViolation(
+    code = "RUN_COLOR_MISMATCH",
+    message = "Run tiles must have the same color",
+    path = "boardSets[1]",
+    setIndex = 1,
+    tileIds = listOf("tile-17", "tile-22")
+)
+```
+
+### Recommended usage
+
+Use `RuleViolation` when:
+
+- validating a final submitted draft
+- validating multiple sets on the board
+- validating first-move rules
+- aggregating multiple rule failures into one result
+
+Do **not** use `RuleViolation` for hard-stop use-case errors that should abort immediately.
+Those are better represented as exceptions.
+
+### Good pairing with `ValidationResult`
+
+```kotlin
+data class ValidationResult(
+    val violations: List<RuleViolation> = emptyList()
+) {
+    val isValid: Boolean get() = violations.isEmpty()
+}
+```
+
+This lets validators contribute violations independently while keeping the final result simple.
 
 ---
 
