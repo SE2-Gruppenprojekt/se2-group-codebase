@@ -332,3 +332,413 @@ Common example error codes:
 
 ---
 
+## 3. REST API
+
+## 3.1 `GET /api/games/{gameId}`
+
+Returns the confirmed authoritative game state.
+
+### Purpose
+
+Used for:
+
+- initial screen load
+- reconnect recovery
+- refreshing the confirmed match state
+
+### Response type
+
+- `200 OK` → `GameResponse`
+- `404 Not Found` → `ErrorResponse`
+
+### Example response
+
+```json
+{
+    "gameId": "game-123",
+    "players": [
+        {
+            "userId": "player-1",
+            "displayName": "Julian",
+            "hand": [],
+            "hasPlayedInitialMeld": true,
+            "score": 0
+        },
+        {
+            "userId": "player-2",
+            "displayName": "Alex",
+            "hand": [],
+            "hasPlayedInitialMeld": false,
+            "score": 0
+        }
+    ],
+    "board": [],
+    "drawPileCount": 42,
+    "currentTurnPlayerId": "player-1",
+    "turnDeadline": "2026-04-21T12:30:00Z",
+    "remainingTurnSeconds": 50,
+    "status": "ACTIVE",
+    "winnerUserId": null
+}
+```
+
+---
+
+## 3.2 `GET /api/games/{gameId}/draft` (optional)
+
+Returns the current live draft state.
+
+### Purpose
+
+Useful for:
+
+- reconnect recovery
+- restoring the active player's in-progress draft
+- restoring spectator views of the current live draft
+
+### Response type
+
+- `200 OK` → `TurnDraftResponse`
+- `404 Not Found` → `ErrorResponse`
+
+### Example response
+
+```json
+{
+    "gameId": "game-123",
+    "playerId": "player-1",
+    "draftBoard": [],
+    "draftHand": [],
+    "version": 2,
+    "status": "ACTIVE"
+}
+```
+
+---
+
+## 3.3 `PUT /api/games/{gameId}/draft`
+
+Replaces the current draft with the latest draft state from the active player.
+
+### Purpose
+
+Used while the active player is rearranging tiles during their turn.
+
+### Request type
+
+`UpdateDraftRequest`
+
+### Example request
+
+```json
+{
+    "playerId": "player-1",
+    "draftBoard": [
+        {
+            "id": "set-temp-1",
+            "type": "UNRESOLVED",
+            "tiles": [
+                {
+                    "id": "tile-020",
+                    "color": "RED",
+                    "number": 4,
+                    "isJoker": false
+                }
+            ]
+        }
+    ],
+    "draftHand": [
+        {
+            "id": "tile-010",
+            "color": "YELLOW",
+            "number": 5,
+            "isJoker": false
+        }
+    ],
+    "version": 2
+}
+```
+
+Fields:
+
+- `playerId: String`
+- `draftBoard: List<BoardSetResponse>`
+- `draftHand: List<TileResponse>`
+- `version: Long`
+
+### Response type
+
+- `200 OK` → `TurnDraftResponse`
+- `400 Bad Request` → `ErrorResponse`
+- `403 Forbidden` → `ErrorResponse`
+- `404 Not Found` → `ErrorResponse`
+- `409 Conflict` → `ErrorResponse`
+
+### Example success response
+
+```json
+{
+    "gameId": "game-123",
+    "playerId": "player-1",
+    "draftBoard": [
+        {
+            "id": "set-temp-1",
+            "type": "UNRESOLVED",
+            "tiles": [
+                {
+                    "id": "tile-020",
+                    "color": "RED",
+                    "number": 4,
+                    "isJoker": false
+                }
+            ]
+        }
+    ],
+    "draftHand": [
+        {
+            "id": "tile-010",
+            "color": "YELLOW",
+            "number": 5,
+            "isJoker": false
+        }
+    ],
+    "version": 3,
+    "status": "ACTIVE"
+}
+```
+
+### Example error response
+
+```json
+{
+    "code": "FORBIDDEN_ACTION",
+    "message": "Only the active player can update the draft",
+    "timestamp": "2026-04-21T12:31:00Z"
+}
+```
+
+---
+
+## 3.4 `POST /api/games/{gameId}/end-turn`
+
+Submits the current draft for final validation and, if valid, commits it as the new confirmed game state.
+
+### Purpose
+
+Used when the active player wants to finish their turn.
+
+### Request type
+
+`EndTurnRequest`
+
+### Example request
+
+```json
+{
+    "playerId": "player-1"
+}
+```
+
+Fields:
+
+- `playerId: String`
+
+### Response type
+
+- `200 OK` → `GameResponse`
+- `400 Bad Request` → `ErrorResponse`
+- `403 Forbidden` → `ErrorResponse`
+- `404 Not Found` → `ErrorResponse`
+- `409 Conflict` → `ErrorResponse`
+
+### Example success response
+
+```json
+{
+    "gameId": "game-123",
+    "players": [
+        {
+            "userId": "player-1",
+            "displayName": "Julian",
+            "hand": [
+                {
+                    "id": "tile-010",
+                    "color": "YELLOW",
+                    "number": 5,
+                    "isJoker": false
+                }
+            ],
+            "hasPlayedInitialMeld": true,
+            "score": 0
+        },
+        {
+            "userId": "player-2",
+            "displayName": "Alex",
+            "hand": [
+                {
+                    "id": "tile-011",
+                    "color": "RED",
+                    "number": 9,
+                    "isJoker": false
+                }
+            ],
+            "hasPlayedInitialMeld": false,
+            "score": 0
+        }
+    ],
+    "board": [
+        {
+            "id": "set-001",
+            "type": "GROUP",
+            "tiles": [
+                {
+                    "id": "tile-001",
+                    "color": "RED",
+                    "number": 7,
+                    "isJoker": false
+                },
+                {
+                    "id": "tile-002",
+                    "color": "BLUE",
+                    "number": 7,
+                    "isJoker": false
+                },
+                {
+                    "id": "tile-003",
+                    "color": "BLACK",
+                    "number": 7,
+                    "isJoker": false
+                }
+            ]
+        }
+    ],
+    "drawPileCount": 41,
+    "currentTurnPlayerId": "player-2",
+    "turnDeadline": "2026-04-21T12:31:30Z",
+    "remainingTurnSeconds": 60,
+    "status": "ACTIVE",
+    "winnerUserId": null
+}
+```
+
+### Example error response
+
+```json
+{
+    "code": "INVALID_MOVE",
+    "message": "The submitted draft is not a valid Rummikub board",
+    "timestamp": "2026-04-21T12:31:00Z"
+}
+```
+
+---
+
+## 3.5 `POST /api/games/{gameId}/draw`
+
+Lets the active player draw a tile from the draw pile.
+
+### Purpose
+
+Used when the player cannot or chooses not to play tiles.
+
+### Request type
+
+Can be either empty or use a small request DTO like:
+
+```json
+{
+    "playerId": "player-1"
+}
+```
+
+### Response type
+
+- `200 OK` → `GameResponse`
+- `400 Bad Request` → `ErrorResponse`
+- `403 Forbidden` → `ErrorResponse`
+- `404 Not Found` → `ErrorResponse`
+- `409 Conflict` → `ErrorResponse`
+
+### Example success response
+
+```json
+{
+    "gameId": "game-123",
+    "players": [
+        {
+            "userId": "player-1",
+            "displayName": "Julian",
+            "hand": [
+                {
+                    "id": "tile-999",
+                    "color": "BLACK",
+                    "number": 12,
+                    "isJoker": false
+                }
+            ],
+            "hasPlayedInitialMeld": true,
+            "score": 0
+        }
+    ],
+    "board": [],
+    "drawPileCount": 40,
+    "currentTurnPlayerId": "player-2",
+    "turnDeadline": "2026-04-21T12:31:30Z",
+    "remainingTurnSeconds": 60,
+    "status": "ACTIVE",
+    "winnerUserId": null
+}
+```
+
+---
+
+## 3.6 `POST /api/games/{gameId}/reset-draft`
+
+Resets the current draft back to the current confirmed game state.
+
+### Purpose
+
+Useful when:
+
+- the active player wants to undo current draft changes
+- the frontend wants to resync after a rejected move
+
+### Request type
+
+Can be either empty or use:
+
+```json
+{
+    "playerId": "player-1"
+}
+```
+
+### Response type
+
+- `200 OK` → `TurnDraftResponse`
+- `400 Bad Request` → `ErrorResponse`
+- `403 Forbidden` → `ErrorResponse`
+- `404 Not Found` → `ErrorResponse`
+
+### Example success response
+
+```json
+{
+    "gameId": "game-123",
+    "playerId": "player-1",
+    "draftBoard": [],
+    "draftHand": [
+        {
+            "id": "tile-010",
+            "color": "YELLOW",
+            "number": 5,
+            "isJoker": false
+        }
+    ],
+    "version": 4,
+    "status": "ACTIVE"
+}
+```
+
+---
+
