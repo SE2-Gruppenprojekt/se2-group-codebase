@@ -1,6 +1,7 @@
 package at.se2group.backend.lobby.service
 
 import at.se2group.backend.domain.LobbyStatus
+import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
@@ -36,6 +37,9 @@ class LobbyServiceUnreadyTest {
 
     @Mock
     lateinit var gameInitializationService: GameInitializationService
+
+    @Mock
+    lateinit var gameRepository: GameRepository
 
     @InjectMocks
     lateinit var lobbyService: LobbyService

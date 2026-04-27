@@ -7,6 +7,7 @@ import at.se2group.backend.domain.GameStatus
 import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.domain.LobbyStatus
 import at.se2group.backend.domain.TurnDraft
+import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
 import at.se2group.backend.service.LobbyBroadcastService
@@ -38,6 +39,9 @@ class LobbyServiceStartTest {
 
     @Mock
     lateinit var gameInitializationService: GameInitializationService
+
+    @Mock
+    lateinit var gameRepository: GameRepository
 
     @InjectMocks
     lateinit var lobbyService: LobbyService
@@ -109,7 +113,7 @@ class LobbyServiceStartTest {
 
         verify(gameInitializationService).createGameFromLobby(result)
         verify(lobbyBroadcastService).broadcastLobbyStarted(result.lobbyId, "game-123")
-
+        verify(gameRepository).save(any())
     }
 
     @Test
@@ -137,7 +141,7 @@ class LobbyServiceStartTest {
         assertEquals("Only the host can start the match", exception.message)
         verify(lobbyRepository, never()).save(any())
         verifyNoInteractions(lobbyBroadcastService)
-
+        verifyNoInteractions(gameRepository)
     }
 
     @Test
@@ -165,6 +169,7 @@ class LobbyServiceStartTest {
         assertEquals("Match can only be started while the lobby is open", exception.message)
         verify(lobbyRepository, never()).save(any())
         verifyNoInteractions(lobbyBroadcastService)
+        verifyNoInteractions(gameRepository)
     }
 
     @Test
@@ -192,6 +197,7 @@ class LobbyServiceStartTest {
         assertEquals("At least 2 players are required to start the match", exception.message)
         verify(lobbyRepository, never()).save(any())
         verifyNoInteractions(lobbyBroadcastService)
+        verifyNoInteractions(gameRepository)
     }
 
     @Test
@@ -220,6 +226,7 @@ class LobbyServiceStartTest {
         assertEquals("All players must be ready to start the match", exception.message)
         verify(lobbyRepository, never()).save(any())
         verifyNoInteractions(lobbyBroadcastService)
+        verifyNoInteractions(gameRepository)
     }
 
 }
