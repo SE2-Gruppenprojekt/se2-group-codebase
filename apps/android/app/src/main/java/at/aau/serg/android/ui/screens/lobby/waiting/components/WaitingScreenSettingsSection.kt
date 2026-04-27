@@ -16,9 +16,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableIntState
-import androidx.compose.runtime.MutableState
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,9 +28,9 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun WaitingScreenSettingsSection(
-    turnTimer: MutableIntState,
-    startingCards: MutableIntState,
-    stackEnabled: MutableState<Boolean>,
+    turnTimer: Int,
+    startingCards: Int,
+    stackEnabled: Boolean,
 
     onTurnTimerMinus: () -> Unit,
     onTurnTimerPlus: () -> Unit,
@@ -45,7 +46,7 @@ fun WaitingScreenSettingsSection(
 
         SettingRow(
             title = "Turn Timer",
-            value = "${turnTimer.intValue}s",
+            value = "${turnTimer}s",
             onMinus = onTurnTimerMinus,
             onPlus = onTurnTimerPlus,
             cardColor = cardColor,
@@ -55,13 +56,51 @@ fun WaitingScreenSettingsSection(
 
         SettingRow(
             title = "Starting Cards",
-            value = "${startingCards.intValue}",
+            value = "$startingCards",
             onMinus = onStartingCardsMinus,
             onPlus = onStartingCardsPlus,
             cardColor = cardColor,
             primaryTextColor = primaryTextColor,
             buttonColor = buttonColor
         )
+
+        Spacer(Modifier.height(8.dp))
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            colors = CardDefaults.cardColors(containerColor = cardColor),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .padding(horizontal = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Stack +2/+4",
+                    color = primaryTextColor,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Switch(
+                    checked = stackEnabled,
+                    onCheckedChange = onStackToggle,
+                    modifier = Modifier.scale(0.78f),
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = buttonColor,
+                        uncheckedThumbColor = Color.White.copy(alpha = 0.9f),
+                        uncheckedTrackColor = buttonColor.copy(alpha = 0.55f),
+                        uncheckedBorderColor = Color.Transparent,
+                        checkedBorderColor = Color.Transparent
+                    )
+                )
+            }
+        }
     }
 }
 

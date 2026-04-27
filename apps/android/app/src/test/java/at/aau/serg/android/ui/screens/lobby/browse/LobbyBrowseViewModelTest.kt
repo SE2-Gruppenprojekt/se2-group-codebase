@@ -1,12 +1,17 @@
 package at.aau.serg.android.ui.screens.lobby.browse
 
 import at.aau.serg.android.MainDispatcherRule
+import at.aau.serg.android.core.datastore.ProtoStore
 import at.aau.serg.android.core.network.lobby.LobbyAPI
+import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.state.LoadState
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
@@ -22,21 +27,15 @@ class LobbyBrowseViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var api: LobbyAPI
+    private lateinit var userStore: ProtoStore<User>
     private lateinit var viewModel: LobbyBrowseViewModel
 
     @Before
     fun setup() {
         api = mockk()
+        userStore = mockk()
         coEvery { api.getLobbies() } returns emptyList()
-        viewModel = LobbyBrowseViewModel(api)
-    }
-
-    // --- default constructor ---
-
-    @Test
-    fun default_constructor_path_isCovered() = runTest {
-        val vm = LobbyBrowseViewModel()
-        assertNotNull(vm)
+        viewModel = LobbyBrowseViewModel(userStore, api)
     }
 
     // --- Initial State ---
@@ -71,7 +70,7 @@ class LobbyBrowseViewModelTest {
             )
         )
 
-        viewModel = LobbyBrowseViewModel(api)
+        viewModel = LobbyBrowseViewModel(userStore, api)
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
@@ -86,7 +85,7 @@ class LobbyBrowseViewModelTest {
     fun init_loads_lobbies_error_state() = runTest {
         coEvery { api.getLobbies() } throws RuntimeException("network error")
 
-        viewModel = LobbyBrowseViewModel(api)
+        viewModel = LobbyBrowseViewModel(userStore, api)
         advanceUntilIdle()
 
         assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
@@ -103,10 +102,15 @@ class LobbyBrowseViewModelTest {
     // --- effect emissions ---
 
     @Test
-    fun onJoinLobby_emitsJoinEffect() = runTest {
+    fun onJoinLobby_emitsNavigateToWaitingRoom() = runTest {
+        every { userStore.data } returns flowOf(User.getDefaultInstance())
+        coEvery { api.joinLobby(any(), any()) } returns mockk()
+
+        val effectDeferred = async { viewModel.effects.first() }
         viewModel.onEvent(LobbyBrowseEvent.OnJoinLobby("ABC"))
-        val effect = viewModel.effects.first()
-        assertEquals(LobbyBrowseEffect.JoinLobby("ABC"), effect)
+        advanceUntilIdle()
+
+        assertEquals(LobbyBrowseEffect.NavigateToWaitingRoom("ABC"), effectDeferred.await())
     }
 
     @Test

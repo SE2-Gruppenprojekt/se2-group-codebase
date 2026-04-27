@@ -156,14 +156,15 @@ fun NavGraphBuilder.homeGraph(
         }
 
         composable(Routes.BROWSING_LOBBIES) {
+            val userStore = remember { provider.getStore<User>() }
             val vm: LobbyBrowseViewModel = viewModel(
-                factory = GenericViewModelFactory { LobbyBrowseViewModel() }
+                factory = GenericViewModelFactory { LobbyBrowseViewModel(userStore) }
             )
 
             LaunchedEffect(Unit) {
                 vm.effects.collect { effect ->
                     when (effect) {
-                        is LobbyBrowseEffect.JoinLobby -> {
+                        is LobbyBrowseEffect.NavigateToWaitingRoom -> {
                             navController.navigate("${Routes.WAITING_ROOM}/${effect.lobbyId}")
                         }
                         LobbyBrowseEffect.NavigateToCreate ->

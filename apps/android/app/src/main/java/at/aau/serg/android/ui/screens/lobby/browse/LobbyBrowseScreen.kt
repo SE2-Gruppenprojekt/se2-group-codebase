@@ -41,7 +41,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import at.aau.serg.android.ui.components.TopBar
 import at.aau.serg.android.ui.screens.lobby.browse.components.LobbyBrowseCard
 import at.aau.serg.android.ui.state.LoadState
@@ -49,7 +48,7 @@ import at.aau.serg.android.ui.theme.ThemeState
 
 @Composable
 fun LobbyBrowseScreen(
-    viewModel: LobbyBrowseViewModel = viewModel()
+    viewModel: LobbyBrowseViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
