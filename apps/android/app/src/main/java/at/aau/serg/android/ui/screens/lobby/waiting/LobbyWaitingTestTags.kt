@@ -4,7 +4,6 @@ object LobbyWaitingTestTags {
 
         const val ROOM_CODE = "waiting_room_code"
         const val PLAYER_LIST = "waiting_player_list"
-        const val PLAYER_ITEM = "waiting_player_item"
         const val SETTINGS_SECTION = "waiting_settings_section"
 
         const val TURN_TIMER_VALUE = "waiting_turn_timer_value"
@@ -16,5 +15,7 @@ object LobbyWaitingTestTags {
         const val STARTING_CARDS_MINUS = "waiting_starting_cards_minus"
 
         const val STACK_SWITCH = "waiting_stack_switch"
+
+        const val START_BUTTON = "waiting_start_game_button"
 
 }

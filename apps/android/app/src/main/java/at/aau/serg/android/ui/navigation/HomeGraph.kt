@@ -27,6 +27,7 @@ import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateEffect
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateScreen
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateViewModel
 import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingEffect
+import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingEvent
 import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingScreen
 import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingViewModel
 import at.aau.serg.android.ui.screens.settings.SettingsEffect
@@ -178,12 +179,17 @@ fun NavGraphBuilder.homeGraph(
             LobbyBrowseScreen(viewModel = vm)
         }
 
-        composable(Routes.WAITING_ROOM) {
+        composable("${Routes.WAITING_ROOM}/{lobbyId}") {
+            val lobbyId = it.arguments?.getString("lobbyId")!!
             val userStore = remember { provider.getStore<User>() }
 
             val vm: LobbyWaitingViewModel = viewModel(
                 factory = GenericViewModelFactory { LobbyWaitingViewModel(userStore) }
             )
+
+            LaunchedEffect(lobbyId) {
+                vm.onEvent(LobbyWaitingEvent.OnLoadLobby(lobbyId))
+            }
 
             LaunchedEffect(Unit) {
                 vm.effects.collect { effect ->
