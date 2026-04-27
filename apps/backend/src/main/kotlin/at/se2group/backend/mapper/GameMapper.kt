@@ -6,6 +6,10 @@ import at.se2group.backend.domain.GamePlayer
 import at.se2group.backend.domain.JokerTile
 import at.se2group.backend.domain.NumberedTile
 import at.se2group.backend.domain.Tile
+import at.se2group.backend.dto.BoardSetResponse
+import at.se2group.backend.dto.GamePlayerResponse
+import at.se2group.backend.dto.GameResponse
+import at.se2group.backend.dto.TileResponse
 import at.se2group.backend.persistence.BoardSetEntity
 import at.se2group.backend.persistence.GameEntity
 import at.se2group.backend.persistence.GamePlayerEntity
@@ -97,6 +101,52 @@ fun Tile.toEmbeddable(): TileEmbeddable =
         )
         is NumberedTile -> TileEmbeddable(
             color = color,
+            number = number,
+            joker = false
+        )
+    }
+
+fun ConfirmedGame.toResponse(): GameResponse =
+    GameResponse(
+        gameId = gameId,
+        lobbyId = lobbyId,
+        players = players.map { it.toResponse() },
+        boardSets = boardSets.map { it.toResponse() },
+        drawPile = drawPile.map { it.toResponse() },
+        currentPlayerUserId = currentPlayerUserId,
+        status = status.name,
+        createdAt = createdAt,
+        startedAt = startedAt,
+        finishedAt = finishedAt
+    )
+
+fun GamePlayer.toResponse(): GamePlayerResponse =
+    GamePlayerResponse(
+        userId = userId,
+        displayName = displayName,
+        turnOrder = turnOrder,
+        rackTiles = rackTiles.map { it.toResponse() },
+        hasCompletedInitialMeld = hasCompletedInitialMeld,
+        score = score,
+        joinedAt = joinedAt
+    )
+
+fun BoardSet.toResponse(): BoardSetResponse =
+    BoardSetResponse(
+        boardSetId = boardSetId,
+        type = type.name,
+        tiles = tiles.map { it.toResponse() }
+    )
+
+fun Tile.toResponse(): TileResponse =
+    when (this) {
+        is JokerTile -> TileResponse(
+            color = color.name,
+            number = null,
+            joker = true
+        )
+        is NumberedTile -> TileResponse(
+            color = color.name,
             number = number,
             joker = false
         )
