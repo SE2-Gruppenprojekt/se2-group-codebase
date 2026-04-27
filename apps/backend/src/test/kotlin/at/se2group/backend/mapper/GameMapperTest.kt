@@ -232,4 +232,102 @@ class GameMapperTest {
 
         assertEquals("Numbered tile must have a number", exception.message)
     }
+
+    @Test
+    fun `toResponse maps complete confirmed game`() {
+        val createdAt = Instant.parse("2026-04-27T18:00:00Z")
+        val startedAt = Instant.parse("2026-04-27T18:05:00Z")
+
+        val game = ConfirmedGame(
+            gameId = "game-1",
+            lobbyId = "lobby-1",
+            players = listOf(
+                GamePlayer(
+                    userId = "user-1",
+                    displayName = "Alice",
+                    turnOrder = 0,
+                    rackTiles = listOf(
+                        NumberedTile(TileColor.BLUE, 3),
+                        JokerTile(TileColor.RED)
+                    ),
+                    hasCompletedInitialMeld = true,
+                    score = 25,
+                    joinedAt = Instant.parse("2026-04-27T17:55:00Z")
+                )
+            ),
+            boardSets = listOf(
+                BoardSet(
+                    boardSetId = "set-1",
+                    type = BoardSetType.RUN,
+                    tiles = listOf(
+                        NumberedTile(TileColor.BLUE, 7),
+                        NumberedTile(TileColor.BLUE, 8),
+                        JokerTile(TileColor.BLACK)
+                    )
+                )
+            ),
+            drawPile = listOf(
+                NumberedTile(TileColor.ORANGE, 5),
+                JokerTile(TileColor.BLUE)
+            ),
+            currentPlayerUserId = "user-1",
+            status = GameStatus.ACTIVE,
+            createdAt = createdAt,
+            startedAt = startedAt,
+            finishedAt = null
+        )
+
+        val response = game.toResponse()
+
+        assertEquals("game-1", response.gameId)
+        assertEquals("lobby-1", response.lobbyId)
+        assertEquals("user-1", response.currentPlayerUserId)
+        assertEquals("ACTIVE", response.status)
+        assertEquals(createdAt, response.createdAt)
+        assertEquals(startedAt, response.startedAt)
+        assertEquals(1, response.players.size)
+        assertEquals(1, response.boardSets.size)
+        assertEquals(2, response.drawPile.size)
+
+        assertEquals("user-1", response.players[0].userId)
+        assertEquals("Alice", response.players[0].displayName)
+        assertEquals(0, response.players[0].turnOrder)
+        assertEquals(2, response.players[0].rackTiles.size)
+        assertEquals("BLUE", response.players[0].rackTiles[0].color)
+        assertEquals(3, response.players[0].rackTiles[0].number)
+        assertEquals(false, response.players[0].rackTiles[0].joker)
+        assertEquals("RED", response.players[0].rackTiles[1].color)
+        assertEquals(null, response.players[0].rackTiles[1].number)
+        assertEquals(true, response.players[0].rackTiles[1].joker)
+
+        assertEquals("set-1", response.boardSets[0].boardSetId)
+        assertEquals("RUN", response.boardSets[0].type)
+        assertEquals(3, response.boardSets[0].tiles.size)
+        assertEquals("BLACK", response.boardSets[0].tiles[2].color)
+        assertEquals(true, response.boardSets[0].tiles[2].joker)
+
+        assertEquals("ORANGE", response.drawPile[0].color)
+        assertEquals(5, response.drawPile[0].number)
+        assertEquals(false, response.drawPile[0].joker)
+        assertEquals("BLUE", response.drawPile[1].color)
+        assertEquals(null, response.drawPile[1].number)
+        assertEquals(true, response.drawPile[1].joker)
+    }
+
+    @Test
+    fun `tile toResponse maps numbered and joker tiles`() {
+        val numbered = NumberedTile(TileColor.BLACK, 11)
+        val joker = JokerTile(TileColor.ORANGE)
+
+        val numberedResponse = numbered.toResponse()
+        val jokerResponse = joker.toResponse()
+
+        assertEquals("BLACK", numberedResponse.color)
+        assertEquals(11, numberedResponse.number)
+        assertEquals(false, numberedResponse.joker)
+
+        assertEquals("ORANGE", jokerResponse.color)
+        assertEquals(null, jokerResponse.number)
+        assertEquals(true, jokerResponse.joker)
+    }
 }
