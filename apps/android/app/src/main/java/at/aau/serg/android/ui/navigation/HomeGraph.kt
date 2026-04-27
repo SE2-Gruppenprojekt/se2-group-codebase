@@ -1,11 +1,7 @@
 package at.aau.serg.android.ui.navigation
 
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -16,25 +12,26 @@ import at.aau.serg.android.core.datastore.getStore
 import at.aau.serg.android.core.datastore.user.UserStore
 import at.aau.serg.android.core.util.GenericViewModelFactory
 import at.aau.serg.android.datastore.proto.User
+import at.aau.serg.android.ui.screens.auth.AuthEffect
+import at.aau.serg.android.ui.screens.auth.AuthMode
 import at.aau.serg.android.ui.screens.auth.AuthScreen
 import at.aau.serg.android.ui.screens.auth.AuthViewModel
 import at.aau.serg.android.ui.screens.game.GameScreen
+import at.aau.serg.android.ui.screens.home.HomeEffect
 import at.aau.serg.android.ui.screens.home.HomeScreen
 import at.aau.serg.android.ui.screens.home.HomeViewModel
-import at.aau.serg.android.ui.screens.leaderboard.LeaderboardScreen
-import at.aau.serg.android.ui.screens.leaderboard.LeaderboardViewModel
 import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseEffect
 import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseScreen
 import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseViewModel
-import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateViewModel
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateEffect
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateScreen
+import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateViewModel
 import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingEffect
 import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingScreen
 import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingViewModel
+import at.aau.serg.android.ui.screens.settings.SettingsEffect
 import at.aau.serg.android.ui.screens.settings.SettingsScreen
 import at.aau.serg.android.ui.screens.settings.SettingsViewModel
-import at.aau.serg.android.ui.theme.ThemeState
 
 fun NavGraphBuilder.homeGraph(
     navController: NavHostController,
@@ -47,38 +44,27 @@ fun NavGraphBuilder.homeGraph(
     ) {
 
         composable(Routes.HOME_SCREEN) {
-
-            val parent = remember(navController.currentBackStackEntry) {
-                navController.getBackStackEntry(Routes.HOME)
-            }
-
-            val leaderboardVM: LeaderboardViewModel = viewModel(parent)
-
             val userStore = remember { provider.getStore<User>() }
 
-            val homeVM: HomeViewModel = viewModel(
+            val vm: HomeViewModel = viewModel(
                 factory = GenericViewModelFactory { HomeViewModel(userStore) }
             )
 
-            HomeScreen(
-                viewModel = homeVM,
-                modifier = Modifier.testTag(AppNavTestTags.HOME_GRAPH),
-                onNewLobbyScreen = {
-                    navController.navigate(Routes.CREATE_LOBBY_FANCY)
-                },
-                onBrowseFancyLobbies = {
-                    navController.navigate(Routes.BROWSING_LOBBIES)
-                },
-                onShowLeaderboard = {
-                    leaderboardVM.loadLeaderboard(
-                        onSuccess = { navController.navigate(Routes.LEADERBOARD) },
-                        onError = {}
-                    )
-                },
-                onSettings = {
-                    navController.navigate(Routes.SETTINGS)
+            LaunchedEffect(Unit) {
+                vm.effects.collect { effect ->
+                    when (effect) {
+                        HomeEffect.NavigateToCreate ->
+                            navController.navigate(Routes.CREATE_LOBBY_FANCY)
+                        HomeEffect.NavigateToBrowse ->
+                            navController.navigate(Routes.BROWSING_LOBBIES)
+                        HomeEffect.NavigateToSettings ->
+                            navController.navigate(Routes.SETTINGS)
+
+                    }
                 }
-            )
+            }
+
+            HomeScreen(viewModel = vm)
         }
 
 
@@ -89,24 +75,25 @@ fun NavGraphBuilder.homeGraph(
                 factory = GenericViewModelFactory { SettingsViewModel(userStore as UserStore) }
             )
 
-            SettingsScreen(
-                viewModel = vm,
-                onChangeUsername = {
-                    navController.navigate(Routes.CHANGE_USERNAME)
-                },
-                onBack = {
-                    navController.popBackStack()
-                },
-                isDarkMode = ThemeState.isDarkMode.value,
-                onToggleDarkMode = { ThemeState.isDarkMode.value = it },
-                onLogout = {
-                    vm.logout {
-                        navController.navigate(Routes.AUTH) {
-                            popUpTo(Routes.HOME) { inclusive = true }
+            LaunchedEffect(Unit) {
+                vm.effects.collect { effect ->
+                    when (effect) {
+                        SettingsEffect.NavigateChangeUsername ->
+                            navController.navigate(Routes.CHANGE_USERNAME)
+
+                        SettingsEffect.NavigateBack ->
+                            navController.popBackStack()
+
+                        SettingsEffect.Logout -> {
+                            navController.navigate(Routes.AUTH) {
+                                popUpTo(Routes.HOME) { inclusive = true }
+                            }
                         }
                     }
                 }
-            )
+            }
+
+            SettingsScreen(viewModel = vm)
         }
 
         composable(Routes.CHANGE_USERNAME) {
@@ -115,26 +102,24 @@ fun NavGraphBuilder.homeGraph(
             val vm: AuthViewModel = viewModel(
                 factory = GenericViewModelFactory { AuthViewModel(userStore) }
             )
-            AuthScreen(
-                viewModel = vm,
-                onContinue = { navController.popBackStack() },
-                onBack = { navController.popBackStack() }
-            )
-        }
 
-        composable(Routes.LEADERBOARD) {
-
-            val parent = remember(navController.currentBackStackEntry) {
-                navController.getBackStackEntry(Routes.HOME)
+            LaunchedEffect(Unit) {
+                vm.setMode(AuthMode.ChangeUsername)
             }
 
-            val vm: LeaderboardViewModel = viewModel(parent)
-            val players by vm.players.collectAsState()
+            LaunchedEffect(Unit) {
+                vm.effects.collect { effect ->
+                    when (effect) {
+                        is AuthEffect.NavigateBack ->
+                            navController.popBackStack()
 
-            LeaderboardScreen(
-                players = players,
-                onBack = { navController.popBackStack() }
-            )
+                        AuthEffect.NavigateContinue ->
+                            navController.popBackStack()
+                    }
+                }
+            }
+
+            AuthScreen(viewModel = vm)
         }
 
         composable("${Routes.GAME}/{matchId}") {
@@ -156,15 +141,17 @@ fun NavGraphBuilder.homeGraph(
                     when (effect) {
                         is LobbyCreateEffect.NavigateToWaitingRoom ->
                             navController.navigate("${Routes.WAITING_ROOM}/${effect.lobbyId}")
+
+                        LobbyCreateEffect.NavigateToSettings ->
+                            navController.navigate(Routes.SETTINGS)
+
+                        LobbyCreateEffect.NavigateBack ->
+                            navController.popBackStack()
                     }
                 }
             }
 
-            LobbyCreateScreen(
-                viewModel = vm,
-                onBack = { navController.popBackStack() },
-                onSettings = { navController.navigate(Routes.SETTINGS) }
-            )
+            LobbyCreateScreen(viewModel = vm)
         }
 
         composable(Routes.BROWSING_LOBBIES) {
@@ -215,6 +202,5 @@ fun NavGraphBuilder.homeGraph(
 
             LobbyWaitingScreen(viewModel = vm)
         }
-
     }
 }
