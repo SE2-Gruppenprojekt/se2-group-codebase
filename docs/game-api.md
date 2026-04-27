@@ -742,3 +742,219 @@ Can be either empty or use:
 
 ---
 
+## 4. WebSocket API
+
+## 4.1 Subscription topic
+
+Clients should subscribe to:
+
+```text
+/topic/games/{gameId}
+```
+
+Example:
+
+```text
+/topic/games/game-123
+```
+
+### Event contract recommendation
+
+All websocket events should follow a small consistent structure.
+
+Recommended common fields:
+
+- `type`
+- `gameId`
+- event-specific payload fields
+
+Optional future fields:
+
+- `version`
+- `timestamp`
+- `sequenceNumber`
+
+This makes frontend parsing simpler and helps with reconnect and stale-event handling.
+
+---
+
+## 4.2 `game.draft.updated`
+
+Sent whenever the active player updates the draft.
+
+### Event type
+
+`GameDraftUpdatedEvent`
+
+### Example payload
+
+```json
+{
+    "type": "game.draft.updated",
+    "gameId": "game-123",
+    "playerId": "player-1",
+    "draft": {
+        "gameId": "game-123",
+        "playerId": "player-1",
+        "draftBoard": [
+            {
+                "id": "set-temp-1",
+                "type": "UNRESOLVED",
+                "tiles": [
+                    {
+                        "id": "tile-020",
+                        "color": "RED",
+                        "number": 4,
+                        "isJoker": false
+                    }
+                ]
+            }
+        ],
+        "draftHand": [
+            {
+                "id": "tile-010",
+                "color": "YELLOW",
+                "number": 5,
+                "isJoker": false
+            }
+        ],
+        "version": 3,
+        "status": "ACTIVE"
+    }
+}
+```
+
+Fields:
+
+- `type: "game.draft.updated"`
+- `gameId: String`
+- `playerId: String`
+- `draft: TurnDraftResponse`
+
+---
+
+## 4.3 `game.updated`
+
+Sent whenever the confirmed authoritative game state changes.
+
+Typical causes:
+
+- valid turn commit
+- draw action if confirmed state changes
+- finished game state
+
+### Event type
+
+`GameUpdatedEvent`
+
+### Example payload
+
+```json
+{
+    "type": "game.updated",
+    "gameId": "game-123",
+    "game": {
+        "gameId": "game-123",
+        "players": [],
+        "board": [],
+        "drawPileCount": 40,
+        "currentTurnPlayerId": "player-2",
+        "turnDeadline": "2026-04-21T12:31:30Z",
+        "remainingTurnSeconds": 60,
+        "status": "ACTIVE",
+        "winnerUserId": null
+    }
+}
+```
+
+Fields:
+
+- `type: "game.updated"`
+- `gameId: String`
+- `game: GameResponse`
+
+---
+
+## 4.4 `turn.changed`
+
+Sent when the active turn moves to the next player.
+
+### Event type
+
+`TurnChangedEvent`
+
+### Example payload
+
+```json
+{
+    "type": "turn.changed",
+    "gameId": "game-123",
+    "currentTurnPlayerId": "player-2"
+}
+```
+
+Fields:
+
+- `type: "turn.changed"`
+- `gameId: String`
+- `currentTurnPlayerId: String`
+
+---
+
+## 4.5 `turn.timed_out` (optional)
+
+Sent when the active player's turn ends automatically because the timer expired.
+
+### Event type
+
+`TurnTimedOutEvent`
+
+### Example payload
+
+```json
+{
+    "type": "turn.timed_out",
+    "gameId": "game-123",
+    "previousTurnPlayerId": "player-1"
+}
+```
+
+Fields:
+
+- `type: "turn.timed_out"`
+- `gameId: String`
+- `previousTurnPlayerId: String`
+
+Notes:
+
+- this event is optional but useful for frontend messaging
+- the frontend should still treat the following `game.updated`, `turn.changed`, and draft reset state as authoritative
+
+---
+
+## 4.6 `game.ended`
+
+Sent when the game finishes.
+
+### Event type
+
+`GameEndedEvent`
+
+### Example payload
+
+```json
+{
+    "type": "game.ended",
+    "gameId": "game-123",
+    "winnerUserId": "player-1"
+}
+```
+
+Fields:
+
+- `type: "game.ended"`
+- `gameId: String`
+- `winnerUserId: String`
+
+---
+
