@@ -958,3 +958,69 @@ Fields:
 
 ---
 
+## 5. Recommended frontend handling
+
+### On initial load
+
+1. call `GET /api/games/{gameId}`
+2. optionally call `GET /api/games/{gameId}/draft`
+3. subscribe to `/topic/games/{gameId}`
+
+### During a turn
+
+- active player sends `PUT /api/games/{gameId}/draft`
+- all clients receive `game.draft.updated`
+
+### On end turn
+
+- active player sends `POST /api/games/{gameId}/end-turn`
+- all clients receive `game.updated`
+- all clients receive `turn.changed`
+- all clients may receive a fresh `game.draft.updated`
+
+### On timeout
+
+- clients may receive `turn.timed_out`
+- clients should then trust the following updated game/draft state from the backend
+
+### On reconnect
+
+1. reconnect websocket
+2. re-subscribe to `/topic/games/{gameId}`
+3. reload confirmed game
+4. optionally reload current draft
+5. discard stale local assumptions if backend state differs
+
+---
+
+## 6. Summary
+
+The game API uses:
+
+- REST for commands and initial loading
+- WebSocket for live shared state updates
+
+Main REST endpoints:
+
+- `GET /api/games/{gameId}`
+- `GET /api/games/{gameId}/draft` (optional)
+- `PUT /api/games/{gameId}/draft`
+- `POST /api/games/{gameId}/end-turn`
+- `POST /api/games/{gameId}/draw`
+- `POST /api/games/{gameId}/reset-draft`
+
+Main websocket events:
+
+- `game.draft.updated`
+- `game.updated`
+- `turn.changed`
+- `turn.timed_out` (optional)
+- `game.ended`
+
+The backend remains authoritative for:
+
+- confirmed game state
+- draft state
+- rule validation
+- turn progression
+- timer / timeout behavior
