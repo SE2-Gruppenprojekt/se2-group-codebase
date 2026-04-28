@@ -1,10 +1,17 @@
 package at.se2group.backend.lobby.service
 
+import at.se2group.backend.domain.ConfirmedGame
+import at.se2group.backend.domain.GamePlayer
+import at.se2group.backend.domain.GameStartResult
+import at.se2group.backend.domain.GameStatus
 import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.domain.LobbyStatus
+import at.se2group.backend.domain.TurnDraft
+import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
 import at.se2group.backend.service.LobbyBroadcastService
+import at.se2group.backend.service.GameInitializationService
 import at.se2group.backend.service.LobbyService
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
@@ -29,6 +36,12 @@ class LobbyServiceStartTest {
 
     @Mock
     lateinit var lobbyBroadcastService: LobbyBroadcastService
+
+    @Mock
+    lateinit var gameInitializationService: GameInitializationService
+
+    @Mock
+    lateinit var gameRepository: GameRepository
 
     @InjectMocks
     lateinit var lobbyService: LobbyService
@@ -58,6 +71,28 @@ class LobbyServiceStartTest {
         `when`(lobbyRepository.findById("lobby-1")).thenReturn(Optional.of(entity))
         `when`(lobbyRepository.save(any()))
             .thenAnswer { it.arguments[0] as LobbyEntity }
+        `when`(gameInitializationService.createGameFromLobby(any()))
+            .thenReturn(
+                GameStartResult(
+                    confirmedGame = ConfirmedGame(
+                        gameId = "game-123",
+                        lobbyId = "lobby-1",
+                        players = listOf(
+                            GamePlayer(
+                                userId = "host-1",
+                                displayName = "Anna",
+                                turnOrder = 0
+                            )
+                        ),
+                        currentPlayerUserId = "host-1",
+                        status = GameStatus.ACTIVE
+                    ),
+                    turnDraft = TurnDraft(
+                        gameId = "game-123",
+                        playerUserId = "host-1"
+                    )
+                )
+            )
 
 
         val result = lobbyService.startLobby("lobby-1", "host-1")
@@ -76,8 +111,9 @@ class LobbyServiceStartTest {
         assertEquals(3, saved.players.size)
 
 
-        verify(lobbyBroadcastService).broadcastLobbyStarted(result.lobbyId, result.lobbyId)
-
+        verify(gameInitializationService).createGameFromLobby(result)
+        verify(lobbyBroadcastService).broadcastLobbyStarted(result.lobbyId, "game-123")
+        verify(gameRepository).save(any())
     }
 
     @Test
@@ -105,7 +141,7 @@ class LobbyServiceStartTest {
         assertEquals("Only the host can start the match", exception.message)
         verify(lobbyRepository, never()).save(any())
         verifyNoInteractions(lobbyBroadcastService)
-
+        verifyNoInteractions(gameRepository)
     }
 
     @Test
@@ -133,6 +169,7 @@ class LobbyServiceStartTest {
         assertEquals("Match can only be started while the lobby is open", exception.message)
         verify(lobbyRepository, never()).save(any())
         verifyNoInteractions(lobbyBroadcastService)
+        verifyNoInteractions(gameRepository)
     }
 
     @Test
@@ -160,6 +197,7 @@ class LobbyServiceStartTest {
         assertEquals("At least 2 players are required to start the match", exception.message)
         verify(lobbyRepository, never()).save(any())
         verifyNoInteractions(lobbyBroadcastService)
+        verifyNoInteractions(gameRepository)
     }
 
     @Test
@@ -188,6 +226,7 @@ class LobbyServiceStartTest {
         assertEquals("All players must be ready to start the match", exception.message)
         verify(lobbyRepository, never()).save(any())
         verifyNoInteractions(lobbyBroadcastService)
+        verifyNoInteractions(gameRepository)
     }
 
 }
