@@ -45,6 +45,7 @@ import at.aau.serg.android.ui.components.TopBar
 import at.aau.serg.android.ui.screens.lobby.browse.components.LobbyBrowseCard
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.theme.ThemeState
+import at.aau.serg.android.ui.util.ErrorUiMapper
 
 @Composable
 fun LobbyBrowseScreen(
@@ -196,13 +197,17 @@ fun LobbyBrowseScreenContent(
             }
         }
 
-        uiState.errorMessage?.let { errorMessage ->
-            Text(
-                text = errorMessage,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
+        when (val state = uiState.loadState) {
+            is LoadState.Error -> {
+                Text(
+                    text = ErrorUiMapper.toMessage(state.error),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+            }
+
+            else -> Unit
         }
 
         // lobby list
