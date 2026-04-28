@@ -46,8 +46,10 @@ class LobbyBrowseViewModelTest {
     }
 
     @Test
-    fun initialState_hasNullErrorMessage() {
-        assertNull(viewModel.uiState.value.errorMessage)
+    fun initialState_is_not_error() {
+        assertTrue(
+            viewModel.uiState.value.loadState !is LoadState.Error
+        )
     }
 
     @Test

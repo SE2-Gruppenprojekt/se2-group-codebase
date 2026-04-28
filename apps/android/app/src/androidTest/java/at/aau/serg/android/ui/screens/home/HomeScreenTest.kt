@@ -71,27 +71,20 @@ class HomeScreenTest {
             .assertExists()
     }
 
+    private fun click(tag: String) {
+        composeRule.onNodeWithTag(tag).performClick()
+    }
+
     @Test
     fun buttons_trigger_events() {
         val events = mutableListOf<HomeEvent>()
 
         setScreen(onEvent = { events.add(it) })
 
-        composeRule
-            .onNodeWithTag(HomeTestTags.ACTION_CREATE_LOBBY)
-            .performClick()
-
-        composeRule
-            .onNodeWithTag(HomeTestTags.ACTION_BROWSE_LOBBY)
-            .performClick()
-
-        composeRule
-            .onNodeWithTag(HomeTestTags.ACTION_SETTINGS)
-            .performClick()
-
-        composeRule
-            .onNodeWithTag(HomeTestTags.TOPBAR_SETTINGS_BUTTON)
-            .performClick()
+        click(HomeTestTags.ACTION_CREATE_LOBBY)
+        click(HomeTestTags.ACTION_BROWSE_LOBBY)
+        click(HomeTestTags.ACTION_SETTINGS)
+        click(HomeTestTags.TOPBAR_SETTINGS_BUTTON)
 
 
         assertEquals(

@@ -11,7 +11,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import at.aau.serg.android.core.errors.AppError
 import at.aau.serg.android.ui.state.LoadState
+import at.aau.serg.android.ui.util.ErrorUiMapper
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -24,8 +26,7 @@ class LobbyBrowseScreenTest {
 
     private fun setScreen(
         lobbies: List<LobbyBrowseItem> = emptyList(),
-        isLoading: Boolean = false,
-        errorMessage: String? = null,
+        loadState: LoadState = LoadState.Success,
         lobbyIdInput: String = "",
         onEvent: (LobbyBrowseEvent) -> Unit = {}
     ) {
@@ -33,8 +34,7 @@ class LobbyBrowseScreenTest {
             LobbyBrowseScreenContent(
                 uiState = LobbyBrowseUiState(
                     lobbies = lobbies,
-                    loadState = if (isLoading) LoadState.Loading else LoadState.Idle,
-                    errorMessage = errorMessage,
+                    loadState = loadState,
                     lobbyIdInput = lobbyIdInput
                 ),
                 onEvent = onEvent
@@ -169,7 +169,7 @@ class LobbyBrowseScreenTest {
 
     @Test
     fun loadingState_showsProgressIndicator() {
-        setScreen(isLoading = true)
+        setScreen(loadState = LoadState.Loading)
         composeRule
             .onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate))
             .assertIsDisplayed()
@@ -177,7 +177,7 @@ class LobbyBrowseScreenTest {
 
     @Test
     fun notLoading_hidesProgressIndicator() {
-        setScreen(isLoading = false)
+        setScreen(loadState = LoadState.Success)
         composeRule
             .onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate))
             .assertDoesNotExist()
@@ -185,14 +185,24 @@ class LobbyBrowseScreenTest {
 
     @Test
     fun errorMessage_isDisplayed() {
-        setScreen(errorMessage = "Failed to load lobbies")
-        composeRule.onNodeWithText("Failed to load lobbies").assertIsDisplayed()
+        setScreen(
+            loadState = LoadState.Error(AppError.Network)
+        )
+
+        composeRule
+            .onNodeWithText(ErrorUiMapper.toMessage(AppError.Network))
+            .assertIsDisplayed()
     }
 
     @Test
     fun noErrorMessage_isNotDisplayed() {
-        setScreen(errorMessage = null)
-        composeRule.onNodeWithText("Failed to load lobbies").assertDoesNotExist()
+        setScreen(
+            loadState = LoadState.Success
+        )
+
+        composeRule
+            .onNodeWithText("Network error")
+            .assertDoesNotExist()
     }
 
     // --- buttons ---
