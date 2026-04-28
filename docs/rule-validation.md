@@ -12,7 +12,7 @@ During a player's turn, the frontend is allowed to create **temporary invalid dr
     - allows temporary invalid intermediate structures
 2. **Turn submission validation**
     - full Rummikub validation
-    - classifies each final set as **group** or **run** on the backend
+    - resolves each final set as **group** or **run** inside backend set validation
     - checks whether the final submitted draft can legally become the next confirmed game state
 
 In short:
@@ -24,7 +24,7 @@ The most important design consequence in this document is:
 
 > **The backend, not the frontend, decides whether a final set is a group or a run.**
 
-That means the validation system must include an explicit **set classification** step before full set validation can happen.
+That decision should live inside backend set validation rather than in a separate standalone classification service.
 
 ---
 
@@ -101,7 +101,7 @@ The backend must ensure that:
 When a player ends the turn, the backend must ensure that:
 
 - the final board consists only of legal sets
-- each set can be classified as either a legal group or a legal run
+- each set can be validated as either a legal group or a legal run
 - the move respects first-move rules if applicable
 - the tile movement is legal relative to the confirmed state and active player's rack
 - the game can transition safely to the next turn or the finished state
@@ -140,7 +140,7 @@ The backend should **not** fully validate:
 - whether all sets are valid groups/runs
 - whether the board is fully legal already
 - whether initial meld conditions are already satisfied
-- whether every temporary set can already be classified cleanly
+- whether every temporary set can already be resolved cleanly
 
 That is intentional.
 
@@ -150,7 +150,7 @@ For `POST /api/games/{gameId}/end-turn`, the backend should validate:
 
 - all ownership/integrity checks again
 - full board structure validity
-- set classification
+- set resolution inside set validation
 - set-level legality
 - first move rules
 - final move legality relative to confirmed state
@@ -160,7 +160,7 @@ This is where full Rummikub validation belongs.
 
 ---
 
-# 4. Core Design Change: Backend-Inferred Set Type
+# 4. Core Design Change: Backend-Resolved Set Type
 
 The frontend does **not** send `BoardSetType.GROUP` or `BoardSetType.RUN`.
 Therefore the backend must decide that itself.
@@ -177,15 +177,7 @@ Instead, the backend must:
 3. reject the set if it can be neither
 4. validate it with the correct validator
 
-That means the validation flow becomes:
-
-- classify set
-- validate set according to classified type
-
-instead of:
-
-- read declared type
-- validate against declared type
+That means the backend cannot just trust `set.type` from the client. It must inspect the tiles and decide whether the set is legal as a group or legal as a run.
 
 ## 4.2 Why this is harder
 
@@ -196,14 +188,14 @@ Without an explicit type from the client, the backend must reason about:
 - ambiguous or impossible sets
 - all-joker edge cases
 
-This makes **set classification** a first-class part of the rule engine.
+This makes backend type resolution part of the rule engine, but it does not require a separate dedicated service.
 
 ## 4.3 Best architectural decision
 
 The cleanest design is:
 
-- do **not** classify sets on every draft update
-- classify sets only during **final submitted turn validation**
+- do **not** resolve sets on every draft update
+- resolve sets only during **final submitted turn validation**
 - keep draft update permissive
 - keep end-turn validation strict
 
@@ -372,97 +364,30 @@ It only checks whether the player rearranged the correct tiles.
 
 ---
 
-## Level 3: Set classification
+## Level 3: Set resolution inside set validation
 
 Question:
 
-> If this set is part of a final submitted board, what kind of set is it supposed to be?
+> If this set is part of a final submitted board, is it legal as a group, legal as a run, ambiguous, or invalid?
 
 This is the key new layer.
 
-Because the frontend does not send a `BoardSetType`, the backend must infer one.
-
-## 5.3.1 Why classification deserves its own service
-
-Classification is not the same thing as full validation.
+Because the frontend does not send a trustworthy final type, the backend must attempt both legal interpretations inside `SetValidationService`.
 
 The service should answer:
 
-- is this set a **group candidate**?
-- is this set a **run candidate**?
-- is it impossible to classify?
-- is it ambiguous?
+- is this set valid as a group?
+- is this set valid as a run?
+- is it invalid as both?
+- is it valid as both and therefore ambiguous?
 
-That is separate from fully validating all the rules of a group or run.
+A good practical strategy is:
 
-## 5.3.2 Recommended service: `SetClassificationService`
+- let `GroupValidationService` validate the set
+- let `RunValidationService` validate the set
+- let `SetValidationService` decide based on those two results
 
-Responsibilities:
-
-- inspect one set
-- infer whether it is a `GROUP` or `RUN`
-- reject ambiguous/impossible cases
-- return a `SetClassificationResult`
-
-### Suggested model
-
-```kotlin
-enum class InferredSetType {
-    GROUP,
-    RUN
-}
-
-data class SetClassificationResult(
-    val isClassifiable: Boolean,
-    val inferredType: InferredSetType? = null,
-    val violations: List<RuleViolation> = emptyList()
-)
-```
-
-## 5.3.3 Suggested classification strategy
-
-For **non-joker tiles** in the set:
-
-- if all have the same number and colors are unique -> group candidate
-- if all have the same color and numbers are unique -> run candidate
-- if neither -> invalid
-- if there are no non-jokers -> invalid or unsupported, depending on your rules
-
-### Example pseudo-code
-
-```kotlin
-fun classify(set: BoardSet): SetClassificationResult {
-    if (set.tiles.size < 3) {
-        return invalidClassification("Set must contain at least 3 tiles")
-    }
-
-    val nonJokers = set.tiles.filterNot { it.isJoker }
-
-    if (nonJokers.isEmpty()) {
-        return invalidClassification("Cannot classify an all-joker set")
-    }
-
-    val sameNumber = nonJokers.map { it.number }.distinct().size == 1
-    val sameColor = nonJokers.map { it.color }.distinct().size == 1
-
-    return when {
-        sameNumber && !sameColor -> classifiedAs(InferredSetType.GROUP)
-        sameColor && !sameNumber -> classifiedAs(InferredSetType.RUN)
-        else -> invalidClassification("Set is neither a group nor a run")
-    }
-}
-```
-
-## 5.3.4 Important note about jokers
-
-Jokers make classification more complicated.
-
-A good practical rule is:
-
-- classify based on the non-joker subset first
-- let the later group/run validator decide whether joker use is legal
-
-That keeps classification simpler and more stable.
+This avoids a separate classification pass that duplicates much of the same reasoning.
 
 ---
 
@@ -470,7 +395,7 @@ That keeps classification simpler and more stable.
 
 Question:
 
-> Given the inferred set type, is this individual set a legal group or run?
+> Is this individual set legal as a group or legal as a run?
 
 At this level, each set is validated independently.
 
@@ -478,7 +403,7 @@ At this level, each set is validated independently.
 
 - `GroupValidationService`
 - `RunValidationService`
-- optional `SetValidationService` as a router
+- `SetValidationService` that tries both and decides the outcome
 
 ---
 
@@ -574,27 +499,29 @@ fun validateRun(set: BoardSet): ValidationResult {
 
 ### 5.4.3 `SetValidationService`
 
-This service now routes **after classification**.
-It should not read a pre-existing `BoardSetType` from the client.
+This service should not trust a pre-existing `BoardSetType` from the client.
+Instead, it should validate the set as both a group and a run and then decide the outcome.
 
 ### Example
 
 ```kotlin
 class SetValidationService(
-    private val setClassificationService: SetClassificationService,
     private val groupValidationService: GroupValidationService,
     private val runValidationService: RunValidationService
 ) {
     fun validate(set: BoardSet): ValidationResult {
-        val classification = setClassificationService.classify(set)
-        if (!classification.isClassifiable) {
-            return invalid(classification.violations)
-        }
+        val groupResult = groupValidationService.validate(set)
+        val runResult = runValidationService.validate(set)
 
-        return when (classification.inferredType) {
-            InferredSetType.GROUP -> groupValidationService.validate(set)
-            InferredSetType.RUN -> runValidationService.validate(set)
-            null -> invalid("Set could not be classified")
+        return when {
+            groupResult.isValid && !runResult.isValid -> valid()
+            runResult.isValid && !groupResult.isValid -> valid()
+            groupResult.isValid && runResult.isValid -> invalid(
+                "Set is ambiguous because it is valid as both a group and a run"
+            )
+            else -> ValidationResult(
+                violations = groupResult.violations + runResult.violations
+            )
         }
     }
 }
@@ -805,7 +732,7 @@ Own rule validation only.
 
 Responsibilities:
 
-- set classification
+- set resolution inside set validation
 - set legality
 - board legality
 - tile conservation
@@ -894,7 +821,7 @@ Purpose:
 6. The orchestrator invokes layered validators:
     - tile conservation
     - board validation
-    - set classification and set validation inside board validation
+    - set resolution and set validation inside board validation
     - first move validation
     - any later turn-level validators
 7. If validation fails:
@@ -949,18 +876,18 @@ fun endTurn(gameId: String, userId: String): Game {
 
 # 8. Best Options for Classification Timing
 
-Because type is backend-inferred, there are several possible strategies.
+Because the frontend does not provide a trustworthy final set type, there are several possible strategies.
 
-## Option A: classify on every draft update
+## Option A: resolve on every draft update
 
 ### Idea
 
-Each incoming candidate set is immediately classified as group/run/invalid.
+Each incoming candidate set is immediately checked as group/run/invalid.
 
 ### Pros
 
 - early feedback
-- draft may already carry inferred type metadata
+- draft may already carry inferred diagnostic metadata
 
 ### Cons
 
@@ -974,12 +901,12 @@ Not recommended for your main draft update path.
 
 ---
 
-## Option B: classify only on end-turn
+## Option B: resolve only on end-turn
 
 ### Idea
 
 During draft editing, the backend stores temporary sets without requiring final type.
-At end-turn, each set is classified and then validated.
+At end-turn, each set is tested as a group and as a run, and then the backend decides the outcome.
 
 ### Pros
 
@@ -990,7 +917,7 @@ At end-turn, each set is classified and then validated.
 
 ### Cons
 
-- classification errors appear later, at submit time
+- set-resolution errors appear later, at submit time
 
 ### Recommendation
 
@@ -998,11 +925,11 @@ This is the **best default option**.
 
 ---
 
-## Option C: classify softly on update, strictly on end-turn
+## Option C: resolve softly on update, strictly on end-turn
 
 ### Idea
 
-Draft update attempts a best-effort classification for diagnostics/UI hints, but does not reject temporary ambiguous sets unless integrity is broken.
+Draft update attempts a best-effort group/run resolution for diagnostics or UI hints, but does not reject temporary ambiguous sets unless integrity is broken.
 
 ### Pros
 
@@ -1040,7 +967,7 @@ You should usually not validate:
 
 - group legality
 - run legality
-- final set classification
+- final set resolution
 - full board legality
 - first move point threshold
 - end-turn scoring
@@ -1211,29 +1138,6 @@ This lets validators contribute violations independently while keeping the final
 
 ---
 
-## 10.3 `SetClassificationResult`
-
-Because type is inferred, classification should have its own explicit model.
-
-### Example
-
-```kotlin
-enum class InferredSetType {
-    GROUP,
-    RUN
-}
-
-data class SetClassificationResult(
-    val isClassifiable: Boolean,
-    val inferredType: InferredSetType? = null,
-    val violations: List<RuleViolation> = emptyList()
-)
-```
-
-This keeps classification separate from final legality validation.
-
----
-
 # 11. Recommended Validation Service Hierarchy
 
 A strong separation would look like this:
@@ -1243,7 +1147,6 @@ RummikubRuleService
 ├── TileConservationService
 ├── BoardValidationService
 │   └── SetValidationService
-│       ├── SetClassificationService
 │       ├── GroupValidationService
 │       └── RunValidationService
 └── FirstMoveValidationService
@@ -1261,7 +1164,7 @@ TurnDraftService
 This keeps:
 
 - draft mutation separate from rule evaluation
-- classification separate from validation
+- group/run detail separate from top-level set resolution
 - small validators small
 - orchestration explicit
 
@@ -1282,7 +1185,7 @@ The player has not finished rearranging yet.
 - broadcast draft
 - do **not** reject it just because one set is temporarily invalid
 
-This is why full board validation and classification do not belong in the draft update path.
+This is why full board validation and set resolution do not belong in the draft update path.
 
 ---
 
@@ -1300,17 +1203,17 @@ This is a `TileConservationService` failure.
 
 ---
 
-## 12.3 Invalid end-turn because a set cannot be classified
+## 12.3 Invalid end-turn because a set cannot be resolved as a legal group or run
 
 Player submits a final set whose non-joker tiles are neither same-number nor same-color.
 
 ### Expected backend behavior
 
 - reject end-turn
-- return classification error
+- return set-resolution or set-validation errors
 - keep draft uncommitted
 
-This is a `SetClassificationService` failure.
+This is a `SetValidationService` failure.
 
 ---
 
@@ -1347,21 +1250,19 @@ This is a `FirstMoveValidationService` failure.
 If implementing incrementally, a good order is:
 
 1. `ValidationResult` and `RuleViolation`
-2. `SetClassificationResult`
-3. `TileConservationService`
-4. `SetClassificationService`
-5. `GroupValidationService`
-6. `RunValidationService`
-7. `SetValidationService`
-8. `BoardValidationService`
-9. `FirstMoveValidationService`
-10. `RummikubRuleService`
-11. integrate full validation into end-turn flow
+2. `TileConservationService`
+3. `GroupValidationService`
+4. `RunValidationService`
+5. `SetValidationService`
+6. `BoardValidationService`
+7. `FirstMoveValidationService`
+8. `RummikubRuleService`
+9. integrate full validation into end-turn flow
 
 This order works well because:
 
 - draft update safety depends heavily on tile conservation
-- end-turn now depends on classification before group/run validation
+- end-turn now depends on trying both group and run validation inside set validation
 - first-move validation depends on board validity already existing
 
 ---
@@ -1375,7 +1276,7 @@ The single most important design rule is:
 That means:
 
 - `TurnDraftService` should allow temporary invalid arrangements as long as ownership and tile integrity are preserved
-- `SetClassificationService` should decide whether a final set is a group or a run
+- `SetValidationService` should decide whether a final set is legal as a group, legal as a run, ambiguous, or invalid
 - `RummikubRuleService` should validate only submitted end-turn states that are about to become confirmed game state
 
 If this boundary stays clear, the architecture remains:
@@ -1390,4 +1291,4 @@ If this boundary stays clear, the architecture remains:
 
 # 15. One-Sentence Summary
 
-The backend should treat draft updates as **safe persistence of temporary player work**, and treat end-turn submission as the **single strict validation point where tile conservation, backend set classification, set legality, board legality, and game-context rules together decide whether the draft may become the next confirmed game state**.
+The backend should treat draft updates as **safe persistence of temporary player work**, and treat end-turn submission as the **single strict validation point where tile conservation, backend set resolution, set legality, board legality, and game-context rules together decide whether the draft may become the next confirmed game state**.
