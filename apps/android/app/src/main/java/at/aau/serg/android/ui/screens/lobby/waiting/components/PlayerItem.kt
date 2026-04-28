@@ -2,11 +2,13 @@ package at.aau.serg.android.ui.screens.lobby.waiting.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -17,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -26,12 +29,14 @@ fun PlayerItem(
     name: String,
     subtitle: String,
     isHost: Boolean = false,
-    isJoined: Boolean = false,
+    isReady: Boolean = false,
     isPlaceholder: Boolean = false,
     borderColor: Color,
     backgroundColor: Color,
     primaryTextColor: Color,
-    secondaryTextColor: Color
+    secondaryTextColor: Color,
+    onClick: (() -> Unit)? = null,
+    testTag: String = "",
 ) {
     val avatarBackground = if (isPlaceholder) {
         secondaryTextColor.copy(alpha = 0.16f)
@@ -47,13 +52,19 @@ fun PlayerItem(
 
     Card(
         modifier = Modifier
+            .testTag(testTag)
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .border(
                 width = 2.dp,
                 color = borderColor,
                 shape = RoundedCornerShape(18.dp)
-            ),
+            )
+            .clickable(
+                enabled = !isPlaceholder && onClick != null
+            ) {
+                onClick?.invoke()
+            },
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         shape = RoundedCornerShape(18.dp)
     ) {
@@ -109,9 +120,8 @@ fun PlayerItem(
                 }
             }
 
-            if (isJoined) {
+            if (isReady && !isPlaceholder) {
                 Spacer(modifier = Modifier.width(10.dp))
-
                 Box(
                     modifier = Modifier
                         .size(22.dp)
@@ -120,6 +130,22 @@ fun PlayerItem(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Check,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(12.dp)
+                    )
+                }
+            } else if (!isPlaceholder) {
+                Spacer(modifier = Modifier.width(10.dp))
+
+                Box(
+                    modifier = Modifier
+                        .size(22.dp)
+                        .background(Color(0xFFE53935), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
                         contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(12.dp)

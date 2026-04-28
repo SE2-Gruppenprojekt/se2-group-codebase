@@ -63,6 +63,7 @@ fun LobbyWaitingScreenContent(
             .background(Brush.verticalGradient(listOf(gradientTop, gradientBottom)))
             .verticalScroll(scrollState)
             .padding(16.dp)
+            .testTag(LobbyWaitingTestTags.SCREEN)
     ) {
 
         TopBar(
@@ -86,6 +87,8 @@ fun LobbyWaitingScreenContent(
         Spacer(Modifier.height(16.dp))
 
         WaitingScreenPlayerSection(
+            onEvent = onEvent,
+            localId = uiState.user?.uid ?: "",
             isLoading = uiState.loadState == LoadState.Loading,
             players = players,
             fetchedLobby = uiState.lobby,
@@ -93,7 +96,7 @@ fun LobbyWaitingScreenContent(
             joinedCount = joinedCount,
             primaryTextColor = primaryTextColor,
             secondaryTextColor = secondaryTextColor,
-            darkMode = darkMode
+            darkMode = darkMode,
         )
 
         Spacer(Modifier.height(18.dp))

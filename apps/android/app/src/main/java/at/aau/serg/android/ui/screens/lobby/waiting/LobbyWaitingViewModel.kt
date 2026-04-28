@@ -9,10 +9,15 @@ import at.aau.serg.android.core.network.lobby.LobbyService
 import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
 import at.aau.serg.android.core.network.mapper.toDomain
 import at.aau.serg.android.datastore.proto.User
-import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseEffect
-import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseEvent
 import at.aau.serg.android.ui.state.LoadState
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import shared.models.lobby.domain.Lobby
 
@@ -24,7 +29,7 @@ class LobbyWaitingViewModel(
 
 ) : ViewModel() {
 
-    val _uiState = MutableStateFlow(LobbyWaitingUiState())
+    private val _uiState = MutableStateFlow(LobbyWaitingUiState())
     val uiState: StateFlow<LobbyWaitingUiState> = _uiState.asStateFlow()
 
     private val _effect = MutableSharedFlow<LobbyWaitingEffect>()
@@ -53,10 +58,9 @@ class LobbyWaitingViewModel(
             }
 
             LobbyWaitingEvent.OnTurnTimerDecrease -> {
-                _uiState.update {
-                    if (it.turnTimer > 10) {
-                        it.copy(turnTimer = it.turnTimer - 10)
-                    } else it
+                _uiState.update { state ->
+                    val newValue = (state.turnTimer - 10).coerceAtLeast(10)
+                    state.copy(turnTimer = newValue)
                 }
             }
 
@@ -67,28 +71,15 @@ class LobbyWaitingViewModel(
             }
 
             LobbyWaitingEvent.OnStartingCardsDecrease -> {
-                _uiState.update {
-                    if (it.startingCards > 1) {
-                        it.copy(startingCards = it.startingCards - 1)
-                    } else it
+                _uiState.update { state ->
+                    val newValue = (state.startingCards - 1).coerceAtLeast(1)
+                    state.copy(startingCards = newValue)
                 }
             }
 
             is LobbyWaitingEvent.OnStackToggle -> {
                 _uiState.update {
                     it.copy(stackEnabled = event.enabled)
-                }
-            }
-
-            LobbyWaitingEvent.OnBackClicked -> {
-                viewModelScope.launch {
-                    _effect.emit(LobbyWaitingEffect.NavigateBack)
-                }
-            }
-
-            LobbyWaitingEvent.OnSettingsClicked -> {
-                viewModelScope.launch {
-                    _effect.emit(LobbyWaitingEffect.NavigateToSettings)
                 }
             }
 
@@ -107,6 +98,23 @@ class LobbyWaitingViewModel(
                 }
             }
 
+            is LobbyWaitingEvent.ToggleReadyState -> {
+                if (uiState.value.user?.uid != event.userId) return
+
+                _uiState.update { state ->
+                    val lobby = state.lobby ?: return@update state
+
+                    state.copy(
+                        lobby = lobby.copy(
+                            players = lobby.players.map { player ->
+                                if (player.userId == event.userId)
+                                    player.copy(isReady = !player.isReady)
+                                else player
+                            }
+                        )
+                    )
+                }
+            }
         }
     }
 
@@ -148,7 +156,7 @@ class LobbyWaitingViewModel(
 
 
             try {
-                val result = api.startMatch(user.uid, state.lobby?.lobbyId ?: " ")
+                api.startMatch(user.uid, state.lobby?.lobbyId ?: " ")
                 _uiState.update {
                     it.copy(
                         loadState = LoadState.Success
@@ -156,10 +164,8 @@ class LobbyWaitingViewModel(
                         )
                 }
 
-                viewModelScope.launch {
-                    _effect.emit(LobbyWaitingEffect.NavigateToMatch)
-                }
-
+                // TODO: apply here in case we get that as a response from start
+                _effect.emit(LobbyWaitingEffect.NavigateToMatch("placeholder"))
             } catch (e: Throwable) {
                 val appError = NetworkErrorMapper.map(e)
 

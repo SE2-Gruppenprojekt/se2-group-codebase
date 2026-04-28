@@ -196,7 +196,7 @@ fun NavGraphBuilder.homeGraph(
                 vm.effects.collect { effect ->
                     when (effect) {
                         is LobbyWaitingEffect.NavigateToMatch ->
-                            navController.navigate("${Routes.GAME}/{matchId}")
+                            navController.navigate("${Routes.GAME}/${effect.matchId}")
 
                         LobbyWaitingEffect.NavigateToSettings ->
                             navController.navigate(Routes.SETTINGS)
