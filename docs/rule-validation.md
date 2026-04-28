@@ -341,10 +341,22 @@ class TileConservationService {
         actingPlayerId: String,
         candidateDraft: TurnDraft
     ): ValidationResult {
-        val allowedTiles = buildAllowedTileMultiset(confirmedGame, actingPlayerId)
-        val submittedTiles = buildSubmittedTileMultiset(candidateDraft)
+        // The active player may rearrange the current confirmed board plus their own confirmed rack.
+        val allowedTileIds = (
+            confirmedGame.boardSets.flatMap { it.tiles } +
+            confirmedGame.players.first { it.userId == actingPlayerId }.rackTiles
+        ).groupingBy { it.tileId }
+            .eachCount()
 
-        return if (allowedTiles == submittedTiles) {
+        // After editing, the draft must still contain exactly that same tile universe.
+        val submittedTileIds = (
+            candidateDraft.boardSets.flatMap { it.tiles } +
+            candidateDraft.rackTiles
+        ).groupingBy { it.tileId }
+            .eachCount()
+
+        // Conservation is an exact multiset equality check, not a subset check.
+        return if (allowedTileIds == submittedTileIds) {
             valid()
         } else {
             invalid("Submitted draft does not preserve the allowed tile set")
