@@ -519,7 +519,7 @@ class SetValidationService(
             groupResult.isValid && runResult.isValid -> invalid(
                 "Set is ambiguous because it is valid as both a group and a run"
             )
-            else -> ValidationResult(
+            else -> invalid(
                 violations = groupResult.violations + runResult.violations
             )
         }
@@ -871,6 +871,62 @@ fun endTurn(gameId: String, userId: String): Game {
     return updatedGame
 }
 ```
+
+---
+
+## 7.3 `commitDraftToConfirmedGame(...)`
+
+Once end-turn validation succeeds, the backend still needs one final step:
+
+> convert the validated draft into the next confirmed game state
+
+This step should stay separate from rule validation itself.
+
+Validation answers:
+
+- is this draft legal to commit?
+
+`commitDraftToConfirmedGame(...)` answers:
+
+- what does the next confirmed game state look like now that the draft is accepted?
+
+Typical responsibilities:
+
+- replace the confirmed board with the submitted draft board
+- replace the acting player's confirmed rack with the submitted draft rack
+- preserve the other players unchanged
+- keep the same game identity and lobby identity
+- keep or update status fields as needed
+- leave turn advancement and next-draft creation to the surrounding orchestration layer
+
+### Example pseudo-code
+
+```kotlin
+fun commitDraftToConfirmedGame(
+    confirmedGame: Game,
+    draft: TurnDraft
+): Game {
+    val updatedPlayers = confirmedGame.players.map { player ->
+        if (player.userId == draft.playerUserId) {
+            player.copy(rackTiles = draft.rackTiles)
+        } else {
+            player
+        }
+    }
+
+    return confirmedGame.copy(
+        players = updatedPlayers,
+        boardSets = draft.boardSets
+    )
+}
+```
+
+### Important boundary
+
+This function should assume the draft has already passed full validation.
+It should not redo group/run validation, board validation, or first-move validation.
+
+Its job is state transition, not rule checking.
 
 ---
 
