@@ -9,6 +9,7 @@ import at.se2group.backend.dto.JoinLobbyRequest
 import at.se2group.backend.dto.UpdateLobbySettingsRequest
 import at.se2group.backend.mapper.toDomain
 import at.se2group.backend.mapper.toEntity
+import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -19,7 +20,8 @@ import java.time.Instant
 class LobbyService(
     private val lobbyRepository: LobbyRepository,
     private val lobbyBroadcastService: LobbyBroadcastService,
-    private val gameInitializationService: GameInitializationService) {
+    private val gameInitializationService: GameInitializationService,
+    private val gameRepository: GameRepository) {
 
     companion object {
         const val MAX_PLAYERS = 8
@@ -156,6 +158,7 @@ class LobbyService(
         val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
 
         val gameStart = gameInitializationService.createGameFromLobby(saved)
+        gameRepository.save(gameStart.confirmedGame.toEntity())
         lobbyBroadcastService.broadcastLobbyStarted(saved.lobbyId, gameStart.confirmedGame.gameId)
         return saved
     }
