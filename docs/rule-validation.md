@@ -930,84 +930,36 @@ Its job is state transition, not rule checking.
 
 ---
 
-# 8. Best Options for Classification Timing
+# 8. Chosen Strategy for Set Resolution Timing
 
-Because the frontend does not provide a trustworthy final set type, there are several possible strategies.
+The backend should use exactly one strategy:
 
-## Option A: resolve on every draft update
+> **resolve sets only on end-turn**
 
-### Idea
+During draft editing, the backend stores temporary sets without requiring a final resolved type.
+When the player submits the turn, `SetValidationService` tests each final set as a group and as a run and then decides the outcome.
 
-Each incoming candidate set is immediately checked as group/run/invalid.
+### Why this is the chosen strategy
 
-### Pros
+- it preserves editing freedom during drag-and-drop
+- it matches how real players actually rearrange tiles
+- it keeps `PUT /api/games/{gameId}/draft` lightweight
+- it keeps `POST /api/games/{gameId}/end-turn` as the single strict validation point
+- it avoids introducing a separate early-resolution path that mostly duplicates final validation logic
 
-- early feedback
-- draft may already carry inferred diagnostic metadata
+### Tradeoff
 
-### Cons
+The main tradeoff is that set-resolution errors appear at submit time rather than during every intermediate draft update.
 
-- too strict for intermediate editing
-- many legal editing sequences would be rejected too early
-- difficult with temporary incomplete sets
-
-### Recommendation
-
-Not recommended for your main draft update path.
+That tradeoff is acceptable and preferable for this architecture because temporary invalid states are a normal part of legal turn editing.
 
 ---
 
-## Option B: resolve only on end-turn
+# 9. What This Means for Draft Updates
 
-### Idea
+Because set resolution happens only on end-turn, draft updates should stay intentionally narrow.
 
-During draft editing, the backend stores temporary sets without requiring final type.
-At end-turn, each set is tested as a group and as a run, and then the backend decides the outcome.
-
-### Pros
-
-- preserves editing freedom
-- matches real player behavior
-- keeps draft update endpoint simpler
-- best fit for your architecture
-
-### Cons
-
-- set-resolution errors appear later, at submit time
-
-### Recommendation
-
-This is the **best default option**.
-
----
-
-## Option C: resolve softly on update, strictly on end-turn
-
-### Idea
-
-Draft update attempts a best-effort group/run resolution for diagnostics or UI hints, but does not reject temporary ambiguous sets unless integrity is broken.
-
-### Pros
-
-- gives better future UI/debug support
-- still keeps end-turn as the strict validation point
-
-### Cons
-
-- more implementation complexity
-- may not be worth it early on
-
-### Recommendation
-
-A good later enhancement, but not necessary for the initial backend implementation.
-
----
-
-# 9. What Should and Should Not Be Validated on Draft Update
-
-## Validate on every draft update
-
-You should validate:
+### Validate on every draft update
 
 - caller identity
 - active player ownership
@@ -1017,9 +969,7 @@ You should validate:
 - tile conservation
 - optional version consistency
 
-## Do not fully validate on every draft update
-
-You should usually not validate:
+### Do not fully validate on every draft update
 
 - group legality
 - run legality
@@ -1029,12 +979,11 @@ You should usually not validate:
 - end-turn scoring
 - game end conditions
 
-Reason:
-The player must be allowed to pass through temporary invalid states while editing.
+This boundary is important because the player must be allowed to pass through temporary invalid states while editing.
 
 ---
 
-# 10. Suggested Rule Validation Models
+# 10. Validation Result Models
 
 ## 10.1 `ValidationResult`
 
@@ -1226,7 +1175,7 @@ This keeps:
 
 ---
 
-# 12. Practical Examples of Validation Scenarios
+# 12. Practical Validation Scenarios
 
 ## 12.1 Valid draft update, temporarily invalid board
 
@@ -1301,7 +1250,7 @@ This is a `FirstMoveValidationService` failure.
 
 ---
 
-# 13. Recommended PR / Implementation Order for the Rule System
+# 13. Recommended Implementation Order
 
 If implementing incrementally, a good order is:
 
@@ -1323,9 +1272,9 @@ This order works well because:
 
 ---
 
-# 14. Final Design Rule
+# 14. Final Takeaway
 
-The single most important design rule is:
+The single most important rule in this document is:
 
 > **Temporary draft editing must stay permissive, but turn submission must stay strict, and final set type must be inferred by the backend before full set validation runs.**
 
@@ -1343,8 +1292,6 @@ If this boundary stays clear, the architecture remains:
 - easy to test
 - easy to extend later
 
----
+In one sentence:
 
-# 15. One-Sentence Summary
-
-The backend should treat draft updates as **safe persistence of temporary player work**, and treat end-turn submission as the **single strict validation point where tile conservation, backend set resolution, set legality, board legality, and game-context rules together decide whether the draft may become the next confirmed game state**.
+> **Draft updates protect temporary player work, while end-turn is the single strict backend gate where tile conservation, set resolution, set legality, board legality, and game-context rules decide whether the draft may become the next confirmed game state.**
