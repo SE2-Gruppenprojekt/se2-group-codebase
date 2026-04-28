@@ -448,7 +448,6 @@ fun classify(set: BoardSet): SetClassificationResult {
     return when {
         sameNumber && !sameColor -> classifiedAs(InferredSetType.GROUP)
         sameColor && !sameNumber -> classifiedAs(InferredSetType.RUN)
-        sameNumber && sameColor -> invalidClassification("Set classification is ambiguous")
         else -> invalidClassification("Set is neither a group nor a run")
     }
 }
