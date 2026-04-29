@@ -9,4 +9,15 @@ sealed class AppError {
     data object Conflict : AppError()
     data class Api(val message: String) : AppError()
     data object Unknown : AppError()
+    companion object {
+        fun allStaticErrors(): List<AppError> = listOf(
+            Network,
+            Server,
+            BadRequest,
+            Forbidden,
+            NotFound,
+            Conflict,
+            Unknown
+        )
+    }
 }

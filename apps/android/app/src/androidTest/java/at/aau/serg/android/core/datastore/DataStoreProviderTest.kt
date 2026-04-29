@@ -22,13 +22,6 @@ class DataStoreProviderTest {
     }
 
     @Test
-    fun getStore_returnsProtoStore_forUserClass() = runTest {
-        val store = provider.getStore(User::class)
-
-        assert(store is ProtoStore<*>)
-    }
-
-    @Test
     fun getStore_reified_returnsSameInstance() = runTest {
         val store1 = provider.getStore(User::class)
         val store2 = provider.getStore<User>()

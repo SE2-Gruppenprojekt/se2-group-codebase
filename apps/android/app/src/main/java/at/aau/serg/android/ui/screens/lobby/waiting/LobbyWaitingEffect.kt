@@ -6,5 +6,6 @@ sealed class LobbyWaitingEffect {
 
     object NavigateBack : LobbyWaitingEffect()
 
-    data class ShowError(val message: String) : LobbyWaitingEffect()
+
+    object NavigateToSettings : LobbyWaitingEffect()
 }

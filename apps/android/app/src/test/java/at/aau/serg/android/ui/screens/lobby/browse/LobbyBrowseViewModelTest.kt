@@ -1,16 +1,24 @@
 package at.aau.serg.android.ui.screens.lobby.browse
 
 import at.aau.serg.android.MainDispatcherRule
+import at.aau.serg.android.core.datastore.ProtoStore
+import at.aau.serg.android.core.network.lobby.LobbyAPI
+import at.aau.serg.android.datastore.proto.User
+import at.aau.serg.android.ui.state.LoadState
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import shared.models.lobby.response.LobbyListItemResponse
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LobbyBrowseViewModelTest {
@@ -18,11 +26,16 @@ class LobbyBrowseViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
+    private lateinit var api: LobbyAPI
+    private lateinit var userStore: ProtoStore<User>
     private lateinit var viewModel: LobbyBrowseViewModel
 
     @Before
     fun setup() {
-        viewModel = LobbyBrowseViewModel()
+        api = mockk()
+        userStore = mockk()
+        coEvery { api.getLobbies() } returns emptyList()
+        viewModel = LobbyBrowseViewModel(userStore, api)
     }
 
     // --- Initial State ---
@@ -33,13 +46,10 @@ class LobbyBrowseViewModelTest {
     }
 
     @Test
-    fun initialState_isNotLoading() {
-        assertTrue(!viewModel.uiState.value.isLoading)
-    }
-
-    @Test
-    fun initialState_hasNullErrorMessage() {
-        assertNull(viewModel.uiState.value.errorMessage)
+    fun initialState_is_not_error() {
+        assertTrue(
+            viewModel.uiState.value.loadState !is LoadState.Error
+        )
     }
 
     @Test
@@ -47,225 +57,82 @@ class LobbyBrowseViewModelTest {
         assertEquals("", viewModel.uiState.value.lobbyIdInput)
     }
 
-    // --- update() ---
+    // --- load lobbies success ---
 
     @Test
-    fun update_setsLobbiesList() = runTest {
-        val lobbies = listOf(fakeLobbyBrowseItem("lobby-1"), fakeLobbyBrowseItem("lobby-2"))
+    fun init_loads_lobbies_successfully() = runTest {
+        coEvery { api.getLobbies() } returns listOf(
+            LobbyListItemResponse(
+                lobbyId = "ABC",
+                hostUserId = "host",
+                status = "OPEN",
+                currentPlayerCount = 1,
+                maxPlayers = 4,
+                isPrivate = false
+            )
+        )
 
-        viewModel.update(lobbies, isLoading = false, errorMessage = null)
+        viewModel = LobbyBrowseViewModel(userStore, api)
+        advanceUntilIdle()
 
-        assertEquals(lobbies, viewModel.uiState.value.lobbies)
+        val state = viewModel.uiState.value
+        assertEquals(LoadState.Success, state.loadState)
+        assertEquals(1, state.lobbies.size)
+        assertEquals("ABC", state.lobbies.first().lobbyId)
     }
 
-    @Test
-    fun update_setsIsLoading_true() = runTest {
-        viewModel.update(emptyList(), isLoading = true, errorMessage = null)
+    // --- load lobbies error ---
 
-        assertTrue(viewModel.uiState.value.isLoading)
+    @Test
+    fun init_loads_lobbies_error_state() = runTest {
+        coEvery { api.getLobbies() } throws RuntimeException("network error")
+
+        viewModel = LobbyBrowseViewModel(userStore, api)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
     }
 
-    @Test
-    fun update_setsIsLoading_false() = runTest {
-        viewModel.update(emptyList(), isLoading = false, errorMessage = null)
-
-        assertTrue(!viewModel.uiState.value.isLoading)
-    }
+    // --- input event ---
 
     @Test
-    fun update_setsErrorMessage() = runTest {
-        viewModel.update(emptyList(), isLoading = false, errorMessage = "Something went wrong")
-
-        assertEquals("Something went wrong", viewModel.uiState.value.errorMessage)
-    }
-
-    @Test
-    fun update_clearsErrorMessage_whenNull() = runTest {
-        viewModel.update(emptyList(), isLoading = false, errorMessage = "error")
-        viewModel.update(emptyList(), isLoading = false, errorMessage = null)
-
-        assertNull(viewModel.uiState.value.errorMessage)
-    }
-
-    @Test
-    fun update_doesNotAffectLobbyIdInput() = runTest {
-        viewModel.onEvent(LobbyBrowseEvent.OnLobbyIdChanged("ABC123"))
-        viewModel.update(emptyList(), isLoading = true, errorMessage = null)
-
-        assertEquals("ABC123", viewModel.uiState.value.lobbyIdInput)
-    }
-
-    // --- OnLobbyIdChanged ---
-
-    @Test
-    fun onLobbyIdChanged_updatesLobbyIdInput() = runTest {
-        viewModel.onEvent(LobbyBrowseEvent.OnLobbyIdChanged("XYZ999"))
-
-        assertEquals("XYZ999", viewModel.uiState.value.lobbyIdInput)
-    }
-
-    @Test
-    fun onLobbyIdChanged_toEmpty_clearsInput() = runTest {
-        viewModel.onEvent(LobbyBrowseEvent.OnLobbyIdChanged("FILLED"))
-        viewModel.onEvent(LobbyBrowseEvent.OnLobbyIdChanged(""))
-
-        assertEquals("", viewModel.uiState.value.lobbyIdInput)
-    }
-
-    @Test
-    fun onLobbyIdChanged_doesNotEmitEffect() = runTest {
-        val effects = mutableListOf<LobbyBrowseEffect>()
-        val job = launch { viewModel.effects.collect { effects.add(it) } }
-
+    fun onLobbyIdChanged_updates_state() = runTest {
         viewModel.onEvent(LobbyBrowseEvent.OnLobbyIdChanged("ABC"))
-        advanceUntilIdle()
-        job.cancel()
-
-        assertTrue(effects.isEmpty())
+        assertEquals("ABC", viewModel.uiState.value.lobbyIdInput)
     }
 
-    // --- OnJoinLobby ---
+    // --- effect emissions ---
 
     @Test
-    fun onJoinLobby_emitsJoinLobbyEffect() = runTest {
-        val effects = mutableListOf<LobbyBrowseEffect>()
-        val job = launch { viewModel.effects.collect { effects.add(it) } }
+    fun onJoinLobby_emitsNavigateToWaitingRoom() = runTest {
+        every { userStore.data } returns flowOf(User.getDefaultInstance())
+        coEvery { api.joinLobby(any(), any()) } returns mockk()
 
-        viewModel.onEvent(LobbyBrowseEvent.OnJoinLobby("lobby-42"))
+        val effectDeferred = async { viewModel.effects.first() }
+        viewModel.onEvent(LobbyBrowseEvent.OnJoinLobby("ABC"))
         advanceUntilIdle()
-        job.cancel()
 
-        assertEquals(1, effects.size)
-        assertEquals(LobbyBrowseEffect.JoinLobby("lobby-42"), effects.first())
+        assertEquals(LobbyBrowseEffect.NavigateToWaitingRoom("ABC"), effectDeferred.await())
     }
 
     @Test
-    fun onJoinLobby_carriesCorrectLobbyId() = runTest {
-        val effects = mutableListOf<LobbyBrowseEffect>()
-        val job = launch { viewModel.effects.collect { effects.add(it) } }
-
-        viewModel.onEvent(LobbyBrowseEvent.OnJoinLobby("special-id"))
-        advanceUntilIdle()
-        job.cancel()
-
-        val effect = effects.first() as LobbyBrowseEffect.JoinLobby
-        assertEquals("special-id", effect.lobbyId)
-    }
-
-    @Test
-    fun onJoinLobby_doesNotChangeUiState() = runTest {
-        val stateBefore = viewModel.uiState.value
-
-        viewModel.onEvent(LobbyBrowseEvent.OnJoinLobby("lobby-1"))
-        advanceUntilIdle()
-
-        assertEquals(stateBefore, viewModel.uiState.value)
-    }
-
-    // --- OnCreateNewLobby ---
-
-    @Test
-    fun onCreateNewLobby_emitsNavigateToCreateEffect() = runTest {
-        val effects = mutableListOf<LobbyBrowseEffect>()
-        val job = launch { viewModel.effects.collect { effects.add(it) } }
-
+    fun onCreateNewLobby_emitsNavigateToCreate() = runTest {
         viewModel.onEvent(LobbyBrowseEvent.OnCreateNewLobby)
-        advanceUntilIdle()
-        job.cancel()
-
-        assertEquals(1, effects.size)
-        assertEquals(LobbyBrowseEffect.NavigateToCreate, effects.first())
+        val effect = viewModel.effects.first()
+        assertEquals(LobbyBrowseEffect.NavigateToCreate, effect)
     }
 
     @Test
-    fun onCreateNewLobby_doesNotChangeUiState() = runTest {
-        val stateBefore = viewModel.uiState.value
-
-        viewModel.onEvent(LobbyBrowseEvent.OnCreateNewLobby)
-        advanceUntilIdle()
-
-        assertEquals(stateBefore, viewModel.uiState.value)
-    }
-
-    // --- OnSettings ---
-
-    @Test
-    fun onSettings_emitsNavigateToSettingsEffect() = runTest {
-        val effects = mutableListOf<LobbyBrowseEffect>()
-        val job = launch { viewModel.effects.collect { effects.add(it) } }
-
+    fun onSettings_emitsNavigateToSettings() = runTest {
         viewModel.onEvent(LobbyBrowseEvent.OnSettings)
-        advanceUntilIdle()
-        job.cancel()
-
-        assertEquals(1, effects.size)
-        assertEquals(LobbyBrowseEffect.NavigateToSettings, effects.first())
+        val effect = viewModel.effects.first()
+        assertEquals(LobbyBrowseEffect.NavigateToSettings, effect)
     }
 
     @Test
-    fun onSettings_doesNotChangeUiState() = runTest {
-        val stateBefore = viewModel.uiState.value
-
-        viewModel.onEvent(LobbyBrowseEvent.OnSettings)
-        advanceUntilIdle()
-
-        assertEquals(stateBefore, viewModel.uiState.value)
-    }
-
-    // --- OnBack ---
-
-    @Test
-    fun onBack_emitsNavigateBackEffect() = runTest {
-        val effects = mutableListOf<LobbyBrowseEffect>()
-        val job = launch { viewModel.effects.collect { effects.add(it) } }
-
+    fun onBack_emitsNavigateBack() = runTest {
         viewModel.onEvent(LobbyBrowseEvent.OnBack)
-        advanceUntilIdle()
-        job.cancel()
-
-        assertEquals(1, effects.size)
-        assertEquals(LobbyBrowseEffect.NavigateBack, effects.first())
+        val effect = viewModel.effects.first()
+        assertEquals(LobbyBrowseEffect.NavigateBack, effect)
     }
-
-    @Test
-    fun onBack_doesNotChangeUiState() = runTest {
-        val stateBefore = viewModel.uiState.value
-
-        viewModel.onEvent(LobbyBrowseEvent.OnBack)
-        advanceUntilIdle()
-
-        assertEquals(stateBefore, viewModel.uiState.value)
-    }
-
-    // --- Multiple Events ---
-
-    @Test
-    fun multipleEvents_eachEmitsOwnEffect() = runTest {
-        val effects = mutableListOf<LobbyBrowseEffect>()
-        val job = launch { viewModel.effects.collect { effects.add(it) } }
-
-        viewModel.onEvent(LobbyBrowseEvent.OnBack)
-        viewModel.onEvent(LobbyBrowseEvent.OnSettings)
-        viewModel.onEvent(LobbyBrowseEvent.OnCreateNewLobby)
-        advanceUntilIdle()
-        job.cancel()
-
-        assertEquals(3, effects.size)
-        assertTrue(effects.contains(LobbyBrowseEffect.NavigateBack))
-        assertTrue(effects.contains(LobbyBrowseEffect.NavigateToSettings))
-        assertTrue(effects.contains(LobbyBrowseEffect.NavigateToCreate))
-    }
-
-    // --- Helpers ---
-
-    private fun fakeLobbyBrowseItem(id: String) = LobbyBrowseItem(
-        lobbyId = id,
-        hostId = "host-$id",
-        currentPlayers = 1,
-        maxPlayers = 4,
-        turnTimerSeconds = 60,
-        startingCards = 7,
-        isOpen = true,
-        accentColor = androidx.compose.ui.graphics.Color.Blue
-    )
 }

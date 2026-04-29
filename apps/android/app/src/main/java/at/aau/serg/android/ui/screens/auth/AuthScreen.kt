@@ -28,7 +28,6 @@ import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -41,7 +40,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -52,8 +50,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import at.aau.serg.android.ui.components.BackButton
+import at.aau.serg.android.ui.screens.auth.components.SuggestionChip
 import at.aau.serg.android.ui.theme.AuthButtonGradientEnd
 import at.aau.serg.android.ui.theme.AuthButtonGradientStart
+import at.aau.serg.android.ui.theme.AuthColors
 import at.aau.serg.android.ui.theme.AuthDarkBackground
 import at.aau.serg.android.ui.theme.AuthDarkBorderBlue
 import at.aau.serg.android.ui.theme.AuthDarkBorderGreen
@@ -79,8 +79,6 @@ import at.aau.serg.android.ui.theme.AuthLightInput
 import at.aau.serg.android.ui.theme.AuthLightPrimaryText
 import at.aau.serg.android.ui.theme.AuthLightSecondaryText
 import at.aau.serg.android.ui.theme.ThemeState
-import at.aau.serg.android.ui.theme.AuthColors
-import at.aau.serg.android.ui.screens.auth.components.SuggestionChip
 
 
 private fun authColors(darkMode: Boolean): AuthColors = if (darkMode) {
@@ -115,13 +113,21 @@ private fun authColors(darkMode: Boolean): AuthColors = if (darkMode) {
 
 @Composable
 fun AuthScreen(
-    viewModel: AuthViewModel = viewModel(),
-    modifier: Modifier = Modifier,
-    onContinue: () -> Unit,
-    onBack: (() -> Unit)? = null
+    viewModel: AuthViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    AuthScreenContent(
+        uiState = uiState,
+        onEvent = viewModel::onEvent
+    )
+}
+
+@Composable
+fun AuthScreenContent(
+    uiState: AuthUiState,
+    onEvent: (AuthEvent) -> Unit
+) {
     val username = uiState.username
     val validation = uiState.validation
 
@@ -149,11 +155,12 @@ fun AuthScreen(
         ) {
 
             // --- Back button (only when navigated from within the app) ---
-            if (onBack != null) {
+            if (uiState.canGoBack) {
                 Box(modifier = Modifier.fillMaxWidth()) {
                     BackButton(
-                        onBack = onBack,
+                        onBack = { onEvent(AuthEvent.OnBack)},
                         modifier = Modifier
+                            .testTag(AuthTestTags.BACK_BUTTON)
                             .align(Alignment.CenterStart)
                             .clip(CircleShape)
                             .background(colors.card),
@@ -251,7 +258,9 @@ fun AuthScreen(
             // --- Username text field ---
             OutlinedTextField(
                 value = username,
-                onValueChange = viewModel::onUsernameChanged,
+                onValueChange = { value ->
+                    onEvent(AuthEvent.OnUsernameChanged(value))
+                },
                 placeholder = {
                     Text("Enter your username", color = colors.secondaryText)
                 },
@@ -334,13 +343,19 @@ fun AuthScreen(
 
             Spacer(Modifier.height(10.dp))
 
+            val suggestedNames = UsernameSuggestions.list
+                .shuffled()
+                .take(4)
+
+
             val suggestions = listOf(
-                "Player7429" to Icons.Filled.SportsEsports,
-                "Gamer456" to Icons.Filled.Star,
-                "TempUser123" to Icons.Filled.WorkspacePremium,
-                "BestGamerEver" to Icons.Filled.LocalFireDepartment,
+                suggestedNames[0] to Icons.Filled.SportsEsports,
+                suggestedNames[1] to Icons.Filled.Star,
+                suggestedNames[2] to Icons.Filled.WorkspacePremium,
+                suggestedNames[3] to Icons.Filled.LocalFireDepartment,
             )
 
+            var index = 0
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 suggestions.chunked(2).forEach { row ->
                     Row(
@@ -352,10 +367,15 @@ fun AuthScreen(
                                 label = label,
                                 icon = icon,
                                 colors = colors,
-                                onClick = { viewModel.onUsernameChanged(label) },
-                                modifier = Modifier.weight(1f)
+                                onClick = { onEvent(AuthEvent.OnUsernameChanged(label)) },
+                                modifier = Modifier
+                                    .testTag("${AuthTestTags.SuggestedNames.OPTION_PREFIX}$index")
+                                    .weight(1f)
                             )
+
+                            index++
                         }
+
                         if (row.size == 1) Spacer(Modifier.weight(1f))
                     }
                 }
@@ -380,7 +400,7 @@ fun AuthScreen(
                         if (isValid) Modifier.background(buttonGradient)
                         else Modifier.background(colors.secondaryText.copy(alpha = 0.3f))
                     )
-                    .clickable(enabled = isValid) { viewModel.submit(onContinue) }
+                    .clickable(enabled = isValid) { onEvent(AuthEvent.OnSubmit) }
                     .testTag(AuthTestTags.CONTINUE_BUTTON),
                 contentAlignment = Alignment.Center
             ) {

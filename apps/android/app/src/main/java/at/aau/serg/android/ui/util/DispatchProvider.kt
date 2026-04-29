@@ -1,4 +1,4 @@
-package at.aau.serg.android.util
+package at.aau.serg.android.ui.util
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers

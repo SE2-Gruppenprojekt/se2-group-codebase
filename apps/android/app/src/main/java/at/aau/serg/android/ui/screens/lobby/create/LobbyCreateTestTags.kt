@@ -16,18 +16,15 @@ object LobbyCreateTestTags {
 
     // Max Players Section
     const val MAX_PLAYERS_SECTION = "lobbyCreate_maxPlayersSection"
-    const val MAX_PLAYERS_OPTION_2 = "lobbyCreate_maxPlayers_2"
-    const val MAX_PLAYERS_OPTION_4 = "lobbyCreate_maxPlayers_4"
-    const val MAX_PLAYERS_OPTION_6 = "lobbyCreate_maxPlayers_6"
-    const val MAX_PLAYERS_OPTION_8 = "lobbyCreate_maxPlayers_8"
+
+    // Max players (dynamic options)
+    object MaxPlayers {
+        const val OPTION_PREFIX = "lobbyCreate_maxPlayers"
+    }
 
     // Privacy Section
-    const val PRIVACY_SECTION = "lobbyCreate_privacySection"
     const val PRIVACY_PUBLIC = "lobbyCreate_privacy_public"
     const val PRIVACY_PRIVATE = "lobbyCreate_privacy_private"
-
-    // Game Settings Section
-    const val GAME_SETTINGS_SECTION = "lobbyCreate_gameSettingsSection"
 
     // Turn Timer
     const val TURN_TIMER_ROW = "lobbyCreate_turnTimerRow"
