@@ -70,6 +70,17 @@ class LobbyCreateViewModel(
 
     fun onEvent(event: LobbyCreateEvent) {
         when (event) {
+            LobbyCreateEvent.OnSettings -> {
+                viewModelScope.launch {
+                    _effects.emit(LobbyCreateEffect.NavigateToSettings)
+                }
+            }
+
+            LobbyCreateEvent.OnBack -> {
+                viewModelScope.launch {
+                    _effects.emit(LobbyCreateEffect.NavigateBack)
+                }
+            }
 
             LobbyCreateEvent.CreateLobby -> {
                 createLobby()

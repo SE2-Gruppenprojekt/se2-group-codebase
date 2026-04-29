@@ -3,6 +3,7 @@ package at.aau.serg.android.ui.screens.settings
 import at.aau.serg.android.MainDispatcherRule
 import at.aau.serg.android.core.datastore.InMemoryProtoStore
 import at.aau.serg.android.datastore.proto.User
+import at.aau.serg.android.ui.theme.ThemeState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -26,8 +27,8 @@ class SettingsViewModelTest {
     @Before
     fun setup() {
         val user = User.newBuilder()
-            .setUid("u1")
-            .setDisplayName("Alice")
+            .setUid("")
+            .setDisplayName("")
             .build()
 
         store = InMemoryProtoStore(user)
@@ -38,16 +39,13 @@ class SettingsViewModelTest {
     fun user_state_emits_initial_value() = runTest {
         val user = viewModel.user.value
 
-        assertEquals("u1", user.uid)
-        assertEquals("Alice", user.displayName)
+        assertEquals("", user.uid)
+        assertEquals("", user.displayName)
     }
 
     @Test
     fun user_state_updates_when_store_changes() = runTest {
-        // trigger collection
-        val job = launch {
-            viewModel.user.collect { }
-        }
+        val job = launch { viewModel.user.collect { } }
 
         val updated = User.newBuilder()
             .setUid("u2")
@@ -66,25 +64,51 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun logout_wipes_store_and_calls_callback() = runTest {
-        var doneCalled = false
-
-        viewModel.logout {
-            doneCalled = true
+    fun onBack_emits_navigation_effect() = runTest {
+        val job = launch {
+            val effect = viewModel.effects.first()
+            assertTrue(effect is SettingsEffect.NavigateBack)
         }
 
+        viewModel.onEvent(SettingsEvent.OnBack)
+        advanceUntilIdle()
+        job.cancel()
+    }
+
+    @Test
+    fun onChangeUsername_emits_navigation_effect() = runTest {
+        val job = launch {
+            val effect = viewModel.effects.first()
+            assertTrue(effect is SettingsEffect.NavigateChangeUsername)
+        }
+
+        viewModel.onEvent(SettingsEvent.OnChangeUsername)
+        advanceUntilIdle()
+        job.cancel()
+    }
+
+    @Test
+    fun logout_wipes_store_and_emits_effect() = runTest {
+        val job = launch {
+            val effect = viewModel.effects.first()
+            assertTrue(effect is SettingsEffect.Logout)
+        }
+
+        viewModel.onEvent(SettingsEvent.OnLogout)
         advanceUntilIdle()
 
         val stored = store.data.first()
+        assertEquals(User.getDefaultInstance(), stored)
 
-        assertEquals(
-            User.newBuilder()
-                .setUid("u1")
-                .setDisplayName("Alice")
-                .build(),
-            stored
-        )
+        job.cancel()
+    }
 
-        assertTrue(doneCalled)
+    @Test
+    fun setDarkMode_updates_theme_state() = runTest {
+        ThemeState.isDarkMode.value = false
+
+        viewModel.onEvent(SettingsEvent.SetDarkMode(true))
+
+        assertTrue(ThemeState.isDarkMode.value)
     }
 }

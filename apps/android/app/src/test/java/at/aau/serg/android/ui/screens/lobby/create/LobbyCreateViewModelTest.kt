@@ -10,10 +10,12 @@ import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -41,11 +43,11 @@ class LobbyCreateViewModelTest {
             override val data = MutableStateFlow(user)
 
             override suspend fun save(value: User) {
-                (data as MutableStateFlow<User>).value = value
+                data.value = value
             }
 
             override suspend fun wipe() {
-                (data as MutableStateFlow<User>).value = User.getDefaultInstance()
+                data.value = User.getDefaultInstance()
             }
         }
 
@@ -152,5 +154,47 @@ class LobbyCreateViewModelTest {
         val state = viewModel.uiState.value
 
         assertTrue(state.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun createLobby_emitsNavigationEffect_onSuccess() = runTest {
+        val fakeLobby = LobbyResponse(
+            lobbyId = "lobby-123",
+            hostUserId = "user-1",
+            status = "OPEN",
+            players = emptyList(),
+            maxPlayers = 4,
+            isPrivate = false,
+            allowGuests = true
+        )
+
+        coEvery { api.createLobby(any(), any()) } returns fakeLobby
+
+        viewModel.onEvent(LobbyCreateEvent.CreateLobby)
+
+        val effect = viewModel.effects.first()
+
+        assertEquals(
+            LobbyCreateEffect.NavigateToWaitingRoom("lobby-123"),
+            effect
+        )
+    }
+
+    @Test
+    fun onBack_emitsNavigateBack() = runTest {
+        viewModel.onEvent(LobbyCreateEvent.OnBack)
+
+        val effect = viewModel.effects.first()
+
+        assertEquals(LobbyCreateEffect.NavigateBack, effect)
+    }
+
+    @Test
+    fun onSettings_emitsNavigateToSettings() = runTest {
+        viewModel.onEvent(LobbyCreateEvent.OnSettings)
+
+        val effect = viewModel.effects.first()
+
+        assertEquals(LobbyCreateEffect.NavigateToSettings, effect)
     }
 }

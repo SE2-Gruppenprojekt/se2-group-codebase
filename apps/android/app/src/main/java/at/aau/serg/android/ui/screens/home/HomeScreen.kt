@@ -2,15 +2,30 @@ package at.aau.serg.android.ui.screens.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ViewInAr
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -22,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import at.aau.serg.android.ui.components.TopBar
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.theme.ThemeState
@@ -29,12 +45,20 @@ import at.aau.serg.android.ui.util.ErrorUiMapper
 
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel,
-    modifier: Modifier = Modifier,
-    onBrowseFancyLobbies: () -> Unit,
-    onShowLeaderboard: () -> Unit,
-    onSettings: () -> Unit,
-    onNewLobbyScreen: () -> Unit
+    viewModel: HomeViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    HomeScreenContent(
+        uiState = uiState,
+        onEvent = viewModel::onEvent
+    )
+}
+
+@Composable
+fun HomeScreenContent(
+    uiState: HomeUiState,
+    onEvent: (HomeEvent) -> Unit
 ) {
     val darkMode = ThemeState.isDarkMode.value
 
@@ -73,15 +97,6 @@ fun HomeScreen(
         }
     )
 
-    // leaderboard button gradient
-    val leaderboardBrush = Brush.horizontalGradient(
-        colors = if (darkMode) {
-            listOf(Color(0xFF33435B), Color(0xFF273347))
-        } else {
-            listOf(Color(0xFFDCE3EF), Color(0xFFCED7E7))
-        }
-    )
-
     // shared ui colors for neutral buttons and bottom profile bar
     val neutralButtonContentColor = if (darkMode) Color.White else Color(0xFF23314C)
 
@@ -92,12 +107,9 @@ fun HomeScreen(
     val playerLevelColor = if (darkMode) Color(0xFFFFD93D) else Color(0xFFC08A00)
     val xpColor = if (darkMode) Color(0xFF9AA6C0) else Color(0xFF6A7692)
 
-    val uiState by viewModel.uiState.collectAsState()
-    val username = uiState.username
-
     // root screen layout
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(backgroundGradient)
             .testTag(HomeTestTags.SCREEN),
@@ -106,9 +118,9 @@ fun HomeScreen(
 
         TopBar(
             subtitle = "Main Menu",
-            onSettings = onSettings,
+            onSettings = { onEvent(HomeEvent.OnSettings) },
             modifier = Modifier.padding(16.dp),
-            settingsButtonModifier = Modifier.testTag(HomeTestTags.SETTINGS_BUTTON)
+            settingsButtonModifier = Modifier.testTag(HomeTestTags.TOPBAR_SETTINGS_BUTTON)
         )
 
         // main content section
@@ -185,14 +197,14 @@ fun HomeScreen(
             // create lobby screen
             HomeActionButton(
                 text = "Create a Lobby",
-                onClick = onNewLobbyScreen,
+                onClick = { onEvent(HomeEvent.OnCreateLobby) },
                 icon = { tint ->
                     Icon(Icons.Filled.Person, null, tint = tint, modifier = Modifier.size(24.dp))
                 },
                 containerBrush = Brush.horizontalGradient(
                     colors = listOf(Color(0xE24B68FF), Color(0xD74B3FD4))
                 ),
-                modifier = Modifier.testTag(HomeTestTags.CREATE_LOBBY_BUTTON)
+                modifier = Modifier.testTag(HomeTestTags.ACTION_CREATE_LOBBY)
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -200,14 +212,14 @@ fun HomeScreen(
             // browse lobbies
             HomeActionButton(
                 text = "Browse Lobbies",
-                onClick = onBrowseFancyLobbies,
+                onClick = { onEvent(HomeEvent.OnBrowseLobby) },
                 icon = { tint ->
                     Icon(Icons.Filled.Groups, null, tint = tint, modifier = Modifier.size(24.dp))
                 },
                 containerBrush = Brush.horizontalGradient(
                     colors = listOf(Color(0xFF9D3CFF), Color(0xFF9D3CFF))
                 ),
-                modifier = Modifier.testTag(HomeTestTags.BROWSE_LOBBIES_BUTTON)
+                modifier = Modifier.testTag(HomeTestTags.ACTION_BROWSE_LOBBY)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -215,31 +227,16 @@ fun HomeScreen(
             // settings action
             HomeActionButton(
                 text = "Settings",
-                onClick = onSettings,
+                onClick = { onEvent(HomeEvent.OnSettings) },
                 icon = { tint ->
                     Icon(Icons.Filled.Settings, null, tint = tint, modifier = Modifier.size(22.dp))
                 },
                 containerBrush = settingsBrush,
-                modifier = Modifier.testTag(HomeTestTags.SETTINGS_LIST_BUTTON),
+                modifier = Modifier.testTag(HomeTestTags.ACTION_SETTINGS),
                 contentColor = neutralButtonContentColor
             )
 
             Spacer(modifier = Modifier.height(6.dp))
-
-
-            // leaderboard action
-            HomeActionButton(
-                text = "Leaderboard",
-                onClick = onShowLeaderboard,
-                icon = { tint ->
-                    Icon(Icons.Filled.EmojiEvents, null, tint = tint, modifier = Modifier.size(22.dp))
-                },
-                containerBrush = leaderboardBrush,
-                modifier = Modifier.testTag(HomeTestTags.LEADERBOARD_BUTTON),
-                contentColor = neutralButtonContentColor
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
         }
 
         // bottom profile/info bar
@@ -279,7 +276,7 @@ fun HomeScreen(
 
                 Column {
                     Text(
-                        text = username,
+                        text = uiState.user?.displayName ?: "Guest",
                         color = playerNameColor,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.testTag(HomeTestTags.USERNAME_TEXT)

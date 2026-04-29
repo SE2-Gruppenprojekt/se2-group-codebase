@@ -5,6 +5,7 @@ import at.aau.serg.android.core.datastore.InMemoryProtoStore
 import at.aau.serg.android.datastore.proto.User
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -48,8 +49,19 @@ class AuthViewModelTest {
     }
 
     @Test
+    fun initialState_handlesEmptyStoreGracefully() = runTest {
+        store.save(User.getDefaultInstance())
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+
+        assertEquals("", state.username)
+        assertFalse(state.validation.isValid)
+    }
+
+    @Test
     fun usernameChange_updatesValidation() = runTest {
-        vm.onUsernameChanged("Bob")
+        vm.onEvent(AuthEvent.OnUsernameChanged("Bob"))
 
         val state = vm.uiState.value
 
@@ -59,31 +71,110 @@ class AuthViewModelTest {
     }
 
     @Test
-    fun submit_savesUserAndTriggersSuccess() = runTest {
-        var successCalled = false
+    fun submit_overwritesExistingUser() = runTest {
+        store.save(
+            User.newBuilder()
+                .setUid("old")
+                .setDisplayName("OldName")
+                .build()
+        )
 
-        vm.onUsernameChanged("Charlie")
-        vm.submit { successCalled = true }
+        advanceUntilIdle()
 
+        vm.onEvent(AuthEvent.OnUsernameChanged("NewName"))
+        vm.onEvent(AuthEvent.OnSubmit)
         advanceUntilIdle()
 
         val saved = store.data.first()
 
-        assertEquals("Charlie", saved.displayName)
-        assertTrue(saved.uid.isNotBlank())
-        assertTrue(successCalled)
+        assertEquals("NewName", saved.displayName)
+    }
+
+    @Test
+    fun submit_emitsNavigateContinueEffect() = runTest {
+        vm.onEvent(AuthEvent.OnUsernameChanged("Charlie"))
+
+        var emitted = false
+
+        val job = launch {
+            vm.effects.collect {
+                if (it is AuthEffect.NavigateContinue) {
+                    emitted = true
+                }
+            }
+        }
+
+        vm.onEvent(AuthEvent.OnSubmit)
+        advanceUntilIdle()
+
+        assertTrue(emitted)
+
+        job.cancel()
     }
 
     @Test
     fun submit_doesNothingWhenValidationFails() = runTest {
-        var successCalled = false
-
-        vm.onUsernameChanged("") // invalid
-        vm.submit { successCalled = true }
+        vm.onEvent(AuthEvent.OnUsernameChanged(""))
+        vm.onEvent(AuthEvent.OnSubmit)
 
         val saved = store.data.first()
 
         assertEquals(User.getDefaultInstance(), saved)
-        assertFalse(successCalled)
+    }
+
+    @Test
+    fun back_emitsNavigateBackEffect() = runTest {
+        var emitted = false
+
+        val job = launch {
+            vm.effects.collect {
+                if (it is AuthEffect.NavigateBack) {
+                    emitted = true
+                }
+            }
+        }
+
+        vm.onEvent(AuthEvent.OnBack)
+        advanceUntilIdle()
+
+        assertTrue(emitted)
+
+        job.cancel()
+    }
+
+    @Test
+    fun submit_generatesUid_whenBlank() = runTest {
+        vm.onEvent(AuthEvent.OnUsernameChanged("Charlie"))
+        vm.onEvent(AuthEvent.OnSubmit)
+        advanceUntilIdle()
+
+        val saved = store.data.first()
+
+        assertTrue(saved.uid.isNotBlank())
+    }
+
+    @Test
+    fun setMode_updatesUiState() = runTest {
+        vm.setMode(AuthMode.CreateUser)
+
+        val state = vm.uiState.value
+
+        assertEquals(AuthMode.CreateUser, state.mode)
+    }
+
+    @Test
+    fun setMode_updatesUiState_toChangeUsername() = runTest {
+        vm.setMode(AuthMode.ChangeUsername)
+
+        val state = vm.uiState.value
+
+        assertEquals(AuthMode.ChangeUsername, state.mode)
+    }
+
+    @Test
+    fun canGoBack_isTrue_whenModeIsChangeUsername() = runTest {
+        vm.setMode(AuthMode.ChangeUsername)
+
+        assertTrue(vm.uiState.value.canGoBack)
     }
 }

@@ -1,8 +1,7 @@
 package at.aau.serg.android.ui.navigation
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -12,6 +11,8 @@ import at.aau.serg.android.core.datastore.DataStoreProvider
 import at.aau.serg.android.core.datastore.getStore
 import at.aau.serg.android.core.util.GenericViewModelFactory
 import at.aau.serg.android.datastore.proto.User
+import at.aau.serg.android.ui.screens.auth.AuthEffect
+import at.aau.serg.android.ui.screens.auth.AuthMode
 import at.aau.serg.android.ui.screens.auth.AuthScreen
 import at.aau.serg.android.ui.screens.auth.AuthViewModel
 
@@ -31,15 +32,26 @@ fun NavGraphBuilder.authGraph(
                 factory = GenericViewModelFactory { AuthViewModel(userStore) }
             )
 
-            AuthScreen(
-                viewModel = vm,
-                modifier = Modifier.testTag(AppNavTestTags.AUTH_GRAPH),
-                onContinue = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.AUTH) { inclusive = true }
+            LaunchedEffect(Unit) {
+                vm.setMode(AuthMode.CreateUser)
+            }
+
+            LaunchedEffect(Unit) {
+                vm.effects.collect { effect ->
+                    when (effect) {
+                        is AuthEffect.NavigateBack ->
+                            navController.popBackStack()
+
+                        AuthEffect.NavigateContinue -> {
+                            navController.navigate(Routes.HOME) {
+                                popUpTo(Routes.AUTH) { inclusive = true }
+                            }
+                        }
                     }
                 }
-            )
+            }
+
+            AuthScreen(viewModel = vm)
         }
     }
 }
