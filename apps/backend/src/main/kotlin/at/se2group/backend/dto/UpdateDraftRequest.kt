@@ -1,9 +1,16 @@
 package at.se2group.backend.dto
 
-import at.se2group.backend.domain.BoardSet
-import at.se2group.backend.domain.Tile
-
 data class UpdateDraftRequest(
-    val boardSets: List<BoardSet> = emptyList(),
-    val rackTiles: List<Tile> = emptyList()
+    val boardSets: List<BoardSetRequest>,
+    val rackTiles: List<TileRequest>
+)
+
+data class BoardSetRequest(
+    val tiles: List<TileRequest>
+)
+
+data class TileRequest(
+    val color: String,
+    val number: Int?,
+    val joker: Boolean
 )

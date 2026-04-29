@@ -1,13 +1,15 @@
 package at.se2group.backend.service
 
 import at.se2group.backend.domain.ConfirmedGame
-import at.se2group.backend.mapper.toDomain
 import at.se2group.backend.persistence.GameRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import at.se2group.backend.dto.UpdateDraftRequest
 import at.se2group.backend.domain.TurnDraft
 import at.se2group.backend.persistence.TurnDraftRepository
+import at.se2group.backend.mapper.toDomain
+import at.se2group.backend.mapper.toDomain as toDraftDomain
+import at.se2group.backend.mapper.toEntity
 
 @Service
 @Transactional(readOnly = true)
@@ -38,8 +40,11 @@ class GameService(
         if (draftEntity.playerUserId != userId) {
             throw IllegalStateException("Not active player")
         }
+        val draftDomain = request.toDraftDomain(gameId, userId)
 
-        val saved = turnDraftRepository.save(draftEntity)
+        val updatedEntity = draftDomain.toEntity(draftEntity)
+
+        val saved = turnDraftRepository.save(updatedEntity)
 
         return TurnDraft(
             gameId = saved.gameId,
@@ -91,10 +96,16 @@ class GameService(
 
         val player = game.players.first { it.userId == userId }
 
-        draft.boardSets = game.boardSets.map { it.toString() }.toMutableList()
-        draft.rackTiles = player.rackTiles.map { it.toString() }.toMutableList()
+        val draftDomain = TurnDraft(
+            gameId = gameId,
+            playerUserId = userId,
+            boardSets = game.boardSets.map { it.toDomain() },
+            rackTiles = player.rackTiles.map { it.toDomain() }
+        )
 
-        val saved = turnDraftRepository.save(draft)
+        val updated = draftDomain.toEntity(draft)
+
+        val saved = turnDraftRepository.save(updated)
 
         return TurnDraft(
             gameId = saved.gameId,

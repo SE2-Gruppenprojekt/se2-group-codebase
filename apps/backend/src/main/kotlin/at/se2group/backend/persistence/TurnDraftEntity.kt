@@ -11,8 +11,8 @@ class TurnDraftEntity(
     var playerUserId: String = "",
 
     @ElementCollection
-    var boardSets: MutableList<String> = mutableListOf(),
+    var rackTiles: MutableList<TileEmbeddable> = mutableListOf(),
 
     @ElementCollection
-    var rackTiles: MutableList<String> = mutableListOf()
+    var boardTiles: MutableList<TileEmbeddable> = mutableListOf()
 )

@@ -1,5 +1,7 @@
 package at.se2group.backend.service
 
+import at.se2group.backend.mapper.toEmbeddable
+
 import at.se2group.backend.domain.*
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -97,8 +99,13 @@ class GameInitializationService(
             TurnDraftEntity(
                 gameId = draft.gameId,
                 playerUserId = draft.playerUserId,
-                boardSets = draft.boardSets.map { it.toString() }.toMutableList(),
-                rackTiles = draft.rackTiles.map { it.toString() }.toMutableList()
+                boardTiles = draft.boardSets
+                    .flatMap { it.tiles }
+                    .map { it.toEmbeddable() }
+                    .toMutableList(),
+                rackTiles = draft.rackTiles
+                    .map { it.toEmbeddable() }
+                    .toMutableList()
             )
         )
         return GameStartResult(confirmedGame, draft )
