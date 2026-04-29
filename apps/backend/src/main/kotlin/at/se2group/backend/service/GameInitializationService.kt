@@ -4,6 +4,8 @@ import at.se2group.backend.domain.*
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
+import at.se2group.backend.persistence.TurnDraftRepository
+import at.se2group.backend.persistence.TurnDraftEntity
 
 /**
  * Service responsible for creating the initial confirmedGame state from a lobby that has already been
@@ -22,7 +24,8 @@ import java.util.UUID
 @Service
 class GameInitializationService(
     private val tilePoolGenerationService: TilePoolGenerationService,
-    private val tileShuffleService: TileShuffleService
+    private val tileShuffleService: TileShuffleService,
+    private val turnDraftRepository: TurnDraftRepository
 ) {
     companion object {
         private const val INITIAL_HAND_SIZE = 14
@@ -89,6 +92,14 @@ class GameInitializationService(
             playerUserId = firstPlayer.userId,
             boardSets = emptyList(),
             rackTiles = firstPlayer.rackTiles
+        )
+        turnDraftRepository.save(
+            TurnDraftEntity(
+                gameId = draft.gameId,
+                playerUserId = draft.playerUserId,
+                boardSets = draft.boardSets.map { it.toString() }.toMutableList(),
+                rackTiles = draft.rackTiles.map { it.toString() }.toMutableList()
+            )
         )
         return GameStartResult(confirmedGame, draft )
     }

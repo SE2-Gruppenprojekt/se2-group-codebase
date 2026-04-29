@@ -46,4 +46,32 @@ class GameService(
             playerUserId = saved.playerUserId
         )
     }
+
+    @Transactional
+    fun endTurn(gameId: String, userId: String): ConfirmedGame {
+
+        val game = gameRepository.findById(gameId)
+            .orElseThrow { NoSuchElementException("Game not found") }
+
+        val draft = turnDraftRepository.findByGameId(gameId)
+            ?: throw NoSuchElementException("Draft not found")
+
+        if (game.currentPlayerUserId != userId) {
+            throw IllegalStateException("Not active player")
+        }
+
+        // NEXT PLAYER bestimmen
+        val players = game.players
+        val currentIndex = players.indexOfFirst { it.userId == userId }
+        val nextPlayer = players[(currentIndex + 1) % players.size]
+
+        game.currentPlayerUserId = nextPlayer.userId
+
+        val savedGame = gameRepository.save(game)
+
+        // neuen Draft erstellen (minimal)
+        turnDraftRepository.save(draft)
+
+        return savedGame.toDomain()
+    }
 }

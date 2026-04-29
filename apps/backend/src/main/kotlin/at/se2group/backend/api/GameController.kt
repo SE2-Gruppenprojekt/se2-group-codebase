@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import at.se2group.backend.dto.UpdateDraftRequest
 import at.se2group.backend.domain.TurnDraft
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestHeader
+import at.se2group.backend.domain.ConfirmedGame
 
 @RestController
 @RequestMapping("/api/games")
@@ -31,5 +34,13 @@ class GameController(
         val userId = "mock-user"
 
         return gameService.updateDraft(gameId, userId, request)
+    }
+
+    @PostMapping("/api/games/{gameId}/end-turn")
+    fun endTurn(
+        @PathVariable gameId: String,
+        @RequestHeader("X-USER-ID") userId: String
+    ): ConfirmedGame {
+        return gameService.endTurn(gameId, userId)
     }
 }
