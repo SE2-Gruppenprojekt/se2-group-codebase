@@ -74,4 +74,31 @@ class GameService(
 
         return savedGame.toDomain()
     }
+
+    @Transactional
+    fun resetDraft(gameId: String, userId: String): TurnDraft {
+
+        val game = gameRepository.findById(gameId)
+            .orElseThrow { NoSuchElementException("Game not found") }
+
+        val draft = turnDraftRepository.findByGameId(gameId)
+            ?: throw NoSuchElementException("Draft not found")
+
+        // nur aktiver Spieler darf resetten
+        if (game.currentPlayerUserId != userId) {
+            throw IllegalStateException("Not active player")
+        }
+
+        val player = game.players.first { it.userId == userId }
+
+        draft.boardSets = game.boardSets.map { it.toString() }.toMutableList()
+        draft.rackTiles = player.rackTiles.map { it.toString() }.toMutableList()
+
+        val saved = turnDraftRepository.save(draft)
+
+        return TurnDraft(
+            gameId = saved.gameId,
+            playerUserId = saved.playerUserId
+        )
+    }
 }

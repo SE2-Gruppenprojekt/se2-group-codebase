@@ -36,11 +36,19 @@ class GameController(
         return gameService.updateDraft(gameId, userId, request)
     }
 
-    @PostMapping("/api/games/{gameId}/end-turn")
+    @PostMapping("/{gameId}/end-turn")
     fun endTurn(
         @PathVariable gameId: String,
         @RequestHeader("X-USER-ID") userId: String
     ): ConfirmedGame {
         return gameService.endTurn(gameId, userId)
+    }
+
+    @PostMapping("/{gameId}/reset-draft")
+    fun resetDraft(
+        @PathVariable gameId: String,
+        @RequestHeader("X-USER-ID") userId: String
+    ): TurnDraft {
+        return gameService.resetDraft(gameId, userId)
     }
 }

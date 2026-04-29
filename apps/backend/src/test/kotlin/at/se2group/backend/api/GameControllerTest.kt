@@ -20,6 +20,9 @@ import org.springframework.test.web.servlet.put
 import org.springframework.http.MediaType
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
+import org.springframework.test.web.servlet.post
+import org.mockito.Mockito.mock
+
 
 @WebMvcTest(GameController::class)
 @Import(GlobalExceptionHandler::class)
@@ -117,6 +120,41 @@ class GameControllerTest {
                 status { isOk() }
                 jsonPath("$.gameId") { value("game-1") }
                 jsonPath("$.playerUserId") { value("mock-user") }
+            }
+    }
+
+    @Test
+    fun `endTurn returns game`() {
+        val game = mock(ConfirmedGame::class.java)
+
+        `when`(gameService.endTurn("game-1", "user-1"))
+            .thenReturn(game)
+
+        mockMvc.post("/api/games/game-1/end-turn") {
+            header("X-USER-ID", "user-1")
+        }
+            .andExpect {
+                status { isOk() }
+            }
+    }
+
+    @Test
+    fun `resetDraft returns draft`() {
+        val draft = TurnDraft(
+            gameId = "game-1",
+            playerUserId = "user-1"
+        )
+
+        `when`(gameService.resetDraft("game-1", "user-1"))
+            .thenReturn(draft)
+
+        mockMvc.post("/api/games/game-1/reset-draft") {
+            header("X-USER-ID", "user-1")
+        }
+            .andExpect {
+                status { isOk() }
+                jsonPath("$.gameId") { value("game-1") }
+                jsonPath("$.playerUserId") { value("user-1") }
             }
     }
 }
