@@ -1,92 +1,99 @@
 package at.se2group.backend.game.service
 
+import at.se2group.backend.domain.TurnDraft
 import at.se2group.backend.dto.UpdateDraftRequest
-import at.se2group.backend.persistence.GameEntity
-import at.se2group.backend.persistence.GamePlayerEntity
 import at.se2group.backend.persistence.GameRepository
-import at.se2group.backend.service.GameService
+import at.se2group.backend.persistence.TurnDraftRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
-import org.mockito.Mock
-import org.mockito.Mockito.`when`
-import org.mockito.junit.jupiter.MockitoExtension
-import java.time.Instant
-import java.util.Optional
+import org.mockito.kotlin.*
+import at.se2group.backend.service.GameService
+import org.junit.jupiter.api.Assertions.assertThrows
 
-@ExtendWith(MockitoExtension::class)
+
 class GameServiceUpdateDraftTest {
 
-    @Mock
-    lateinit var gameRepository: GameRepository
+    private val gameRepository: GameRepository = mock()
+    private val turnDraftRepository: TurnDraftRepository = mock()
 
-    @InjectMocks
-    lateinit var gameService: GameService
+    private val gameService = GameService(
+        gameRepository,
+        turnDraftRepository
+    )
 
     @Test
-    fun `updateDraft rejects if not active player`() {
-        val entity = GameEntity(
-            gameId = "g1",
-            lobbyId = "l1",
-            currentPlayerUserId = "host-1",
-            players = mutableListOf(
-                GamePlayerEntity(
-                    id = 1,
-                    game = null,
-                    userId = "host-1",
-                    displayName = "Host",
-                    turnOrder = 0,
-                    hasCompletedInitialMeld = false,
-                    score = 0,
-                    joinedAt = Instant.now()
-                )
-            )
+    fun `updateDraft returns updated draft`() {
+        val request = UpdateDraftRequest(
+            boardSets = emptyList(),
+            rackTiles = emptyList()
         )
 
-        `when`(gameRepository.findById("g1"))
-            .thenReturn(Optional.of(entity))
+        val existingDraft = TurnDraft(
+            gameId = "game-1",
+            playerUserId = "user-1"
+        )
+        whenever(gameRepository.findById("game-1"))
+            .thenReturn(java.util.Optional.of(mock()))
 
-        assertThrows<SecurityException> {
-            gameService.updateDraft(
-                "g1",
-                "other",
-                UpdateDraftRequest(emptyList(), emptyList())
-            )
+        whenever(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(existingDraft)
+
+        whenever(turnDraftRepository.save(any()))
+            .thenAnswer { it.arguments[0] as TurnDraft }
+
+        val result = gameService.updateDraft(
+            "game-1",
+            "user-1",
+            request
+        )
+
+        assertEquals("game-1", result.gameId)
+        assertEquals("user-1", result.playerUserId)
+
+        verify(turnDraftRepository).save(any())
+    }
+
+    @Test
+    fun `updateDraft throws when game not found`() {
+        whenever(gameRepository.findById("game-1"))
+            .thenReturn(java.util.Optional.empty())
+
+        val request = UpdateDraftRequest(emptyList(), emptyList())
+
+        assertThrows(NoSuchElementException::class.java) {
+            gameService.updateDraft("game-1", "user-1", request)
         }
     }
 
     @Test
-    fun `updateDraft returns draft for active player`() {
-        val entity = GameEntity(
-            gameId = "g1",
-            lobbyId = "l1",
-            currentPlayerUserId = "host-1",
-            players = mutableListOf(
-                GamePlayerEntity(
-                    id = 1,
-                    game = null,
-                    userId = "host-1",
-                    displayName = "Host",
-                    turnOrder = 0,
-                    hasCompletedInitialMeld = false,
-                    score = 0,
-                    joinedAt = Instant.now()
-                )
+    fun `updateDraft throws when wrong player`() {
+        val request = UpdateDraftRequest(emptyList(), emptyList())
+
+        whenever(gameRepository.findById("game-1"))
+            .thenReturn(java.util.Optional.of(mock()))
+
+        whenever(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(
+                TurnDraft("game-1", "other-user")
             )
-        )
 
-        `when`(gameRepository.findById("g1"))
-            .thenReturn(Optional.of(entity))
+        assertThrows(IllegalStateException::class.java) {
+            gameService.updateDraft("game-1", "user-1", request)
+        }
+    }
 
-        val result = gameService.updateDraft(
-            "g1",
-            "host-1",
-            UpdateDraftRequest(emptyList(), emptyList())
-        )
+    @Test
+    fun `updateDraft throws when draft not found`() {
+        val request = UpdateDraftRequest(emptyList(), emptyList())
 
-        assertEquals("g1", result.gameId)
-        assertEquals("host-1", result.playerUserId)
+        whenever(gameRepository.findById("game-1"))
+            .thenReturn(java.util.Optional.of(mock()))
+
+        whenever(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(null)
+
+        assertThrows(NoSuchElementException::class.java) {
+            gameService.updateDraft("game-1", "user-1", request)
+        }
     }
 }
