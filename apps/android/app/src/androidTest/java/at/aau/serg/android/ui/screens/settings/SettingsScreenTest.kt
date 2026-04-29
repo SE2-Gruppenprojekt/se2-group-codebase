@@ -3,15 +3,9 @@ package at.aau.serg.android.ui.screens.settings
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import at.aau.serg.android.core.datastore.InMemoryProtoStore
-import at.aau.serg.android.datastore.proto.User
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -21,33 +15,24 @@ class SettingsScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
 
-    private lateinit var store: InMemoryProtoStore<User>
-    private lateinit var viewModel: SettingsViewModel
+    private val events = mutableListOf<SettingsEvent>()
 
-    @Before
-    fun setup() {
-        store = InMemoryProtoStore(
-            User.newBuilder()
-                .setUid("u1")
-                .setDisplayName("Alice")
-                .build()
-        )
+    private fun setContent() {
+        events.clear()
+        composeRule.setContent {
+            SettingsScreenContent(
+                onEvent = { events.add(it) }
+            )
+        }
+    }
 
-        viewModel = SettingsViewModel(store)
+    private fun click(tag: String) {
+        composeRule.onNodeWithTag(tag).performClick()
     }
 
     @Test
     fun screen_is_displayed() {
-        composeRule.setContent {
-            SettingsScreen(
-                viewModel = viewModel,
-                onChangeUsername = {},
-                onLogout = {},
-                onBack = {},
-                isDarkMode = false,
-                onToggleDarkMode = {}
-            )
-        }
+        setContent()
 
         composeRule
             .onNodeWithTag(SettingsTestTags.SCREEN)
@@ -55,90 +40,38 @@ class SettingsScreenTest {
     }
 
     @Test
-    fun backButton_triggersCallback() {
-        var clicked = false
+    fun buttons_trigger_events() {
+        val events = mutableListOf<SettingsEvent>()
 
         composeRule.setContent {
-            SettingsScreen(
-                viewModel = viewModel,
-                onChangeUsername = {},
-                onLogout = {},
-                onBack = { clicked = true },
-                isDarkMode = false,
-                onToggleDarkMode = {}
+            SettingsScreenContent(
+                onEvent = { events.add(it) }
             )
         }
 
-        composeRule
-            .onNodeWithTag(SettingsTestTags.BACK_BUTTON)
-            .performClick()
+        click(SettingsTestTags.BACK_BUTTON)
+        click(SettingsTestTags.CHANGE_USERNAME_BUTTON)
+        click(SettingsTestTags.LOGOUT_BUTTON)
 
-        assertTrue(clicked)
+        assertEquals(3, events.size)
+
+        assertTrue(events.contains(SettingsEvent.OnBack))
+        assertTrue(events.contains(SettingsEvent.OnChangeUsername))
+        assertTrue(events.contains(SettingsEvent.OnLogout))
     }
 
     @Test
-    fun changeUsernameButton_triggersCallback() {
-        var clicked = false
+    fun darkModeSwitch_emits_toggle_event() {
+        val events = mutableListOf<SettingsEvent>()
 
         composeRule.setContent {
-            SettingsScreen(
-                viewModel = viewModel,
-                onChangeUsername = { clicked = true },
-                onLogout = {},
-                onBack = {},
-                isDarkMode = false,
-                onToggleDarkMode = {}
+            SettingsScreenContent(
+                onEvent = { events.add(it) }
             )
         }
 
-        composeRule
-            .onNodeWithTag(SettingsTestTags.CHANGE_USERNAME_BUTTON)
-            .performClick()
+        click(SettingsTestTags.DARK_MODE_SWITCH)
 
-        assertTrue(clicked)
-    }
-
-    @Test
-    fun logoutButton_triggersCallback() {
-        var clicked = false
-
-        composeRule.setContent {
-            SettingsScreen(
-                viewModel = viewModel,
-                onChangeUsername = {},
-                onLogout = { clicked = true },
-                onBack = {},
-                isDarkMode = false,
-                onToggleDarkMode = {}
-            )
-        }
-
-        composeRule
-            .onNodeWithTag(SettingsTestTags.LOGOUT_BUTTON)
-            .performClick()
-
-        assertTrue(clicked)
-    }
-
-    @Test
-    fun darkModeSwitch_triggersCallback() = runTest {
-        var toggled = false
-
-        composeRule.setContent {
-            SettingsScreen(
-                viewModel = viewModel,
-                onChangeUsername = {},
-                onLogout = {},
-                onBack = {},
-                isDarkMode = false,
-                onToggleDarkMode = { toggled = true }
-            )
-        }
-
-        composeRule
-            .onNodeWithTag(SettingsTestTags.DARK_MODE_SWITCH)
-            .performClick()
-
-        assertTrue(toggled)
+        assertTrue(events.any { it is SettingsEvent.SetDarkMode })
     }
 }

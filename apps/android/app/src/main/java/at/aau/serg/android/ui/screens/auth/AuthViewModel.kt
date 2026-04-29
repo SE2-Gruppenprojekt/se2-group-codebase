@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import at.aau.serg.android.core.datastore.ProtoStore
 import at.aau.serg.android.datastore.proto.User
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import shared.validation.user.DisplayNameValidator
@@ -18,16 +20,16 @@ class AuthViewModel(
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState
 
+
+    private val _effects = MutableSharedFlow<AuthEffect>()
+    val effects = _effects.asSharedFlow()
+
     init {
         viewModelScope.launch {
             userStore.data.collect { user ->
                 updateUsernameInternal(user.displayName, user.uid)
             }
         }
-    }
-
-    fun onUsernameChanged(value: String) {
-        updateUsernameInternal(value, _uiState.value.uid)
     }
 
     private fun updateUsernameInternal(name: String, uid: String) {
@@ -43,21 +45,36 @@ class AuthViewModel(
         }
     }
 
-    fun submit(onSuccess: () -> Unit) {
-        val state = _uiState.value
-        if (!state.validation.isValid) return
+    fun setMode(mode: AuthMode) {
+        _uiState.update { it.copy(mode = mode) }
+    }
 
-        viewModelScope.launch {
-            val uid = state.uid.ifBlank { UUID.randomUUID().toString() }
+    fun onEvent(event: AuthEvent) {
+        when (event) {
+            AuthEvent.OnBack -> {
+                viewModelScope.launch {
+                    _effects.emit(AuthEffect.NavigateBack)
+                }
+            }
+            AuthEvent.OnSubmit -> {
+                val state = _uiState.value
+                if (!state.validation.isValid) return
 
-            userStore.save(
-                User.newBuilder()
-                    .setUid(uid)
-                    .setDisplayName(state.username)
-                    .build()
-            )
+                viewModelScope.launch {
+                    val uid = state.uid.ifBlank { UUID.randomUUID().toString() }
 
-            onSuccess()
+                    userStore.save(
+                        User.newBuilder()
+                            .setUid(uid)
+                            .setDisplayName(state.username)
+                            .build()
+                    )
+                    _effects.emit(AuthEffect.NavigateContinue)
+                }
+            }
+
+            is AuthEvent.OnUsernameChanged ->
+                updateUsernameInternal(event.value, _uiState.value.uid)
         }
     }
 }

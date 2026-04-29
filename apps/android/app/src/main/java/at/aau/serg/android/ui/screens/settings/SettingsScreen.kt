@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.DarkMode
@@ -47,17 +46,21 @@ import at.aau.serg.android.ui.theme.AuthLightBackground
 import at.aau.serg.android.ui.theme.AuthLightCard
 import at.aau.serg.android.ui.theme.AuthLightPrimaryText
 import at.aau.serg.android.ui.theme.AuthLightSecondaryText
+import at.aau.serg.android.ui.theme.ThemeState
+
 
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel = viewModel(),
-    onChangeUsername: () -> Unit,
-    onLogout: () -> Unit,
-    onBack: () -> Unit,
-    isDarkMode: Boolean,
-    onToggleDarkMode: (Boolean) -> Unit,
+    viewModel: SettingsViewModel = viewModel()
 ) {
-    val darkMode = isDarkMode
+    SettingsScreenContent(onEvent = viewModel::onEvent)
+}
+
+@Composable
+fun SettingsScreenContent(
+    onEvent: (SettingsEvent) -> Unit
+) {
+    val darkMode = ThemeState.isDarkMode.value
 
     val background   = if (darkMode) AuthDarkBackground    else AuthLightBackground
     val card         = if (darkMode) AuthDarkCard          else AuthLightCard
@@ -87,7 +90,7 @@ fun SettingsScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             BackButton(
-                onBack = onBack,
+                onBack = { onEvent(SettingsEvent.OnBack)},
                 modifier = Modifier.testTag(SettingsTestTags.BACK_BUTTON),
                 tint = primaryText
             )
@@ -153,8 +156,8 @@ fun SettingsScreen(
                     )
                 }
                 Switch(
-                    checked = isDarkMode,
-                    onCheckedChange = onToggleDarkMode,
+                    checked = darkMode,
+                    onCheckedChange = { onEvent(SettingsEvent.SetDarkMode(it)) },
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
                         checkedTrackColor = AuthButtonGradientStart,
@@ -188,7 +191,7 @@ fun SettingsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = onChangeUsername)
+                    .clickable(onClick = {onEvent(SettingsEvent.OnChangeUsername) })
                     .padding(horizontal = 16.dp, vertical = 14.dp)
                     .testTag(SettingsTestTags.CHANGE_USERNAME_BUTTON),
                 verticalAlignment = Alignment.CenterVertically
@@ -239,7 +242,7 @@ fun SettingsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = onLogout)
+                    .clickable(onClick = { onEvent(SettingsEvent.OnLogout) })
                     .padding(horizontal = 16.dp, vertical = 14.dp)
                     .testTag(SettingsTestTags.LOGOUT_BUTTON),
                 verticalAlignment = Alignment.CenterVertically

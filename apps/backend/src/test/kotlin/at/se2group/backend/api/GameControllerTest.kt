@@ -1,0 +1,84 @@
+package at.se2group.backend.api
+
+import at.se2group.backend.domain.ConfirmedGame
+import at.se2group.backend.domain.GamePlayer
+import at.se2group.backend.domain.GameStatus
+import at.se2group.backend.domain.NumberedTile
+import at.se2group.backend.domain.TileColor
+import at.se2group.backend.service.GameService
+import org.junit.jupiter.api.Test
+import org.mockito.Mockito.`when`
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.context.annotation.Import
+import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.get
+import java.time.Instant
+
+@WebMvcTest(GameController::class)
+@Import(GlobalExceptionHandler::class)
+class GameControllerTest {
+
+    @Autowired
+    lateinit var mockMvc: MockMvc
+
+    @MockitoBean
+    lateinit var gameService: GameService
+
+    @Test
+    fun `getGame returns game response`() {
+        val game = ConfirmedGame(
+            gameId = "game-1",
+            lobbyId = "lobby-1",
+            players = listOf(
+                GamePlayer(
+                    userId = "user-1",
+                    displayName = "Alice",
+                    turnOrder = 0,
+                    rackTiles = listOf(
+                        NumberedTile(TileColor.BLUE, 3)
+                    ),
+                    score = 10,
+                    joinedAt = Instant.parse("2026-04-27T17:55:00Z")
+                )
+            ),
+            drawPile = listOf(
+                NumberedTile(TileColor.RED, 7)
+            ),
+            currentPlayerUserId = "user-1",
+            status = GameStatus.ACTIVE,
+            createdAt = Instant.parse("2026-04-27T18:00:00Z")
+        )
+
+        `when`(gameService.getGame("game-1")).thenReturn(game)
+
+        mockMvc.get("/api/games/game-1")
+            .andExpect {
+                status { isOk() }
+                jsonPath("$.gameId") { value("game-1") }
+                jsonPath("$.lobbyId") { value("lobby-1") }
+                jsonPath("$.currentPlayerUserId") { value("user-1") }
+                jsonPath("$.status") { value("ACTIVE") }
+                jsonPath("$.players[0].userId") { value("user-1") }
+                jsonPath("$.players[0].displayName") { value("Alice") }
+                jsonPath("$.players[0].rackTiles[0].color") { value("BLUE") }
+                jsonPath("$.players[0].rackTiles[0].number") { value(3) }
+                jsonPath("$.players[0].rackTiles[0].joker") { value(false) }
+                jsonPath("$.drawPile[0].color") { value("RED") }
+            }
+    }
+
+    @Test
+    fun `getGame returns 404 when game does not exist`() {
+        `when`(gameService.getGame("missing-game"))
+            .thenThrow(NoSuchElementException("Game not found"))
+
+        mockMvc.get("/api/games/missing-game")
+            .andExpect {
+                status { isNotFound() }
+                jsonPath("$.errorCode") { value("NOT_FOUND") }
+                jsonPath("$.errorMessage") { value("Game not found") }
+            }
+    }
+}

@@ -16,6 +16,12 @@ object LobbyBrowseTestTags {
     // Lobby List
     const val LOBBY_LIST = "lobbyBrowse_lobbyList"
 
-    // Create Button
+    // per-item tags (use with lobbyId suffix)
+    object LobbyItem {
+        const val CARD_PREFIX = "lobbyBrowse_card"
+        const val JOIN_BUTTON_PREFIX = "lobbyBrowse_join"
+        const val ID_TEXT_PREFIX = "lobbyBrowse_id"
+    }
+
     const val CREATE_BUTTON = "lobbyBrowse_createButton"
 }

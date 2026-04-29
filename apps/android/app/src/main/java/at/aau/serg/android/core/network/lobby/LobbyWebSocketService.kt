@@ -1,84 +1,50 @@
 package at.aau.serg.android.core.network.lobby
 
-import android.util.Log
+import at.aau.serg.android.core.network.WebConfig
+import at.aau.serg.android.core.network.WebSocketManager
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import kotlinx.coroutines.flow.catch
-import org.hildan.krossbow.stomp.StompClient
-import org.hildan.krossbow.stomp.StompSession
-import org.hildan.krossbow.stomp.subscribeText
-import org.hildan.krossbow.websocket.okhttp.OkHttpWebSocketClient
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.mapNotNull
 
 class LobbyWebSocketService(
-    private val client: StompClient = StompClient(OkHttpWebSocketClient())
+    private val moshi: Moshi,
+    private val ws: WebSocketManager = WebSocketManager()
 ) {
-
-    private val moshi = Moshi.Builder()
-        .addLast(KotlinJsonAdapterFactory())
-        .build()
-
-    private var session: StompSession? = null
-
-    // Suspend function — runs until the coroutine is cancelled
-    suspend fun connect(
-        lobbyId: String,
-        onConnected: () -> Unit = {},
-        onLobbyUpdated: (LobbyUpdatedPayload) -> Unit,
-        onLobbyDeleted: (LobbyDeletedPayload) -> Unit,
-        onLobbyStarted: (LobbyStartedPayload) -> Unit
-    ) {
-        session = client.connect("ws://10.0.2.2:8080/ws")
-        onConnected()
-
-        session!!
-            .subscribeText("/topic/lobbies/$lobbyId")
-            .catch { e -> Log.e("LobbyWebSocket", "Error receiving message", e) }
-            .collect { message -> dispatch(message, onLobbyUpdated, onLobbyDeleted, onLobbyStarted) }
-    }
-
-    suspend fun disconnect() {
-        try {
-            session?.disconnect()
-        } catch (e: Exception) {
-            Log.e("LobbyWebSocket", "Error during disconnect", e)
-        } finally {
-            session = null
-        }
-    }
-
     private val typeAdapter = moshi.adapter(LobbyEventType::class.java)
 
-    private fun dispatch(
-        message: String,
-        onLobbyUpdated: (LobbyUpdatedPayload) -> Unit,
-        onLobbyDeleted: (LobbyDeletedPayload) -> Unit,
-        onLobbyStarted: (LobbyStartedPayload) -> Unit
-    ) {
-        val type = typeAdapter.fromJson(message)?.type
-        when (type) {
+    suspend fun connect() {
+        ws.connect()
+    }
+
+    fun subscribe(lobbyId: String): Flow<LobbyEvent> {
+        return ws
+            .subscribe(WebConfig.Topics.lobby(lobbyId))
+            .mapNotNull { parseLobbyEvent(it) }
+    }
+
+    private fun parseLobbyEvent(message: String): LobbyEvent? {
+        return when (typeAdapter.fromJson(message)?.type) {
+
             "lobby.updated" ->
                 moshi.adapter(LobbyUpdatedPayload::class.java)
-                    .fromJson(message)?.let(onLobbyUpdated)
+                    .fromJson(message)
+                    ?.let { LobbyEvent.Updated(it) }
 
             "lobby.deleted" ->
                 moshi.adapter(LobbyDeletedPayload::class.java)
-                    .fromJson(message)?.let(onLobbyDeleted)
+                    .fromJson(message)
+                    ?.let { LobbyEvent.Deleted(it) }
 
             "lobby.started" ->
                 moshi.adapter(LobbyStartedPayload::class.java)
-                    .fromJson(message)?.let(onLobbyStarted)
+                    .fromJson(message)
+                    ?.let { LobbyEvent.Started(it) }
 
-            else -> Log.w("LobbyWebSocket", "Unknown event: $type")
+            else -> null
         }
     }
 
-    // Test helper only
-    internal fun testDispatch(
-        message: String,
-        onLobbyUpdated: (LobbyUpdatedPayload) -> Unit = {},
-        onLobbyDeleted: (LobbyDeletedPayload) -> Unit = {},
-        onLobbyStarted: (LobbyStartedPayload) -> Unit = {}
-    ) {
-        dispatch(message, onLobbyUpdated, onLobbyDeleted, onLobbyStarted)
+    internal fun dispatch(message: String): LobbyEvent? {
+        return parseLobbyEvent(message)
     }
 }

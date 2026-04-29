@@ -10,8 +10,11 @@ sealed class LobbyWaitingEvent {
 
     data class OnStackToggle(val enabled: Boolean) : LobbyWaitingEvent()
 
+    data class ToggleReadyState(val userId: String) : LobbyWaitingEvent()
     data class OnLoadLobby(val lobbyId: String) : LobbyWaitingEvent()
+    object onMatchStart : LobbyWaitingEvent()
 
-    object OnBackClicked : LobbyWaitingEvent()
-    object OnSettingsClicked : LobbyWaitingEvent()
+    object OnSettings : LobbyWaitingEvent()
+    object OnBack : LobbyWaitingEvent()
+
 }
