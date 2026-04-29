@@ -2,20 +2,21 @@ package at.aau.serg.android.core.network.lobby
 
 import shared.models.lobby.response.LobbyResponse
 
-data class LobbyUpdatedPayload(
-    val type: String,
-    val lobby: LobbyResponse
+open class EventPayLoad(
+    val type: String
 )
+
+data class LobbyUpdatedPayload(
+    val lobby: LobbyResponse
+) : EventPayLoad(type = "lobby.updated")
 
 data class LobbyDeletedPayload(
-    val type: String,
     val lobbyId: String
-)
+) : EventPayLoad(type = "lobby.deleted")
 
 data class LobbyStartedPayload(
-    val type: String,
     val lobbyId: String,
     val matchId: String
-)
+) : EventPayLoad(type = "lobby.started")
 
 data class LobbyEventType(val type: String)

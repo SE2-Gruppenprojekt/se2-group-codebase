@@ -139,4 +139,5 @@ dependencies {
     // Debug-only tools
     debugImplementation(libs.compose.tooling)
     debugImplementation(libs.compose.test.manifest)
+    testImplementation(kotlin("test"))
 }

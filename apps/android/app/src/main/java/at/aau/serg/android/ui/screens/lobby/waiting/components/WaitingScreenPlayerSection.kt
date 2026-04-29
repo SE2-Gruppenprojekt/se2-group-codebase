@@ -7,12 +7,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
+import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingEvent
+import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingTestTags
 import shared.models.lobby.domain.Lobby
 import shared.models.lobby.domain.LobbyPlayer
 
 
 @Composable
 fun WaitingScreenPlayerSection(
+    onEvent: (LobbyWaitingEvent) -> Unit,
+    localId: String = "",
     isLoading: Boolean,
     players: List<LobbyPlayer>,
     fetchedLobby: Lobby?,
@@ -64,25 +68,27 @@ fun WaitingScreenPlayerSection(
 
     if (fetchedLobby != null) {
         players.forEachIndexed { index, player ->
+            val isSelf = player.userId == localId
             PlayerItem(
                 name = player.displayName,
                 subtitle = if (player.isReady) "Ready" else "Not ready",
                 isHost = player.userId == fetchedLobby.hostUserId,
-                isJoined = true,
+                isReady = player.isReady,
                 isPlaceholder = false,
-                borderColor = if (index == 1) secondPlayerBorder else activePlayerBorder,
-                backgroundColor = if (index == 1) secondPlayerBackground else activePlayerBackground,
+                borderColor = if (isSelf) secondPlayerBorder else activePlayerBorder,
+                backgroundColor = if (isSelf) secondPlayerBackground else activePlayerBackground,
                 primaryTextColor = primaryTextColor,
-                secondaryTextColor = secondaryTextColor
+                secondaryTextColor = secondaryTextColor,
+                onClick = if (isSelf) { { onEvent(LobbyWaitingEvent.ToggleReadyState(player.userId)) } } else null,
+                testTag = LobbyWaitingTestTags.Players.ready_tag(player.userId)
             )
         }
     } else {
-
         PlayerItem(
             name = "You",
             subtitle = "Level 24",
             isHost = true,
-            isJoined = true,
+            isReady = false,
             isPlaceholder = false,
             borderColor = activePlayerBorder,
             backgroundColor = activePlayerBackground,
@@ -94,7 +100,7 @@ fun WaitingScreenPlayerSection(
             name = "Alex",
             subtitle = "Level 18",
             isHost = false,
-            isJoined = true,
+            isReady = true,
             isPlaceholder = false,
             borderColor = secondPlayerBorder,
             backgroundColor = secondPlayerBackground,

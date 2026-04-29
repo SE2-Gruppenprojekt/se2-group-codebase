@@ -16,20 +16,23 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableIntState
-import androidx.compose.runtime.MutableState
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingTestTags
 
 @Composable
 fun WaitingScreenSettingsSection(
-    turnTimer: MutableIntState,
-    startingCards: MutableIntState,
-    stackEnabled: MutableState<Boolean>,
+    turnTimer: Int,
+    startingCards: Int,
+    stackEnabled: Boolean,
 
     onTurnTimerMinus: () -> Unit,
     onTurnTimerPlus: () -> Unit,
@@ -45,23 +48,67 @@ fun WaitingScreenSettingsSection(
 
         SettingRow(
             title = "Turn Timer",
-            value = "${turnTimer.intValue}s",
+            value = "${turnTimer}s",
             onMinus = onTurnTimerMinus,
             onPlus = onTurnTimerPlus,
             cardColor = cardColor,
             primaryTextColor = primaryTextColor,
-            buttonColor = buttonColor
+            buttonColor = buttonColor,
+            minusTag = LobbyWaitingTestTags.TURN_TIMER_MINUS,
+            plusTag = LobbyWaitingTestTags.TURN_TIMER_PLUS
         )
 
         SettingRow(
             title = "Starting Cards",
-            value = "${startingCards.intValue}",
+            value = "$startingCards",
             onMinus = onStartingCardsMinus,
             onPlus = onStartingCardsPlus,
             cardColor = cardColor,
             primaryTextColor = primaryTextColor,
-            buttonColor = buttonColor
+            buttonColor = buttonColor,
+            minusTag = LobbyWaitingTestTags.STARTING_CARDS_MINUS,
+            plusTag = LobbyWaitingTestTags.STARTING_CARDS_PLUS
         )
+
+        Spacer(Modifier.height(8.dp))
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            colors = CardDefaults.cardColors(containerColor = cardColor),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .padding(horizontal = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Stack +2/+4",
+                    color = primaryTextColor,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Switch(
+                    checked = stackEnabled,
+                    onCheckedChange = onStackToggle,
+                    modifier = Modifier
+                        .testTag(LobbyWaitingTestTags.STACK_SWITCH)
+                        .scale(0.78f),
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = buttonColor,
+                        uncheckedThumbColor = Color.White.copy(alpha = 0.9f),
+                        uncheckedTrackColor = buttonColor.copy(alpha = 0.55f),
+                        uncheckedBorderColor = Color.Transparent,
+                        checkedBorderColor = Color.Transparent
+                    )
+                )
+            }
+        }
     }
 }
 
@@ -73,7 +120,9 @@ fun SettingRow(
     onPlus: () -> Unit,
     cardColor: Color,
     primaryTextColor: Color,
-    buttonColor: Color
+    buttonColor: Color,
+    minusTag: String = "",
+    plusTag: String = "",
 ) {
     Card(
         modifier = Modifier
@@ -103,7 +152,9 @@ fun SettingRow(
 
                 Button(
                     onClick = onMinus,
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier
+                        .testTag(minusTag)
+                        .size(32.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = buttonColor,
@@ -128,7 +179,9 @@ fun SettingRow(
                 // plus button
                 Button(
                     onClick = onPlus,
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier
+                        .testTag(plusTag)
+                        .size(32.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = buttonColor,
