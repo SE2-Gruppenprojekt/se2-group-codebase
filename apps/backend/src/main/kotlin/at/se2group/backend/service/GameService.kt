@@ -7,11 +7,13 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import at.se2group.backend.domain.TurnDraft
 import at.se2group.backend.dto.UpdateDraftRequest
+import at.se2group.backend.persistence.TurnDraftRepository
 
 @Service
 @Transactional(readOnly = true)
 class GameService(
-    private val gameRepository: GameRepository
+    private val gameRepository: GameRepository,
+    private val turnDraftRepository: TurnDraftRepository
 ) {
     fun getGame(gameId: String): ConfirmedGame {
         return gameRepository.findById(gameId)
@@ -19,20 +21,22 @@ class GameService(
             .toDomain()
     }
     @Transactional
-    fun updateDraft(gameId: String, userId: String, request: UpdateDraftRequest
+    fun updateDraft(
+        gameId: String,
+        userId: String,
+        request: UpdateDraftRequest
     ): TurnDraft {
 
-        val game = gameRepository.findById(gameId)
+        gameRepository.findById(gameId)
             .orElseThrow { NoSuchElementException("Game not found") }
-            .toDomain()
 
-        if (game.currentPlayerUserId != userId) {
-            throw SecurityException("Not your turn")
+        val draft = turnDraftRepository.findByGameId(gameId)
+            ?: throw NoSuchElementException("Draft not found")
+
+        if (draft.playerUserId != userId) {
+            throw IllegalStateException("Not active player")
         }
 
-        return TurnDraft(
-            gameId = gameId,
-            playerUserId = userId
-        )
+        return turnDraftRepository.save(draft)
     }
 }
