@@ -122,6 +122,8 @@ dependencies {
     implementation(libs.datastore.preferences)
     implementation(libs.datastore.core)
     implementation(libs.protobuf.javalite)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.animation.core)
 
     // Unit testing
     testImplementation(libs.junit4)

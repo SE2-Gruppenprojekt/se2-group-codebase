@@ -45,6 +45,8 @@ krossbow = "9.3.0"
 # Retrofit
 retrofit = "2.11.0"
 moshi = "1.15.1"
+material3 = "1.4.0"
+animationCore = "1.11.0"
 
 
 [libraries]
@@ -117,6 +119,8 @@ retrofit-moshi = { group = "com.squareup.retrofit2", name = "converter-moshi", v
 
 moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "moshi" }
 moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
+androidx-animation-core = { group = "androidx.compose.animation", name = "animation-core", version.ref = "animationCore" }
 
 
 [plugins]
