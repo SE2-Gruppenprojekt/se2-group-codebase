@@ -4,6 +4,7 @@ import at.se2group.backend.domain.*
 import at.se2group.backend.dto.*
 import at.se2group.backend.persistence.TurnDraftEntity
 import java.util.UUID
+import at.se2group.backend.dto.DraftResponse
 
 fun UpdateDraftRequest.toDomain(gameId: String, userId: String): TurnDraft {
     return TurnDraft(
@@ -53,5 +54,12 @@ fun TurnDraftEntity.toDomain(): TurnDraft {
         playerUserId = playerUserId,
         boardSets = emptyList(),
         rackTiles = emptyList()
+    )
+}
+
+fun TurnDraft.toResponse(): DraftResponse {
+    return DraftResponse(
+        gameId = gameId,
+        playerUserId = playerUserId
     )
 }

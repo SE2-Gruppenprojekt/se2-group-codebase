@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import at.se2group.backend.dto.UpdateDraftRequest
-import at.se2group.backend.domain.TurnDraft
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestHeader
 import at.se2group.backend.domain.ConfirmedGame
+import at.se2group.backend.dto.DraftResponse
 
 @RestController
 @RequestMapping("/api/games")
@@ -30,24 +30,24 @@ class GameController(
         @PathVariable gameId: String,
         @RequestHeader("X-User-Id") userId: String,
         @RequestBody request: UpdateDraftRequest
-    ): TurnDraft {
+    ): DraftResponse {
 
-        return gameService.updateDraft(gameId, userId, request)
+        return gameService.updateDraft(gameId, userId, request).toResponse()
     }
 
     @PostMapping("/{gameId}/end-turn")
     fun endTurn(
         @PathVariable gameId: String,
         @RequestHeader("X-User-Id") userId: String
-    ): ConfirmedGame {
-        return gameService.endTurn(gameId, userId)
+    ): GameResponse {
+        return gameService.endTurn(gameId, userId).toResponse()
     }
 
     @PostMapping("/{gameId}/reset-draft")
     fun resetDraft(
         @PathVariable gameId: String,
         @RequestHeader("X-User-Id") userId: String
-    ): TurnDraft {
-        return gameService.resetDraft(gameId, userId)
+    ): DraftResponse {
+        return gameService.resetDraft(gameId, userId).toResponse()
     }
 }

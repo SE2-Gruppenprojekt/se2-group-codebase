@@ -21,7 +21,6 @@ import org.springframework.http.MediaType
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.springframework.test.web.servlet.post
-import org.mockito.Mockito.mock
 
 
 @WebMvcTest(GameController::class)
@@ -113,7 +112,7 @@ class GameControllerTest {
         ).thenReturn(draft)
 
         mockMvc.put("/api/games/game-1/draft") {
-            header("X-USER-ID", "mock-user")
+            header("X-User-Id", "mock-user")
             contentType = MediaType.APPLICATION_JSON
             content = requestJson
         }
@@ -126,16 +125,34 @@ class GameControllerTest {
 
     @Test
     fun `endTurn returns game`() {
-        val game = mock(ConfirmedGame::class.java)
+        val game = ConfirmedGame(
+            gameId = "game-1",
+            lobbyId = "lobby-1",
+            players = listOf(
+                GamePlayer(
+                    userId = "user-2",
+                    displayName = "Bob",
+                    turnOrder = 0,
+                    rackTiles = emptyList(),
+                    score = 0,
+                    joinedAt = Instant.now()
+                )
+            ),
+            drawPile = emptyList(),
+            currentPlayerUserId = "user-2",
+            status = GameStatus.ACTIVE,
+            createdAt = Instant.now()
+        )
 
         `when`(gameService.endTurn("game-1", "user-1"))
             .thenReturn(game)
 
         mockMvc.post("/api/games/game-1/end-turn") {
-            header("X-USER-ID", "user-1")
+            header("X-User-Id", "user-1")
         }
             .andExpect {
                 status { isOk() }
+                jsonPath("$.gameId") { value("game-1") }
             }
     }
 
@@ -150,7 +167,7 @@ class GameControllerTest {
             .thenReturn(draft)
 
         mockMvc.post("/api/games/game-1/reset-draft") {
-            header("X-USER-ID", "user-1")
+            header("X-User-Id", "user-1")
         }
             .andExpect {
                 status { isOk() }
