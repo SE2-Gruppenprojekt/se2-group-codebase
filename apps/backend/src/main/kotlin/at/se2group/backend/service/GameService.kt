@@ -74,7 +74,15 @@ class GameService(
 
         val savedGame = gameRepository.save(game)
 
-        // neuen Draft erstellen (minimal)
+        draft.playerUserId = nextPlayer.userId
+
+        draft.boardTiles = game.boardSets
+            .flatMap { it.tiles }
+            .toMutableList()
+
+        draft.rackTiles = nextPlayer.rackTiles
+            .toMutableList()
+
         turnDraftRepository.save(draft)
 
         return savedGame.toDomain()
@@ -107,9 +115,6 @@ class GameService(
 
         val saved = turnDraftRepository.save(updated)
 
-        return TurnDraft(
-            gameId = saved.gameId,
-            playerUserId = saved.playerUserId
-        )
+        return saved.toDomain()
     }
 }

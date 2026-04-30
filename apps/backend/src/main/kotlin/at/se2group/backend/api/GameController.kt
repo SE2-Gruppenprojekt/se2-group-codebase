@@ -28,10 +28,9 @@ class GameController(
     @PutMapping("/{gameId}/draft")
     fun updateDraft(
         @PathVariable gameId: String,
+        @RequestHeader("X-User-Id") userId: String,
         @RequestBody request: UpdateDraftRequest
     ): TurnDraft {
-
-        val userId = "mock-user"
 
         return gameService.updateDraft(gameId, userId, request)
     }
@@ -39,7 +38,7 @@ class GameController(
     @PostMapping("/{gameId}/end-turn")
     fun endTurn(
         @PathVariable gameId: String,
-        @RequestHeader("X-USER-ID") userId: String
+        @RequestHeader("X-User-Id") userId: String
     ): ConfirmedGame {
         return gameService.endTurn(gameId, userId)
     }
@@ -47,7 +46,7 @@ class GameController(
     @PostMapping("/{gameId}/reset-draft")
     fun resetDraft(
         @PathVariable gameId: String,
-        @RequestHeader("X-USER-ID") userId: String
+        @RequestHeader("X-User-Id") userId: String
     ): TurnDraft {
         return gameService.resetDraft(gameId, userId)
     }

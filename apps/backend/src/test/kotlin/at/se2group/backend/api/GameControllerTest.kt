@@ -113,6 +113,7 @@ class GameControllerTest {
         ).thenReturn(draft)
 
         mockMvc.put("/api/games/game-1/draft") {
+            header("X-USER-ID", "mock-user")
             contentType = MediaType.APPLICATION_JSON
             content = requestJson
         }
