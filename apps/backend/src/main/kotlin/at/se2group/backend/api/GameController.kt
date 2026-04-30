@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import at.se2group.backend.dto.UpdateDraftRequest
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestHeader
-import at.se2group.backend.domain.ConfirmedGame
 import at.se2group.backend.dto.DraftResponse
+import jakarta.validation.Valid
 
 @RestController
 @RequestMapping("/api/games")
@@ -29,7 +29,7 @@ class GameController(
     fun updateDraft(
         @PathVariable gameId: String,
         @RequestHeader("X-User-Id") userId: String,
-        @RequestBody request: UpdateDraftRequest
+        @Valid @RequestBody request: UpdateDraftRequest
     ): DraftResponse {
 
         return gameService.updateDraft(gameId, userId, request).toResponse()

@@ -93,8 +93,12 @@ class GameControllerTest {
     fun `updateDraft returns ok`() {
         val requestJson = """
         {
-            "boardSets": [],
-            "rackTiles": []
+            "boardSets": [
+                { "tiles": [{ "color": "BLUE", "number": 3, "joker": false }] }
+            ],
+            "rackTiles": [
+                { "color": "RED", "number": 5, "joker": false }
+            ]
         }
     """.trimIndent()
 
