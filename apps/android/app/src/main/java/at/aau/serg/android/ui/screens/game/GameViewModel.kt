@@ -1,5 +1,6 @@
 package at.aau.serg.android.ui.screens.game
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import at.aau.serg.android.core.datastore.ProtoStore
@@ -14,6 +15,7 @@ import shared.models.match.domain.NumberedTile
 import shared.models.match.domain.Tile
 import shared.models.match.domain.TileColor
 import java.util.UUID
+
 
 class GameViewModel(
     private val userStore: ProtoStore<User>
@@ -144,6 +146,19 @@ class GameViewModel(
                 selectedTiles = emptySet(),
                 activeSelectionRow = null
             )
+        }
+    }
+    fun moveTileInRack(from: Int, to: Int) {
+        _uiState.update { state ->
+
+            val list = state.rackTiles.toMutableList()
+
+            if (from !in list.indices || to !in list.indices) return@update state
+
+            val item = list.removeAt(from)
+            list.add(to, item)
+
+            state.copy(rackTiles = list)
         }
     }
 }

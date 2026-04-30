@@ -124,6 +124,7 @@ dependencies {
     implementation(libs.protobuf.javalite)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.animation.core)
+    implementation(libs.androidx.foundation)
 
     // Unit testing
     testImplementation(libs.junit4)
