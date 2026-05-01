@@ -99,10 +99,7 @@ class GameInitializationService(
             TurnDraftEntity(
                 gameId = draft.gameId,
                 playerUserId = draft.playerUserId,
-                boardTiles = draft.boardSets
-                    .flatMap { it.tiles }
-                    .map { it.toEmbeddable() }
-                    .toMutableList(),
+                boardSets = mutableListOf(),
                 rackTiles = draft.rackTiles
                     .map { it.toEmbeddable() }
                     .toMutableList()

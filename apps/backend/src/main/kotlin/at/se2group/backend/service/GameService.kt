@@ -1,5 +1,7 @@
 package at.se2group.backend.service
 
+import at.se2group.backend.persistence.TurnDraftBoardSetEntity
+
 import at.se2group.backend.domain.ConfirmedGame
 import at.se2group.backend.persistence.GameRepository
 import org.springframework.stereotype.Service
@@ -80,9 +82,16 @@ class GameService(
 
         draft.playerUserId = nextPlayer.userId
 
-        draft.boardTiles = game.boardSets
-            .flatMap { it.tiles }
-            .toMutableList()
+        draft.boardSets.clear()
+
+        val newBoardSets = game.boardSets.map { set ->
+            TurnDraftBoardSetEntity(
+                draft = draft,
+                tiles = set.tiles.toMutableList()
+            )
+        }
+
+        draft.boardSets.addAll(newBoardSets)
 
         draft.rackTiles = nextPlayer.rackTiles
             .toMutableList()
