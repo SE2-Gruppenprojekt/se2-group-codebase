@@ -930,34 +930,10 @@ Its job is state transition, not rule checking.
 
 ---
 
-# 8. Chosen Strategy for Set Resolution Timing
+# 8. What This Means for Draft Updates
 
-The backend should use exactly one strategy:
-
-> **resolve sets only on end-turn**
-
-During draft editing, the backend stores temporary sets without requiring a final resolved type.
-When the player submits the turn, `SetValidationService` tests each final set as a group and as a run and then decides the outcome.
-
-### Why this is the chosen strategy
-
-- it preserves editing freedom during drag-and-drop
-- it matches how real players actually rearrange tiles
-- it keeps `PUT /api/games/{gameId}/draft` lightweight
-- it keeps `POST /api/games/{gameId}/end-turn` as the single strict validation point
-- it avoids introducing a separate early-resolution path that mostly duplicates final validation logic
-
-### Tradeoff
-
-The main tradeoff is that set-resolution errors appear at submit time rather than during every intermediate draft update.
-
-That tradeoff is acceptable and preferable for this architecture because temporary invalid states are a normal part of legal turn editing.
-
----
-
-# 9. What This Means for Draft Updates
-
-Because set resolution happens only on end-turn, draft updates should stay intentionally narrow.
+Set resolution should happen only on end-turn.
+That means draft updates should stay intentionally narrow.
 
 ### Validate on every draft update
 
@@ -983,9 +959,9 @@ This boundary is important because the player must be allowed to pass through te
 
 ---
 
-# 10. Validation Result Models
+# 9. Validation Result Models
 
-## 10.1 `ValidationResult`
+## 9.1 `ValidationResult`
 
 A rule validation should return a structured object, not just a boolean.
 
@@ -1006,7 +982,7 @@ This lets the backend:
 
 ---
 
-## 10.2 `RuleViolation`
+## 9.2 `RuleViolation`
 
 A `RuleViolation` should be the standard structured result object for **game-rule validation failures**.
 
@@ -1143,7 +1119,7 @@ This lets validators contribute violations independently while keeping the final
 
 ---
 
-# 11. Recommended Validation Service Hierarchy
+# 10. Recommended Validation Service Hierarchy
 
 A strong separation would look like this:
 
@@ -1175,9 +1151,9 @@ This keeps:
 
 ---
 
-# 12. Practical Validation Scenarios
+# 11. Practical Validation Scenarios
 
-## 12.1 Valid draft update, temporarily invalid board
+## 11.1 Valid draft update, temporarily invalid board
 
 Player takes a tile out of a valid run.
 The run becomes invalid for a short time.
@@ -1194,7 +1170,7 @@ This is why full board validation and set resolution do not belong in the draft 
 
 ---
 
-## 12.2 Invalid draft update because a tile was duplicated
+## 11.2 Invalid draft update because a tile was duplicated
 
 Player or buggy client submits a draft where one tile appears twice.
 
@@ -1208,7 +1184,7 @@ This is a `TileConservationService` failure.
 
 ---
 
-## 12.3 Invalid end-turn because a set cannot be resolved as a legal group or run
+## 11.3 Invalid end-turn because a set cannot be resolved as a legal group or run
 
 Player submits a final set whose non-joker tiles are neither same-number nor same-color.
 
@@ -1222,7 +1198,7 @@ This is a `SetValidationService` failure.
 
 ---
 
-## 12.4 Invalid end-turn because final board contains illegal run
+## 11.4 Invalid end-turn because final board contains illegal run
 
 Player submits final draft where a run has duplicate numbers or mismatched colors.
 
@@ -1236,7 +1212,7 @@ This is a `RunValidationService` / `BoardValidationService` failure.
 
 ---
 
-## 12.5 Invalid first move because initial meld score is too low
+## 11.5 Invalid first move because initial meld score is too low
 
 Player completes first turn but only places 24 points.
 
@@ -1250,7 +1226,7 @@ This is a `FirstMoveValidationService` failure.
 
 ---
 
-# 13. Recommended Implementation Order
+# 12. Recommended Implementation Order
 
 If implementing incrementally, a good order is:
 
@@ -1272,7 +1248,7 @@ This order works well because:
 
 ---
 
-# 14. Final Takeaway
+# 13. Final Takeaway
 
 The single most important rule in this document is:
 
