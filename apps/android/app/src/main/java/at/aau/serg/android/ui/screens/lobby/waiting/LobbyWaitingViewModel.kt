@@ -58,7 +58,7 @@ class LobbyWaitingViewModel(
         }
     }
 
-    fun handleLobbyEvent(event: LobbyEvent) {
+    internal fun handleLobbyEvent(event: LobbyEvent) {
         when (event) {
             is LobbyEvent.Deleted -> {
                 viewModelScope.launch {
@@ -141,28 +141,27 @@ class LobbyWaitingViewModel(
                 val lobby = uiState.value.lobby ?: return
                 val currentPlayer = lobby.players.find { it.userId == userId } ?: return
 
-                requestReadyChange(lobby.lobbyId, !currentPlayer.isReady)
+                requestReadyChange(userId, lobby.lobbyId, !currentPlayer.isReady)
             }
         }
     }
 
-    private fun requestReadyChange(lobbyId: String, newReadyState: Boolean) {
+    private fun requestReadyChange(userId: String, lobbyId: String, newReadyState: Boolean) {
         viewModelScope.launch {
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
 
-            val user = userStore.data.first()
 
             try {
                 if (newReadyState) {
                     api.ready(
-                        userId = user.uid,
+                        userId = userId,
                         lobbyId = lobbyId
                     )
                 } else {
                     api.unready(
-                        userId = user.uid,
+                        userId = userId,
                         lobbyId = lobbyId
                     )
                 }

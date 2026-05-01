@@ -349,33 +349,7 @@ class LobbyWaitingViewModelTest {
     }
 
     @Test
-    fun ToggleReadyState_shows_Error_onReady() = runTest {
-        val userId = fakeLobby.hostUserId
-        val payload = LobbyUpdatedPayload(
-            lobby = fakeLobby
-        )
-
-        viewModel.handleLobbyEvent(LobbyEvent.Updated(payload))
-
-        val updatedUser = User.newBuilder()
-            .setUid(userId)
-            .setDisplayName("Bob")
-            .build()
-
-        store.save(updatedUser)
-        advanceUntilIdle()
-
-        coEvery { api.ready(any(), any()) } throws RuntimeException("network error")
-        coEvery { api.ready(any(), any()) } throws RuntimeException("network error")
-
-        viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState(userId))
-        advanceUntilIdle()
-
-        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
-    }
-
-    @Test
-    fun ToggleReadyState_shows_Error() = runTest {
+    fun toggle_ready_state_shows_error() = runTest {
         val userId = fakeLobby.hostUserId
         val payload = LobbyUpdatedPayload(
             lobby = fakeLobby
@@ -401,7 +375,7 @@ class LobbyWaitingViewModelTest {
     }
 
     @Test
-    fun ToggleReadyState_sets_Success() = runTest {
+    fun toggle_ready_state_sets_success() = runTest {
         val userId = fakeLobby.hostUserId
         val lobbyId = fakeLobby.lobbyId
         val payload = LobbyUpdatedPayload(

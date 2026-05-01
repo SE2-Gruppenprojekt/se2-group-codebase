@@ -39,10 +39,6 @@ class LobbyWebSocketServiceTest {
         unmockkAll()
     }
 
-    // -----------------------------
-    // CONNECT
-    // -----------------------------
-
     @Test
     fun subscribe_emits_lobby_updated_event() = runBlocking {
         val json = """

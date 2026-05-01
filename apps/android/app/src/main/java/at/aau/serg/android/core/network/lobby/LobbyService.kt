@@ -36,13 +36,13 @@ interface LobbyService {
         @Path("lobbyId") lobbyId: String
     ): Response<Unit>
 
-    @POST("/api/lobbies/{lobbyId}/ready")
+    @POST("lobbies/{lobbyId}/ready")
     suspend fun ready(
         @Header("X-User-Id") userId: String,
         @Path("lobbyId") lobbyId: String
     ): Response<Unit>
 
-    @POST("/api/lobbies/{lobbyId}/unready")
+    @POST("lobbies/{lobbyId}/unready")
     suspend fun unready(
         @Header("X-User-Id") userId: String,
         @Path("lobbyId") lobbyId: String
