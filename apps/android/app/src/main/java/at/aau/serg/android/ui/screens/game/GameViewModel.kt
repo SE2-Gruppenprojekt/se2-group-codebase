@@ -1,6 +1,10 @@
 package at.aau.serg.android.ui.screens.game
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import at.aau.serg.android.core.datastore.ProtoStore
@@ -22,6 +26,12 @@ class GameViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState
+
+    var draggedTile by mutableStateOf<Tile?>(null)
+    var dragPosition by mutableStateOf(Offset.Zero)
+
+    var dragStartPosition by mutableStateOf(Offset.Zero)
+    var dragFromIndex by mutableStateOf<Int?>(null)
 
     init {
         // Fill board with 2 rows
@@ -148,6 +158,7 @@ class GameViewModel(
             )
         }
     }
+
     fun moveTileInRack(from: Int, to: Int) {
         _uiState.update { state ->
 
@@ -161,4 +172,5 @@ class GameViewModel(
             state.copy(rackTiles = list)
         }
     }
+
 }
