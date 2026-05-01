@@ -556,11 +556,9 @@ class BoardValidationService(
     fun validate(boardSets: List<BoardSet>): ValidationResult {
         val violations = mutableListOf<RuleViolation>()
 
-        boardSets.forEachIndexed { index, set ->
+        boardSets.forEach { set ->
             val result = setValidationService.validate(set)
-            violations += result.violations.map {
-                it.copy(path = "boardSets[$index]")
-            }
+            violations += result.violations
         }
 
         return if (violations.isEmpty()) valid() else invalid(violations)
@@ -1005,7 +1003,6 @@ A `RuleViolation` should:
 
 - identify what rule failed
 - provide a human-readable explanation
-- optionally point to the affected location in the draft/board
 - be stable enough for frontend handling and debugging
 
 ### Recommended class shape
@@ -1014,7 +1011,6 @@ A `RuleViolation` should:
 data class RuleViolation(
     val code: String,
     val message: String,
-    val path: String? = null,
     val setIndex: Int? = null,
     val tileIds: List<String> = emptyList()
 )
@@ -1053,23 +1049,11 @@ Examples:
 
 This is what you would usually log or return directly in an API error body.
 
-#### `path`
-
-An optional logical location string describing where the problem occurred.
-
-Examples:
-
-- `"boardSets[0]"`
-- `"boardSets[2].tiles[1]"`
-- `"rackTiles"`
-
-This is especially useful when many violations are returned together.
-
 #### `setIndex`
 
 An optional numeric shortcut for the affected set.
 
-This is helpful when the frontend wants to highlight one full board set without parsing the `path` string.
+This is helpful when the frontend wants to highlight one full board set directly.
 
 #### `tileIds`
 
@@ -1087,7 +1071,6 @@ This is useful when:
 RuleViolation(
     code = "RUN_COLOR_MISMATCH",
     message = "Run tiles must have the same color",
-    path = "boardSets[1]",
     setIndex = 1,
     tileIds = listOf("tile-17", "tile-22")
 )
