@@ -18,9 +18,15 @@ class GameService(
     private val turnDraftRepository: TurnDraftRepository
 ) {
 
+    private companion object {
+        const val GAME_NOT_FOUND = "Game not found"
+        const val DRAFT_NOT_FOUND = "Draft not found"
+        const val NOT_ACTIVE_PLAYER = "Not active player"
+    }
+
     fun getGame(gameId: String): ConfirmedGame {
         return gameRepository.findById(gameId)
-            .orElseThrow { NoSuchElementException("Game not found") }
+            .orElseThrow { NoSuchElementException(GAME_NOT_FOUND) }
             .toDomain()
     }
 
@@ -32,13 +38,13 @@ class GameService(
     ): TurnDraft {
 
         gameRepository.findById(gameId)
-            .orElseThrow { NoSuchElementException("Game not found") }
+            .orElseThrow { NoSuchElementException(GAME_NOT_FOUND) }
 
         val draftEntity = turnDraftRepository.findByGameId(gameId)
-            ?: throw NoSuchElementException("Draft not found")
+            ?: throw NoSuchElementException (DRAFT_NOT_FOUND)
 
         if (draftEntity.playerUserId != userId) {
-            throw IllegalStateException("Not active player")
+            throw IllegalStateException(NOT_ACTIVE_PLAYER)
         }
         val draftDomain = request.toDraftDomain(gameId, userId)
 
@@ -46,23 +52,21 @@ class GameService(
 
         val saved = turnDraftRepository.save(updatedEntity)
 
-        return TurnDraft(
-            gameId = saved.gameId,
-            playerUserId = saved.playerUserId
-        )
+        return draftDomain
+
     }
 
     @Transactional
     fun endTurn(gameId: String, userId: String): ConfirmedGame {
 
         val game = gameRepository.findById(gameId)
-            .orElseThrow { NoSuchElementException("Game not found") }
+            .orElseThrow { NoSuchElementException (GAME_NOT_FOUND) }
 
         val draft = turnDraftRepository.findByGameId(gameId)
-            ?: throw NoSuchElementException("Draft not found")
+            ?: throw NoSuchElementException(DRAFT_NOT_FOUND)
 
         if (game.currentPlayerUserId != userId) {
-            throw IllegalStateException("Not active player")
+            throw IllegalStateException(NOT_ACTIVE_PLAYER)
         }
 
         // NEXT PLAYER bestimmen
@@ -92,14 +96,14 @@ class GameService(
     fun resetDraft(gameId: String, userId: String): TurnDraft {
 
         val game = gameRepository.findById(gameId)
-            .orElseThrow { NoSuchElementException("Game not found") }
+            .orElseThrow { NoSuchElementException(GAME_NOT_FOUND) }
 
         val draft = turnDraftRepository.findByGameId(gameId)
-            ?: throw NoSuchElementException("Draft not found")
+            ?: throw NoSuchElementException(DRAFT_NOT_FOUND)
 
         // nur aktiver Spieler darf resetten
         if (game.currentPlayerUserId != userId) {
-            throw IllegalStateException("Not active player")
+            throw IllegalStateException(NOT_ACTIVE_PLAYER)
         }
 
         val player = game.players.first { it.userId == userId }

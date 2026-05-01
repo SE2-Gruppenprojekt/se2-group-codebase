@@ -2,13 +2,14 @@ package at.se2group.backend.dto
 
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.NotEmpty
 
 data class UpdateDraftRequest(
-    @field:NotEmpty(message = "boardSets must not be empty")
+    @field:NotNull
     val boardSets: List<@Valid BoardSetRequest>,
 
-    @field:NotEmpty(message = "rackTiles must not be empty")
+    @field:NotNull
     val rackTiles: List<@Valid TileRequest>
 )
 
