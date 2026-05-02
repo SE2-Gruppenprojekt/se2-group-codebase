@@ -1,15 +1,14 @@
 package at.aau.serg.android.core.network.lobby
 
-import at.aau.serg.android.core.network.lobby.LobbyAPI
-import at.aau.serg.android.core.network.lobby.LobbyService
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import retrofit2.Response
 import shared.models.lobby.request.CreateLobbyRequest
@@ -116,8 +115,46 @@ class LobbyAPITest {
 
     @Test
     fun leaveLobby_returnsFalseWhenNotSuccessful() = runBlocking {
-        coEvery { service.leaveLobby("user123", "1") } returns Response.error(400, ResponseBody.create(null, ""))
+        coEvery { service.leaveLobby("user123", "1") } returns Response.error(400, "".toResponseBody(null))
         val result = api.leaveLobby("user123", "1")
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun ready_returnsTrueWhenSuccessful() = runBlocking {
+        coEvery { service.ready("user123", "1") } returns Response.success(Unit)
+
+        val result = api.ready("user123", "1")
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun ready_returnsFalseWhenNotSuccessful() = runBlocking {
+        coEvery { service.ready("user123", "1") } returns
+            Response.error(400, "".toResponseBody(null))
+
+        val result = api.ready("user123", "1")
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun unready_returnsTrueWhenSuccessful() = runBlocking {
+        coEvery { service.unready("user123", "1") } returns Response.success(Unit)
+
+        val result = api.unready("user123", "1")
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun unready_returnsFalseWhenNotSuccessful() = runBlocking {
+        coEvery { service.unready("user123", "1") } returns
+            Response.error(400, "".toResponseBody(null))
+
+        val result = api.unready("user123", "1")
 
         assertFalse(result)
     }
@@ -137,7 +174,7 @@ class LobbyAPITest {
     fun startMatch_returnsFalseWhenNotSuccessful() = runTest {
         coEvery {
             service.startMatch("user123", "1")
-        } returns Response.error(400, ResponseBody.create(null, ""))
+        } returns Response.error(400, "".toResponseBody(null))
 
         val result = api.startMatch("user123", "1")
 

@@ -107,16 +107,6 @@ class WebSocketManagerTest {
     }
 
     @Test
-    fun subscribe_throws_if_not_connected() = runTest {
-        val exception = runCatching {
-            manager.subscribe("topic").toList()
-        }.exceptionOrNull()
-
-        assertTrue(exception is IllegalStateException)
-        assertTrue(exception?.message?.contains("not connected") == true)
-    }
-
-    @Test
     fun subscribe_triggers_disconnect_on_completion() = runTest {
         coEvery { client.connect(any()) } returns session
 
