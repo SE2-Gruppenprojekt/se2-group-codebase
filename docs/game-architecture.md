@@ -445,19 +445,18 @@ When the player submits the turn:
 
 1. the backend receives the draft board
 2. each set is inspected
-3. if a set is already marked as `GROUP` or `RUN`, the backend may validate it directly
-4. if a set is `UNRESOLVED`, the backend must infer its effective type from the tiles
-5. if the tiles match group rules, treat it as `GROUP`
-6. if the tiles match run rules, treat it as `RUN`
-7. if it matches neither, reject the submitted draft
+3. the backend tries validating the set as a group
+4. the backend tries validating the set as a run
+5. if exactly one interpretation is valid, accept that set
+6. if both are valid, reject the set as ambiguous
+7. if neither is valid, reject the submitted draft
 
-So the final authoritative type resolution happens in the backend rule layer.
+So the final authoritative group/run decision happens in the backend rule layer.
 
 Small example:
 
 ```kotlin
-val resolvedType = resolveBoardSetType(set)
-val valid = setValidationService.validate(set.copy(type = resolvedType))
+val result = setValidationService.validate(set)
 ```
 
 #### Local board-set arrangement vs authoritative board content
@@ -504,21 +503,15 @@ Or:
 
 The set only clearly becomes a `RUN` once the sequence is visible.
 
-#### Recommended backend helper
+#### Recommended backend approach
 
-The backend should have a small resolver in the rules layer.
+The backend does not need a separate resolver helper here.
+The cleaner approach is for `SetValidationService` to try both legal interpretations during final validation and decide whether the set is:
 
-```kotlin
-fun resolveBoardSetType(set: BoardSet): BoardSetType {
-    val groupResult = groupValidationService.validate(set.copy(type = BoardSetType.GROUP))
-    if (groupResult.isValid) return BoardSetType.GROUP
-
-    val runResult = runValidationService.validate(set.copy(type = BoardSetType.RUN))
-    if (runResult.isValid) return BoardSetType.RUN
-
-    return BoardSetType.UNRESOLVED
-}
-```
+- valid as a group
+- valid as a run
+- ambiguous because both are valid
+- invalid because neither is valid
 
 This helper should be used when validating submitted drafts, especially for sets that are still marked as `UNRESOLVED`.
 
@@ -1384,38 +1377,36 @@ class SetValidationService(
 ) {
 
     fun validate(set: BoardSet): ValidationResult {
-        val resolvedType = if (set.type == BoardSetType.UNRESOLVED) {
-            resolveType(set)
-        } else {
-            set.type
-        }
+        val groupResult = groupValidationService.validate(set)
+        val runResult = runValidationService.validate(set)
 
-        return when (resolvedType) {
-            BoardSetType.GROUP -> groupValidationService.validate(set.copy(type = BoardSetType.GROUP))
-            BoardSetType.RUN -> runValidationService.validate(set.copy(type = BoardSetType.RUN))
-            BoardSetType.UNRESOLVED -> ValidationResult(
+        return when {
+            groupResult.isValid && !runResult.isValid -> ValidationResult(isValid = true)
+            runResult.isValid && !groupResult.isValid -> ValidationResult(isValid = true)
+            groupResult.isValid && runResult.isValid -> ValidationResult(
                 isValid = false,
                 violations = listOf(
                     RuleViolation(
-                        code = "UNRESOLVED_SET_TYPE",
-                        message = "The set could not be resolved as either a group or a run"
+                        code = "AMBIGUOUS_SET",
+                        message = "The set is valid as both a group and a run"
                     )
                 )
             )
+            else -> ValidationResult(
+                isValid = false,
+                violations = groupResult.violations + runResult.violations
+            )
         }
-    }
-
-    private fun resolveType(set: BoardSet): BoardSetType {
-        val groupResult = groupValidationService.validate(set.copy(type = BoardSetType.GROUP))
-        if (groupResult.isValid) return BoardSetType.GROUP
-
-        val runResult = runValidationService.validate(set.copy(type = BoardSetType.RUN))
-        if (runResult.isValid) return BoardSetType.RUN
-
-        return BoardSetType.UNRESOLVED
     }
 }
 ```
+
+This keeps the decision local to `SetValidationService`:
+
+- the frontend does not need to provide a trusted final set type
+- no separate classification service is required
+- the backend simply asks whether the final set is legal as a group or legal as a run
+- ambiguity and invalidity are handled in the same place
 
 ### 12.7 Group validation in detail
 
