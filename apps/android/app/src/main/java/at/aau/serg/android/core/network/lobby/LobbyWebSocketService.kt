@@ -12,10 +12,6 @@ class LobbyWebSocketService(
 ) {
     private val typeAdapter = moshi.adapter(LobbyEventType::class.java)
 
-    suspend fun connect() {
-        ws.connect()
-    }
-
     fun subscribe(lobbyId: String): Flow<LobbyEvent> {
         return ws
             .subscribe(WebConfig.Topics.lobby(lobbyId))
