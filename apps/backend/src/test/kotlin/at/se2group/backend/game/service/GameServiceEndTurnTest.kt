@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.mockito.Mockito.*
 import java.time.Instant
 import java.util.Optional
+import org.junit.jupiter.api.Assertions.assertThrows
 
 class GameServiceEndTurnTest {
 
@@ -56,5 +57,33 @@ class GameServiceEndTurnTest {
         val result = gameService.endTurn("game-1", "user-1")
 
         assertEquals("user-2", result.currentPlayerUserId)
+    }
+
+    @Test
+    fun `should throw when user is not active player`() {
+
+        val game = GameEntity().apply {
+            gameId = "game1"
+            currentPlayerUserId = "user1"
+            players = mutableListOf(
+                GamePlayerEntity().apply { userId = "user1" },
+                GamePlayerEntity().apply { userId = "user2" }
+            )
+        }
+
+        val draft = TurnDraftEntity(
+            gameId = "game1",
+            playerUserId = "user1"
+        )
+
+        `when`(gameRepository.findById("game1"))
+            .thenReturn(Optional.of(game))
+
+        `when`(turnDraftRepository.findByGameId("game1"))
+            .thenReturn(draft)
+
+        assertThrows(IllegalStateException::class.java) {
+            gameService.endTurn("game1", "user2")
+        }
     }
 }

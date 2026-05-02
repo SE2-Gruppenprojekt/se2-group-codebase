@@ -3,6 +3,7 @@ package at.se2group.backend.mapper
 import at.se2group.backend.domain.*
 import at.se2group.backend.dto.*
 import at.se2group.backend.persistence.TurnDraftEntity
+import at.se2group.backend.persistence.TurnDraftBoardSetEntity
 import java.util.UUID
 import at.se2group.backend.dto.DraftResponse
 
@@ -33,13 +34,18 @@ fun TileRequest.toTileDomain(): Tile {
 }
 
 fun TurnDraft.toEntity(existing: TurnDraftEntity): TurnDraftEntity {
-    // NOTE: boardSets are currently flattened into boardTiles.
-    // This loses set structure, but is sufficient for the current draft persistence.
-    // Proper BoardSet persistence should be handled in a later iteration.
-    existing.boardTiles = boardSets
-        .flatMap { it.tiles }
-        .map { it.toEmbeddable() }
-        .toMutableList()
+    existing.boardSets.clear()
+
+    val newBoardSets = boardSets.map { set ->
+        TurnDraftBoardSetEntity(
+            draft = existing,
+            tiles = set.tiles
+                .map { it.toEmbeddable() }
+                .toMutableList()
+        )
+    }
+
+    existing.boardSets.addAll(newBoardSets)
 
     existing.rackTiles = rackTiles
         .map { it.toEmbeddable() }
@@ -48,12 +54,17 @@ fun TurnDraft.toEntity(existing: TurnDraftEntity): TurnDraftEntity {
     return existing
 }
 fun TurnDraftEntity.toDomain(): TurnDraft {
-    //map boardTiles and rackTiles back to domain representation
     return TurnDraft(
         gameId = gameId,
         playerUserId = playerUserId,
-        boardSets = emptyList(),
-        rackTiles = emptyList()
+        boardSets = boardSets.map { set ->
+            BoardSet(
+                boardSetId = set.id,
+                type = BoardSetType.UNRESOLVED,
+                tiles = set.tiles.map { it.toDomain() }
+            )
+        },
+        rackTiles = rackTiles.map { it.toDomain() }
     )
 }
 
