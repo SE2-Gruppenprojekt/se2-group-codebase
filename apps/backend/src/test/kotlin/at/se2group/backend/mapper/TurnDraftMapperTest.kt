@@ -38,4 +38,30 @@ class TurnDraftMapperTest {
         assertEquals(1, result.rackTiles.size)
         assertTrue(result.rackTiles[0] is JokerTile)
     }
+
+    @Test
+    fun `toTileDomain maps joker`() {
+        val request = TileRequest(
+            color = "RED",
+            number = null,
+            joker = true
+        )
+
+        val result = request.toTileDomain()
+
+        assertTrue(result is JokerTile)
+    }
+
+    @Test
+    fun `toTileDomain throws if number missing`() {
+        val request = TileRequest(
+            color = "RED",
+            number = null,
+            joker = false
+        )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            request.toTileDomain()
+        }
+    }
 }
