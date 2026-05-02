@@ -68,9 +68,12 @@ fun TurnDraftEntity.toDomain(): TurnDraft {
     )
 }
 
+
 fun TurnDraft.toResponse(): DraftResponse {
     return DraftResponse(
         gameId = gameId,
-        playerUserId = playerUserId
+        playerUserId = playerUserId,
+        boardSets = boardSets.map { it.toResponse() },
+        rackTiles = rackTiles.map { it.toResponse() }
     )
 }

@@ -54,7 +54,7 @@ class GameService(
 
         val saved = turnDraftRepository.save(updatedEntity)
 
-        return draftDomain
+        return saved.toDomain()
 
     }
 
