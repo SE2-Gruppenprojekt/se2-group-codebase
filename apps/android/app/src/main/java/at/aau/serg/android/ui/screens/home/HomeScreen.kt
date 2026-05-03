@@ -86,9 +86,7 @@ fun HomeScreenContent(
 
         TopBar(
             subtitle = "Main Menu",
-            onSettings = { onEvent(HomeEvent.OnSettings) },
-            modifier = Modifier.padding(16.dp),
-            settingsButtonModifier = Modifier.testTag(HomeTestTags.TOPBAR_SETTINGS_BUTTON)
+            modifier = Modifier.padding(16.dp)
         )
 
         // main content section
