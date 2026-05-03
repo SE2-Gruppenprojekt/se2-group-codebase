@@ -3,6 +3,7 @@ package at.se2group.backend.api
 import at.se2group.backend.dto.GameResponse
 import at.se2group.backend.mapper.toResponse
 import at.se2group.backend.service.GameService
+import at.se2group.backend.service.TurnDraftService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
@@ -17,7 +18,8 @@ import jakarta.validation.Valid
 @RestController
 @RequestMapping("/api/games")
 class GameController(
-    private val gameService: GameService
+    private val gameService: GameService,
+    private val turnDraftService: TurnDraftService
 ) {
     @GetMapping("/{gameId}")
     fun getGame(@PathVariable gameId: String): GameResponse {
@@ -31,6 +33,6 @@ class GameController(
         @Valid @RequestBody request: UpdateDraftRequest
     ): DraftResponse {
 
-        return gameService.updateDraft(gameId, userId, request).toResponse()
+        return turnDraftService.updateDraft(gameId, userId, request).toResponse()
     }
 }

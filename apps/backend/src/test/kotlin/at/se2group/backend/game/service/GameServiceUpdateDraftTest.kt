@@ -2,18 +2,18 @@ package at.se2group.backend.game.service
 
 import at.se2group.backend.dto.UpdateDraftRequest
 import at.se2group.backend.persistence.*
-import at.se2group.backend.service.GameService
+import at.se2group.backend.service.TurnDraftService
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import java.util.Optional
 
-class GameServiceUpdateDraftTest {
+class TurnDraftServiceTest {
 
     private val gameRepository: GameRepository = mock()
     private val turnDraftRepository: TurnDraftRepository = mock()
 
-    private val gameService = GameService(gameRepository, turnDraftRepository)
+    private val turnDraftService = TurnDraftService(gameRepository, turnDraftRepository)
 
     @Test
     fun `updateDraft throws when game not found`() {
@@ -23,7 +23,7 @@ class GameServiceUpdateDraftTest {
         val request = UpdateDraftRequest(emptyList(), emptyList())
 
         assertThrows(NoSuchElementException::class.java) {
-            gameService.updateDraft("game-1", "user-1", request)
+            turnDraftService.updateDraft("game-1", "user-1", request)
         }
     }
 
@@ -48,7 +48,7 @@ class GameServiceUpdateDraftTest {
         whenever(turnDraftRepository.save(any()))
             .thenReturn(draft)
 
-        val result = gameService.updateDraft(
+        val result = turnDraftService.updateDraft(
             "game-1",
             "user-1",
             mock()
@@ -72,7 +72,7 @@ class GameServiceUpdateDraftTest {
             .thenReturn(null)
 
         assertThrows(NoSuchElementException::class.java) {
-            gameService.updateDraft(
+            turnDraftService.updateDraft(
                 "game-1",
                 "user-1",
                 mock()

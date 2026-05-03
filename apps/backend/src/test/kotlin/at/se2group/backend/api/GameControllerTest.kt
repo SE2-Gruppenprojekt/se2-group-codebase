@@ -6,6 +6,7 @@ import at.se2group.backend.domain.GameStatus
 import at.se2group.backend.domain.NumberedTile
 import at.se2group.backend.domain.TileColor
 import at.se2group.backend.service.GameService
+import at.se2group.backend.service.TurnDraftService
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
@@ -31,6 +32,9 @@ class GameControllerTest {
 
     @MockitoBean
     lateinit var gameService: GameService
+
+    @MockitoBean
+    lateinit var turnDraftService: TurnDraftService
 
     @Test
     fun `getGame returns game response`() {
@@ -107,7 +111,7 @@ class GameControllerTest {
         )
 
         `when`(
-            gameService.updateDraft(
+            turnDraftService.updateDraft(
                 eq("game-1"),
                 eq("mock-user"),
                 any()
