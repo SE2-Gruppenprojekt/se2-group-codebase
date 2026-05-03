@@ -72,14 +72,9 @@ class TileShuffleService {
             "Not enough tiles to distribute $HAND_SIZE tiles to ${players.size} players"
         }
 
-        var index = 0
-
-        return players.map { player ->
-            // Assign the next consecutive hand segment to the current player.
-            val hand = tiles.subList(index, index + HAND_SIZE)
-            index += HAND_SIZE
-
-            player.copy(rackTiles = hand)
+        return players.mapIndexed { index, player ->
+            val handStart = index * HAND_SIZE
+            player.copy(rackTiles = tiles.subList(handStart, handStart + HAND_SIZE))
         }
     }
 
@@ -99,8 +94,6 @@ class TileShuffleService {
         tiles: List<Tile>,
         players: List<GamePlayer>
     ): List<Tile> {
-        // Everything already assigned to player racks must be excluded from the draw pile.
-        val used = players.sumOf { it.rackTiles.size }
-        return tiles.drop(used)
+        return tiles.drop(players.sumOf { it.rackTiles.size })
     }
 }
