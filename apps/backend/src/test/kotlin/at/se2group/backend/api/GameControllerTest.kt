@@ -124,6 +124,8 @@ class GameControllerTest {
                 status { isOk() }
                 jsonPath("$.gameId") { value("game-1") }
                 jsonPath("$.playerUserId") { value("mock-user") }
+                jsonPath("$.boardSets") { isArray() }
+                jsonPath("$.rackTiles") { isArray() }
             }
     }
 
@@ -177,6 +179,8 @@ class GameControllerTest {
                 status { isOk() }
                 jsonPath("$.gameId") { value("game-1") }
                 jsonPath("$.playerUserId") { value("user-1") }
+                jsonPath("$.boardSets") { isArray() }
+                jsonPath("$.rackTiles") { isArray() }
             }
     }
 }
