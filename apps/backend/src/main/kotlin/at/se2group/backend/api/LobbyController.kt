@@ -104,7 +104,7 @@ class LobbyController(
     fun deleteLobby(
         @PathVariable lobbyId: String,
         @RequestHeader("X-User-Id") userId: String
-    ): ResponseEntity<Void> {
+    ): ResponseEntity<Unit> {
         lobbyService.deleteLobby(lobbyId, userId)
         return ResponseEntity.noContent().build()
     }

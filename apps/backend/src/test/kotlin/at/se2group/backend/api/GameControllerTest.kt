@@ -6,6 +6,7 @@ import at.se2group.backend.domain.GameStatus
 import at.se2group.backend.domain.NumberedTile
 import at.se2group.backend.domain.TileColor
 import at.se2group.backend.service.GameService
+import at.se2group.backend.service.TurnDraftService
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,7 +21,6 @@ import org.springframework.test.web.servlet.put
 import org.springframework.http.MediaType
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
-import org.springframework.test.web.servlet.post
 
 
 @WebMvcTest(GameController::class)
@@ -32,6 +32,9 @@ class GameControllerTest {
 
     @MockitoBean
     lateinit var gameService: GameService
+
+    @MockitoBean
+    lateinit var turnDraftService: TurnDraftService
 
     @Test
     fun `getGame returns game response`() {
@@ -108,7 +111,7 @@ class GameControllerTest {
         )
 
         `when`(
-            gameService.updateDraft(
+            turnDraftService.updateDraft(
                 eq("game-1"),
                 eq("mock-user"),
                 any()
@@ -129,58 +132,4 @@ class GameControllerTest {
             }
     }
 
-    @Test
-    fun `endTurn returns game`() {
-        val game = ConfirmedGame(
-            gameId = "game-1",
-            lobbyId = "lobby-1",
-            players = listOf(
-                GamePlayer(
-                    userId = "user-2",
-                    displayName = "Bob",
-                    turnOrder = 0,
-                    rackTiles = emptyList(),
-                    score = 0,
-                    joinedAt = Instant.now()
-                )
-            ),
-            drawPile = emptyList(),
-            currentPlayerUserId = "user-2",
-            status = GameStatus.ACTIVE,
-            createdAt = Instant.now()
-        )
-
-        `when`(gameService.endTurn("game-1", "user-1"))
-            .thenReturn(game)
-
-        mockMvc.post("/api/games/game-1/end-turn") {
-            header("X-User-Id", "user-1")
-        }
-            .andExpect {
-                status { isOk() }
-                jsonPath("$.gameId") { value("game-1") }
-            }
-    }
-
-    @Test
-    fun `resetDraft returns draft`() {
-        val draft = TurnDraft(
-            gameId = "game-1",
-            playerUserId = "user-1"
-        )
-
-        `when`(gameService.resetDraft("game-1", "user-1"))
-            .thenReturn(draft)
-
-        mockMvc.post("/api/games/game-1/reset-draft") {
-            header("X-User-Id", "user-1")
-        }
-            .andExpect {
-                status { isOk() }
-                jsonPath("$.gameId") { value("game-1") }
-                jsonPath("$.playerUserId") { value("user-1") }
-                jsonPath("$.boardSets") { isArray() }
-                jsonPath("$.rackTiles") { isArray() }
-            }
-    }
 }

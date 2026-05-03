@@ -58,53 +58,81 @@ class GameInitializationService(
      */
     @Transactional
     fun createGameFromLobby(lobby: Lobby): GameStartResult {
-
-        val orderedPool = tilePoolGenerationService.createTilePool()
-        val tiles = tileShuffleService.shuffleTiles(orderedPool)
-
-        val basePlayers = lobby.players.mapIndexed { index, it ->
-            GamePlayer(
-                userId = it.userId,
-                displayName = it.displayName,
-                turnOrder = index,
-                rackTiles = emptyList(),
-                hasCompletedInitialMeld = false,
-                score = 0
-            )
-        }
-
-        val playersWithHands = tileShuffleService.distributedHands(basePlayers, tiles)
-        val drawPile = tileShuffleService.createDrawPile(tiles, playersWithHands)
-
-        val firstPlayer = playersWithHands.minByOrNull { it.turnOrder }
-            ?: throw IllegalArgumentException("players must not be empty")
-
+        val shuffledTiles = tileShuffleService.shuffleTiles(tilePoolGenerationService.createTilePool())
+        val playersWithHands = tileShuffleService.distributedHands(
+            lobby.toGamePlayers(),
+            shuffledTiles
+        )
+        val firstPlayer = playersWithHands.firstByTurnOrder()
         val confirmedGame = ConfirmedGame(
             gameId = UUID.randomUUID().toString(),
             lobbyId = lobby.lobbyId,
             players = playersWithHands,
             boardSets = emptyList(),
-            drawPile = drawPile,
+            drawPile = tileShuffleService.createDrawPile(shuffledTiles, playersWithHands),
             currentPlayerUserId = firstPlayer.userId,
             status = GameStatus.ACTIVE
         )
-
         val draft = TurnDraft(
             gameId = confirmedGame.gameId,
             playerUserId = firstPlayer.userId,
             boardSets = emptyList(),
             rackTiles = firstPlayer.rackTiles
         )
-        turnDraftRepository.save(
-            TurnDraftEntity(
-                gameId = draft.gameId,
-                playerUserId = draft.playerUserId,
-                boardSets = mutableListOf(),
-                rackTiles = draft.rackTiles
-                    .map { it.toEmbeddable() }
-                    .toMutableList()
-            )
-        )
-        return GameStartResult(confirmedGame, draft )
+        turnDraftRepository.save(draft.toEntity())
+
+        return GameStartResult(confirmedGame, draft)
     }
+
+    /**
+     * Maps the validated lobby player list into the initial backend game-player model.
+     *
+     * The lobby order is preserved and used as the initial `turnOrder`, so downstream
+     * game setup can derive a deterministic first player without introducing extra
+     * ordering logic. Newly created game players always start with an empty rack,
+     * no completed initial meld, and a score of zero because those values are filled
+     * or evolved later in the initialization and game flow.
+     */
+    private fun Lobby.toGamePlayers(): List<GamePlayer> = players.mapIndexed { index, player ->
+        GamePlayer(
+            userId = player.userId,
+            displayName = player.displayName,
+            turnOrder = index,
+            rackTiles = emptyList(),
+            hasCompletedInitialMeld = false,
+            score = 0
+        )
+    }
+
+    /**
+     * Selects the first active player from the distributed game players.
+     *
+     * This keeps initial turn selection deterministic by using the lowest `turnOrder`
+     * instead of randomness. The helper assumes that the player list has already been
+     * created from lobby order and enriched with starting hands, so the returned player
+     * can be used both for `currentPlayerUserId` in the confirmed game and for the
+     * initial live draft owner.
+     *
+     * @throws IllegalArgumentException if the player list is unexpectedly empty
+     */
+    private fun List<GamePlayer>.firstByTurnOrder(): GamePlayer =
+        minByOrNull { it.turnOrder }
+            ?: throw IllegalArgumentException("players must not be empty")
+
+    /**
+     * Converts the freshly created domain draft into the persistence shape used for
+     * backend-managed live draft editing.
+     *
+     * At initialization time the draft starts without any persisted board-set entities,
+     * because the confirmed game begins with an empty board and the first player has not
+     * edited anything yet. Rack tiles are converted into embeddables so the draft can be
+     * stored immediately and later updated through the draft workflow without rebuilding
+     * the initial state from scratch.
+     */
+    private fun TurnDraft.toEntity() = TurnDraftEntity(
+        gameId = gameId,
+        playerUserId = playerUserId,
+        boardSets = mutableListOf(),
+        rackTiles = rackTiles.map { it.toEmbeddable() }.toMutableList()
+    )
 }
