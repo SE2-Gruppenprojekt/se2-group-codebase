@@ -32,6 +32,6 @@ class TileConservationService {
         activePlayerUserId: String,
         candidateDraft: TurnDraft
     ) {
-        throw UnsupportedOperationException("Tile conservation validation is not implemented yet.")
+        throw UnsupportedOperationException("Tile conservation validation is not implemented yet")
     }
 }
