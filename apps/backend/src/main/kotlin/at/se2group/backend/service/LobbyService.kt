@@ -153,13 +153,9 @@ class LobbyService(
     fun leaveLobby(lobbyId: String, userId: String): Lobby? {
         val lobby = getLobby(lobbyId)
 
-        if(lobby.status != LobbyStatus.OPEN) {
-            throw IllegalStateException("Cannot leave an unopen lobby")
-        }
+        check(lobby.status == LobbyStatus.OPEN) { "Cannot leave an unopen lobby" }
 
-        if (lobby.players.none { it.userId == userId }) {
-            throw IllegalArgumentException("No player found in this lobby")
-        }
+        require(!(lobby.players.none { it.userId == userId })) { "No player found in this lobby" }
 
         val remainingPlayers = lobby.players.filter { it.userId != userId }
 
@@ -189,13 +185,9 @@ class LobbyService(
     fun readyLobby(lobbyId: String, userId: String): Lobby {
         val lobby = getLobby(lobbyId)
 
-        if(lobby.status != LobbyStatus.OPEN) {
-            throw IllegalStateException("You cannot change the ready status, while lobby is not open")
-        }
+        check(lobby.status == LobbyStatus.OPEN) { "You cannot change the ready status, while lobby is not open" }
 
-        if(lobby.players.none { it.userId == userId}) {
-            throw IllegalArgumentException("No player was found in this lobby")
-        }
+        require(!(lobby.players.none { it.userId == userId})) { "No player was found in this lobby" }
 
         val updatedLobby = lobby.copy(
             players = lobby.players.map {
@@ -212,13 +204,9 @@ class LobbyService(
     fun unreadyLobby(lobbyId: String, userId: String): Lobby {
         val lobby = getLobby(lobbyId)
 
-        if(lobby.status != LobbyStatus.OPEN) {
-            throw IllegalStateException("You cannot change the ready status, while lobby is not open")
-        }
+        check(lobby.status == LobbyStatus.OPEN) { "You cannot change the ready status, while lobby is not open" }
 
-        if(lobby.players.none {it.userId == userId}) {
-            throw IllegalArgumentException("No player found in this lobby")
-        }
+        require(!(lobby.players.none {it.userId == userId})) { "No player found in this lobby" }
 
         val updatedLobby = lobby.copy(
             players = lobby.players.map {
