@@ -36,7 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import at.aau.serg.android.ui.components.BackButton
+import at.aau.serg.android.ui.components.TopBar
 import at.aau.serg.android.ui.theme.AuthButtonGradientStart
 import at.aau.serg.android.ui.theme.AuthDarkBorderPurple
 import at.aau.serg.android.ui.theme.SettingsIconRedTint
@@ -67,24 +67,11 @@ fun SettingsScreenContent(
             .testTag(SettingsTestTags.SCREEN)
     ) {
 
-        // --- Header ---
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            BackButton(
-                onBack = { onEvent(SettingsEvent.OnBack)},
-                modifier = Modifier.testTag(SettingsTestTags.BACK_BUTTON),
-                tint = c.settings.primaryText
-            )
-            Spacer(Modifier.width(10.dp))
-            Text(
-                text = "Settings",
-                color = c.settings.primaryText,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
-            )
-        }
+        TopBar(
+            subtitle = "Settings",
+            onBack = { onEvent(SettingsEvent.OnBack) },
+            backButtonModifier = Modifier.testTag(SettingsTestTags.BACK_BUTTON)
+        )
 
         Spacer(Modifier.height(28.dp))
 
