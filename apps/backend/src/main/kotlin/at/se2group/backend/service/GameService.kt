@@ -43,17 +43,12 @@ class GameService(
         val draftEntity = turnDraftRepository.findByGameId(gameId)
             ?: throw NoSuchElementException (DRAFT_NOT_FOUND)
 
-        if (draftEntity.playerUserId != userId) {
-            throw IllegalStateException(NOT_ACTIVE_PLAYER)
-        }
+        check(draftEntity.playerUserId == userId) { NOT_ACTIVE_PLAYER }
         val draftDomain = request.toDraftDomain(gameId, userId)
-
         val updatedEntity = draftDomain.toEntity(draftEntity)
 
         val saved = turnDraftRepository.save(updatedEntity)
-
         return saved.toDomain()
-
     }
 
 }
