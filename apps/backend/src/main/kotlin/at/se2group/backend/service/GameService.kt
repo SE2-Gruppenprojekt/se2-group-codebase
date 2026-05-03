@@ -1,7 +1,5 @@
 package at.se2group.backend.service
 
-import at.se2group.backend.persistence.TurnDraftBoardSetEntity
-
 import at.se2group.backend.domain.ConfirmedGame
 import at.se2group.backend.persistence.GameRepository
 import org.springframework.stereotype.Service
@@ -56,49 +54,6 @@ class GameService(
 
         return saved.toDomain()
 
-    }
-
-    @Transactional
-    fun endTurn(gameId: String, userId: String): ConfirmedGame {
-
-        val game = gameRepository.findById(gameId)
-            .orElseThrow { NoSuchElementException (GAME_NOT_FOUND) }
-
-        val draft = turnDraftRepository.findByGameId(gameId)
-            ?: throw NoSuchElementException(DRAFT_NOT_FOUND)
-
-        if (game.currentPlayerUserId != userId) {
-            throw IllegalStateException(NOT_ACTIVE_PLAYER)
-        }
-
-        // NEXT PLAYER bestimmen
-        val players = game.players
-        val currentIndex = players.indexOfFirst { it.userId == userId }
-        val nextPlayer = players[(currentIndex + 1) % players.size]
-
-        game.currentPlayerUserId = nextPlayer.userId
-
-        val savedGame = gameRepository.save(game)
-
-        draft.playerUserId = nextPlayer.userId
-
-        draft.boardSets.clear()
-
-        val newBoardSets = game.boardSets.map { set ->
-            TurnDraftBoardSetEntity(
-                draft = draft,
-                tiles = set.tiles.toMutableList()
-            )
-        }
-
-        draft.boardSets.addAll(newBoardSets)
-
-        draft.rackTiles = nextPlayer.rackTiles
-            .toMutableList()
-
-        turnDraftRepository.save(draft)
-
-        return savedGame.toDomain()
     }
 
     @Transactional

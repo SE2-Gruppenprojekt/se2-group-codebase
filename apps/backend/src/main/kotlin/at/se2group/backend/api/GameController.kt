@@ -5,15 +5,15 @@ import at.se2group.backend.mapper.toResponse
 import at.se2group.backend.service.GameService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PutMapping
+import at.se2group.backend.dto.UpdateDraftRequest
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import at.se2group.backend.dto.UpdateDraftRequest
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestHeader
 import at.se2group.backend.dto.DraftResponse
 import jakarta.validation.Valid
+import org.springframework.web.bind.annotation.PostMapping
 
 @RestController
 @RequestMapping("/api/games")
@@ -33,14 +33,6 @@ class GameController(
     ): DraftResponse {
 
         return gameService.updateDraft(gameId, userId, request).toResponse()
-    }
-
-    @PostMapping("/{gameId}/end-turn")
-    fun endTurn(
-        @PathVariable gameId: String,
-        @RequestHeader("X-User-Id") userId: String
-    ): GameResponse {
-        return gameService.endTurn(gameId, userId).toResponse()
     }
 
     @PostMapping("/{gameId}/reset-draft")
