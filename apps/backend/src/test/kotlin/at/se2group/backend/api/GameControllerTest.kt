@@ -20,7 +20,6 @@ import org.springframework.test.web.servlet.put
 import org.springframework.http.MediaType
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
-import org.springframework.test.web.servlet.post
 
 
 @WebMvcTest(GameController::class)
@@ -129,25 +128,4 @@ class GameControllerTest {
             }
     }
 
-    @Test
-    fun `resetDraft returns draft`() {
-        val draft = TurnDraft(
-            gameId = "game-1",
-            playerUserId = "user-1"
-        )
-
-        `when`(gameService.resetDraft("game-1", "user-1"))
-            .thenReturn(draft)
-
-        mockMvc.post("/api/games/game-1/reset-draft") {
-            header("X-User-Id", "user-1")
-        }
-            .andExpect {
-                status { isOk() }
-                jsonPath("$.gameId") { value("game-1") }
-                jsonPath("$.playerUserId") { value("user-1") }
-                jsonPath("$.boardSets") { isArray() }
-                jsonPath("$.rackTiles") { isArray() }
-            }
-    }
 }

@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import at.se2group.backend.dto.DraftResponse
 import jakarta.validation.Valid
-import org.springframework.web.bind.annotation.PostMapping
 
 @RestController
 @RequestMapping("/api/games")
@@ -33,13 +32,5 @@ class GameController(
     ): DraftResponse {
 
         return gameService.updateDraft(gameId, userId, request).toResponse()
-    }
-
-    @PostMapping("/{gameId}/reset-draft")
-    fun resetDraft(
-        @PathVariable gameId: String,
-        @RequestHeader("X-User-Id") userId: String
-    ): DraftResponse {
-        return gameService.resetDraft(gameId, userId).toResponse()
     }
 }
