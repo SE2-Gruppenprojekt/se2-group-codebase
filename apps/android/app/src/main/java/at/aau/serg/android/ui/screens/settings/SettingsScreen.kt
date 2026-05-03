@@ -63,7 +63,7 @@ fun SettingsScreenContent(
             .fillMaxSize()
             .background(c.settings.background)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 28.dp)
+            .padding(16.dp)
             .testTag(SettingsTestTags.SCREEN)
     ) {
 
@@ -73,7 +73,7 @@ fun SettingsScreenContent(
             backButtonModifier = Modifier.testTag(SettingsTestTags.BACK_BUTTON)
         )
 
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(18.dp))
 
         // --- APPEARANCE section ---
         Text(
