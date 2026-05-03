@@ -1,13 +1,11 @@
 package at.aau.serg.android.ui.screens.game
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import at.aau.serg.android.core.datastore.ProtoStore
+import at.aau.serg.android.core.network.RetrofitProvider
+import at.aau.serg.android.core.network.lobby.LobbyAPI
+import at.aau.serg.android.core.network.lobby.LobbyService
 import at.aau.serg.android.datastore.proto.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,14 +25,9 @@ class GameViewModel(
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState
 
-    var draggedTile by mutableStateOf<Tile?>(null)
-    var dragPosition by mutableStateOf(Offset.Zero)
-
-    var dragStartPosition by mutableStateOf(Offset.Zero)
-    var dragFromIndex by mutableStateOf<Int?>(null)
 
     init {
-        // Fill board with 2 rows
+
         val boardSets = listOf(
             BoardSet(
                 boardSetId = "row1",
@@ -159,17 +152,28 @@ class GameViewModel(
         }
     }
 
-    fun moveTileInRack(from: Int, to: Int) {
+    fun moveInSameRow(srcRowId: String?, from: Int, to: Int) {
         _uiState.update { state ->
-
-            val list = state.rackTiles.toMutableList()
+            val (list, boardIndex) = if (srcRowId == null) {
+                state.rackTiles.toMutableList() to null
+            } else {
+                val idx = state.boardSets.indexOfFirst { it.boardSetId == srcRowId }
+                if (idx == -1) return@update state
+                state.boardSets[idx].tiles.toMutableList() to idx
+            }
 
             if (from !in list.indices || to !in list.indices) return@update state
 
             val item = list.removeAt(from)
             list.add(to, item)
 
-            state.copy(rackTiles = list)
+            if (boardIndex == null) {
+                state.copy(rackTiles = list)
+            } else {
+                val updatedSets = state.boardSets.toMutableList()
+                updatedSets[boardIndex] = updatedSets[boardIndex].copy(tiles = list)
+                state.copy(boardSets = updatedSets)
+            }
         }
     }
 

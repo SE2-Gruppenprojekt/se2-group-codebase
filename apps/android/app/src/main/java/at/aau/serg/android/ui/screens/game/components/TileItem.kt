@@ -30,10 +30,11 @@ fun TileItem(
     selected: Boolean,
     moveHack: Boolean,
     onSelectedChange: (Boolean) -> Unit,
-    onMoveRequest: () -> Unit
+    onMoveRequest: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .width(size.dp)
             .height((size * 1.4f).dp)
             .clip(RoundedCornerShape(10.dp))
@@ -45,8 +46,6 @@ fun TileItem(
                 }
             }
             .background(
-                /*if (selected) Color(tile.color.colorInt).copy(alpha = 0.1f)
-                else Color(tile.color.colorInt)*/
                 color = Color(tile.color.colorInt)
             )
             .border(

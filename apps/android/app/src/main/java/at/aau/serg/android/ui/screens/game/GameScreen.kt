@@ -1,9 +1,7 @@
 package at.aau.serg.android.ui.screens.game
 
-import android.graphics.Color.green
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -45,7 +43,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -124,6 +121,7 @@ fun GameScreen(
                     ) {
                         items(uiState.boardSets) { boardSet ->
                             TileRow(
+                                viewModel = viewModel,
                                 tiles = boardSet.tiles,
                                 tileSize = 60,
                                 borderColor = boardBorder,
@@ -162,84 +160,26 @@ fun GameScreen(
 
                             Spacer(Modifier.height(12.dp))
 
-                            val scrollState = rememberScrollState()
-
-                            val shape = RoundedCornerShape(12.dp)
-
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .horizontalScroll(scrollState)
-                                    .clip(shape)
-                                    .border(2.dp, Color.Gray, shape)
-                                    .padding(8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-
-                            ) {
-
-                                val tiles = uiState.rackTiles
-
-                                tiles.forEachIndexed { index, tile ->
-
-                                    var isDragging by remember { mutableStateOf(false) }
-                                    var offsetX by remember { mutableStateOf(0f) }
-
-                                    val density = LocalDensity.current
-                                    val tileWidthPx = with(density) { 60.dp.toPx() }
-
-                                    Box(
-                                        modifier = Modifier
-                                            .offset { IntOffset(offsetX.toInt(), 0) }
-                                            .zIndex(if (isDragging) 1f else 0f)
-                                            .pointerInput(tiles){
-
-                                                detectDragGesturesAfterLongPress(
-                                                    onDragStart = {
-                                                        isDragging = true
-                                                    },
-
-                                                    onDragEnd = {
-
-                                                        isDragging = false
-
-                                                        val targetIndex =
-                                                            (index + (offsetX / tileWidthPx).toInt())
-                                                                .coerceIn(0, tiles.lastIndex)
-
-                                                        viewModel.moveTileInRack(index, targetIndex)
-
-                                                        offsetX = 0f
-                                                    },
-
-                                                    onDragCancel = {
-                                                        isDragging = false
-                                                        offsetX = 0f
-                                                    },
-
-                                                    onDrag = { change, dragAmount ->
-                                                        change.consume()
-                                                        offsetX += dragAmount.x
-                                                    }
-                                                )
-                                            }
-                                    ) {
-                                        TileItem(
-                                            tile = tile,
-                                            size = 44,
-                                            selected = tile in uiState.selectedTiles,
-                                            moveHack = false,
-                                            onSelectedChange = { selected ->
-                                                viewModel.onTileSelected(tile, selected)
-                                            },
-                                            onMoveRequest = {}
-                                        )
-                                    }
+                            TileRow(
+                                viewModel = viewModel,
+                                tiles = uiState.rackTiles,
+                                tileSize = 44,
+                                borderColor = boardBorder,
+                                selectedTiles = uiState.selectedTiles,
+                                selectedRow = uiState.activeSelectionRow,
+                                rowId = null,
+                                onSelectionChange = { tile, selected, rowId ->
+                                    viewModel.onTileSelected(
+                                        tile = tile,
+                                        selected = selected
+                                    )
+                                },
+                                onRowClick = { clickedRowId ->
+                                    viewModel.moveTiles(boardSetId = clickedRowId)
                                 }
+                            )
 
-                            }
-
-                            Spacer(Modifier.height(12.dp))
-
+                            Spacer(Modifier.height(14.dp))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -279,6 +219,7 @@ fun GameScreen(
                                     Icon(Icons.Filled.Refresh, contentDescription = "Reset", tint = iconBtnTint)
                                 }
                             }
+
                         }
                     }
                 }

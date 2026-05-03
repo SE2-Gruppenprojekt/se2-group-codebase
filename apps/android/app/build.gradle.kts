@@ -94,6 +94,7 @@ dependencies {
     implementation(libs.material.icons.extended)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.lifecycle.runtime)
+    implementation(libs.reorderable)
 
     // Navigation (App structure)
     implementation(libs.navigation.compose)
