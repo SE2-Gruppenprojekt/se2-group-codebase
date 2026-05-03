@@ -58,53 +58,49 @@ class GameInitializationService(
      */
     @Transactional
     fun createGameFromLobby(lobby: Lobby): GameStartResult {
-
-        val orderedPool = tilePoolGenerationService.createTilePool()
-        val tiles = tileShuffleService.shuffleTiles(orderedPool)
-
-        val basePlayers = lobby.players.mapIndexed { index, it ->
-            GamePlayer(
-                userId = it.userId,
-                displayName = it.displayName,
-                turnOrder = index,
-                rackTiles = emptyList(),
-                hasCompletedInitialMeld = false,
-                score = 0
-            )
-        }
-
-        val playersWithHands = tileShuffleService.distributedHands(basePlayers, tiles)
-        val drawPile = tileShuffleService.createDrawPile(tiles, playersWithHands)
-
-        val firstPlayer = playersWithHands.minByOrNull { it.turnOrder }
-            ?: throw IllegalArgumentException("players must not be empty")
-
+        val shuffledTiles = tileShuffleService.shuffleTiles(tilePoolGenerationService.createTilePool())
+        val playersWithHands = tileShuffleService.distributedHands(
+            lobby.toGamePlayers(),
+            shuffledTiles
+        )
+        val firstPlayer = playersWithHands.firstByTurnOrder()
         val confirmedGame = ConfirmedGame(
             gameId = UUID.randomUUID().toString(),
             lobbyId = lobby.lobbyId,
             players = playersWithHands,
             boardSets = emptyList(),
-            drawPile = drawPile,
+            drawPile = tileShuffleService.createDrawPile(shuffledTiles, playersWithHands),
             currentPlayerUserId = firstPlayer.userId,
             status = GameStatus.ACTIVE
         )
-
         val draft = TurnDraft(
             gameId = confirmedGame.gameId,
             playerUserId = firstPlayer.userId,
             boardSets = emptyList(),
             rackTiles = firstPlayer.rackTiles
         )
-        turnDraftRepository.save(
-            TurnDraftEntity(
-                gameId = draft.gameId,
-                playerUserId = draft.playerUserId,
-                boardSets = mutableListOf(),
-                rackTiles = draft.rackTiles
-                    .map { it.toEmbeddable() }
-                    .toMutableList()
-            )
-        )
-        return GameStartResult(confirmedGame, draft )
+        turnDraftRepository.save(draft.toEntity())
+
+        return GameStartResult(confirmedGame, draft)
     }
+
+    private fun Lobby.toGamePlayers(): List<GamePlayer> = players.mapIndexed { index, player ->
+        GamePlayer(
+            userId = player.userId,
+            displayName = player.displayName,
+            turnOrder = index,
+            rackTiles = emptyList(),
+            hasCompletedInitialMeld = false,
+            score = 0
+        )
+    }
+    private fun List<GamePlayer>.firstByTurnOrder(): GamePlayer =
+        minByOrNull { it.turnOrder }
+            ?: throw IllegalArgumentException("players must not be empty")
+    private fun TurnDraft.toEntity() = TurnDraftEntity(
+        gameId = gameId,
+        playerUserId = playerUserId,
+        boardSets = mutableListOf(),
+        rackTiles = rackTiles.map { it.toEmbeddable() }.toMutableList()
+    )
 }
