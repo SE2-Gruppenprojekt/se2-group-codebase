@@ -38,15 +38,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import at.aau.serg.android.ui.components.BackButton
 import at.aau.serg.android.ui.theme.AuthButtonGradientStart
-import at.aau.serg.android.ui.theme.AuthDarkBackground
-import at.aau.serg.android.ui.theme.AuthDarkCard
-import at.aau.serg.android.ui.theme.AuthDarkPrimaryText
-import at.aau.serg.android.ui.theme.AuthDarkSecondaryText
-import at.aau.serg.android.ui.theme.AuthLightBackground
-import at.aau.serg.android.ui.theme.AuthLightCard
-import at.aau.serg.android.ui.theme.AuthLightPrimaryText
-import at.aau.serg.android.ui.theme.AuthLightSecondaryText
+import at.aau.serg.android.ui.theme.AuthDarkBorderPurple
+import at.aau.serg.android.ui.theme.SettingsIconRedTint
 import at.aau.serg.android.ui.theme.ThemeState
+import at.aau.serg.android.ui.theme.appColors
 
 
 @Composable
@@ -60,25 +55,13 @@ fun SettingsScreen(
 fun SettingsScreenContent(
     onEvent: (SettingsEvent) -> Unit
 ) {
+    val c = appColors()
     val darkMode = ThemeState.isDarkMode.value
-
-    val background   = if (darkMode) AuthDarkBackground    else AuthLightBackground
-    val card         = if (darkMode) AuthDarkCard          else AuthLightCard
-    val primaryText  = if (darkMode) AuthDarkPrimaryText   else AuthLightPrimaryText
-    val secondaryText = if (darkMode) AuthDarkSecondaryText else AuthLightSecondaryText
-    val divider      = if (darkMode) Color(0xFF1E2A40)     else Color(0xFFE5E7EB)
-    val iconBlueBg   = if (darkMode) Color(0xFF1A2D55)     else Color(0xFFDEEAFF)
-    val iconBlueTint = if (darkMode) Color(0xFF60A5FA)     else Color(0xFF3B82F6)
-    val iconPurpleBg = if (darkMode) Color(0xFF241A55)     else Color(0xFFF0EBFF)
-    val iconPurpleTint = Color(0xFF8B5CF6)
-    val iconRedBg    = if (darkMode) Color(0xFF3A1A1A)     else Color(0xFFFFEBEB)
-    val iconRedTint  = Color(0xFFEF4444)
-    val chevron      = if (darkMode) Color(0xFF4A5568)     else Color(0xFFCBD5E0)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(background)
+            .background(c.settings.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 28.dp)
             .testTag(SettingsTestTags.SCREEN)
@@ -92,12 +75,12 @@ fun SettingsScreenContent(
             BackButton(
                 onBack = { onEvent(SettingsEvent.OnBack)},
                 modifier = Modifier.testTag(SettingsTestTags.BACK_BUTTON),
-                tint = primaryText
+                tint = c.settings.primaryText
             )
             Spacer(Modifier.width(10.dp))
             Text(
                 text = "Settings",
-                color = primaryText,
+                color = c.settings.primaryText,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
             )
@@ -108,7 +91,7 @@ fun SettingsScreenContent(
         // --- APPEARANCE section ---
         Text(
             text = "APPEARANCE",
-            color = secondaryText,
+            color = c.settings.secondaryText,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
             letterSpacing = 1.sp,
@@ -119,7 +102,7 @@ fun SettingsScreenContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(14.dp))
-                .background(card)
+                .background(c.settings.card)
         ) {
             Row(
                 modifier = Modifier
@@ -131,13 +114,13 @@ fun SettingsScreenContent(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(iconBlueBg),
+                        .background(c.settings.iconBlueBg),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.DarkMode,
                         contentDescription = null,
-                        tint = iconBlueTint,
+                        tint = c.settings.iconBlueTint,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -145,13 +128,13 @@ fun SettingsScreenContent(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Dark Mode",
-                        color = primaryText,
+                        color = c.settings.primaryText,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp
                     )
                     Text(
                         text = "Switch app theme",
-                        color = secondaryText,
+                        color = c.settings.secondaryText,
                         fontSize = 12.sp
                     )
                 }
@@ -162,7 +145,7 @@ fun SettingsScreenContent(
                         checkedThumbColor = Color.White,
                         checkedTrackColor = AuthButtonGradientStart,
                         uncheckedThumbColor = Color.White,
-                        uncheckedTrackColor = secondaryText.copy(alpha = 0.35f)
+                        uncheckedTrackColor = c.settings.secondaryText.copy(alpha = 0.35f)
                     ),
                     modifier = Modifier.testTag(SettingsTestTags.DARK_MODE_SWITCH)
                 )
@@ -174,7 +157,7 @@ fun SettingsScreenContent(
         // --- ACCOUNT section ---
         Text(
             text = "ACCOUNT",
-            color = secondaryText,
+            color = c.settings.secondaryText,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
             letterSpacing = 1.sp,
@@ -185,7 +168,7 @@ fun SettingsScreenContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(14.dp))
-                .background(card)
+                .background(c.settings.card)
         ) {
             // Change Username row
             Row(
@@ -200,13 +183,13 @@ fun SettingsScreenContent(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(iconPurpleBg),
+                        .background(c.settings.iconPurpleBg),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Person,
                         contentDescription = null,
-                        tint = iconPurpleTint,
+                        tint = AuthDarkBorderPurple,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -214,20 +197,20 @@ fun SettingsScreenContent(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Change Username",
-                        color = primaryText,
+                        color = c.settings.primaryText,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp
                     )
                     Text(
                         text = "Update your display name",
-                        color = secondaryText,
+                        color = c.settings.secondaryText,
                         fontSize = 12.sp
                     )
                 }
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                     contentDescription = null,
-                    tint = chevron,
+                    tint = c.settings.chevron,
                     modifier = Modifier.size(14.dp)
                 )
             }
@@ -235,7 +218,7 @@ fun SettingsScreenContent(
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 thickness = 1.dp,
-                color = divider
+                color = c.settings.divider
             )
 
             // Logout row
@@ -251,13 +234,13 @@ fun SettingsScreenContent(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(iconRedBg),
+                        .background(c.settings.iconRedBg),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Logout,
                         contentDescription = null,
-                        tint = iconRedTint,
+                        tint = SettingsIconRedTint,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -265,20 +248,20 @@ fun SettingsScreenContent(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Logout",
-                        color = iconRedTint,
+                        color = SettingsIconRedTint,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp
                     )
                     Text(
                         text = "Sign out and clear saved data",
-                        color = secondaryText,
+                        color = c.settings.secondaryText,
                         fontSize = 12.sp
                     )
                 }
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                     contentDescription = null,
-                    tint = chevron,
+                    tint = c.settings.chevron,
                     modifier = Modifier.size(14.dp)
                 )
             }
