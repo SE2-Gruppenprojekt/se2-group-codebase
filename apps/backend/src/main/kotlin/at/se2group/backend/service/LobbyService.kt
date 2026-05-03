@@ -35,8 +35,8 @@ class LobbyService(
 
     @Transactional
     fun createLobby(userId: String, request: CreateLobbyRequest): Lobby {
-        if (request.maxPlayers < MIN_PLAYERS || request.maxPlayers > MAX_PLAYERS) {
-            throw IllegalArgumentException("maxPlayers must be between ${MIN_PLAYERS} and ${MAX_PLAYERS}")
+        require(!(request.maxPlayers < MIN_PLAYERS || request.maxPlayers > MAX_PLAYERS)) {
+            "maxPlayers must be between ${MIN_PLAYERS} and ${MAX_PLAYERS}"
         }
 
         val lobby = Lobby(
@@ -76,17 +76,11 @@ class LobbyService(
     fun joinLobby(lobbyId: String, request: JoinLobbyRequest): Lobby {
         val lobby = getLobby(lobbyId)
 
-        if (lobby.status != LobbyStatus.OPEN) {
-            throw IllegalStateException("Lobby is not open")
-        }
+        check(lobby.status == LobbyStatus.OPEN) { "Lobby is not open" }
 
-        if (lobby.players.size >= lobby.settings.maxPlayers) {
-            throw IllegalStateException("Lobby is full")
-        }
+        check(lobby.players.size < lobby.settings.maxPlayers) { "Lobby is full" }
 
-        if (lobby.players.any { it.userId == request.userId }) {
-            throw IllegalStateException("Player already in lobby")
-        }
+        check(!(lobby.players.any { it.userId == request.userId })) { "Player already in lobby" }
 
         val updatedLobby = lobby.copy(
             players = lobby.players + LobbyPlayer(
