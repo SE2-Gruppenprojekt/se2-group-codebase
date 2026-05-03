@@ -17,6 +17,7 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import java.time.Instant
+import org.mockito.kotlin.mock
 
 @ExtendWith(MockitoExtension::class)
 class GameInitializationServiceTest {
@@ -28,7 +29,8 @@ class GameInitializationServiceTest {
     fun `createGameFromLobby creates confirmed game and initial draft from lobby`() {
         val gameInitializationService = GameInitializationService(
             tilePoolGenerationService = tilePoolGenerationService,
-            tileShuffleService = TileShuffleService()
+            tileShuffleService = TileShuffleService(),
+            turnDraftRepository = mock()
         )
 
         val lobby = Lobby(

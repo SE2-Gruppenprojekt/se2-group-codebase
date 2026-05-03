@@ -36,6 +36,18 @@ interface LobbyService {
         @Path("lobbyId") lobbyId: String
     ): Response<Unit>
 
+    @POST("lobbies/{lobbyId}/ready")
+    suspend fun ready(
+        @Header("X-User-Id") userId: String,
+        @Path("lobbyId") lobbyId: String
+    ): Response<Unit>
+
+    @POST("lobbies/{lobbyId}/unready")
+    suspend fun unready(
+        @Header("X-User-Id") userId: String,
+        @Path("lobbyId") lobbyId: String
+    ): Response<Unit>
+
     @POST("lobbies/{lobbyId}/start")
     suspend fun startMatch(
         @Header("X-User-Id") userId: String,
