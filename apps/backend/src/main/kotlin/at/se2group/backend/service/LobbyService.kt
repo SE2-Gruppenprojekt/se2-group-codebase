@@ -104,12 +104,10 @@ class LobbyService(
             throw SecurityException("Only the host can update lobby settings")
         }
 
-        if (lobby.status != LobbyStatus.OPEN) {
-            throw IllegalStateException("Lobby settings can only be changed while the lobby is open")
-        }
+        check(lobby.status == LobbyStatus.OPEN) { "Lobby settings can only be changed while the lobby is open" }
 
-        if (request.maxPlayers !in maxOf(MIN_PLAYERS, lobby.players.size)..MAX_PLAYERS) {
-            throw IllegalArgumentException("Maximum players must be between ${maxOf(MIN_PLAYERS, lobby.players.size)} and ${MAX_PLAYERS}")
+        require(!(request.maxPlayers !in maxOf(MIN_PLAYERS, lobby.players.size)..MAX_PLAYERS)) {
+            "Maximum players must be between ${maxOf(MIN_PLAYERS, lobby.players.size)} and ${MAX_PLAYERS}"
         }
 
         val updatedLobby = lobby.copy(
@@ -133,17 +131,11 @@ class LobbyService(
             throw SecurityException("Only the host can start the match")
         }
 
-        if (lobby.status != LobbyStatus.OPEN) {
-            throw IllegalStateException("Match can only be started while the lobby is open")
-        }
+        check(lobby.status == LobbyStatus.OPEN) { "Match can only be started while the lobby is open" }
 
-        if (lobby.players.size < MIN_PLAYERS) {
-            throw IllegalStateException("At least ${MIN_PLAYERS} players are required to start the match")
-        }
+        check(lobby.players.size >= MIN_PLAYERS) { "At least ${MIN_PLAYERS} players are required to start the match" }
 
-        if (lobby.players.any { !it.isReady }) {
-            throw IllegalStateException("All players must be ready to start the match")
-        }
+        check(!(lobby.players.any { !it.isReady })) { "All players must be ready to start the match" }
 
         val updatedLobby = lobby.copy(
             status = LobbyStatus.IN_GAME
