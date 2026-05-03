@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import at.aau.serg.android.ui.theme.AccentPurple
 
 
 @Composable
@@ -33,10 +34,10 @@ fun DirectJoinSection(
             singleLine = true,
             label = { Text("Lobby ID") },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF9D3CFF).copy(alpha = 0.5f),
-                unfocusedBorderColor = Color(0xFF9D3CFF).copy(alpha = 0.25f),
-                focusedLabelColor = Color(0xFF9D3CFF).copy(alpha = 0.5f),
-                cursorColor = Color(0xFF9D3CFF).copy(alpha = 0.5f)
+                focusedBorderColor = AccentPurple.copy(alpha = 0.5f),
+                unfocusedBorderColor = AccentPurple.copy(alpha = 0.25f),
+                focusedLabelColor = AccentPurple.copy(alpha = 0.5f),
+                cursorColor = AccentPurple.copy(alpha = 0.5f)
             )
         )
 
@@ -44,9 +45,9 @@ fun DirectJoinSection(
             onClick = onJoin,
             enabled = enabled,
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF9D3CFF),
+                containerColor = AccentPurple,
                 contentColor = Color.White,
-                disabledContainerColor = Color(0xFF9D3CFF).copy(alpha = 0.38f),
+                disabledContainerColor = AccentPurple.copy(alpha = 0.38f),
                 disabledContentColor = Color.White.copy(alpha = 0.6f)
             )
         ) {
