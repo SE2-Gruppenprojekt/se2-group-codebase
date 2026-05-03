@@ -20,10 +20,10 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun TopBar(
     subtitle: String,
-    onSettings: () -> Unit,
     modifier: Modifier = Modifier,
     title: String = "RUMMIKUB",
     onBack: (() -> Unit)? = null,
+    onSettings: (() -> Unit)? = null,
     backButtonModifier: Modifier = Modifier,
     titleModifier: Modifier = Modifier,
     subtitleModifier: Modifier = Modifier,
@@ -55,16 +55,18 @@ fun TopBar(
             }
         }
 
-        IconButton(
-            onClick = onSettings,
-            modifier = settingsButtonModifier.size(40.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Settings,
-                contentDescription = "Settings",
-                tint = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.size(20.dp)
-            )
+        if (onSettings != null) {
+            IconButton(
+                onClick = onSettings,
+                modifier = settingsButtonModifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = "Settings",
+                    tint = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
     }
 }

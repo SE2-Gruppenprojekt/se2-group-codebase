@@ -56,7 +56,9 @@ import at.aau.serg.android.ui.screens.lobby.create.components.SectionTitle
 import at.aau.serg.android.ui.screens.lobby.create.components.SelectableBox
 import at.aau.serg.android.ui.screens.lobby.create.components.ToggleSettingRow
 import at.aau.serg.android.ui.state.LoadState
-import at.aau.serg.android.ui.theme.ThemeState
+import at.aau.serg.android.ui.theme.AccentGreen
+import at.aau.serg.android.ui.theme.AccentPurple
+import at.aau.serg.android.ui.theme.appColors
 
 @Composable
 fun LobbyCreateScreen(
@@ -75,28 +77,9 @@ fun LobbyCreateScreenContent(
     uiState: LobbyCreateUiState,
     onEvent: (LobbyCreateEvent) -> Unit
 ) {
-    val darkMode = ThemeState.isDarkMode.value
+    val c = appColors()
     val context = LocalContext.current
 
-    // align dark mode with waiting room styling
-    val bgTop = if (darkMode) MaterialTheme.colorScheme.background else Color(0xFFF5F7FB)
-    val bgBottom = if (darkMode) MaterialTheme.colorScheme.surface else Color(0xFFEAEFFF)
-    val cardColor = MaterialTheme.colorScheme.surface
-    val cardBorder = if (darkMode) Color(0xFF394766) else Color(0xFFD8DEF0)
-    val primaryText = MaterialTheme.colorScheme.onSurface
-
-    // improved selected colors for dark mode
-    val selectedColor = if (darkMode) Color(0xFF7C3AED) else Color(0xFF2F3A57)
-    val selectedBorder = if (darkMode) Color(0xFFB794F4) else Color(0xFF47536F)
-    val selectedContentColor = Color.White
-
-    val actionGreen = Color(0xFF22C55E)
-    val settingButtonColor = if (darkMode) Color(0xFF2A3552) else Color(0xFF2F3A57)
-    val secondaryText = if (darkMode) {
-        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-    } else {
-        Color(0xFF6B7280)
-    }
     val roomCode = remember { "XK7P2M" }
 
     Column(
@@ -105,10 +88,10 @@ fun LobbyCreateScreenContent(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(bgTop, bgBottom)
+                    colors = listOf(c.screen.bgTop, c.screen.bgBottom)
                 )
             )
-            .verticalScroll(rememberScrollState()) // allow smaller screens to scroll
+            .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
         TopBar(
@@ -128,7 +111,7 @@ fun LobbyCreateScreenContent(
                 .testTag(LobbyCreateTestTags.ROOM_CODE_CARD)
                 .fillMaxWidth(),
             colors = CardDefaults.cardColors(
-                containerColor = cardColor
+                containerColor = c.screen.card
             ),
             shape = RoundedCornerShape(20.dp)
         ) {
@@ -141,7 +124,7 @@ fun LobbyCreateScreenContent(
                 Column {
                     Text(
                         text = "#  ROOM CODE",
-                        color = secondaryText,
+                        color = c.screen.secondaryText,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -153,7 +136,7 @@ fun LobbyCreateScreenContent(
                             text = roomCode,
                             modifier = Modifier.testTag(LobbyCreateTestTags.ROOM_CODE_TEXT),
                             style = MaterialTheme.typography.titleMedium,
-                            color = primaryText,
+                            color = c.screen.primaryText,
                             fontWeight = FontWeight.Bold
                         )
 
@@ -179,7 +162,7 @@ fun LobbyCreateScreenContent(
                             Icon(
                                 imageVector = Icons.Filled.ContentCopy,
                                 contentDescription = "Copy Room Code",
-                                tint = primaryText,
+                                tint = c.screen.primaryText,
                                 modifier = Modifier.size(14.dp)
                             )
                         }
@@ -191,7 +174,7 @@ fun LobbyCreateScreenContent(
         Spacer(modifier = Modifier.height(20.dp))
 
         SectionTitle(
-            icon = { Icon(Icons.Filled.Groups, null, tint = Color(0x9C9D3CFF)) },
+            icon = { Icon(Icons.Filled.Groups, null, tint = AccentPurple.copy(alpha = 0.61f)) },
             title = "Maximum Players"
         )
 
@@ -213,12 +196,12 @@ fun LobbyCreateScreenContent(
                         .weight(1f)
                         .height(40.dp)
                         .testTag("${LobbyCreateTestTags.MaxPlayers.OPTION_PREFIX}_$count"),
-                    cardColor = cardColor,
-                    selectedColor = selectedColor,
-                    borderColor = cardBorder,
-                    selectedBorder = selectedBorder,
-                    textColor = primaryText,
-                    selectedTextColor = selectedContentColor
+                    cardColor = c.screen.card,
+                    selectedColor = c.screen.selectedBox,
+                    borderColor = c.screen.cardBorder,
+                    selectedBorder = c.screen.selectedBorder,
+                    textColor = c.screen.primaryText,
+                    selectedTextColor = Color.White
                 )
             }
         }
@@ -226,7 +209,7 @@ fun LobbyCreateScreenContent(
         Spacer(modifier = Modifier.height(20.dp))
 
         SectionTitle(
-            icon = { Icon(Icons.Filled.Lock, null, tint = Color(0x9E9D3CFF)) },
+            icon = { Icon(Icons.Filled.Lock, null, tint = AccentPurple.copy(alpha = 0.62f)) },
             title = "Privacy"
         )
 
@@ -247,12 +230,12 @@ fun LobbyCreateScreenContent(
                     .testTag(LobbyCreateTestTags.PRIVACY_PUBLIC)
                     .weight(1f)
                     .height(72.dp),
-                cardColor = cardColor,
-                selectedColor = selectedColor,
-                borderColor = cardBorder,
-                selectedBorder = selectedBorder,
-                textColor = primaryText,
-                selectedTextColor = selectedContentColor
+                cardColor = c.screen.card,
+                selectedColor = c.screen.selectedBox,
+                borderColor = c.screen.cardBorder,
+                selectedBorder = c.screen.selectedBorder,
+                textColor = c.screen.primaryText,
+                selectedTextColor = Color.White
             )
 
             LargeSelectableBox(
@@ -266,26 +249,26 @@ fun LobbyCreateScreenContent(
                     .testTag(LobbyCreateTestTags.PRIVACY_PRIVATE)
                     .weight(1f)
                     .height(72.dp),
-                cardColor = cardColor,
-                selectedColor = selectedColor,
-                borderColor = cardBorder,
-                selectedBorder = selectedBorder,
-                textColor = primaryText,
-                selectedTextColor = selectedContentColor
+                cardColor = c.screen.card,
+                selectedColor = c.screen.selectedBox,
+                borderColor = c.screen.cardBorder,
+                selectedBorder = c.screen.selectedBorder,
+                textColor = c.screen.primaryText,
+                selectedTextColor = Color.White
             )
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
         SectionTitle(
-            icon = { Icon(Icons.Filled.Timer, null, tint = Color(0xFF9D3CFF)) },
+            icon = { Icon(Icons.Filled.Timer, null, tint = AccentPurple) },
             title = "Game Settings"
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         NumericSettingRow(
-            icon = { Icon(Icons.Filled.Timer, null, tint = primaryText) },
+            icon = { Icon(Icons.Filled.Timer, null, tint = c.screen.primaryText) },
             title = "Turn Timer",
             value = "${uiState.turnTimer}s",
             onMinus = {
@@ -297,16 +280,16 @@ fun LobbyCreateScreenContent(
             modifier = Modifier
                 .testTag(LobbyCreateTestTags.TURN_TIMER_ROW)
                 .padding(bottom = 4.dp),
-            cardColor = cardColor,
-            textColor = primaryText,
-            buttonColor = settingButtonColor,
+            cardColor = c.screen.card,
+            textColor = c.screen.primaryText,
+            buttonColor = c.screen.actionButton,
             valueTag = LobbyCreateTestTags.TURN_TIMER_VALUE,
             minusTag = LobbyCreateTestTags.TURN_TIMER_MINUS,
             plusTag = LobbyCreateTestTags.TURN_TIMER_PLUS,
         )
 
         NumericSettingRow(
-            icon = { Icon(Icons.Filled.Groups, null, tint = primaryText) },
+            icon = { Icon(Icons.Filled.Groups, null, tint = c.screen.primaryText) },
             title = "Starting Tiles",
             value = uiState.startingTiles.toString(),
             onMinus = {
@@ -318,16 +301,16 @@ fun LobbyCreateScreenContent(
             modifier = Modifier
                 .testTag(LobbyCreateTestTags.STARTING_TILES_ROW)
                 .padding(bottom = 4.dp),
-            cardColor = cardColor,
-            textColor = primaryText,
-            buttonColor = settingButtonColor,
+            cardColor = c.screen.card,
+            textColor = c.screen.primaryText,
+            buttonColor = c.screen.actionButton,
             valueTag = LobbyCreateTestTags.STARTING_TILES_VALUE,
             minusTag = LobbyCreateTestTags.STARTING_TILES_MINUS,
             plusTag = LobbyCreateTestTags.STARTING_TILES_PLUS,
         )
 
         NumericSettingRow(
-            icon = { Icon(Icons.Filled.Star, null, tint = primaryText) },
+            icon = { Icon(Icons.Filled.Star, null, tint = c.screen.primaryText) },
             title = "Win Score",
             value = uiState.winScore.toString(),
             onMinus = {
@@ -339,35 +322,35 @@ fun LobbyCreateScreenContent(
             modifier = Modifier
                 .testTag(LobbyCreateTestTags.WIN_SCORE_ROW)
                 .padding(bottom = 4.dp),
-            cardColor = cardColor,
-            textColor = primaryText,
-            buttonColor = settingButtonColor,
+            cardColor = c.screen.card,
+            textColor = c.screen.primaryText,
+            buttonColor = c.screen.actionButton,
             valueTag = LobbyCreateTestTags.WIN_SCORE_VALUE,
             minusTag = LobbyCreateTestTags.WIN_SCORE_MINUS,
             plusTag = LobbyCreateTestTags.WIN_SCORE_PLUS,
         )
 
         ToggleSettingRow(
-            icon = { Icon(Icons.Filled.Speed, null, tint = primaryText) },
+            icon = { Icon(Icons.Filled.Speed, null, tint = c.screen.primaryText) },
             title = "Quick Mode",
             checked = uiState.quickMode,
             onCheckedChange = { onEvent(LobbyCreateEvent.SetQuickMode(it)) },
             modifier = Modifier.padding(bottom = 4.dp),
-            cardColor = cardColor,
-            textColor = primaryText,
-            switchColor = settingButtonColor,
+            cardColor = c.screen.card,
+            textColor = c.screen.primaryText,
+            switchColor = c.screen.actionButton,
             switchTestTag = LobbyCreateTestTags.QUICK_MODE_TOGGLE
         )
 
         ToggleSettingRow(
-            icon = { Icon(Icons.Filled.Visibility, null, tint = primaryText) },
+            icon = { Icon(Icons.Filled.Visibility, null, tint = c.screen.primaryText) },
             title = "Require Initial Meld",
             checked = uiState.requireInitialMeld,
             onCheckedChange = { onEvent(LobbyCreateEvent.SetRequireInitialMeld(it)) },
             modifier = Modifier.padding(bottom = 4.dp),
-            cardColor = cardColor,
-            textColor = primaryText,
-            switchColor = settingButtonColor,
+            cardColor = c.screen.card,
+            textColor = c.screen.primaryText,
+            switchColor = c.screen.actionButton,
             switchTestTag = LobbyCreateTestTags.REQUIRE_INITIAL_MELD_TOGGLE
         )
 
@@ -384,7 +367,7 @@ fun LobbyCreateScreenContent(
             enabled = uiState.loadState != LoadState.Loading,
             shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF9D3CFF),
+                containerColor = AccentPurple,
                 contentColor = Color.White
             )
         ) {

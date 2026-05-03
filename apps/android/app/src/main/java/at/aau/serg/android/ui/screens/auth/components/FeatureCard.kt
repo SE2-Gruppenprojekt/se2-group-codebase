@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import at.aau.serg.android.ui.theme.AuthDarkSecondaryText
 
 @Composable
 private fun FeatureCard(
@@ -60,7 +61,7 @@ private fun FeatureCard(
         Spacer(Modifier.width(14.dp))
         Column {
             Text(text = title, color = primaryText, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-            Text(text = subtitle, color = Color(0xFF9AA6C0), fontSize = 12.sp)
+            Text(text = subtitle, color = AuthDarkSecondaryText, fontSize = 12.sp)
         }
     }
 }
