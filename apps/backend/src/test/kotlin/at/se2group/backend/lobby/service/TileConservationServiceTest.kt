@@ -5,35 +5,56 @@ import at.se2group.backend.service.TileConservationService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.Instant
 
 class TileConservationServiceTest {
 
     private val tileConservationService = TileConservationService()
 
-    @Test
-    fun `validate throws not implemented exception`() {
-        val game = ConfirmedGame(
+
+    private fun game(boardTiles: List<Tile> = emptyList(), rackTiles: List<Tile> = emptyList())=
+        ConfirmedGame(
             gameId = "game-1",
-            lobbyId = "lobby-1",
+            lobbyId= "lobby-1",
             players = listOf(
-                GamePlayer(
-                    userId = "user-1",
-                    displayName = "Alice",
-                    turnOrder = 0
-                )
+                GamePlayer(userId = "user-1", displayName = "Anna", turnOrder = 0, rackTiles = rackTiles)
             ),
+            boardSets = if (boardTiles.isEmpty()) emptyList() else listOf(BoardSet(boardSetId = "set-1", tiles = boardTiles)),
             currentPlayerUserId = "user-1",
             status = GameStatus.ACTIVE,
             createdAt = Instant.now()
         )
-        val draft = TurnDraft(
+
+    private fun draft(boardTiles: List<Tile> = emptyList(), rackTiles: List<Tile> = emptyList()) =
+        TurnDraft(
             gameId = "game-1",
-            playerUserId = "user-1"
+            playerUserId = "user-1",
+            boardSets = if (boardTiles.isEmpty()) emptyList() else listOf(BoardSet(boardSetId = "set-1", tiles = boardTiles)),
+            rackTiles = rackTiles
         )
-        val exception = assertThrows(UnsupportedOperationException::class.java) {
-            tileConservationService.validate(game, "user-1", draft)
-        }
-        assertEquals("Tile conservation validation is not implemented yet", exception.message)
+
+    @Test
+    fun `passes when rack tiles are conserved`() {
+        val tiles = listOf(NumberedTile(TileColor.RED, 1), NumberedTile(TileColor.BLUE, 2))
+        assertDoesNotThrow { tileConservationService.validate(game(rackTiles = tiles), "user-1", draft(rackTiles = tiles)) }
+    }
+
+    @Test
+    fun `passes when tile moved from rack to board`() {
+       val tile = NumberedTile(TileColor.RED, 5)
+        val extra = listOf(NumberedTile(TileColor.BLUE, 3), NumberedTile(TileColor.ORANGE, 4))
+        val confirmedGame = game(rackTiles = listOf(tile)+ extra)
+        val candidateDraft = draft(boardTiles = listOf(tile) + extra)
+        assertDoesNotThrow { tileConservationService.validate(confirmedGame, "user-1", candidateDraft) }
+    }
+
+    @Test
+    fun `passes when tile moved from board to rack`() {
+        val tile = NumberedTile(TileColor.BLACK, 8)
+        val extra = listOf(NumberedTile(TileColor.BLUE, 1), NumberedTile(TileColor.RED, 3))
+        val confirmedGame = game(boardTiles = listOf(tile) + extra)
+        val candidateDraft = draft(rackTiles = listOf(tile) + extra)
+        assertDoesNotThrow { tileConservationService.validate(confirmedGame, "user-1", candidateDraft) }
     }
 }
