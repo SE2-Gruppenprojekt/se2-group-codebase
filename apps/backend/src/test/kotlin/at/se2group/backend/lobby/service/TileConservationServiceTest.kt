@@ -95,6 +95,7 @@ class TileConservationServiceTest {
         val candidateDraft = draft(boardTiles = listOf(tile),rackTiles = listOf(tile))
         val exception = org.junit.jupiter.api.assertThrows<IllegalArgumentException> { tileConservationService.validate(confirmedGame, "user-1", candidateDraft) }
 
+        assert(exception.message!!.contains("extra"))
 
     }
 
