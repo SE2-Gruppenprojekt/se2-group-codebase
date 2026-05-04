@@ -112,6 +112,16 @@ class TurnDraftServiceTest {
         }
     }
 
+    @Test
+    fun `updateDraft throws when user is draft owner but not active player`() {
+        whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(gameEntity(currentPlayer = "user-2")))
+        whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(TurnDraftEntity(gameId = "game-1", playerUserId = "user-1"))
+
+        assertThrows(IllegalStateException::class.java) {
+            turnDraftService.updateDraft("game-1", "user-1", mock())
+        }
+    }
+
 
     @Test
     fun `updateDraft does not persist when tile conservation fails`(){
