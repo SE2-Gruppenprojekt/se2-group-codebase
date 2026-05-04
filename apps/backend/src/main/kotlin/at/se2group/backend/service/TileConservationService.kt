@@ -37,7 +37,9 @@ class TileConservationService {
         val candidate = proposedTiles(candidateDraft)
 
         if (allowed != candidate){
-            throw IllegalArgumentException("The proposed turn draft violates the tile conservation rule.")
+            val missingTiles = (allowed - candidate).entries.joinToString { "${it.key} (${it.value})" }
+            val extraTiles = (candidate - allowed).entries.joinToString { "${it.key} (${it.value})" }
+            throw IllegalArgumentException("The proposed turn draft violated - missing: [$missingTiles] and extra: [$extraTiles] tile conservation rules!")
         }
     }
 
@@ -59,4 +61,12 @@ class TileConservationService {
         val rackTiles = proposedDraft.rackTiles
         return (boardTiles + rackTiles).toMultiset()
     }
+
+    private operator fun Map<Tile, Int>.minus(other: Map<Tile, Int>): Map<Tile, Int> =
+        entries
+            .mapNotNull { (tile, count) ->
+                val remaining = count - (other[tile] ?: 0)
+                if (remaining > 0) tile to remaining else null
+            }
+            .toMap()
 }
