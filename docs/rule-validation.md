@@ -142,7 +142,8 @@ The backend should **not** fully validate:
 - whether initial meld conditions are already satisfied
 - whether every temporary set can already be resolved cleanly
 
-That is intentional.
+That is intentional. Draft updates should stay intentionally narrow because
+players must be allowed to pass through temporary invalid states while editing.
 
 ## 3.2 On turn submission
 
@@ -207,39 +208,6 @@ That preserves the important editing freedom during the turn.
 
 A clean validation design has multiple levels.
 Each level answers a different question.
-
-## Level 0: DTO / transport validation
-
-Question:
-
-> Is the incoming request well-formed?
-
-Examples:
-
-- missing required fields
-- malformed JSON
-- null lists where not allowed
-- malformed tile payloads
-- invalid numbers
-
-This belongs in:
-
-- controller request parsing
-- DTO annotations / validation
-- request mapper layer
-
-### Example
-
-```kotlin
-fun validateUpdateDraftRequest(request: UpdateDraftRequest) {
-    require(request.boardSets != null) { "boardSets must be present" }
-    require(request.rackTiles != null) { "rackTiles must be present" }
-}
-```
-
-This is not game logic yet. It is only transport validation.
-
----
 
 ## Level 1: Ownership and lifecycle validation
 
@@ -928,38 +896,9 @@ Its job is state transition, not rule checking.
 
 ---
 
-# 8. What This Means for Draft Updates
+# 8. Validation Result Models
 
-Set resolution should happen only on end-turn.
-That means draft updates should stay intentionally narrow.
-
-### Validate on every draft update
-
-- caller identity
-- active player ownership
-- draft ownership
-- game status allows updates
-- draft status allows updates
-- tile conservation
-- optional version consistency
-
-### Do not fully validate on every draft update
-
-- group legality
-- run legality
-- final set resolution
-- full board legality
-- first move point threshold
-- end-turn scoring
-- game end conditions
-
-This boundary is important because the player must be allowed to pass through temporary invalid states while editing.
-
----
-
-# 9. Validation Result Models
-
-## 9.1 `ValidationResult`
+## 8.1 `ValidationResult`
 
 A rule validation should return a structured object, not just a boolean.
 
@@ -980,7 +919,7 @@ This lets the backend:
 
 ---
 
-## 9.2 `RuleViolation`
+## 8.2 `RuleViolation`
 
 A `RuleViolation` should be the standard structured result object for **game-rule validation failures**.
 
@@ -1102,7 +1041,7 @@ This lets validators contribute violations independently while keeping the final
 
 ---
 
-# 10. Recommended Validation Service Hierarchy
+# 9. Recommended Validation Service Hierarchy
 
 A strong separation would look like this:
 
@@ -1134,82 +1073,40 @@ This keeps:
 
 ---
 
-# 11. Practical Validation Scenarios
+# 10. Practical Validation Scenarios
 
-## 11.1 Valid draft update, temporarily invalid board
+## 10.1 Valid draft update, temporarily invalid board
 
-Player takes a tile out of a valid run.
-The run becomes invalid for a short time.
-The player has not finished rearranging yet.
-
-### Expected backend behavior
-
-- accept draft update
-- persist draft
-- broadcast draft
-- do **not** reject it just because one set is temporarily invalid
-
-This is why full board validation and set resolution do not belong in the draft update path.
+Player temporarily breaks a valid run while still rearranging tiles.
+The backend should accept and persist the draft without running full board validation.
 
 ---
 
-## 11.2 Invalid draft update because a tile was duplicated
+## 10.2 Invalid draft update because a tile was duplicated
 
-Player or buggy client submits a draft where one tile appears twice.
-
-### Expected backend behavior
-
-- reject update
-- return integrity error
-- do not persist candidate draft
-
-This is a `TileConservationService` failure.
+If a submitted draft contains the same tile twice, the backend should reject it as a tile-conservation failure and keep the previous draft unchanged.
 
 ---
 
-## 11.3 Invalid end-turn because a set cannot be resolved as a legal group or run
+## 10.3 Invalid end-turn because a set cannot be resolved as a legal group or run
 
-Player submits a final set whose non-joker tiles are neither same-number nor same-color.
-
-### Expected backend behavior
-
-- reject end-turn
-- return set-resolution or set-validation errors
-- keep draft uncommitted
-
-This is a `SetValidationService` failure.
+If a final submitted set is neither a legal group nor a legal run, the backend should reject end-turn and return a set-resolution or set-validation error.
 
 ---
 
-## 11.4 Invalid end-turn because final board contains illegal run
+## 10.4 Invalid end-turn because final board contains illegal run
 
-Player submits final draft where a run has duplicate numbers or mismatched colors.
-
-### Expected backend behavior
-
-- reject end-turn
-- return validation errors
-- keep draft uncommitted
-
-This is a `RunValidationService` / `BoardValidationService` failure.
+If the final board contains an illegal run, such as duplicate numbers or mismatched colors, the backend should reject end-turn and keep the draft uncommitted.
 
 ---
 
-## 11.5 Invalid first move because initial meld score is too low
+## 10.5 Invalid first move because initial meld score is too low
 
-Player completes first turn but only places 24 points.
-
-### Expected backend behavior
-
-- reject end-turn
-- keep draft
-- return first-move-specific violation
-
-This is a `FirstMoveValidationService` failure.
+If a player's first submitted meld does not reach the required minimum, the backend should reject end-turn with a first-move-specific violation.
 
 ---
 
-# 12. Recommended Implementation Order
+# 11. Recommended Implementation Order
 
 If implementing incrementally, a good order is:
 
@@ -1231,7 +1128,7 @@ This order works well because:
 
 ---
 
-# 13. Final Takeaway
+# 12. Final Takeaway
 
 The single most important rule in this document is:
 
