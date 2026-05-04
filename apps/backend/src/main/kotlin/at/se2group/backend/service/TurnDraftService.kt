@@ -50,7 +50,9 @@ class TurnDraftService(
 
         const val DRAFT_NOT_FOUND = "Draft not found"
 
-        const val NOT_ACTIVE_PLAYER = "Not active player"
+        const val NOT_CURRENT_PLAYER = "User is not the current active player"
+
+        const val NOT_DRAFT_OWNER = "Draft belongs to a different user"
     }
 
     /**
@@ -93,8 +95,8 @@ class TurnDraftService(
         val draftEntity = turnDraftRepository.findByGameId(gameId)
             ?: throw NoSuchElementException(DRAFT_NOT_FOUND)
 
-        check(game.currentPlayerUserId == userId) { NOT_ACTIVE_PLAYER }
-        check(draftEntity.playerUserId == userId) { NOT_ACTIVE_PLAYER }
+        check(game.currentPlayerUserId == userId) { NOT_CURRENT_PLAYER }
+        check(draftEntity.playerUserId == userId) { NOT_DRAFT_OWNER }
 
         val proposedDraft = request.toDraftDomain(gameId, userId)
 
