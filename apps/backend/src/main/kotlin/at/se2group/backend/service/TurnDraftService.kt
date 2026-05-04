@@ -38,7 +38,8 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional(readOnly = true)
 class TurnDraftService(
     private val gameRepository: GameRepository,
-    private val turnDraftRepository: TurnDraftRepository
+    private val turnDraftRepository: TurnDraftRepository,
+    private val tileConservationService: TileConservationService
 ) {
 
     /**
@@ -95,6 +96,13 @@ class TurnDraftService(
         check(game.currentPlayerUserId == userId) { NOT_ACTIVE_PLAYER }
         check(draftEntity.playerUserId == userId) { NOT_ACTIVE_PLAYER }
 
+        val proposedDraft = request.toDraftDomain(gameId, userId)
+
+        tileConservationService.validate(
+            confirmedGame = game,
+            activePlayerUserId = userId,
+            candidateDraft = proposedDraft
+        )
         return turnDraftRepository.save(
             request.toDraftDomain(gameId, userId).toEntity(draftEntity)
         ).toDomain()
