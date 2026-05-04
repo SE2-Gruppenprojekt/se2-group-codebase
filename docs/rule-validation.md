@@ -970,24 +970,12 @@ This order works well because:
 
 # 8. Final Takeaway
 
-The single most important rule in this document is:
+The backend should treat draft updates and turn submission as two different
+operations.
 
-> **Temporary draft editing must stay permissive, but turn submission must stay strict, and final set type must be inferred by the backend before full set validation runs.**
+- `PUT /draft` protects ownership, lifecycle, and tile integrity
+- `POST /end-turn` is the single strict rule-validation gate
+- final set type is resolved by the backend during submitted-turn validation
 
-That means:
-
-- `TurnDraftService` should allow temporary invalid arrangements as long as ownership and tile integrity are preserved
-- `SetValidationService` should decide whether a final set is legal as a group, legal as a run, ambiguous, or invalid
-- `RummikubRuleService` should validate only submitted end-turn states that are about to become confirmed game state
-
-If this boundary stays clear, the architecture remains:
-
-- flexible for frontend editing
-- strict where correctness matters
-- independent of frontend set-type decisions
-- easy to test
-- easy to extend later
-
-In one sentence:
-
-> **Draft updates protect temporary player work, while end-turn is the single strict backend gate where tile conservation, set resolution, set legality, board legality, and game-context rules decide whether the draft may become the next confirmed game state.**
+That keeps editing permissive during the turn while keeping the confirmed game
+state strict and fully validated before it changes.
