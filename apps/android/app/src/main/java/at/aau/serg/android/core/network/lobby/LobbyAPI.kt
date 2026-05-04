@@ -27,6 +27,16 @@ class LobbyAPI(
         return response.isSuccessful
     }
 
+    suspend fun ready(userId: String, lobbyId: String): Boolean {
+        val response = service.ready(userId, lobbyId)
+        return response.isSuccessful
+    }
+
+    suspend fun unready(userId: String, lobbyId: String): Boolean {
+        val response = service.unready(userId, lobbyId)
+        return response.isSuccessful
+    }
+
     suspend fun startMatch(userId: String, lobbyId: String): Boolean {
         val response = service.startMatch(userId, lobbyId)
         return response.isSuccessful

@@ -39,19 +39,6 @@ class LobbyWebSocketServiceTest {
         unmockkAll()
     }
 
-    // -----------------------------
-    // CONNECT
-    // -----------------------------
-    @Test
-    fun connect_calls_websocket_manager() = runBlocking {
-
-        coEvery { manager.connect() } just Runs
-
-        service.connect()
-
-        coVerify { manager.connect() }
-    }
-
     @Test
     fun subscribe_emits_lobby_updated_event() = runBlocking {
         val json = """

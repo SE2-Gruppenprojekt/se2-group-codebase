@@ -8,6 +8,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import at.aau.serg.android.ui.theme.ActionButtonDark
+import at.aau.serg.android.ui.theme.ActionButtonLight
 import at.aau.serg.android.ui.theme.ThemeState
 
 @Composable
@@ -54,7 +56,7 @@ fun SettingRow(
     onMinus: () -> Unit,
     onPlus: () -> Unit
 ) {
-    val buttonColor = if (ThemeState.isDarkMode.value) Color(0xFF2A3552) else Color(0xFF2F3A57)
+    val buttonColor = if (ThemeState.isDarkMode.value) ActionButtonDark else ActionButtonLight
 
     Row(
         modifier = Modifier

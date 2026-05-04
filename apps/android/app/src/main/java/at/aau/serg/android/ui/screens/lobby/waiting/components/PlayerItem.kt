@@ -22,6 +22,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import at.aau.serg.android.ui.theme.AccentBlue
+import at.aau.serg.android.ui.theme.NotReadyRed
+import at.aau.serg.android.ui.theme.ReadyGreen
 
 
 @Composable
@@ -41,7 +44,7 @@ fun PlayerItem(
     val avatarBackground = if (isPlaceholder) {
         secondaryTextColor.copy(alpha = 0.16f)
     } else {
-        Color(0xFF4F8DFF)
+        AccentBlue
     }
 
     val avatarIconTint = if (isPlaceholder) {
@@ -125,7 +128,7 @@ fun PlayerItem(
                 Box(
                     modifier = Modifier
                         .size(22.dp)
-                        .background(Color(0xFF2DBE60), CircleShape),
+                        .background(ReadyGreen, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -141,7 +144,7 @@ fun PlayerItem(
                 Box(
                     modifier = Modifier
                         .size(22.dp)
-                        .background(Color(0xFFE53935), CircleShape),
+                        .background(NotReadyRed, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -161,14 +164,14 @@ fun HostBadge() {
     Box(
         modifier = Modifier
             .background(
-                color = Color(0xFF4F8DFF).copy(alpha = 0.18f),
+                color = AccentBlue.copy(alpha = 0.18f),
                 shape = RoundedCornerShape(10.dp)
             )
             .padding(horizontal = 8.dp, vertical = 3.dp)
     ) {
         Text(
             text = "HOST",
-            color = Color(0xFF4F8DFF),
+            color = AccentBlue,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold
         )

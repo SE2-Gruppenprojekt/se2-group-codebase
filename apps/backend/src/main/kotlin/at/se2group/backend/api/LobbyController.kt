@@ -18,6 +18,7 @@ import at.se2group.backend.dto.JoinLobbyRequest
 import at.se2group.backend.dto.UpdateLobbySettingsRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
+import jakarta.validation.Valid
 
 @RestController
 @RequestMapping("/api/lobbies")
@@ -34,7 +35,7 @@ class LobbyController(
     @PostMapping
     fun createLobby(
         @RequestHeader("X-User-Id") userId: String,
-        @RequestBody request: CreateLobbyRequest
+       @Valid @RequestBody request: CreateLobbyRequest
     ): LobbyResponse {
         return lobbyService.createLobby(userId, request)
             .toResponse()
@@ -47,7 +48,7 @@ class LobbyController(
     @PostMapping("/{lobbyId}/join")
     fun joinLobby(
         @PathVariable lobbyId: String,
-        @RequestBody request: JoinLobbyRequest
+        @Valid @RequestBody request: JoinLobbyRequest
     ): LobbyResponse {
         return lobbyService.joinLobby(lobbyId, request).toResponse()
     }
@@ -56,7 +57,7 @@ class LobbyController(
     fun updateLobbySettings(
         @PathVariable lobbyId: String,
         @RequestHeader("X-User-Id") userId: String,
-        @RequestBody request: UpdateLobbySettingsRequest
+        @Valid @RequestBody request: UpdateLobbySettingsRequest
     ): LobbyResponse {
         return lobbyService.updateLobbySettings(lobbyId, userId, request).toResponse()
     }
@@ -103,7 +104,7 @@ class LobbyController(
     fun deleteLobby(
         @PathVariable lobbyId: String,
         @RequestHeader("X-User-Id") userId: String
-    ): ResponseEntity<Void> {
+    ): ResponseEntity<Unit> {
         lobbyService.deleteLobby(lobbyId, userId)
         return ResponseEntity.noContent().build()
     }

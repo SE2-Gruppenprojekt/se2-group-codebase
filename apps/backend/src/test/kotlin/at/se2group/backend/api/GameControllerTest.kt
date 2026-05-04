@@ -6,6 +6,7 @@ import at.se2group.backend.domain.GameStatus
 import at.se2group.backend.domain.NumberedTile
 import at.se2group.backend.domain.TileColor
 import at.se2group.backend.service.GameService
+import at.se2group.backend.service.TurnDraftService
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
@@ -15,6 +16,12 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import java.time.Instant
+import at.se2group.backend.domain.TurnDraft
+import org.springframework.test.web.servlet.put
+import org.springframework.http.MediaType
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+
 
 @WebMvcTest(GameController::class)
 @Import(GlobalExceptionHandler::class)
@@ -25,6 +32,9 @@ class GameControllerTest {
 
     @MockitoBean
     lateinit var gameService: GameService
+
+    @MockitoBean
+    lateinit var turnDraftService: TurnDraftService
 
     @Test
     fun `getGame returns game response`() {
@@ -81,4 +91,45 @@ class GameControllerTest {
                 jsonPath("$.errorMessage") { value("Game not found") }
             }
     }
+
+    @Test
+    fun `updateDraft returns ok`() {
+        val requestJson = """
+        {
+            "boardSets": [
+                { "tiles": [{ "color": "BLUE", "number": 3, "joker": false }] }
+            ],
+            "rackTiles": [
+                { "color": "RED", "number": 5, "joker": false }
+            ]
+        }
+    """.trimIndent()
+
+        val draft = TurnDraft(
+            gameId = "game-1",
+            playerUserId = "mock-user"
+        )
+
+        `when`(
+            turnDraftService.updateDraft(
+                eq("game-1"),
+                eq("mock-user"),
+                any()
+            )
+        ).thenReturn(draft)
+
+        mockMvc.put("/api/games/game-1/draft") {
+            header("X-User-Id", "mock-user")
+            contentType = MediaType.APPLICATION_JSON
+            content = requestJson
+        }
+            .andExpect {
+                status { isOk() }
+                jsonPath("$.gameId") { value("game-1") }
+                jsonPath("$.playerUserId") { value("mock-user") }
+                jsonPath("$.boardSets") { isArray() }
+                jsonPath("$.rackTiles") { isArray() }
+            }
+    }
+
 }

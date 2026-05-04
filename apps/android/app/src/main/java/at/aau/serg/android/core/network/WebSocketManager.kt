@@ -32,8 +32,13 @@ class WebSocketManager(
     }
 
     fun subscribe(topic: String): Flow<String> = flow {
+        connect()
         val currentSession = synchronized(lock) {
             session ?: throw IllegalStateException("WebSocket not connected.")
+        }
+
+        synchronized(lock) {
+            subscriberCount++
         }
 
         try {

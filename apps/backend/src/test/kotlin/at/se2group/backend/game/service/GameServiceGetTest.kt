@@ -16,6 +16,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import java.time.Instant
 import java.util.Optional
+import org.junit.jupiter.api.BeforeEach
 
 @ExtendWith(MockitoExtension::class)
 class GameServiceGetTest {
@@ -23,8 +24,12 @@ class GameServiceGetTest {
     @Mock
     lateinit var gameRepository: GameRepository
 
-    @InjectMocks
     lateinit var gameService: GameService
+
+    @BeforeEach
+    fun setup() {
+        gameService = GameService(gameRepository)
+    }
 
     @Test
     fun `getGame returns existing game`() {

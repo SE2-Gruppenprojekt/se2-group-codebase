@@ -44,7 +44,8 @@ import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.components.TopBar
 import at.aau.serg.android.ui.screens.lobby.browse.components.LobbyBrowseCard
 import at.aau.serg.android.ui.state.LoadState
-import at.aau.serg.android.ui.theme.ThemeState
+import at.aau.serg.android.ui.theme.AccentPurple
+import at.aau.serg.android.ui.theme.appColors
 import at.aau.serg.android.ui.util.ErrorUiMapper
 
 @Composable
@@ -64,26 +65,11 @@ fun LobbyBrowseScreenContent(
     uiState: LobbyBrowseUiState,
     onEvent: (LobbyBrowseEvent) -> Unit
 ) {
-    val darkMode = ThemeState.isDarkMode.value
+    val c = appColors()
 
     val backgroundGradient = Brush.verticalGradient(
-        colors = listOf(
-            if (darkMode) MaterialTheme.colorScheme.background else Color(0xFFF5F7FB),
-            if (darkMode) MaterialTheme.colorScheme.surface else Color(0xFFEAEFFF)
-        )
+        colors = listOf(c.screen.bgTop, c.screen.bgBottom)
     )
-
-    val cardColor = MaterialTheme.colorScheme.surface
-    val borderColor = if (darkMode) Color(0xFF394766) else Color(0xFFD8DEF0)
-    val primaryText = MaterialTheme.colorScheme.onSurface
-    val secondaryText = if (darkMode) {
-        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-    } else {
-        Color(0xFF6B7280)
-    }
-
-    val accentPurple = Color(0xFF9D3CFF)
-    val actionButtonColor = if (darkMode) Color(0xFF2A3552) else Color(0xFF2F3A57)
 
     val enteredLobbyId = uiState.lobbyIdInput.trim().uppercase()
 
@@ -119,13 +105,13 @@ fun LobbyBrowseScreenContent(
                     .weight(1f)
                     .testTag(LobbyBrowseTestTags.LOBBY_ID_INPUT),
                 singleLine = true,
-                label = { Text("Lobby ID", color = secondaryText) },
-                placeholder = { Text("Enter lobby ID to join...", color = secondaryText) },
+                label = { Text("Lobby ID", color = c.screen.secondaryText) },
+                placeholder = { Text("Enter lobby ID to join...", color = c.screen.secondaryText) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Filled.Tag,
                         contentDescription = null,
-                        tint = secondaryText
+                        tint = c.screen.secondaryText
                     )
                 },
                 keyboardOptions = KeyboardOptions.Default.copy(
@@ -134,12 +120,12 @@ fun LobbyBrowseScreenContent(
                 ),
                 shape = RoundedCornerShape(18.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = primaryText,
-                    unfocusedTextColor = primaryText,
-                    focusedContainerColor = cardColor,
-                    unfocusedContainerColor = cardColor,
-                    focusedBorderColor = borderColor,
-                    unfocusedBorderColor = borderColor
+                    focusedTextColor = c.screen.primaryText,
+                    unfocusedTextColor = c.screen.primaryText,
+                    focusedContainerColor = c.screen.card,
+                    unfocusedContainerColor = c.screen.card,
+                    focusedBorderColor = c.screen.cardBorder,
+                    unfocusedBorderColor = c.screen.cardBorder
                 )
             )
 
@@ -149,7 +135,7 @@ fun LobbyBrowseScreenContent(
                 shape = RoundedCornerShape(16.dp),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = actionButtonColor,
+                    containerColor = c.screen.actionButton,
                     contentColor = Color.White
                 ),
                 modifier = Modifier.testTag(LobbyBrowseTestTags.JOIN_BUTTON)
@@ -180,7 +166,7 @@ fun LobbyBrowseScreenContent(
             Text(
                 text = "${uiState.lobbies.size} available",
                 style = MaterialTheme.typography.labelMedium,
-                color = secondaryText
+                color = c.screen.secondaryText
             )
         }
 
@@ -193,7 +179,7 @@ fun LobbyBrowseScreenContent(
                     .padding(vertical = 24.dp),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = accentPurple)
+                CircularProgressIndicator(color = AccentPurple)
             }
         }
 
@@ -220,9 +206,9 @@ fun LobbyBrowseScreenContent(
             items(uiState.lobbies) { lobby ->
                 LobbyBrowseCard(
                     lobby = lobby,
-                    cardColor = cardColor,
-                    primaryText = primaryText,
-                    secondaryText = secondaryText,
+                    cardColor = c.screen.card,
+                    primaryText = c.screen.primaryText,
+                    secondaryText = c.screen.secondaryText,
                     onJoinLobby = { onEvent(LobbyBrowseEvent.OnJoinLobby(it)) }
                 )
             }
@@ -243,7 +229,7 @@ fun LobbyBrowseScreenContent(
                 .height(58.dp),
             shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = accentPurple,
+                containerColor = AccentPurple,
                 contentColor = Color.White
             ),
             contentPadding = PaddingValues(0.dp)
@@ -252,7 +238,7 @@ fun LobbyBrowseScreenContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
-                        color = accentPurple,
+                        color = AccentPurple,
                         shape = RoundedCornerShape(18.dp)
                     ),
                 contentAlignment = Alignment.Center

@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import at.aau.serg.android.ui.theme.AccentBlue
+import at.aau.serg.android.ui.theme.HomeIconGradientEnd
 
 @Composable
 fun HomeTitleSection(
@@ -34,7 +36,7 @@ fun HomeTitleSection(
                 .clip(RoundedCornerShape(28.dp))
                 .background(
                     Brush.linearGradient(
-                        listOf(Color(0xFF4F8DFF), Color(0xFF9B42FF))
+                        listOf(AccentBlue, HomeIconGradientEnd)
                     )
                 ),
             contentAlignment = Alignment.Center
