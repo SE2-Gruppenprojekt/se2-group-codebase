@@ -3,6 +3,7 @@ package at.se2group.backend.service
 import at.se2group.backend.domain.ConfirmedGame
 import at.se2group.backend.domain.TurnDraft
 import org.springframework.stereotype.Service
+import at.se2group.backend.domain.Tile
 
 /**
  * Service responsible for validating that a candidate turn draft conserves the
@@ -32,6 +33,20 @@ class TileConservationService {
         activePlayerUserId: String,
         candidateDraft: TurnDraft
     ) {
+        val allowed = allowedTiles(confirmedGame, activePlayerUserId)
         throw UnsupportedOperationException("Tile conservation validation is not implemented yet")
     }
+
+    private fun allowedTiles(
+        confirmedGame: ConfirmedGame,
+        activePlayerUserId: String
+        ): Map<Tile, Int> {
+        val boardTiles = confirmedGame.boardSets.flatMap { it.tiles }
+        val rackTiles = confirmedGame.players.first { it.userId == activePlayerUserId }.rackTiles
+
+        return (boardTiles + rackTiles).toMultiset()
+    }
+
+    private fun List<Tile>.toMultiset(): Map<Tile, Int> =
+        groupingBy { it }.eachCount()
 }
