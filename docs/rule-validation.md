@@ -164,7 +164,7 @@ It only checks whether the player rearranged the correct tiles.
 
 ---
 
-## Level 3: Set resolution inside set validation
+## Set resolution inside set validation
 
 Question:
 
@@ -194,7 +194,7 @@ This avoids a separate classification pass that duplicates much of the same reas
 
 ---
 
-### 1.4.1 `GroupValidationService`
+# `GroupValidationService`
 
 A group usually means:
 
@@ -238,7 +238,7 @@ fun validateGroup(set: BoardSet): ValidationResult {
 
 ---
 
-### 1.4.2 `RunValidationService`
+### `RunValidationService`
 
 A run usually means:
 
@@ -284,7 +284,7 @@ fun validateRun(set: BoardSet): ValidationResult {
 
 ---
 
-### 1.4.3 `SetValidationService`
+### `SetValidationService`
 
 This service should not trust a pre-existing `BoardSetType` from the client.
 Instead, it should validate the set as both a group and a run and then decide the outcome.
@@ -318,7 +318,7 @@ This is the core change from the earlier architecture.
 
 ---
 
-## Level 5: Board-level validation
+## Board-level validation
 
 Question:
 
@@ -357,7 +357,7 @@ This layer is mainly used during **end-turn**, not during every draft update.
 
 ---
 
-## Level 6: Turn-level / game-context validation
+## Turn-level / game-context validation
 
 Question:
 
@@ -405,7 +405,7 @@ fun validateFirstMove(game: Game, draft: TurnDraft, player: GamePlayer): Validat
 
 ---
 
-## Level 7: Top-level rule orchestration
+## Top-level rule orchestration
 
 Question:
 
