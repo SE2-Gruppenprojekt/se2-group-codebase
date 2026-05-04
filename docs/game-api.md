@@ -13,7 +13,19 @@ This document is intentionally focused on the **match/game feature only** and le
 
 ---
 
-## 1. API Overview
+## 1. Deployment
+
+Current backend deployment:
+
+- REST base URL: `https://se2-group-codebase.onrender.com/`
+- WebSocket / STOMP endpoint: `wss://se2-group-codebase.onrender.com/ws`
+- Health check: `https://se2-group-codebase.onrender.com/actuator/health`
+
+The WebSocket endpoint uses the same deployed backend host as the REST API.
+
+---
+
+## 2. API Overview
 
 The game feature uses two communication styles:
 
@@ -48,7 +60,7 @@ Typical flow:
 
 ---
 
-## 2. Common Models
+## 3. Common Models
 
 The following response types are used repeatedly across the API.
 
@@ -332,9 +344,9 @@ Common example error codes:
 
 ---
 
-## 3. REST API
+## 4. REST API
 
-## 3.1 `GET /api/games/{gameId}`
+## 4.1 `GET /api/games/{gameId}`
 
 Returns the confirmed authoritative game state.
 
@@ -384,7 +396,7 @@ Used for:
 
 ---
 
-## 3.2 `GET /api/games/{gameId}/draft` (optional)
+## 4.2 `GET /api/games/{gameId}/draft` (optional)
 
 Returns the current live draft state.
 
@@ -416,7 +428,7 @@ Useful for:
 
 ---
 
-## 3.3 `PUT /api/games/{gameId}/draft`
+## 4.3 `PUT /api/games/{gameId}/draft`
 
 Replaces the current draft with the latest draft state from the active player.
 
@@ -519,7 +531,7 @@ Fields:
 
 ---
 
-## 3.4 `POST /api/games/{gameId}/end-turn`
+## 4.4 `POST /api/games/{gameId}/end-turn`
 
 Submits the current draft for final validation and, if valid, commits it as the new confirmed game state.
 
@@ -633,7 +645,7 @@ Fields:
 
 ---
 
-## 3.5 `POST /api/games/{gameId}/draw`
+## 4.5 `POST /api/games/{gameId}/draw`
 
 Lets the active player draw a tile from the draw pile.
 
@@ -692,7 +704,7 @@ Can be either empty or use a small request DTO like:
 
 ---
 
-## 3.6 `POST /api/games/{gameId}/reset-draft`
+## 4.6 `POST /api/games/{gameId}/reset-draft`
 
 Resets the current draft back to the current confirmed game state.
 
@@ -742,9 +754,9 @@ Can be either empty or use:
 
 ---
 
-## 4. WebSocket API
+## 5. WebSocket API
 
-## 4.1 Subscription topic
+## 5.1 Subscription topic
 
 Clients should subscribe to:
 
@@ -778,7 +790,7 @@ This makes frontend parsing simpler and helps with reconnect and stale-event han
 
 ---
 
-## 4.2 `game.draft.updated`
+## 5.2 `game.draft.updated`
 
 Sent whenever the active player updates the draft.
 
@@ -833,7 +845,7 @@ Fields:
 
 ---
 
-## 4.3 `game.updated`
+## 5.3 `game.updated`
 
 Sent whenever the confirmed authoritative game state changes.
 
@@ -875,7 +887,7 @@ Fields:
 
 ---
 
-## 4.4 `turn.changed`
+## 5.4 `turn.changed`
 
 Sent when the active turn moves to the next player.
 
@@ -901,7 +913,7 @@ Fields:
 
 ---
 
-## 4.5 `turn.timed_out` (optional)
+## 5.5 `turn.timed_out` (optional)
 
 Sent when the active player's turn ends automatically because the timer expired.
 
@@ -932,7 +944,7 @@ Notes:
 
 ---
 
-## 4.6 `game.ended`
+## 5.6 `game.ended`
 
 Sent when the game finishes.
 
@@ -958,7 +970,7 @@ Fields:
 
 ---
 
-## 5. Recommended frontend handling
+## 6. Recommended frontend handling
 
 ### On initial load
 
@@ -993,7 +1005,7 @@ Fields:
 
 ---
 
-## 6. Summary
+## 7. Summary
 
 The game API uses:
 
