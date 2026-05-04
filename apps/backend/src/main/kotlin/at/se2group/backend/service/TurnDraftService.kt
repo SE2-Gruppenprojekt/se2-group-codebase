@@ -104,7 +104,7 @@ class TurnDraftService(
             candidateDraft = proposedDraft
         )
         return turnDraftRepository.save(
-            request.toDraftDomain(gameId, userId).toEntity(draftEntity)
+            proposedDraft.toEntity(draftEntity)
         ).toDomain()
     }
 }
