@@ -99,6 +99,22 @@ class TileConservationServiceTest {
     }
 
 
+    @Test
+    fun `rejects when draft contains a tile that is not allowed in the game`() {
+        val confirmedGame = game(rackTiles = listOf(NumberedTile(TileColor.BLACK, 5)))
+        val candidateDraft = draft(rackTiles = listOf(NumberedTile(TileColor.RED, 13)))
+        val exception = org.junit.jupiter.api.assertThrows<IllegalArgumentException> { tileConservationService.validate(confirmedGame, "user-1", candidateDraft) }
 
+        assert(exception.message!!.contains("extra"))
+    }
+
+    @Test
+    fun `rejects when joker is invented in the draft`() {
+        val confirmedGame = game(rackTiles = listOf(NumberedTile(TileColor.BLACK, 5)))
+        val candidateDraft = draft(rackTiles = listOf(JokerTile(TileColor.BLUE)))
+        val exception = org.junit.jupiter.api.assertThrows<IllegalArgumentException> { tileConservationService.validate(confirmedGame, "user-1", candidateDraft) }
+
+        assert(exception.message!!.contains("extra"))
+    }
 
 }
