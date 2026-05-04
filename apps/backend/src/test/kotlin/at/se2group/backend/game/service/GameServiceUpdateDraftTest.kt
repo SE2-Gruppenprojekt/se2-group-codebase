@@ -111,4 +111,18 @@ class TurnDraftServiceTest {
             turnDraftService.updateDraft("game-1", "user-2", mock())
         }
     }
+
+
+    @Test
+    fun `updateDraft does not persist when tile conservation fails`(){
+        whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(gameEntity()))
+        whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(TurnDraftEntity(gameId = "game-1", playerUserId = "user-1"))
+        whenever(tileConservationService.validate(any(), any(), any())).thenThrow(IllegalArgumentException("Tile conservation failed!"))
+
+        runCatching {
+            turnDraftService.updateDraft("game-1", "user-1", UpdateDraftRequest(emptyList(), emptyList()))
+        }
+
+        verify(turnDraftRepository, never()).save(any())
+    }
 }
