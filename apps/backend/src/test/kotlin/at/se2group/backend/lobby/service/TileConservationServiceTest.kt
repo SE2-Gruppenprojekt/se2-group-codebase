@@ -77,4 +77,28 @@ class TileConservationServiceTest {
         val exception = org.junit.jupiter.api.assertThrows<IllegalArgumentException> { tileConservationService.validate(confirmedGame, "user-1", candidateDraft) }
         assert(exception.message!!.contains("missing"))
     }
+
+    @Test
+    fun `rejects when tile is duplicated in draft rack`() {
+        val tile = NumberedTile(TileColor.RED, 5)
+        val confirmedGame = game(rackTiles = listOf(tile))
+        val candidateDraft = draft(rackTiles = listOf(tile,tile))
+        val exception = org.junit.jupiter.api.assertThrows<IllegalArgumentException> { tileConservationService.validate(confirmedGame, "user-1", candidateDraft) }
+
+        assert(exception.message!!.contains("extra"))
+    }
+
+    @Test
+    fun `rejects when tile shows up on board and rack simultaneously`() {
+        val tile = NumberedTile(TileColor.ORANGE, 4)
+        val confirmedGame = game(rackTiles = listOf(tile))
+        val candidateDraft = draft(boardTiles = listOf(tile),rackTiles = listOf(tile))
+        val exception = org.junit.jupiter.api.assertThrows<IllegalArgumentException> { tileConservationService.validate(confirmedGame, "user-1", candidateDraft) }
+
+
+    }
+
+
+
+
 }
