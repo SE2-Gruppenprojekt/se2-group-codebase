@@ -3,6 +3,7 @@ package at.se2group.backend.service
 import at.se2group.backend.domain.TurnDraft
 import at.se2group.backend.dto.UpdateDraftRequest
 import at.se2group.backend.mapper.toDomain
+import at.se2group.backend.mapper.toDomain as toGameDomain
 import at.se2group.backend.mapper.toDomain as toDraftDomain
 import at.se2group.backend.mapper.toEntity
 import at.se2group.backend.persistence.GameRepository
@@ -86,6 +87,7 @@ class TurnDraftService(
     ): TurnDraft {
         gameRepository.findById(gameId)
             .orElseThrow { NoSuchElementException(GAME_NOT_FOUND) }
+                .toGameDomain()
 
         val draftEntity = turnDraftRepository.findByGameId(gameId)
             ?: throw NoSuchElementException(DRAFT_NOT_FOUND)
