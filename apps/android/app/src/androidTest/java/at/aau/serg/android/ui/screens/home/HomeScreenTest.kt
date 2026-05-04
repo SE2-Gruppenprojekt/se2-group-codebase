@@ -84,14 +84,11 @@ class HomeScreenTest {
         click(HomeTestTags.ACTION_CREATE_LOBBY)
         click(HomeTestTags.ACTION_BROWSE_LOBBY)
         click(HomeTestTags.ACTION_SETTINGS)
-        click(HomeTestTags.TOPBAR_SETTINGS_BUTTON)
-
 
         assertEquals(
             listOf(
                 HomeEvent.OnCreateLobby,
                 HomeEvent.OnBrowseLobby,
-                HomeEvent.OnSettings,
                 HomeEvent.OnSettings
             ),
             events

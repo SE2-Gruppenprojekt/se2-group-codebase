@@ -78,6 +78,7 @@ import at.aau.serg.android.ui.theme.AuthLightCardPurple
 import at.aau.serg.android.ui.theme.AuthLightInput
 import at.aau.serg.android.ui.theme.AuthLightPrimaryText
 import at.aau.serg.android.ui.theme.AuthLightSecondaryText
+import at.aau.serg.android.ui.theme.AccentYellow
 import at.aau.serg.android.ui.theme.ThemeState
 
 
@@ -329,7 +330,7 @@ fun AuthScreenContent(
                 Icon(
                     imageVector = Icons.Filled.LightbulbCircle,
                     contentDescription = null,
-                    tint = Color(0xFFFFD93D),
+                    tint = AccentYellow,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(Modifier.width(6.dp))

@@ -21,7 +21,9 @@ import at.aau.serg.android.ui.screens.lobby.waiting.components.WaitingScreenPlay
 import at.aau.serg.android.ui.screens.lobby.waiting.components.WaitingScreenRoomCard
 import at.aau.serg.android.ui.screens.lobby.waiting.components.WaitingScreenSettingsSection
 import at.aau.serg.android.ui.state.LoadState
+import at.aau.serg.android.ui.theme.AccentPurple
 import at.aau.serg.android.ui.theme.ThemeState
+import at.aau.serg.android.ui.theme.appColors
 
 @Composable
 fun LobbyWaitingScreen(
@@ -41,7 +43,7 @@ fun LobbyWaitingScreenContent(
     onEvent: (LobbyWaitingEvent) -> Unit
 ) {
     val scrollState = rememberScrollState()
-    val darkMode = ThemeState.isDarkMode.value
+    val c = appColors()
     val context = LocalContext.current
 
     val players = uiState.lobby?.players ?: emptyList()
@@ -49,18 +51,10 @@ fun LobbyWaitingScreenContent(
     val maxPlayers = uiState.lobby?.settings?.maxPlayers ?: 0
     val roomCode = uiState.lobby?.lobbyId?.take(6)?.uppercase() ?: "------"
 
-    val gradientTop = if (darkMode) MaterialTheme.colorScheme.background else Color(0xFFF5F7FB)
-    val gradientBottom = if (darkMode) MaterialTheme.colorScheme.surface else Color(0xFFEAEFFF)
-
-    val cardColor = MaterialTheme.colorScheme.surface
-    val primaryTextColor = MaterialTheme.colorScheme.onSurface
-    val secondaryTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-    val buttonColor = if (darkMode) Color(0xFF2A3552) else Color(0xFF2F3A57)
-
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(gradientTop, gradientBottom)))
+            .background(Brush.verticalGradient(listOf(c.screen.bgTop, c.screen.bgBottom)))
             .verticalScroll(scrollState)
             .padding(16.dp)
             .testTag(LobbyWaitingTestTags.SCREEN)
@@ -79,9 +73,9 @@ fun LobbyWaitingScreenContent(
             joinedCount = joinedCount,
             maxPlayers = maxPlayers,
             context = context,
-            primaryTextColor = primaryTextColor,
-            secondaryTextColor = secondaryTextColor,
-            cardColor = cardColor
+            primaryTextColor = c.screen.primaryText,
+            secondaryTextColor = c.screen.secondaryText,
+            cardColor = c.screen.card
         )
 
         Spacer(Modifier.height(16.dp))
@@ -94,9 +88,9 @@ fun LobbyWaitingScreenContent(
             fetchedLobby = uiState.lobby,
             maxPlayers = maxPlayers,
             joinedCount = joinedCount,
-            primaryTextColor = primaryTextColor,
-            secondaryTextColor = secondaryTextColor,
-            darkMode = darkMode,
+            primaryTextColor = c.screen.primaryText,
+            secondaryTextColor = c.screen.secondaryText,
+            darkMode = ThemeState.isDarkMode.value,
         )
 
         Spacer(Modifier.height(18.dp))
@@ -110,9 +104,9 @@ fun LobbyWaitingScreenContent(
             onStartingCardsMinus = { onEvent(LobbyWaitingEvent.OnStartingCardsDecrease) },
             onStartingCardsPlus = { onEvent(LobbyWaitingEvent.OnStartingCardsIncrease) },
             onStackToggle = { onEvent(LobbyWaitingEvent.OnStackToggle(it)) },
-            cardColor = cardColor,
-            primaryTextColor = primaryTextColor,
-            buttonColor = buttonColor
+            cardColor = c.screen.card,
+            primaryTextColor = c.screen.primaryText,
+            buttonColor = c.screen.actionButton
         )
 
         Spacer(Modifier.height(24.dp))
@@ -127,7 +121,7 @@ fun LobbyWaitingScreenContent(
                     .testTag(LobbyWaitingTestTags.START_BUTTON),
                 shape = RoundedCornerShape(18.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF9D3CFF),
+                    containerColor = AccentPurple,
                     contentColor = Color.White
                 )
             ) {

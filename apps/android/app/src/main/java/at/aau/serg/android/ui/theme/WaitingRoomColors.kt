@@ -23,8 +23,6 @@ data class WaitingRoomColors(
     val inviteButton: Color,
 
     val settingsBackground: Color
-
-
 )
 
 @Composable
@@ -38,36 +36,36 @@ fun waitingRoomColors(darkMode: Boolean): WaitingRoomColors {
             primaryText = MaterialTheme.colorScheme.onSurface,
             secondaryText = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
 
-            activePlayerBackground = Color(0xFF1F356A),
-            activePlayerBorder = Color(0xFF3E73E8),
+            activePlayerBackground = WaitingActivePlayerBgDark,
+            activePlayerBorder = AuthDarkBorderBlue,
 
-            secondPlayerBackground = Color(0xFF1E3A2D),
-            secondPlayerBorder = Color(0xFF2BC46D),
+            secondPlayerBackground = WaitingSecondPlayerBgDark,
+            secondPlayerBorder = WaitingSecondPlayerBorderDark,
 
             waitingBackground = MaterialTheme.colorScheme.surface,
 
-            inviteButton = Color(0xFF2A3552),
+            inviteButton = ActionButtonDark,
 
             settingsBackground = Color.White.copy(alpha = 0.06f)
         )
     } else {
         WaitingRoomColors(
-            gradientTop = Color(0xFFF5F7FB),
-            gradientBottom = Color(0xFFEAEFFF),
+            gradientTop = LightScreenBgTop,
+            gradientBottom = LightScreenBgBottom,
 
             card = Color.White,
             primaryText = Color.Black,
-            secondaryText = Color(0xFF6B7280),
+            secondaryText = AuthLightSecondaryText,
 
-            activePlayerBackground = Color(0xFFEAF1FF),
-            activePlayerBorder = Color(0xFF4C84FF),
+            activePlayerBackground = WaitingActivePlayerBgLight,
+            activePlayerBorder = WaitingActivePlayerBorderLight,
 
-            secondPlayerBackground = Color(0xFFEAFBF1),
-            secondPlayerBorder = Color(0xFF20C76F),
+            secondPlayerBackground = WaitingSecondPlayerBgLight,
+            secondPlayerBorder = WaitingSecondPlayerBorderLight,
 
             waitingBackground = Color.White,
 
-            inviteButton = Color(0xFF2F3A57),
+            inviteButton = ActionButtonLight,
 
             settingsBackground = Color.Black.copy(alpha = 0.04f)
         )
