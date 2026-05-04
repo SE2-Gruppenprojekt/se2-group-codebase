@@ -3,6 +3,7 @@ package at.se2group.backend.service
 import at.se2group.backend.domain.TurnDraft
 import at.se2group.backend.dto.UpdateDraftRequest
 import at.se2group.backend.mapper.toDomain
+import at.se2group.backend.mapper.toDomain as toGameDomain
 import at.se2group.backend.mapper.toDomain as toDraftDomain
 import at.se2group.backend.mapper.toEntity
 import at.se2group.backend.persistence.GameRepository
@@ -37,7 +38,8 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional(readOnly = true)
 class TurnDraftService(
     private val gameRepository: GameRepository,
-    private val turnDraftRepository: TurnDraftRepository
+    private val turnDraftRepository: TurnDraftRepository,
+    private val tileConservationService: TileConservationService
 ) {
 
     /**
@@ -48,7 +50,9 @@ class TurnDraftService(
 
         const val DRAFT_NOT_FOUND = "Draft not found"
 
-        const val NOT_ACTIVE_PLAYER = "Not active player"
+        const val NOT_CURRENT_PLAYER = "User is not the current active player"
+
+        const val NOT_DRAFT_OWNER = "Draft belongs to a different user"
     }
 
     /**
@@ -84,16 +88,25 @@ class TurnDraftService(
         userId: String,
         request: UpdateDraftRequest
     ): TurnDraft {
-        gameRepository.findById(gameId)
+        val game = gameRepository.findById(gameId)
             .orElseThrow { NoSuchElementException(GAME_NOT_FOUND) }
+                .toGameDomain()
 
         val draftEntity = turnDraftRepository.findByGameId(gameId)
             ?: throw NoSuchElementException(DRAFT_NOT_FOUND)
 
-        check(draftEntity.playerUserId == userId) { NOT_ACTIVE_PLAYER }
+        check(game.currentPlayerUserId == userId) { NOT_CURRENT_PLAYER }
+        check(draftEntity.playerUserId == userId) { NOT_DRAFT_OWNER }
 
+        val proposedDraft = request.toDraftDomain(gameId, userId)
+
+        tileConservationService.validate(
+            confirmedGame = game,
+            activePlayerUserId = userId,
+            candidateDraft = proposedDraft
+        )
         return turnDraftRepository.save(
-            request.toDraftDomain(gameId, userId).toEntity(draftEntity)
+            proposedDraft.toEntity(draftEntity)
         ).toDomain()
     }
 }
