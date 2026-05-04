@@ -34,6 +34,7 @@ class TileConservationService {
         candidateDraft: TurnDraft
     ) {
         val allowed = allowedTiles(confirmedGame, activePlayerUserId)
+        val candidate = proposedTiles(candidateDraft)
         throw UnsupportedOperationException("Tile conservation validation is not implemented yet")
     }
 
@@ -49,4 +50,10 @@ class TileConservationService {
 
     private fun List<Tile>.toMultiset(): Map<Tile, Int> =
         groupingBy { it }.eachCount()
+
+    private fun proposedTiles(proposedDraft: TurnDraft): Map<Tile, Int> {
+        val boardTiles = proposedDraft.boardSets.flatMap { it.tiles }
+        val rackTiles = proposedDraft.rackTiles
+        return (boardTiles + rackTiles).toMultiset()
+    }
 }
