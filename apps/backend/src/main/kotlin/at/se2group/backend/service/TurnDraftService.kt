@@ -85,13 +85,14 @@ class TurnDraftService(
         userId: String,
         request: UpdateDraftRequest
     ): TurnDraft {
-        gameRepository.findById(gameId)
+        val game = gameRepository.findById(gameId)
             .orElseThrow { NoSuchElementException(GAME_NOT_FOUND) }
                 .toGameDomain()
 
         val draftEntity = turnDraftRepository.findByGameId(gameId)
             ?: throw NoSuchElementException(DRAFT_NOT_FOUND)
 
+        check(game.currentPlayerUserId == userId) { NOT_ACTIVE_PLAYER }
         check(draftEntity.playerUserId == userId) { NOT_ACTIVE_PLAYER }
 
         return turnDraftRepository.save(
