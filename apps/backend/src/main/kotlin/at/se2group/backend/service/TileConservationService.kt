@@ -35,7 +35,10 @@ class TileConservationService {
     ) {
         val allowed = allowedTiles(confirmedGame, activePlayerUserId)
         val candidate = proposedTiles(candidateDraft)
-        throw UnsupportedOperationException("Tile conservation validation is not implemented yet")
+
+        if (allowed != candidate){
+            throw IllegalArgumentException("The proposed turn draft violates the tile conservation rule.")
+        }
     }
 
     private fun allowedTiles(
