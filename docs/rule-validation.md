@@ -28,186 +28,18 @@ That decision should live inside backend set validation rather than in a separat
 
 ---
 
-# 1. Why Rule Validation Must Be Layered
-
-Rummikub turns are not simple single-step actions.
-A player may:
-
-- take tiles out of an existing set
-- temporarily break a valid run or group
-- move those tiles elsewhere
-- create new sets
-- only make the board fully valid again at the very end
-
-That means the backend **cannot require the draft to always be valid during editing**.
-If it did, many legal moves would become impossible to perform.
-
-So the backend must treat the game state as two different things:
-
-## 1.1 Confirmed game state
-
-The confirmed game state is the last valid committed state of the match.
-
-It contains things like:
-
-- official board
-- official hands
-- active player
-- draw pile
-- game status
-- score state
-- winner if the game is finished
-
-This state must always be internally valid.
-
-## 1.2 Live turn draft
-
-The live turn draft is the temporary in-progress state of the active player's current move.
-
-It contains things like:
-
-- temporary board arrangement
-- temporary rack state
-- draft version
-- draft status
-- ownership metadata
-
-This state may be temporarily invalid while the player is editing.
-
-That is why validation must be split into:
-
-- **draft safety validation** during updates
-- **full rule validation** during turn submission
-
----
-
-# 2. Validation Goals
-
-The backend rule validation system should guarantee the following:
-
-## 2.1 Integrity goals
-
-The backend must ensure that:
-
-- no tile disappears
-- no tile is duplicated
-- no tile is invented
-- only the active player can change the active draft
-- only one active draft exists for the current game
-- stale draft updates do not overwrite newer state
-
-## 2.2 Game-rule goals
-
-When a player ends the turn, the backend must ensure that:
-
-- the final board consists only of legal sets
-- each set can be validated as either a legal group or a legal run
-- the move respects first-move rules if applicable
-- the tile movement is legal relative to the confirmed state and active player's rack
-- the game can transition safely to the next turn or the finished state
-
-## 2.3 Architectural goals
-
-The validation system should be:
-
-- layered
-- testable
-- composable
-- explicit in responsibility boundaries
-- usable by services without controller-level logic duplication
-- robust even when the frontend does **not** send set type information
-
----
-
-# 3. Validation Boundaries: When to Validate What
-
-## 3.1 On draft update
-
-For `PUT /api/games/{gameId}/draft`, the backend should validate only:
-
-- request structure
-- game exists
-- active draft exists
-- caller is the active player
-- caller owns the draft
-- draft status allows update
-- tile conservation / integrity
-- optional version match / optimistic locking
-- optional lightweight structural sanity checks
-
-The backend should **not** fully validate:
-
-- whether all sets are valid groups/runs
-- whether the board is fully legal already
-- whether initial meld conditions are already satisfied
-- whether every temporary set can already be resolved cleanly
-
-That is intentional. Draft updates should stay intentionally narrow because
-players must be allowed to pass through temporary invalid states while editing.
-
-## 3.2 On turn submission
-
-For `POST /api/games/{gameId}/end-turn`, the backend should validate:
-
-- all ownership/integrity checks again
-- full board structure validity
-- set resolution inside set validation
-- set-level legality
-- first move rules
-- final move legality relative to confirmed state
-- game end conditions if the player's rack is empty
-
-This is where full Rummikub validation belongs.
-
----
-
-# 4. Core Design Change: Backend-Resolved Set Type
-
-The frontend does **not** send `BoardSetType.GROUP` or `BoardSetType.RUN`.
-Therefore the backend must decide that itself.
-
-This changes the validation architecture significantly.
-
-## 4.1 What this means in practice
-
-A final submitted set is not validated by simply routing on `set.type`.
-Instead, the backend must:
-
-1. inspect the tiles in the set
-2. determine whether the set is intended to be a **group candidate** or a **run candidate**
-3. reject the set if it can be neither
-4. validate it with the correct validator
-
-That means the backend cannot just trust `set.type` from the client. It must inspect the tiles and decide whether the set is legal as a group or legal as a run.
-
-## 4.2 Why this is harder
-
-Without an explicit type from the client, the backend must reason about:
-
-- numbered tiles vs jokers
-- partial information when jokers are present
-- ambiguous or impossible sets
-- all-joker edge cases
-
-This makes backend type resolution part of the rule engine, but it does not require a separate dedicated service.
-
-## 4.3 Best architectural decision
-
-The cleanest design is:
-
-- do **not** resolve sets on every draft update
-- resolve sets only during **final submitted turn validation**
-- keep draft update permissive
-- keep end-turn validation strict
-
-That preserves the important editing freedom during the turn.
-
----
-
-# 5. Recommended Layered Validation Architecture
+# 1. Recommended Layered Validation Architecture
 
 A clean validation design has multiple levels.
 Each level answers a different question.
+
+This layered architecture also defines **when** validation runs. Draft updates
+should stay narrow and storage-safe, while full Rummikub legality belongs to
+final turn submission.
+
+The backend also owns final set resolution. Because the frontend does **not**
+send a trustworthy final `BoardSetType`, submitted sets must be resolved from
+their tiles during final validation, not during draft updates.
 
 ## Level 1: Ownership and lifecycle validation
 
@@ -340,7 +172,10 @@ Question:
 
 This is the key new layer.
 
-Because the frontend does not send a trustworthy final type, the backend must attempt both legal interpretations inside `SetValidationService`.
+Because the frontend does not send a trustworthy final type, the backend must
+attempt both legal interpretations inside `SetValidationService`. This
+resolution happens only during final submitted-turn validation. Draft updates
+remain permissive and do not require sets to be fully resolved already.
 
 The service should answer:
 
@@ -375,7 +210,7 @@ At this level, each set is validated independently.
 
 ---
 
-### 5.4.1 `GroupValidationService`
+### 1.4.1 `GroupValidationService`
 
 A group usually means:
 
@@ -419,7 +254,7 @@ fun validateGroup(set: BoardSet): ValidationResult {
 
 ---
 
-### 5.4.2 `RunValidationService`
+### 1.4.2 `RunValidationService`
 
 A run usually means:
 
@@ -465,7 +300,7 @@ fun validateRun(set: BoardSet): ValidationResult {
 
 ---
 
-### 5.4.3 `SetValidationService`
+### 1.4.3 `SetValidationService`
 
 This service should not trust a pre-existing `BoardSetType` from the client.
 Instead, it should validate the set as both a group and a run and then decide the outcome.
@@ -557,7 +392,7 @@ At this level, rules depend on the whole game context.
 
 ---
 
-### 5.6.1 `FirstMoveValidationService`
+### 1.6.1 `FirstMoveValidationService`
 
 This validator handles rules that only apply if the player has not yet completed the initial meld.
 
@@ -640,11 +475,11 @@ This service is the final gate before state commitment.
 
 ---
 
-# 6. Recommended Responsibility Split Across Services
+# 2. Recommended Responsibility Split Across Services
 
 A clean backend design should separate the following concerns.
 
-## 6.1 `GameService`
+## 2.1 `GameService`
 
 Owns confirmed game state.
 
@@ -659,7 +494,7 @@ Should **not** own live draft mutation logic.
 
 ---
 
-## 6.2 `TurnDraftService`
+## 2.2 `TurnDraftService`
 
 Owns live draft state.
 
@@ -677,7 +512,7 @@ This is the main service for the draft update endpoint.
 
 ---
 
-## 6.3 `GameBroadcastService`
+## 2.3 `GameBroadcastService`
 
 Owns websocket event emission only.
 
@@ -692,7 +527,7 @@ Should not contain game rule logic.
 
 ---
 
-## 6.4 Rule validation services
+## 2.4 Rule validation services
 
 Own rule validation only.
 
@@ -709,13 +544,18 @@ Should not own persistence or websocket broadcasting.
 
 ---
 
-# 7. Full Validation Flow From Start to Finish
+# 3. Full Validation Flow From Start to Finish
 
 This section describes the full validation flow through the backend.
 
+The split is simple:
+
+- `PUT /draft` stores work in progress and runs only lightweight safety checks
+- `POST /end-turn` runs full rule validation before committing state
+
 ---
 
-## 7.1 Draft update flow (`PUT /api/games/{gameId}/draft`)
+## 3.1 Draft update flow (`PUT /api/games/{gameId}/draft`)
 
 Purpose:
 
@@ -771,7 +611,7 @@ fun updateDraft(gameId: String, userId: String, request: UpdateDraftRequest): Tu
 
 ---
 
-## 7.2 Turn submission flow (`POST /api/games/{gameId}/end-turn`)
+## 3.2 Turn submission flow (`POST /api/games/{gameId}/end-turn`)
 
 Purpose:
 
@@ -840,7 +680,7 @@ fun endTurn(gameId: String, userId: String): Game {
 
 ---
 
-## 7.3 `commitDraftToConfirmedGame(...)`
+## 3.3 `commitDraftToConfirmedGame(...)`
 
 Once end-turn validation succeeds, the backend still needs one final step:
 
@@ -896,9 +736,9 @@ Its job is state transition, not rule checking.
 
 ---
 
-# 8. Validation Result Models
+# 4. Validation Result Models
 
-## 8.1 `ValidationResult`
+## 4.1 `ValidationResult`
 
 A rule validation should return a structured object, not just a boolean.
 
@@ -919,7 +759,7 @@ This lets the backend:
 
 ---
 
-## 8.2 `RuleViolation`
+## 4.2 `RuleViolation`
 
 A `RuleViolation` should be the standard structured result object for **game-rule validation failures**.
 
@@ -1041,7 +881,7 @@ This lets validators contribute violations independently while keeping the final
 
 ---
 
-# 9. Recommended Validation Service Hierarchy
+# 5. Recommended Validation Service Hierarchy
 
 A strong separation would look like this:
 
@@ -1073,40 +913,40 @@ This keeps:
 
 ---
 
-# 10. Practical Validation Scenarios
+# 6. Practical Validation Scenarios
 
-## 10.1 Valid draft update, temporarily invalid board
+## 6.1 Valid draft update, temporarily invalid board
 
 Player temporarily breaks a valid run while still rearranging tiles.
 The backend should accept and persist the draft without running full board validation.
 
 ---
 
-## 10.2 Invalid draft update because a tile was duplicated
+## 6.2 Invalid draft update because a tile was duplicated
 
 If a submitted draft contains the same tile twice, the backend should reject it as a tile-conservation failure and keep the previous draft unchanged.
 
 ---
 
-## 10.3 Invalid end-turn because a set cannot be resolved as a legal group or run
+## 6.3 Invalid end-turn because a set cannot be resolved as a legal group or run
 
 If a final submitted set is neither a legal group nor a legal run, the backend should reject end-turn and return a set-resolution or set-validation error.
 
 ---
 
-## 10.4 Invalid end-turn because final board contains illegal run
+## 6.4 Invalid end-turn because final board contains illegal run
 
 If the final board contains an illegal run, such as duplicate numbers or mismatched colors, the backend should reject end-turn and keep the draft uncommitted.
 
 ---
 
-## 10.5 Invalid first move because initial meld score is too low
+## 6.5 Invalid first move because initial meld score is too low
 
 If a player's first submitted meld does not reach the required minimum, the backend should reject end-turn with a first-move-specific violation.
 
 ---
 
-# 11. Recommended Implementation Order
+# 7. Recommended Implementation Order
 
 If implementing incrementally, a good order is:
 
@@ -1128,7 +968,7 @@ This order works well because:
 
 ---
 
-# 12. Final Takeaway
+# 8. Final Takeaway
 
 The single most important rule in this document is:
 
