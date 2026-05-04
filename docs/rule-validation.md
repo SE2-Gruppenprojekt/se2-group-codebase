@@ -194,22 +194,6 @@ This avoids a separate classification pass that duplicates much of the same reas
 
 ---
 
-## Level 4: Set-level validation
-
-Question:
-
-> Is this individual set legal as a group or legal as a run?
-
-At this level, each set is validated independently.
-
-### Recommended split
-
-- `GroupValidationService`
-- `RunValidationService`
-- `SetValidationService` that tries both and decides the outcome
-
----
-
 ### 1.4.1 `GroupValidationService`
 
 A group usually means:
