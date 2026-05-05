@@ -68,7 +68,7 @@ The following response types are used repeatedly across the API.
 
 ```json
 {
-    "id": "tile-001",
+    "tileId": "tile-001",
     "color": "RED",
     "number": 7,
     "isJoker": false
@@ -77,7 +77,7 @@ The following response types are used repeatedly across the API.
 
 Fields:
 
-- `id: String`
+- `tileId: String`
 - `color: String | null`
 - `number: Int | null`
 - `isJoker: Boolean`
@@ -93,23 +93,23 @@ Notes:
 
 ```json
 {
-    "id": "set-001",
+    "boardSetId": "set-001",
     "type": "GROUP",
     "tiles": [
         {
-            "id": "tile-001",
+            "tileId": "tile-001",
             "color": "RED",
             "number": 7,
             "isJoker": false
         },
         {
-            "id": "tile-002",
+            "tileId": "tile-002",
             "color": "BLUE",
             "number": 7,
             "isJoker": false
         },
         {
-            "id": "tile-003",
+            "tileId": "tile-003",
             "color": "BLACK",
             "number": 7,
             "isJoker": false
@@ -120,7 +120,7 @@ Notes:
 
 Fields:
 
-- `id: String`
+- `boardSetId: String`
 - `type: "RUN" | "GROUP" | "UNRESOLVED"`
 - `tiles: List<TileResponse>`
 
@@ -139,7 +139,7 @@ Notes:
     "displayName": "Julian",
     "hand": [
         {
-            "id": "tile-010",
+            "tileId": "tile-010",
             "color": "YELLOW",
             "number": 5,
             "isJoker": false
@@ -173,7 +173,7 @@ This is the confirmed authoritative game state.
             "displayName": "Julian",
             "hand": [
                 {
-                    "id": "tile-010",
+                    "tileId": "tile-010",
                     "color": "YELLOW",
                     "number": 5,
                     "isJoker": false
@@ -187,7 +187,7 @@ This is the confirmed authoritative game state.
             "displayName": "Alex",
             "hand": [
                 {
-                    "id": "tile-011",
+                    "tileId": "tile-011",
                     "color": "RED",
                     "number": 9,
                     "isJoker": false
@@ -199,23 +199,23 @@ This is the confirmed authoritative game state.
     ],
     "board": [
         {
-            "id": "set-001",
+            "boardSetId": "set-001",
             "type": "RUN",
             "tiles": [
                 {
-                    "id": "tile-020",
+                    "tileId": "tile-020",
                     "color": "RED",
                     "number": 4,
                     "isJoker": false
                 },
                 {
-                    "id": "tile-021",
+                    "tileId": "tile-021",
                     "color": "RED",
                     "number": 5,
                     "isJoker": false
                 },
                 {
-                    "id": "tile-022",
+                    "tileId": "tile-022",
                     "color": "RED",
                     "number": 6,
                     "isJoker": false
@@ -261,17 +261,17 @@ This is the current live editable draft state.
     "playerId": "player-1",
     "draftBoard": [
         {
-            "id": "set-001",
+            "boardSetId": "set-001",
             "type": "RUN",
             "tiles": [
                 {
-                    "id": "tile-020",
+                    "tileId": "tile-020",
                     "color": "RED",
                     "number": 4,
                     "isJoker": false
                 },
                 {
-                    "id": "tile-021",
+                    "tileId": "tile-021",
                     "color": "RED",
                     "number": 5,
                     "isJoker": false
@@ -279,11 +279,11 @@ This is the current live editable draft state.
             ]
         },
         {
-            "id": "set-temp-1",
+            "boardSetId": "set-temp-1",
             "type": "UNRESOLVED",
             "tiles": [
                 {
-                    "id": "tile-022",
+                    "tileId": "tile-022",
                     "color": "RED",
                     "number": 6,
                     "isJoker": false
@@ -293,7 +293,7 @@ This is the current live editable draft state.
     ],
     "draftHand": [
         {
-            "id": "tile-010",
+            "tileId": "tile-010",
             "color": "YELLOW",
             "number": 5,
             "isJoker": false
@@ -447,11 +447,11 @@ Used while the active player is rearranging tiles during their turn.
     "playerId": "player-1",
     "draftBoard": [
         {
-            "id": "set-temp-1",
+            "boardSetId": "set-temp-1",
             "type": "UNRESOLVED",
             "tiles": [
                 {
-                    "id": "tile-020",
+                    "tileId": "tile-020",
                     "color": "RED",
                     "number": 4,
                     "isJoker": false
@@ -461,7 +461,7 @@ Used while the active player is rearranging tiles during their turn.
     ],
     "draftHand": [
         {
-            "id": "tile-010",
+            "tileId": "tile-010",
             "color": "YELLOW",
             "number": 5,
             "isJoker": false
@@ -494,11 +494,11 @@ Fields:
     "playerId": "player-1",
     "draftBoard": [
         {
-            "id": "set-temp-1",
+            "boardSetId": "set-temp-1",
             "type": "UNRESOLVED",
             "tiles": [
                 {
-                    "id": "tile-020",
+                    "tileId": "tile-020",
                     "color": "RED",
                     "number": 4,
                     "isJoker": false
@@ -508,7 +508,7 @@ Fields:
     ],
     "draftHand": [
         {
-            "id": "tile-010",
+            "tileId": "tile-010",
             "color": "YELLOW",
             "number": 5,
             "isJoker": false
@@ -574,7 +574,7 @@ Fields:
             "displayName": "Julian",
             "hand": [
                 {
-                    "id": "tile-010",
+                    "tileId": "tile-010",
                     "color": "YELLOW",
                     "number": 5,
                     "isJoker": false
@@ -588,7 +588,7 @@ Fields:
             "displayName": "Alex",
             "hand": [
                 {
-                    "id": "tile-011",
+                    "tileId": "tile-011",
                     "color": "RED",
                     "number": 9,
                     "isJoker": false
@@ -600,23 +600,23 @@ Fields:
     ],
     "board": [
         {
-            "id": "set-001",
+            "boardSetId": "set-001",
             "type": "GROUP",
             "tiles": [
                 {
-                    "id": "tile-001",
+                    "tileId": "tile-001",
                     "color": "RED",
                     "number": 7,
                     "isJoker": false
                 },
                 {
-                    "id": "tile-002",
+                    "tileId": "tile-002",
                     "color": "BLUE",
                     "number": 7,
                     "isJoker": false
                 },
                 {
-                    "id": "tile-003",
+                    "tileId": "tile-003",
                     "color": "BLACK",
                     "number": 7,
                     "isJoker": false
@@ -682,7 +682,7 @@ Can be either empty or use a small request DTO like:
             "displayName": "Julian",
             "hand": [
                 {
-                    "id": "tile-999",
+                    "tileId": "tile-999",
                     "color": "BLACK",
                     "number": 12,
                     "isJoker": false
@@ -741,7 +741,7 @@ Can be either empty or use:
     "draftBoard": [],
     "draftHand": [
         {
-            "id": "tile-010",
+            "tileId": "tile-010",
             "color": "YELLOW",
             "number": 5,
             "isJoker": false
@@ -810,11 +810,11 @@ Sent whenever the active player updates the draft.
         "playerId": "player-1",
         "draftBoard": [
             {
-                "id": "set-temp-1",
+                "boardSetId": "set-temp-1",
                 "type": "UNRESOLVED",
                 "tiles": [
                     {
-                        "id": "tile-020",
+                        "tileId": "tile-020",
                         "color": "RED",
                         "number": 4,
                         "isJoker": false
@@ -824,7 +824,7 @@ Sent whenever the active player updates the draft.
         ],
         "draftHand": [
             {
-                "id": "tile-010",
+                "tileId": "tile-010",
                 "color": "YELLOW",
                 "number": 5,
                 "isJoker": false

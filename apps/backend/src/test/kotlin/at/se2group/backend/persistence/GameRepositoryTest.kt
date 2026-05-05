@@ -147,7 +147,7 @@ class GameRepositoryTest {
         val boardSet1 = BoardSetEntity(
             game = game,
             boardSetId = "set-b",
-            type = BoardSetType.SET,
+            type = BoardSetType.GROUP,
             tiles = mutableListOf(
                 embeddable("tile-16", TileColor.RED, 10, false)
             )

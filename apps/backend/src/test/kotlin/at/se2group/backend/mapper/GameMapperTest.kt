@@ -152,7 +152,7 @@ class GameMapperTest {
             BoardSetEntity(
                 game = entity,
                 boardSetId = "set-1",
-                type = BoardSetType.SET,
+                type = BoardSetType.GROUP,
                 tiles = mutableListOf(
                     embeddable("tile-13", TileColor.RED, 10, false),
                     embeddable("tile-14", TileColor.BLUE, 10, false),
@@ -175,7 +175,7 @@ class GameMapperTest {
 
         assertEquals(1, game.boardSets.size)
         assertEquals("set-1", game.boardSets[0].boardSetId)
-        assertEquals(BoardSetType.SET, game.boardSets[0].type)
+        assertEquals(BoardSetType.GROUP, game.boardSets[0].type)
         assertEquals(3, game.boardSets[0].tiles.size)
 
         assertEquals(2, game.drawPile.size)

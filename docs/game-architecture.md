@@ -365,18 +365,27 @@ enum class TileColor {
     RED, BLUE, BLACK, YELLOW
 }
 
-data class Tile(
-    val id: String,
-    val color: TileColor?,
-    val number: Int?,
-    val isJoker: Boolean
-)
+sealed interface Tile {
+    val tileId: String
+    val color: TileColor
+}
+
+data class NumberedTile(
+    override val tileId: String,
+    override val color: TileColor,
+    val number: Int
+) : Tile
+
+data class JokerTile(
+    override val tileId: String,
+    override val color: TileColor
+) : Tile
 ```
 
 Notes:
 
-- `id` is important because duplicate tiles exist in Rummikub
-- joker tiles use `isJoker = true`
+- `tileId` is important because duplicate tiles exist in Rummikub
+- both numbered tiles and jokers have a unique tile ID
 - a unique tile ID makes move validation and tile conservation much easier
 
 ### 6.2 Board set
@@ -387,7 +396,7 @@ enum class BoardSetType {
 }
 
 data class BoardSet(
-    val id: String,
+    val boardSetId: String,
     val type: BoardSetType,
     val tiles: List<Tile>
 )

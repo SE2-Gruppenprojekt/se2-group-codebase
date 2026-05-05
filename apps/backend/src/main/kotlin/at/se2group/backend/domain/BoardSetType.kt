@@ -1,7 +1,7 @@
 package at.se2group.backend.domain
 
 enum class BoardSetType {
-    SET,
+    GROUP,
     RUN,
     UNRESOLVED
 }

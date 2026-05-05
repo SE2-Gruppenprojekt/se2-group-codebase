@@ -104,7 +104,7 @@ class GameDtoTest {
             boardSets = listOf(
                 BoardSetResponse(
                     boardSetId = "set-1",
-                    type = "SET",
+                    type = "GROUP",
                     tiles = listOf(
                         TileResponse("tile-9", "RED", 10, false),
                         TileResponse("tile-10", "BLUE", 10, false),
