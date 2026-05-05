@@ -66,8 +66,8 @@ fun validateUserMayUpdateDraft(game: Game, draft: TurnDraft, userId: String) {
     require(game.status == GameStatus.ACTIVE) {
         "Game is not active"
     }
-    require(draft.status == TurnDraftStatus.ACTIVE) {
-        "Draft is not active"
+    require(draft.status == TurnDraftStatus.IN_PROGRESS) {
+        "Draft is not in progress"
     }
     require(game.currentPlayerUserId == userId) {
         "Only the active player may update the draft"

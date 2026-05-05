@@ -362,7 +362,7 @@ For the MVP, storing game state and draft state as JSON blobs is acceptable and 
 
 ```kotlin
 enum class TileColor {
-    RED, BLUE, BLACK, YELLOW
+    BLACK, BLUE, ORANGE, RED
 }
 
 sealed interface Tile {
@@ -386,6 +386,7 @@ Notes:
 
 - `tileId` is important because duplicate tiles exist in Rummikub
 - both numbered tiles and jokers have a unique tile ID
+- joker tiles also keep a concrete `color`
 - a unique tile ID makes move validation and tile conservation much easier
 
 ### 6.2 Board set
@@ -561,9 +562,10 @@ data class Game(
 
 ```kotlin
 enum class TurnDraftStatus {
-    ACTIVE,
+    IN_PROGRESS,
     SUBMITTED,
-    CANCELLED
+    ACCEPTED,
+    REJECTED
 }
 
 data class TurnDraft(

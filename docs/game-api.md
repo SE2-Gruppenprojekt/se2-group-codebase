@@ -78,13 +78,14 @@ The following response types are used repeatedly across the API.
 Fields:
 
 - `tileId: String`
-- `color: String | null`
+- `color: String`
 - `number: Int | null`
 - `isJoker: Boolean`
 
 Notes:
 
-- jokers may use `color = null` and `number = null`
+- jokers must still have a color set
+- joker tiles use `number = null`
 - tile IDs must be unique even if tiles have the same color and number
 
 ---
@@ -141,7 +142,7 @@ Notes:
     "rackTiles": [
         {
             "tileId": "tile-010",
-            "color": "YELLOW",
+            "color": "ORANGE",
             "number": 5,
             "isJoker": false
         }
@@ -179,7 +180,7 @@ This is the confirmed authoritative game state.
             "rackTiles": [
                 {
                     "tileId": "tile-010",
-                    "color": "YELLOW",
+                    "color": "ORANGE",
                     "number": 5,
                     "isJoker": false
                 }
@@ -249,13 +250,17 @@ Fields:
 - `currentTurnPlayerId: String`
 - `turnDeadline: String | null` (ISO-8601 timestamp)
 - `remainingTurnSeconds: Int | null`
-- `status: "ACTIVE" | "FINISHED"`
+- `status: "WAITING" | "ACTIVE" | "FINISHED" | "CANCELLED"`
 - `winnerUserId: String | null`
 
 Notes:
 
 - using `drawPileCount` instead of returning the full pile is usually enough for the frontend
 - `remainingTurnSeconds` is optional but useful for reconnect recovery and timer display
+
+- possible status values currently mirror the backend `GameStatus` enum: `WAITING`, `ACTIVE`, `FINISHED`, and `CANCELLED`
+- `WAITING` is mainly relevant before active gameplay begins
+- `CANCELLED` is reserved for games that are terminated without a normal finish
 
 ---
 
@@ -302,7 +307,7 @@ This is the current live editable draft state.
     "draftHand": [
         {
             "tileId": "tile-010",
-            "color": "YELLOW",
+            "color": "ORANGE",
             "number": 5,
             "isJoker": false
         }
@@ -321,32 +326,36 @@ Fields:
 
 ---
 
-### `ErrorResponse`
+### `ApiErrorResponse`
 
-REST endpoints should return a small consistent error shape.
+REST endpoints currently return a small consistent backend error shape.
 
 ```json
 {
-    "code": "INVALID_MOVE",
-    "message": "The submitted draft is not a valid Rummikub board",
-    "timestamp": "2026-04-21T12:31:00Z"
+    "errorCode": "BAD_REQUEST",
+    "errorMessage": "Invalid request"
 }
 ```
 
 Fields:
 
-- `code: String`
-- `message: String`
-- `timestamp: String`
+- `errorCode: String`
+- `errorMessage: String`
 
-Common example error codes:
+Current HTTP status mapping from `GlobalExceptionHandler`:
 
-- `INVALID_MOVE`
-- `GAME_NOT_FOUND`
-- `DRAFT_NOT_FOUND`
-- `TURN_EXPIRED`
-- `FORBIDDEN_ACTION`
-- `INVALID_STATE`
+- `400 Bad Request` for `IllegalArgumentException`
+    - `errorCode = "BAD_REQUEST"`
+- `404 Not Found` for `NoSuchElementException`
+    - `errorCode = "NOT_FOUND"`
+- `409 Conflict` for `IllegalStateException`
+    - `errorCode = "CONFLICT"`
+- `403 Forbidden` for `SecurityException`
+    - `errorCode = "FORBIDDEN"`
+- `500 Internal Server Error` for all other exceptions
+    - `errorCode = "INTERNAL_SERVER_ERROR"`
+
+The backend currently does not include a `timestamp` field in error responses.
 
 ---
 
@@ -367,7 +376,7 @@ Used for:
 ### Response type
 
 - `200 OK` → `GameResponse`
-- `404 Not Found` → `ErrorResponse`
+- `404 Not Found` → `ApiErrorResponse`
 
 ### Example response
 
@@ -421,7 +430,7 @@ Useful for:
 ### Response type
 
 - `200 OK` → `TurnDraftResponse`
-- `404 Not Found` → `ErrorResponse`
+- `404 Not Found` → `ApiErrorResponse`
 
 ### Example response
 
@@ -471,7 +480,7 @@ Used while the active player is rearranging tiles during their turn.
     "draftHand": [
         {
             "tileId": "tile-010",
-            "color": "YELLOW",
+            "color": "ORANGE",
             "number": 5,
             "isJoker": false
         }
@@ -490,10 +499,10 @@ Fields:
 ### Response type
 
 - `200 OK` → `TurnDraftResponse`
-- `400 Bad Request` → `ErrorResponse`
-- `403 Forbidden` → `ErrorResponse`
-- `404 Not Found` → `ErrorResponse`
-- `409 Conflict` → `ErrorResponse`
+- `400 Bad Request` → `ApiErrorResponse`
+- `403 Forbidden` → `ApiErrorResponse`
+- `404 Not Found` → `ApiErrorResponse`
+- `409 Conflict` → `ApiErrorResponse`
 
 ### Example success response
 
@@ -518,7 +527,7 @@ Fields:
     "draftHand": [
         {
             "tileId": "tile-010",
-            "color": "YELLOW",
+            "color": "ORANGE",
             "number": 5,
             "isJoker": false
         }
@@ -531,9 +540,8 @@ Fields:
 
 ```json
 {
-    "code": "FORBIDDEN_ACTION",
-    "message": "Only the active player can update the draft",
-    "timestamp": "2026-04-21T12:31:00Z"
+    "errorCode": "CONFLICT",
+    "errorMessage": "User is not the current active player"
 }
 ```
 
@@ -566,10 +574,10 @@ Fields:
 ### Response type
 
 - `200 OK` → `GameResponse`
-- `400 Bad Request` → `ErrorResponse`
-- `403 Forbidden` → `ErrorResponse`
-- `404 Not Found` → `ErrorResponse`
-- `409 Conflict` → `ErrorResponse`
+- `400 Bad Request` → `ApiErrorResponse`
+- `403 Forbidden` → `ApiErrorResponse`
+- `404 Not Found` → `ApiErrorResponse`
+- `409 Conflict` → `ApiErrorResponse`
 
 ### Example success response
 
@@ -584,7 +592,7 @@ Fields:
             "rackTiles": [
                 {
                     "tileId": "tile-010",
-                    "color": "YELLOW",
+                    "color": "ORANGE",
                     "number": 5,
                     "isJoker": false
                 }
@@ -649,9 +657,8 @@ Fields:
 
 ```json
 {
-    "code": "INVALID_MOVE",
-    "message": "The submitted draft is not a valid Rummikub board",
-    "timestamp": "2026-04-21T12:31:00Z"
+    "errorCode": "BAD_REQUEST",
+    "errorMessage": "The submitted draft is not a valid Rummikub board"
 }
 ```
 
@@ -678,10 +685,10 @@ Can be either empty or use a small request DTO like:
 ### Response type
 
 - `200 OK` → `GameResponse`
-- `400 Bad Request` → `ErrorResponse`
-- `403 Forbidden` → `ErrorResponse`
-- `404 Not Found` → `ErrorResponse`
-- `409 Conflict` → `ErrorResponse`
+- `400 Bad Request` → `ApiErrorResponse`
+- `403 Forbidden` → `ApiErrorResponse`
+- `404 Not Found` → `ApiErrorResponse`
+- `409 Conflict` → `ApiErrorResponse`
 
 ### Example success response
 
@@ -742,9 +749,9 @@ Can be either empty or use:
 ### Response type
 
 - `200 OK` → `TurnDraftResponse`
-- `400 Bad Request` → `ErrorResponse`
-- `403 Forbidden` → `ErrorResponse`
-- `404 Not Found` → `ErrorResponse`
+- `400 Bad Request` → `ApiErrorResponse`
+- `403 Forbidden` → `ApiErrorResponse`
+- `404 Not Found` → `ApiErrorResponse`
 
 ### Example success response
 
@@ -756,7 +763,7 @@ Can be either empty or use:
     "draftHand": [
         {
             "tileId": "tile-010",
-            "color": "YELLOW",
+            "color": "ORANGE",
             "number": 5,
             "isJoker": false
         }
@@ -838,7 +845,7 @@ Sent whenever the active player updates the draft.
         "draftHand": [
             {
                 "tileId": "tile-010",
-                "color": "YELLOW",
+                "color": "ORANGE",
                 "number": 5,
                 "isJoker": false
             }
