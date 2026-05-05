@@ -19,6 +19,9 @@ data class BoardSetRequest(
 )
 
 data class TileRequest(
+    @field:NotBlank(message = "tileId must not be blank")
+    val tileId: String,
+
     @field:NotBlank(message = "color must not be blank")
     val color: String,
     val number: Int?,

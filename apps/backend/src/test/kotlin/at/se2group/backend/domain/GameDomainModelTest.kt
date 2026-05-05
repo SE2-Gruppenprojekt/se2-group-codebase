@@ -10,25 +10,38 @@ class GameDomainModelTest {
     @Test
     fun `creates numbered tile with color and number`() {
         val tile = NumberedTile(
+            tileId = "tile-1",
             color = TileColor.BLUE,
             number = 7
         )
 
+        assertEquals("tile-1", tile.tileId)
         assertEquals(TileColor.BLUE, tile.color)
         assertEquals(7, tile.number)
     }
 
     @Test
     fun `creates joker tile with color`() {
-        val tile = JokerTile(color = TileColor.RED)
+        val tile = JokerTile(tileId = "joker-1", color = TileColor.RED)
 
+        assertEquals("joker-1", tile.tileId)
         assertEquals(TileColor.RED, tile.color)
+    }
+
+    @Test
+    fun `rejects blank tile id`() {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            JokerTile(tileId = "", color = TileColor.RED)
+        }
+
+        assertEquals("tileId must not be blank", exception.message)
     }
 
     @Test
     fun `rejects numbered tile outside valid range`() {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             NumberedTile(
+                tileId = "tile-2",
                 color = TileColor.RED,
                 number = 14
             )
@@ -41,6 +54,7 @@ class GameDomainModelTest {
     fun `rejects numbered tile below valid range`() {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             NumberedTile(
+                tileId = "tile-3",
                 color = TileColor.BLUE,
                 number = 0
             )

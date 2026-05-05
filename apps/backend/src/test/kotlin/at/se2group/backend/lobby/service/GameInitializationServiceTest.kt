@@ -103,6 +103,7 @@ class GameInitializationServiceTest {
     private fun createTiles(count: Int): List<Tile> {
         return (0 until count).map { index ->
             NumberedTile(
+                tileId = "tile-$index",
                 color = TileColor.entries[index % TileColor.entries.size],
                 number = (index % 13) + 1
             )

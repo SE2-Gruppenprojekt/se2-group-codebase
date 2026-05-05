@@ -87,19 +87,25 @@ fun BoardSet.toEntity(game: GameEntity): BoardSetEntity =
 
 fun TileEmbeddable.toDomain(): Tile =
     if (joker) {
-        JokerTile(color)
+        JokerTile(tileId, color)
     } else {
-        NumberedTile(color, number ?: throw IllegalStateException("Numbered tile must have a number"))
+        NumberedTile(
+            tileId,
+            color,
+            number ?: throw IllegalStateException("Numbered tile must have a number")
+        )
     }
 
 fun Tile.toEmbeddable(): TileEmbeddable =
     when (this) {
         is JokerTile -> TileEmbeddable(
+            tileId = tileId,
             color = color,
             number = null,
             joker = true
         )
         is NumberedTile -> TileEmbeddable(
+            tileId = tileId,
             color = color,
             number = number,
             joker = false
@@ -141,13 +147,15 @@ fun BoardSet.toResponse(): BoardSetResponse =
 fun Tile.toResponse(): TileResponse =
     when (this) {
         is JokerTile -> TileResponse(
+            tileId = tileId,
             color = color.name,
             number = null,
-            joker = true
+            isJoker = true
         )
         is NumberedTile -> TileResponse(
+            tileId = tileId,
             color = color.name,
             number = number,
-            joker = false
+            isJoker = false
         )
     }

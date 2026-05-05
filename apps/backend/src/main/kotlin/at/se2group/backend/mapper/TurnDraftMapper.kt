@@ -26,10 +26,10 @@ fun BoardSetRequest.toBoardSetDomain(): BoardSet {
 
 fun TileRequest.toTileDomain(): Tile {
     return if (joker) {
-        JokerTile(TileColor.valueOf(color))
+        JokerTile(tileId, TileColor.valueOf(color))
     } else {
         require(number != null) { "Number required for non-joker" }
-        NumberedTile(TileColor.valueOf(color), number)
+        NumberedTile(tileId, TileColor.valueOf(color), number)
     }
 }
 

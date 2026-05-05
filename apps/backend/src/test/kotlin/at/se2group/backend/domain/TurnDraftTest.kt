@@ -8,7 +8,7 @@ class TurnDraftTest {
 
     @Test
     fun `should return drawn tile`() {
-        val tile = NumberedTile(TileColor.RED, 5)
+        val tile = NumberedTile("tile-1", TileColor.RED, 5)
 
         val draft = TurnDraft(
             gameId = "g1",

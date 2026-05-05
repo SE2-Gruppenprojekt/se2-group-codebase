@@ -63,4 +63,12 @@ class TilePoolGenerationServiceTest {
 
         assertTrue(jokerTiles.all { it.color in TileRules.jokerColors })
     }
+
+    @Test
+    fun `createTilePool assigns unique tile ids`() {
+        val tiles = service.createTilePool()
+
+        assertEquals(tiles.size, tiles.map { it.tileId }.toSet().size)
+        assertTrue(tiles.all { it.tileId.isNotBlank() })
+    }
 }

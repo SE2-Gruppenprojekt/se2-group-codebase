@@ -14,13 +14,13 @@ class TurnDraftMapperTest {
             boardSets = listOf(
                 BoardSetRequest(
                     tiles = listOf(
-                        TileRequest("RED", 3, false),
-                        TileRequest("BLUE", 4, false)
+                        TileRequest("tile-1", "RED", 3, false),
+                        TileRequest("tile-2", "BLUE", 4, false)
                     )
                 )
             ),
             rackTiles = listOf(
-                TileRequest("BLACK", null, true)
+                TileRequest("tile-3", "BLACK", null, true)
             )
         )
 
@@ -34,14 +34,17 @@ class TurnDraftMapperTest {
 
         assertEquals(1, result.boardSets.size)
         assertEquals(2, result.boardSets[0].tiles.size)
+        assertEquals("tile-1", (result.boardSets[0].tiles[0] as NumberedTile).tileId)
 
         assertEquals(1, result.rackTiles.size)
         assertTrue(result.rackTiles[0] is JokerTile)
+        assertEquals("tile-3", (result.rackTiles[0] as JokerTile).tileId)
     }
 
     @Test
     fun `toTileDomain maps joker`() {
         val request = TileRequest(
+            tileId = "tile-4",
             color = "RED",
             number = null,
             joker = true
@@ -50,11 +53,13 @@ class TurnDraftMapperTest {
         val result = request.toTileDomain()
 
         assertTrue(result is JokerTile)
+        assertEquals("tile-4", (result as JokerTile).tileId)
     }
 
     @Test
     fun `toTileDomain throws if number missing`() {
         val request = TileRequest(
+            tileId = "tile-5",
             color = "RED",
             number = null,
             joker = false

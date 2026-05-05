@@ -20,13 +20,13 @@ class TurnDraftEntityMapperTest {
                     boardSetId = "1",
                     type = BoardSetType.UNRESOLVED,
                     tiles = listOf(
-                        NumberedTile(TileColor.RED, 5),
-                        NumberedTile(TileColor.BLUE, 6)
+                        NumberedTile("tile-1", TileColor.RED, 5),
+                        NumberedTile("tile-2", TileColor.BLUE, 6)
                     )
                 )
             ),
             rackTiles = listOf(
-                JokerTile(TileColor.BLACK)
+                JokerTile("tile-3", TileColor.BLACK)
             )
         )
 
@@ -42,6 +42,7 @@ class TurnDraftEntityMapperTest {
         assertEquals(1, entity.rackTiles.size)
 
         assertTrue(entity.rackTiles[0].joker)
+        assertEquals("tile-3", entity.rackTiles[0].tileId)
     }
 
     @Test
@@ -55,15 +56,15 @@ class TurnDraftEntityMapperTest {
         val boardSet = TurnDraftBoardSetEntity(
             draft = entity,
             tiles = mutableListOf(
-                TileEmbeddable(TileColor.RED, 5, false),
-                TileEmbeddable(TileColor.BLUE, 6, false)
+                TileEmbeddable("tile-4", TileColor.RED, 5, false),
+                TileEmbeddable("tile-5", TileColor.BLUE, 6, false)
             )
         )
 
         entity.boardSets.add(boardSet)
 
         entity.rackTiles = mutableListOf(
-            TileEmbeddable(TileColor.BLACK, null, true)
+            TileEmbeddable("tile-6", TileColor.BLACK, null, true)
         )
 
         val domain = entity.toDomain()
@@ -71,5 +72,7 @@ class TurnDraftEntityMapperTest {
         assertEquals(1, domain.boardSets.size)
         assertEquals(2, domain.boardSets[0].tiles.size)
         assertEquals(1, domain.rackTiles.size)
+        assertEquals("tile-4", (domain.boardSets[0].tiles[0] as NumberedTile).tileId)
+        assertEquals("tile-6", (domain.rackTiles[0] as JokerTile).tileId)
     }
 }

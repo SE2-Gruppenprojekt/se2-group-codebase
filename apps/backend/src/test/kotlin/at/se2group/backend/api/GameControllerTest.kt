@@ -47,14 +47,14 @@ class GameControllerTest {
                     displayName = "Alice",
                     turnOrder = 0,
                     rackTiles = listOf(
-                        NumberedTile(TileColor.BLUE, 3)
+                        NumberedTile("tile-1", TileColor.BLUE, 3)
                     ),
                     score = 10,
                     joinedAt = Instant.parse("2026-04-27T17:55:00Z")
                 )
             ),
             drawPile = listOf(
-                NumberedTile(TileColor.RED, 7)
+                NumberedTile("tile-2", TileColor.RED, 7)
             ),
             currentPlayerUserId = "user-1",
             status = GameStatus.ACTIVE,
@@ -72,9 +72,11 @@ class GameControllerTest {
                 jsonPath("$.status") { value("ACTIVE") }
                 jsonPath("$.players[0].userId") { value("user-1") }
                 jsonPath("$.players[0].displayName") { value("Alice") }
+                jsonPath("$.players[0].rackTiles[0].tileId") { value("tile-1") }
                 jsonPath("$.players[0].rackTiles[0].color") { value("BLUE") }
                 jsonPath("$.players[0].rackTiles[0].number") { value(3) }
-                jsonPath("$.players[0].rackTiles[0].joker") { value(false) }
+                jsonPath("$.players[0].rackTiles[0].isJoker") { value(false) }
+                jsonPath("$.drawPile[0].tileId") { value("tile-2") }
                 jsonPath("$.drawPile[0].color") { value("RED") }
             }
     }
@@ -97,10 +99,10 @@ class GameControllerTest {
         val requestJson = """
         {
             "boardSets": [
-                { "tiles": [{ "color": "BLUE", "number": 3, "joker": false }] }
+                { "tiles": [{ "tileId": "tile-3", "color": "BLUE", "number": 3, "joker": false }] }
             ],
             "rackTiles": [
-                { "color": "RED", "number": 5, "joker": false }
+                { "tileId": "tile-4", "color": "RED", "number": 5, "joker": false }
             ]
         }
     """.trimIndent()
