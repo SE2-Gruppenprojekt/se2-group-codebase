@@ -69,13 +69,18 @@ class GameControllerTest {
                 jsonPath("$.gameId") { value("game-1") }
                 jsonPath("$.lobbyId") { value("lobby-1") }
                 jsonPath("$.currentPlayerUserId") { value("user-1") }
+                jsonPath("$.currentTurnPlayerId") { value("user-1") }
                 jsonPath("$.status") { value("ACTIVE") }
+                jsonPath("$.drawPileCount") { value(1) }
+                jsonPath("$.turnDeadline") { isEmpty() }
+                jsonPath("$.remainingTurnSeconds") { isEmpty() }
                 jsonPath("$.players[0].userId") { value("user-1") }
                 jsonPath("$.players[0].displayName") { value("Alice") }
                 jsonPath("$.players[0].rackTiles[0].tileId") { value("tile-1") }
                 jsonPath("$.players[0].rackTiles[0].color") { value("BLUE") }
                 jsonPath("$.players[0].rackTiles[0].number") { value(3) }
                 jsonPath("$.players[0].rackTiles[0].isJoker") { value(false) }
+                jsonPath("$.board") { isArray() }
                 jsonPath("$.drawPile[0].tileId") { value("tile-2") }
                 jsonPath("$.drawPile[0].color") { value("RED") }
             }

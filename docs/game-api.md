@@ -137,7 +137,8 @@ Notes:
 {
     "userId": "player-1",
     "displayName": "Julian",
-    "hand": [
+    "turnOrder": 0,
+    "rackTiles": [
         {
             "tileId": "tile-010",
             "color": "YELLOW",
@@ -145,8 +146,9 @@ Notes:
             "isJoker": false
         }
     ],
-    "hasPlayedInitialMeld": false,
-    "score": 0
+    "hasCompletedInitialMeld": false,
+    "score": 0,
+    "joinedAt": "2026-04-21T12:00:00Z"
 }
 ```
 
@@ -154,9 +156,11 @@ Fields:
 
 - `userId: String`
 - `displayName: String`
-- `hand: List<TileResponse>`
-- `hasPlayedInitialMeld: Boolean`
+- `turnOrder: Int`
+- `rackTiles: List<TileResponse>`
+- `hasCompletedInitialMeld: Boolean`
 - `score: Int`
+- `joinedAt: String` (ISO-8601 timestamp)
 
 ---
 
@@ -171,7 +175,8 @@ This is the confirmed authoritative game state.
         {
             "userId": "player-1",
             "displayName": "Julian",
-            "hand": [
+            "turnOrder": 0,
+            "rackTiles": [
                 {
                     "tileId": "tile-010",
                     "color": "YELLOW",
@@ -179,13 +184,15 @@ This is the confirmed authoritative game state.
                     "isJoker": false
                 }
             ],
-            "hasPlayedInitialMeld": false,
-            "score": 0
+            "hasCompletedInitialMeld": false,
+            "score": 0,
+            "joinedAt": "2026-04-21T12:00:00Z"
         },
         {
             "userId": "player-2",
             "displayName": "Alex",
-            "hand": [
+            "turnOrder": 1,
+            "rackTiles": [
                 {
                     "tileId": "tile-011",
                     "color": "RED",
@@ -193,8 +200,9 @@ This is the confirmed authoritative game state.
                     "isJoker": false
                 }
             ],
-            "hasPlayedInitialMeld": false,
-            "score": 0
+            "hasCompletedInitialMeld": false,
+            "score": 0,
+            "joinedAt": "2026-04-21T12:00:05Z"
         }
     ],
     "board": [
@@ -372,16 +380,20 @@ Used for:
         {
             "userId": "player-1",
             "displayName": "Julian",
-            "hand": [],
-            "hasPlayedInitialMeld": true,
-            "score": 0
+            "turnOrder": 0,
+            "rackTiles": [],
+            "hasCompletedInitialMeld": true,
+            "score": 0,
+            "joinedAt": "2026-04-21T12:00:00Z"
         },
         {
             "userId": "player-2",
             "displayName": "Alex",
-            "hand": [],
-            "hasPlayedInitialMeld": false,
-            "score": 0
+            "turnOrder": 1,
+            "rackTiles": [],
+            "hasCompletedInitialMeld": false,
+            "score": 0,
+            "joinedAt": "2026-04-21T12:00:05Z"
         }
     ],
     "board": [],
@@ -572,7 +584,8 @@ Fields:
         {
             "userId": "player-1",
             "displayName": "Julian",
-            "hand": [
+            "turnOrder": 0,
+            "rackTiles": [
                 {
                     "tileId": "tile-010",
                     "color": "YELLOW",
@@ -580,13 +593,15 @@ Fields:
                     "isJoker": false
                 }
             ],
-            "hasPlayedInitialMeld": true,
-            "score": 0
+            "hasCompletedInitialMeld": true,
+            "score": 0,
+            "joinedAt": "2026-04-21T12:00:00Z"
         },
         {
             "userId": "player-2",
             "displayName": "Alex",
-            "hand": [
+            "turnOrder": 1,
+            "rackTiles": [
                 {
                     "tileId": "tile-011",
                     "color": "RED",
@@ -594,8 +609,9 @@ Fields:
                     "isJoker": false
                 }
             ],
-            "hasPlayedInitialMeld": false,
-            "score": 0
+            "hasCompletedInitialMeld": false,
+            "score": 0,
+            "joinedAt": "2026-04-21T12:00:05Z"
         }
     ],
     "board": [
@@ -680,7 +696,8 @@ Can be either empty or use a small request DTO like:
         {
             "userId": "player-1",
             "displayName": "Julian",
-            "hand": [
+            "turnOrder": 0,
+            "rackTiles": [
                 {
                     "tileId": "tile-999",
                     "color": "BLACK",
@@ -688,8 +705,9 @@ Can be either empty or use a small request DTO like:
                     "isJoker": false
                 }
             ],
-            "hasPlayedInitialMeld": true,
-            "score": 0
+            "hasCompletedInitialMeld": true,
+            "score": 0,
+            "joinedAt": "2026-04-21T12:00:00Z"
         }
     ],
     "board": [],

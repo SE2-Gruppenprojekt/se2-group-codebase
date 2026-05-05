@@ -101,7 +101,7 @@ class GameDtoTest {
                     joinedAt = Instant.parse("2026-04-27T17:55:00Z")
                 )
             ),
-            boardSets = listOf(
+            board = listOf(
                 BoardSetResponse(
                     boardSetId = "set-1",
                     type = "GROUP",
@@ -116,7 +116,11 @@ class GameDtoTest {
                 TileResponse("tile-12", "ORANGE", 5, false),
                 TileResponse("tile-13", "RED", null, true)
             ),
+            drawPileCount = 2,
             currentPlayerUserId = "user-1",
+            currentTurnPlayerId = "user-1",
+            turnDeadline = null,
+            remainingTurnSeconds = null,
             status = "ACTIVE",
             createdAt = createdAt,
             startedAt = startedAt,
@@ -126,12 +130,16 @@ class GameDtoTest {
         assertEquals("game-1", dto.gameId)
         assertEquals("lobby-1", dto.lobbyId)
         assertEquals(1, dto.players.size)
-        assertEquals(1, dto.boardSets.size)
+        assertEquals(1, dto.board.size)
         assertEquals(2, dto.drawPile.size)
+        assertEquals(2, dto.drawPileCount)
         assertEquals("user-1", dto.currentPlayerUserId)
+        assertEquals("user-1", dto.currentTurnPlayerId)
         assertEquals("ACTIVE", dto.status)
         assertEquals(createdAt, dto.createdAt)
         assertEquals(startedAt, dto.startedAt)
         assertNull(dto.finishedAt)
+        assertNull(dto.turnDeadline)
+        assertNull(dto.remainingTurnSeconds)
     }
 }
