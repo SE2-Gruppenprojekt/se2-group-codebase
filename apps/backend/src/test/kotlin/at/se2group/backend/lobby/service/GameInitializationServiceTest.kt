@@ -96,6 +96,7 @@ class GameInitializationServiceTest {
         assertEquals(firstPlayer.userId, result.turnDraft?.playerUserId)
         assertEquals(firstPlayer.rackTiles, result.turnDraft?.rackTiles)
         assertEquals(emptyList<Nothing>(), result.turnDraft?.boardSets)
+        assertEquals(0, result.turnDraft?.version)
 
         verify(tilePoolGenerationService).createTilePool()
     }

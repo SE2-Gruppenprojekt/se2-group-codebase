@@ -25,6 +25,23 @@ class TurnDraftTest {
     }
 
     @Test
+    fun `should return version`() {
+        val draft = TurnDraft(
+            gameId = "g1",
+            playerUserId = "p1",
+            boardSets = mutableListOf(),
+            rackTiles = mutableListOf(),
+            version = 4,
+            drawnTile = null,
+            status = TurnDraftStatus.values()[0],
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
+
+        assertEquals(4, draft.version)
+    }
+
+    @Test
     fun `should return null if no drawn tile`() {
         val draft = TurnDraft(
             gameId = "g1",
@@ -74,5 +91,18 @@ class TurnDraftTest {
 
         assertEquals(created, draft.createdAt)
         assertEquals(updated, draft.updatedAt)
+    }
+
+    @Test
+    fun `should reject negative version`() {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            TurnDraft(
+                gameId = "g1",
+                playerUserId = "p1",
+                version = -1
+            )
+        }
+
+        assertEquals("version must not be negative", exception.message)
     }
 }

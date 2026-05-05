@@ -31,6 +31,7 @@ class TurnDraftMapperTest {
 
         assertEquals("game1", result.gameId)
         assertEquals("user1", result.playerUserId)
+        assertEquals(0, result.version)
 
         assertEquals(1, result.boardSets.size)
         assertEquals(2, result.boardSets[0].tiles.size)
@@ -68,5 +69,30 @@ class TurnDraftMapperTest {
         assertThrows(IllegalArgumentException::class.java) {
             request.toTileDomain()
         }
+    }
+
+    @Test
+    fun `should map TurnDraft to turn draft response`() {
+        val draft = TurnDraft(
+            gameId = "game1",
+            playerUserId = "user1",
+            boardSets = listOf(
+                BoardSet(
+                    boardSetId = "set-1",
+                    type = BoardSetType.UNRESOLVED,
+                    tiles = listOf(NumberedTile("tile-1", TileColor.RED, 3))
+                )
+            ),
+            rackTiles = listOf(JokerTile("tile-2", TileColor.BLUE)),
+            version = 7
+        )
+
+        val response = draft.toResponse()
+
+        assertEquals("game1", response.gameId)
+        assertEquals("user1", response.playerUserId)
+        assertEquals(1, response.draftBoard.size)
+        assertEquals(1, response.draftHand.size)
+        assertEquals(7, response.version)
     }
 }

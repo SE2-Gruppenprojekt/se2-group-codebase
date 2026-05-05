@@ -114,7 +114,8 @@ class GameControllerTest {
 
         val draft = TurnDraft(
             gameId = "game-1",
-            playerUserId = "mock-user"
+            playerUserId = "mock-user",
+            version = 3
         )
 
         `when`(
@@ -134,8 +135,9 @@ class GameControllerTest {
                 status { isOk() }
                 jsonPath("$.gameId") { value("game-1") }
                 jsonPath("$.playerUserId") { value("mock-user") }
-                jsonPath("$.boardSets") { isArray() }
-                jsonPath("$.rackTiles") { isArray() }
+                jsonPath("$.draftBoard") { isArray() }
+                jsonPath("$.draftHand") { isArray() }
+                jsonPath("$.version") { value(3) }
             }
     }
 

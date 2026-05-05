@@ -142,4 +142,29 @@ class GameDtoTest {
         assertNull(dto.turnDeadline)
         assertNull(dto.remainingTurnSeconds)
     }
+
+    @Test
+    fun `creates turn draft response`() {
+        val dto = TurnDraftResponse(
+            gameId = "game-1",
+            playerUserId = "user-1",
+            draftBoard = listOf(
+                BoardSetResponse(
+                    boardSetId = "set-1",
+                    type = "UNRESOLVED",
+                    tiles = listOf(TileResponse("tile-1", "BLUE", 3, false))
+                )
+            ),
+            draftHand = listOf(
+                TileResponse("tile-2", "RED", null, true)
+            ),
+            version = 5
+        )
+
+        assertEquals("game-1", dto.gameId)
+        assertEquals("user-1", dto.playerUserId)
+        assertEquals(1, dto.draftBoard.size)
+        assertEquals(1, dto.draftHand.size)
+        assertEquals(5, dto.version)
+    }
 }

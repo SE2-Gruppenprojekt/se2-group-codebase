@@ -266,7 +266,7 @@ This is the current live editable draft state.
 ```json
 {
     "gameId": "game-123",
-    "playerId": "player-1",
+    "playerUserId": "player-1",
     "draftBoard": [
         {
             "boardSetId": "set-001",
@@ -307,19 +307,17 @@ This is the current live editable draft state.
             "isJoker": false
         }
     ],
-    "version": 3,
-    "status": "ACTIVE"
+    "version": 3
 }
 ```
 
 Fields:
 
 - `gameId: String`
-- `playerId: String`
+- `playerUserId: String`
 - `draftBoard: List<BoardSetResponse>`
 - `draftHand: List<TileResponse>`
 - `version: Long`
-- `status: "ACTIVE" | "SUBMITTED" | "CANCELLED"`
 
 ---
 
@@ -430,11 +428,10 @@ Useful for:
 ```json
 {
     "gameId": "game-123",
-    "playerId": "player-1",
+    "playerUserId": "player-1",
     "draftBoard": [],
     "draftHand": [],
-    "version": 2,
-    "status": "ACTIVE"
+    "version": 2
 }
 ```
 
@@ -503,7 +500,7 @@ Fields:
 ```json
 {
     "gameId": "game-123",
-    "playerId": "player-1",
+    "playerUserId": "player-1",
     "draftBoard": [
         {
             "boardSetId": "set-temp-1",
@@ -526,8 +523,7 @@ Fields:
             "isJoker": false
         }
     ],
-    "version": 3,
-    "status": "ACTIVE"
+    "version": 3
 }
 ```
 
@@ -755,7 +751,7 @@ Can be either empty or use:
 ```json
 {
     "gameId": "game-123",
-    "playerId": "player-1",
+    "playerUserId": "player-1",
     "draftBoard": [],
     "draftHand": [
         {
@@ -765,8 +761,7 @@ Can be either empty or use:
             "isJoker": false
         }
     ],
-    "version": 4,
-    "status": "ACTIVE"
+    "version": 4
 }
 ```
 
@@ -825,7 +820,7 @@ Sent whenever the active player updates the draft.
     "playerId": "player-1",
     "draft": {
         "gameId": "game-123",
-        "playerId": "player-1",
+        "playerUserId": "player-1",
         "draftBoard": [
             {
                 "boardSetId": "set-temp-1",
@@ -848,8 +843,7 @@ Sent whenever the active player updates the draft.
                 "isJoker": false
             }
         ],
-        "version": 3,
-        "status": "ACTIVE"
+        "version": 3
     }
 }
 ```

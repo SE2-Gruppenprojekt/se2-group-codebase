@@ -27,7 +27,8 @@ class TurnDraftEntityMapperTest {
             ),
             rackTiles = listOf(
                 JokerTile("tile-3", TileColor.BLACK)
-            )
+            ),
+            version = 4
         )
 
         val entity = draft.toEntity(
@@ -43,6 +44,7 @@ class TurnDraftEntityMapperTest {
 
         assertTrue(entity.rackTiles[0].joker)
         assertEquals("tile-3", entity.rackTiles[0].tileId)
+        assertEquals(4, entity.version)
     }
 
     @Test
@@ -50,7 +52,8 @@ class TurnDraftEntityMapperTest {
 
         val entity = TurnDraftEntity(
             gameId = "game1",
-            playerUserId = "user1"
+            playerUserId = "user1",
+            version = 6
         )
 
         val boardSet = TurnDraftBoardSetEntity(
@@ -72,6 +75,7 @@ class TurnDraftEntityMapperTest {
         assertEquals(1, domain.boardSets.size)
         assertEquals(2, domain.boardSets[0].tiles.size)
         assertEquals(1, domain.rackTiles.size)
+        assertEquals(6, domain.version)
         assertEquals("tile-4", (domain.boardSets[0].tiles[0] as NumberedTile).tileId)
         assertEquals("tile-6", (domain.rackTiles[0] as JokerTile).tileId)
     }
