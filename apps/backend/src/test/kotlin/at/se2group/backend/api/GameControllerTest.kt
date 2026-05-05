@@ -47,14 +47,14 @@ class GameControllerTest {
                     displayName = "Alice",
                     turnOrder = 0,
                     rackTiles = listOf(
-                        NumberedTile(TileColor.BLUE, 3)
+                        NumberedTile("tile-1", TileColor.BLUE, 3)
                     ),
                     score = 10,
                     joinedAt = Instant.parse("2026-04-27T17:55:00Z")
                 )
             ),
             drawPile = listOf(
-                NumberedTile(TileColor.RED, 7)
+                NumberedTile("tile-2", TileColor.RED, 7)
             ),
             currentPlayerUserId = "user-1",
             status = GameStatus.ACTIVE,
@@ -69,12 +69,19 @@ class GameControllerTest {
                 jsonPath("$.gameId") { value("game-1") }
                 jsonPath("$.lobbyId") { value("lobby-1") }
                 jsonPath("$.currentPlayerUserId") { value("user-1") }
+                jsonPath("$.currentTurnPlayerId") { value("user-1") }
                 jsonPath("$.status") { value("ACTIVE") }
+                jsonPath("$.drawPileCount") { value(1) }
+                jsonPath("$.turnDeadline") { isEmpty() }
+                jsonPath("$.remainingTurnSeconds") { isEmpty() }
                 jsonPath("$.players[0].userId") { value("user-1") }
                 jsonPath("$.players[0].displayName") { value("Alice") }
+                jsonPath("$.players[0].rackTiles[0].tileId") { value("tile-1") }
                 jsonPath("$.players[0].rackTiles[0].color") { value("BLUE") }
                 jsonPath("$.players[0].rackTiles[0].number") { value(3) }
-                jsonPath("$.players[0].rackTiles[0].joker") { value(false) }
+                jsonPath("$.players[0].rackTiles[0].isJoker") { value(false) }
+                jsonPath("$.board") { isArray() }
+                jsonPath("$.drawPile[0].tileId") { value("tile-2") }
                 jsonPath("$.drawPile[0].color") { value("RED") }
             }
     }
@@ -97,17 +104,18 @@ class GameControllerTest {
         val requestJson = """
         {
             "boardSets": [
-                { "tiles": [{ "color": "BLUE", "number": 3, "joker": false }] }
+                { "tiles": [{ "tileId": "tile-3", "color": "BLUE", "number": 3, "joker": false }] }
             ],
             "rackTiles": [
-                { "color": "RED", "number": 5, "joker": false }
+                { "tileId": "tile-4", "color": "RED", "number": 5, "joker": false }
             ]
         }
     """.trimIndent()
 
         val draft = TurnDraft(
             gameId = "game-1",
-            playerUserId = "mock-user"
+            playerUserId = "mock-user",
+            version = 3
         )
 
         `when`(
@@ -127,8 +135,9 @@ class GameControllerTest {
                 status { isOk() }
                 jsonPath("$.gameId") { value("game-1") }
                 jsonPath("$.playerUserId") { value("mock-user") }
-                jsonPath("$.boardSets") { isArray() }
-                jsonPath("$.rackTiles") { isArray() }
+                jsonPath("$.draftBoard") { isArray() }
+                jsonPath("$.draftHand") { isArray() }
+                jsonPath("$.version") { value(3) }
             }
     }
 

@@ -11,27 +11,31 @@ class GameDtoTest {
     @Test
     fun `creates tile response`() {
         val dto = TileResponse(
+            tileId = "tile-1",
             color = "BLUE",
             number = 7,
-            joker = false
+            isJoker = false
         )
 
+        assertEquals("tile-1", dto.tileId)
         assertEquals("BLUE", dto.color)
         assertEquals(7, dto.number)
-        assertEquals(false, dto.joker)
+        assertEquals(false, dto.isJoker)
     }
 
     @Test
     fun `creates joker tile response`() {
         val dto = TileResponse(
+            tileId = "tile-2",
             color = "RED",
             number = null,
-            joker = true
+            isJoker = true
         )
 
+        assertEquals("tile-2", dto.tileId)
         assertEquals("RED", dto.color)
         assertNull(dto.number)
-        assertTrue(dto.joker)
+        assertTrue(dto.isJoker)
     }
 
     @Test
@@ -40,9 +44,9 @@ class GameDtoTest {
             boardSetId = "set-1",
             type = "RUN",
             tiles = listOf(
-                TileResponse("BLUE", 7, false),
-                TileResponse("BLUE", 8, false),
-                TileResponse("BLUE", 9, false)
+                TileResponse("tile-3", "BLUE", 7, false),
+                TileResponse("tile-4", "BLUE", 8, false),
+                TileResponse("tile-5", "BLUE", 9, false)
             )
         )
 
@@ -61,8 +65,8 @@ class GameDtoTest {
             displayName = "Alice",
             turnOrder = 0,
             rackTiles = listOf(
-                TileResponse("BLACK", 5, false),
-                TileResponse("ORANGE", null, true)
+                TileResponse("tile-6", "BLACK", 5, false),
+                TileResponse("tile-7", "ORANGE", null, true)
             ),
             hasCompletedInitialMeld = true,
             score = 25,
@@ -91,28 +95,32 @@ class GameDtoTest {
                     userId = "user-1",
                     displayName = "Alice",
                     turnOrder = 0,
-                    rackTiles = listOf(TileResponse("BLUE", 3, false)),
+                    rackTiles = listOf(TileResponse("tile-8", "BLUE", 3, false)),
                     hasCompletedInitialMeld = false,
                     score = 10,
                     joinedAt = Instant.parse("2026-04-27T17:55:00Z")
                 )
             ),
-            boardSets = listOf(
+            board = listOf(
                 BoardSetResponse(
                     boardSetId = "set-1",
-                    type = "SET",
+                    type = "GROUP",
                     tiles = listOf(
-                        TileResponse("RED", 10, false),
-                        TileResponse("BLUE", 10, false),
-                        TileResponse("BLACK", 10, false)
+                        TileResponse("tile-9", "RED", 10, false),
+                        TileResponse("tile-10", "BLUE", 10, false),
+                        TileResponse("tile-11", "BLACK", 10, false)
                     )
                 )
             ),
             drawPile = listOf(
-                TileResponse("ORANGE", 5, false),
-                TileResponse("RED", null, true)
+                TileResponse("tile-12", "ORANGE", 5, false),
+                TileResponse("tile-13", "RED", null, true)
             ),
+            drawPileCount = 2,
             currentPlayerUserId = "user-1",
+            currentTurnPlayerId = "user-1",
+            turnDeadline = null,
+            remainingTurnSeconds = null,
             status = "ACTIVE",
             createdAt = createdAt,
             startedAt = startedAt,
@@ -122,12 +130,41 @@ class GameDtoTest {
         assertEquals("game-1", dto.gameId)
         assertEquals("lobby-1", dto.lobbyId)
         assertEquals(1, dto.players.size)
-        assertEquals(1, dto.boardSets.size)
+        assertEquals(1, dto.board.size)
         assertEquals(2, dto.drawPile.size)
+        assertEquals(2, dto.drawPileCount)
         assertEquals("user-1", dto.currentPlayerUserId)
+        assertEquals("user-1", dto.currentTurnPlayerId)
         assertEquals("ACTIVE", dto.status)
         assertEquals(createdAt, dto.createdAt)
         assertEquals(startedAt, dto.startedAt)
         assertNull(dto.finishedAt)
+        assertNull(dto.turnDeadline)
+        assertNull(dto.remainingTurnSeconds)
+    }
+
+    @Test
+    fun `creates turn draft response`() {
+        val dto = TurnDraftResponse(
+            gameId = "game-1",
+            playerUserId = "user-1",
+            draftBoard = listOf(
+                BoardSetResponse(
+                    boardSetId = "set-1",
+                    type = "UNRESOLVED",
+                    tiles = listOf(TileResponse("tile-1", "BLUE", 3, false))
+                )
+            ),
+            draftHand = listOf(
+                TileResponse("tile-2", "RED", null, true)
+            ),
+            version = 5
+        )
+
+        assertEquals("game-1", dto.gameId)
+        assertEquals("user-1", dto.playerUserId)
+        assertEquals(1, dto.draftBoard.size)
+        assertEquals(1, dto.draftHand.size)
+        assertEquals(5, dto.version)
     }
 }

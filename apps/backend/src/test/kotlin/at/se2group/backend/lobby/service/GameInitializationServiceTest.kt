@@ -96,6 +96,7 @@ class GameInitializationServiceTest {
         assertEquals(firstPlayer.userId, result.turnDraft?.playerUserId)
         assertEquals(firstPlayer.rackTiles, result.turnDraft?.rackTiles)
         assertEquals(emptyList<Nothing>(), result.turnDraft?.boardSets)
+        assertEquals(0, result.turnDraft?.version)
 
         verify(tilePoolGenerationService).createTilePool()
     }
@@ -103,6 +104,7 @@ class GameInitializationServiceTest {
     private fun createTiles(count: Int): List<Tile> {
         return (0 until count).map { index ->
             NumberedTile(
+                tileId = "tile-$index",
                 color = TileColor.entries[index % TileColor.entries.size],
                 number = (index % 13) + 1
             )

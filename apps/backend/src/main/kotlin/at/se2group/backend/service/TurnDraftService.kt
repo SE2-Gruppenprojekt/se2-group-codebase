@@ -106,7 +106,7 @@ class TurnDraftService(
             candidateDraft = proposedDraft
         )
         return turnDraftRepository.save(
-            proposedDraft.toEntity(draftEntity)
+            proposedDraft.copy(version = draftEntity.version + 1).toEntity(draftEntity)
         ).toDomain()
     }
 }

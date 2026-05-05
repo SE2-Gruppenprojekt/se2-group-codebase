@@ -28,9 +28,9 @@ class GameRepositoryTest {
             startedAt = Instant.parse("2026-04-27T18:05:00Z"),
             finishedAt = null,
             drawPile = mutableListOf(
-                TileEmbeddable(color = TileColor.RED, number = 5, joker = false),
-                TileEmbeddable(color = TileColor.BLUE, number = null, joker = true),
-                TileEmbeddable(color = TileColor.BLACK, number = 11, joker = false)
+                embeddable("tile-1", TileColor.RED, 5, false),
+                embeddable("tile-2", TileColor.BLUE, null, true),
+                embeddable("tile-3", TileColor.BLACK, 11, false)
             )
         )
 
@@ -40,8 +40,8 @@ class GameRepositoryTest {
             displayName = "Alice",
             turnOrder = 0,
             rackTiles = mutableListOf(
-                TileEmbeddable(color = TileColor.BLUE, number = 1, joker = false),
-                TileEmbeddable(color = TileColor.ORANGE, number = null, joker = true)
+                embeddable("tile-4", TileColor.BLUE, 1, false),
+                embeddable("tile-5", TileColor.ORANGE, null, true)
             ),
             hasCompletedInitialMeld = true,
             score = 25,
@@ -54,7 +54,7 @@ class GameRepositoryTest {
             displayName = "Bob",
             turnOrder = 1,
             rackTiles = mutableListOf(
-                TileEmbeddable(color = TileColor.BLACK, number = 13, joker = false)
+                embeddable("tile-6", TileColor.BLACK, 13, false)
             ),
             hasCompletedInitialMeld = false,
             score = 10,
@@ -66,9 +66,9 @@ class GameRepositoryTest {
             boardSetId = "set-1",
             type = BoardSetType.RUN,
             tiles = mutableListOf(
-                TileEmbeddable(color = TileColor.RED, number = 7, joker = false),
-                TileEmbeddable(color = TileColor.RED, number = 8, joker = false),
-                TileEmbeddable(color = TileColor.RED, number = 9, joker = false)
+                embeddable("tile-7", TileColor.RED, 7, false),
+                embeddable("tile-8", TileColor.RED, 8, false),
+                embeddable("tile-9", TileColor.RED, 9, false)
             )
         )
 
@@ -89,6 +89,7 @@ class GameRepositoryTest {
         assertEquals(2, saved.players.size)
         assertEquals(1, saved.boardSets.size)
         assertEquals(3, saved.drawPile.size)
+        assertEquals("tile-1", saved.drawPile[0].tileId)
 
         assertEquals("user-1", saved.players[0].userId)
         assertEquals("Alice", saved.players[0].displayName)
@@ -114,9 +115,9 @@ class GameRepositoryTest {
             status = GameStatus.ACTIVE,
             createdAt = Instant.parse("2026-04-27T18:10:00Z"),
             drawPile = mutableListOf(
-                TileEmbeddable(color = TileColor.BLACK, number = 13, joker = false),
-                TileEmbeddable(color = TileColor.ORANGE, number = null, joker = true),
-                TileEmbeddable(color = TileColor.BLUE, number = 1, joker = false)
+                embeddable("tile-10", TileColor.BLACK, 13, false),
+                embeddable("tile-11", TileColor.ORANGE, null, true),
+                embeddable("tile-12", TileColor.BLUE, 1, false)
             )
         )
 
@@ -126,8 +127,8 @@ class GameRepositoryTest {
             displayName = "Bob",
             turnOrder = 1,
             rackTiles = mutableListOf(
-                TileEmbeddable(color = TileColor.RED, number = 4, joker = false),
-                TileEmbeddable(color = TileColor.BLUE, number = 5, joker = false)
+                embeddable("tile-13", TileColor.RED, 4, false),
+                embeddable("tile-14", TileColor.BLUE, 5, false)
             ),
             joinedAt = Instant.parse("2026-04-27T17:56:00Z")
         )
@@ -138,7 +139,7 @@ class GameRepositoryTest {
             displayName = "Alice",
             turnOrder = 0,
             rackTiles = mutableListOf(
-                TileEmbeddable(color = TileColor.BLACK, number = 2, joker = false)
+                embeddable("tile-15", TileColor.BLACK, 2, false)
             ),
             joinedAt = Instant.parse("2026-04-27T17:55:00Z")
         )
@@ -146,9 +147,9 @@ class GameRepositoryTest {
         val boardSet1 = BoardSetEntity(
             game = game,
             boardSetId = "set-b",
-            type = BoardSetType.SET,
+            type = BoardSetType.GROUP,
             tiles = mutableListOf(
-                TileEmbeddable(color = TileColor.RED, number = 10, joker = false)
+                embeddable("tile-16", TileColor.RED, 10, false)
             )
         )
 
@@ -157,8 +158,8 @@ class GameRepositoryTest {
             boardSetId = "set-a",
             type = BoardSetType.RUN,
             tiles = mutableListOf(
-                TileEmbeddable(color = TileColor.BLUE, number = 3, joker = false),
-                TileEmbeddable(color = TileColor.BLUE, number = 4, joker = false)
+                embeddable("tile-17", TileColor.BLUE, 3, false),
+                embeddable("tile-18", TileColor.BLUE, 4, false)
             )
         )
 
@@ -191,4 +192,7 @@ class GameRepositoryTest {
 
         assertFalse(result.isPresent)
     }
+
+    private fun embeddable(tileId: String, color: TileColor, number: Int?, joker: Boolean) =
+        TileEmbeddable(tileId = tileId, color = color, number = number, joker = joker)
 }

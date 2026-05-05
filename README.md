@@ -23,6 +23,16 @@ In addition to the implementation itself, the repository also contains project d
 
 ---
 
+## Deployment
+
+Current backend deployment:
+
+- REST API base URL: `https://se2-group-codebase.onrender.com/`
+- WebSocket / STOMP endpoint: `wss://se2-group-codebase.onrender.com/ws`
+- Health check: `https://se2-group-codebase.onrender.com/actuator/health`
+
+---
+
 ## Project Goals
 
 The main objective is to deliver one polished multiplayer card game experience instead of several loosely connected mini-projects. The focus is on building a clear, maintainable, and well-documented application that can be developed collaboratively by the whole team.

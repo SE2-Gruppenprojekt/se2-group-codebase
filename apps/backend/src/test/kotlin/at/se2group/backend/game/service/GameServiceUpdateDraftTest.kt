@@ -51,7 +51,8 @@ class TurnDraftServiceTest {
 
         val draft = TurnDraftEntity(
             gameId = "game-1",
-            playerUserId = "user-1"
+            playerUserId = "user-1",
+            version = 2
         )
 
         whenever(gameRepository.findById("game-1"))
@@ -71,6 +72,7 @@ class TurnDraftServiceTest {
 
         assertEquals("game-1", result.gameId)
         assertEquals("user-1", result.playerUserId)
+        assertEquals(3, result.version)
     }
 
     @Test

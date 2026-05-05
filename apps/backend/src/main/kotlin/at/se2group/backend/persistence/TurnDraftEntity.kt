@@ -10,6 +10,8 @@ class TurnDraftEntity(
 
     var playerUserId: String = "",
 
+    var version: Long = 0,
+
     @ElementCollection
     var rackTiles: MutableList<TileEmbeddable> = mutableListOf(),
 

@@ -8,6 +8,9 @@ import jakarta.persistence.Enumerated
 
 @Embeddable
 data class TileEmbeddable(
+    @Column(name = "tile_id", nullable = false)
+    var tileId: String = "",
+
     @Enumerated(EnumType.STRING)
     @Column(name = "color", nullable = false)
     var color: TileColor = TileColor.BLACK,

@@ -86,6 +86,7 @@ class TileShuffleServiceTest {
     ): List<Tile> {
         return (0 until count).map { offset ->
             NumberedTile(
+                tileId = "tile-$offset",
                 color = TileColor.entries[offset % TileColor.entries.size],
                 number = ((startNumber - 1 + offset) % 13) + 1
             )

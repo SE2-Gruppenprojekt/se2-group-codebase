@@ -362,21 +362,31 @@ For the MVP, storing game state and draft state as JSON blobs is acceptable and 
 
 ```kotlin
 enum class TileColor {
-    RED, BLUE, BLACK, YELLOW
+    BLACK, BLUE, ORANGE, RED
 }
 
-data class Tile(
-    val id: String,
-    val color: TileColor?,
-    val number: Int?,
-    val isJoker: Boolean
-)
+sealed interface Tile {
+    val tileId: String
+    val color: TileColor
+}
+
+data class NumberedTile(
+    override val tileId: String,
+    override val color: TileColor,
+    val number: Int
+) : Tile
+
+data class JokerTile(
+    override val tileId: String,
+    override val color: TileColor
+) : Tile
 ```
 
 Notes:
 
-- `id` is important because duplicate tiles exist in Rummikub
-- joker tiles use `isJoker = true`
+- `tileId` is important because duplicate tiles exist in Rummikub
+- both numbered tiles and jokers have a unique tile ID
+- joker tiles also keep a concrete `color`
 - a unique tile ID makes move validation and tile conservation much easier
 
 ### 6.2 Board set
@@ -387,7 +397,7 @@ enum class BoardSetType {
 }
 
 data class BoardSet(
-    val id: String,
+    val boardSetId: String,
     val type: BoardSetType,
     val tiles: List<Tile>
 )
@@ -445,19 +455,18 @@ When the player submits the turn:
 
 1. the backend receives the draft board
 2. each set is inspected
-3. if a set is already marked as `GROUP` or `RUN`, the backend may validate it directly
-4. if a set is `UNRESOLVED`, the backend must infer its effective type from the tiles
-5. if the tiles match group rules, treat it as `GROUP`
-6. if the tiles match run rules, treat it as `RUN`
-7. if it matches neither, reject the submitted draft
+3. the backend tries validating the set as a group
+4. the backend tries validating the set as a run
+5. if exactly one interpretation is valid, accept that set
+6. if both are valid, reject the set as ambiguous
+7. if neither is valid, reject the submitted draft
 
-So the final authoritative type resolution happens in the backend rule layer.
+So the final authoritative group/run decision happens in the backend rule layer.
 
 Small example:
 
 ```kotlin
-val resolvedType = resolveBoardSetType(set)
-val valid = setValidationService.validate(set.copy(type = resolvedType))
+val result = setValidationService.validate(set)
 ```
 
 #### Local board-set arrangement vs authoritative board content
@@ -504,21 +513,15 @@ Or:
 
 The set only clearly becomes a `RUN` once the sequence is visible.
 
-#### Recommended backend helper
+#### Recommended backend approach
 
-The backend should have a small resolver in the rules layer.
+The backend does not need a separate resolver helper here.
+The cleaner approach is for `SetValidationService` to try both legal interpretations during final validation and decide whether the set is:
 
-```kotlin
-fun resolveBoardSetType(set: BoardSet): BoardSetType {
-    val groupResult = groupValidationService.validate(set.copy(type = BoardSetType.GROUP))
-    if (groupResult.isValid) return BoardSetType.GROUP
-
-    val runResult = runValidationService.validate(set.copy(type = BoardSetType.RUN))
-    if (runResult.isValid) return BoardSetType.RUN
-
-    return BoardSetType.UNRESOLVED
-}
-```
+- valid as a group
+- valid as a run
+- ambiguous because both are valid
+- invalid because neither is valid
 
 This helper should be used when validating submitted drafts, especially for sets that are still marked as `UNRESOLVED`.
 
@@ -559,9 +562,10 @@ data class Game(
 
 ```kotlin
 enum class TurnDraftStatus {
-    ACTIVE,
+    IN_PROGRESS,
     SUBMITTED,
-    CANCELLED
+    ACCEPTED,
+    REJECTED
 }
 
 data class TurnDraft(
@@ -1166,506 +1170,13 @@ fun endTurn(gameId: String, playerId: String): Game {
 
 ## 12. Rules Architecture
 
-Rule validation should be isolated.
+Detailed backend rule validation is documented separately in [rule-validation.md](./rule-validation.md).
 
-Do not put all rule logic into one huge service. Instead, split it into smaller validators with one clear job each.
+In short:
 
-```text
-rules/
-├── service/
-│   ├── RummikubRuleService.kt
-│   ├── BoardValidationService.kt
-│   ├── SetValidationService.kt
-│   ├── GroupValidationService.kt
-│   ├── RunValidationService.kt
-│   ├── TileConservationService.kt
-│   └── FirstMoveValidationService.kt
-└── model/
-    ├── ValidationResult.kt
-    └── RuleViolation.kt
-```
-
-### 12.1 Responsibilities of each rule service
-
-#### RummikubRuleService
-
-Top-level rule entry point.
-
-Responsibilities:
-
-- coordinate all validators
-- compare confirmed state and draft
-- verify tile conservation
-- validate final draft board
-- validate player's move legality
-
-#### GroupValidationService
-
-Checks:
-
-- same number
-- unique colors
-- valid group size, usually 3 to 4
-- joker handling
-
-#### RunValidationService
-
-Checks:
-
-- same color
-- consecutive numbers
-- valid run length
-- joker handling
-
-#### BoardValidationService
-
-Checks:
-
-- every set on the board is valid
-- board remains legal after rearrangement
-
-#### SetValidationService
-
-Chooses which validator to use for one set.
-
-If the set is:
-
-- a group → call `GroupValidationService`
-- a run → call `RunValidationService`
-
-If a set is still marked as `UNRESOLVED`, the rules layer should first resolve the effective type from the tile content before validating it.
-
-#### FirstMoveValidationService
-
-Optional.
-
-Checks things such as:
-
-- minimum first meld value
-- additional first-move restrictions
-- whether first move uses only tiles from the player's hand
-
-#### TileConservationService
-
-This is very important.
-
-It checks:
-
-- no tile is duplicated
-- no tile disappears
-- player did not invent new tiles
-- board plus hand after move matches board plus hand before move
-
-This is one of the strongest protections against invalid moves.
-
-### 12.2 Validation strategy
-
-#### On draft updates during the turn
-
-Do minimal validation:
-
-- only active player may update
-- draft structure is parseable
-
-Do not run full expensive validation on every drag event unless needed.
-
-#### On end turn
-
-Do full validation:
-
-1. validate turn ownership
-2. validate tile conservation
-3. validate board
-4. validate first move rules if needed
-5. validate game-specific turn rules
-6. if all pass, commit
-
-### 12.3 Validation result model
-
-Example violation codes:
-
-- `INVALID_GROUP`
-- `INVALID_RUN`
-- `DUPLICATE_TILE`
-- `FIRST_MELD_TOO_SMALL`
-
-Recommended approach:
-
-- internal validators return `ValidationResult`
-- top-level service throws exception if invalid
-
-That gives you both:
-
-- clean architecture
-- easier debugging
-
-### 12.4 Example top-level rule service
-
-```kotlin
-package at.se2group.backend.rules.service
-
-import at.se2group.backend.game.domain.Game
-import at.se2group.backend.game.domain.TurnDraft
-import org.springframework.stereotype.Service
-
-@Service
-class RummikubRuleService(
-    private val tileConservationService: TileConservationService,
-    private val boardValidationService: BoardValidationService,
-    private val firstMoveValidationService: FirstMoveValidationService
-) {
-
-    fun validateSubmittedDraft(game: Game, draft: TurnDraft) {
-        val tileResult = tileConservationService.validate(game, draft)
-        if (!tileResult.isValid) {
-            throw IllegalArgumentException(tileResult.violations.first().message)
-        }
-
-        val boardResult = boardValidationService.validate(draft.draftBoard)
-        if (!boardResult.isValid) {
-            throw IllegalArgumentException(boardResult.violations.first().message)
-        }
-
-        val firstMoveResult = firstMoveValidationService.validate(game, draft)
-        if (!firstMoveResult.isValid) {
-            throw IllegalArgumentException(firstMoveResult.violations.first().message)
-        }
-    }
-}
-```
-
-This service is simple on purpose:
-
-- it orchestrates
-- it delegates
-- it fails fast
-
-### 12.5 Board validation
-
-```kotlin
-package at.se2group.backend.rules.service
-
-import at.se2group.backend.game.domain.BoardSet
-import at.se2group.backend.rules.model.RuleViolation
-import at.se2group.backend.rules.model.ValidationResult
-import org.springframework.stereotype.Service
-
-@Service
-class BoardValidationService(
-    private val setValidationService: SetValidationService
-) {
-
-    fun validate(board: List<BoardSet>): ValidationResult {
-        val violations = mutableListOf<RuleViolation>()
-
-        for (set in board) {
-            val result = setValidationService.validate(set)
-            if (!result.isValid) {
-                violations.addAll(result.violations)
-            }
-        }
-
-        return if (violations.isEmpty()) {
-            ValidationResult(isValid = true)
-        } else {
-            ValidationResult(isValid = false, violations = violations)
-        }
-    }
-}
-```
-
-### 12.6 Set validation router
-
-```kotlin
-@Service
-class SetValidationService(
-    private val groupValidationService: GroupValidationService,
-    private val runValidationService: RunValidationService
-) {
-
-    fun validate(set: BoardSet): ValidationResult {
-        val resolvedType = if (set.type == BoardSetType.UNRESOLVED) {
-            resolveType(set)
-        } else {
-            set.type
-        }
-
-        return when (resolvedType) {
-            BoardSetType.GROUP -> groupValidationService.validate(set.copy(type = BoardSetType.GROUP))
-            BoardSetType.RUN -> runValidationService.validate(set.copy(type = BoardSetType.RUN))
-            BoardSetType.UNRESOLVED -> ValidationResult(
-                isValid = false,
-                violations = listOf(
-                    RuleViolation(
-                        code = "UNRESOLVED_SET_TYPE",
-                        message = "The set could not be resolved as either a group or a run"
-                    )
-                )
-            )
-        }
-    }
-
-    private fun resolveType(set: BoardSet): BoardSetType {
-        val groupResult = groupValidationService.validate(set.copy(type = BoardSetType.GROUP))
-        if (groupResult.isValid) return BoardSetType.GROUP
-
-        val runResult = runValidationService.validate(set.copy(type = BoardSetType.RUN))
-        if (runResult.isValid) return BoardSetType.RUN
-
-        return BoardSetType.UNRESOLVED
-    }
-}
-```
-
-### 12.7 Group validation in detail
-
-A group is:
-
-- same number
-- no repeated color
-- size 3 or 4
-- jokers allowed
-
-```kotlin
-@Service
-class GroupValidationService {
-
-    fun validate(set: BoardSet): ValidationResult {
-        val tiles = set.tiles
-
-        if (tiles.size < 3 || tiles.size > 4) {
-            return invalid("INVALID_GROUP", "A group must contain 3 or 4 tiles")
-        }
-
-        val nonJokers = tiles.filter { !it.isJoker }
-
-        if (nonJokers.isEmpty()) {
-            return invalid("INVALID_GROUP", "A group cannot consist only of jokers")
-        }
-
-        val numbers = nonJokers.mapNotNull { it.number }.distinct()
-        if (numbers.size != 1) {
-            return invalid("INVALID_GROUP", "All tiles in a group must have the same number")
-        }
-
-        val colors = nonJokers.mapNotNull { it.color }
-        if (colors.size != colors.distinct().size) {
-            return invalid("INVALID_GROUP", "A group cannot contain duplicate colors")
-        }
-
-        return ValidationResult(isValid = true)
-    }
-
-    private fun invalid(code: String, message: String): ValidationResult {
-        return ValidationResult(
-            isValid = false,
-            violations = listOf(RuleViolation(code, message))
-        )
-    }
-}
-```
-
-### 12.8 Run validation in detail
-
-A run is:
-
-- same color
-- consecutive numbers
-- length at least 3
-- jokers may fill gaps
-
-```kotlin
-@Service
-class RunValidationService {
-
-    fun validate(set: BoardSet): ValidationResult {
-        val tiles = set.tiles
-
-        if (tiles.size < 3) {
-            return invalid("INVALID_RUN", "A run must contain at least 3 tiles")
-        }
-
-        val nonJokers = tiles.filter { !it.isJoker }
-
-        if (nonJokers.isEmpty()) {
-            return invalid("INVALID_RUN", "A run cannot consist only of jokers")
-        }
-
-        val colors = nonJokers.mapNotNull { it.color }.distinct()
-        if (colors.size != 1) {
-            return invalid("INVALID_RUN", "All tiles in a run must have the same color")
-        }
-
-        val numbers = nonJokers.mapNotNull { it.number }.sorted()
-
-        for (i in 1 until numbers.size) {
-            if (numbers[i] == numbers[i - 1]) {
-                return invalid("INVALID_RUN", "A run cannot contain duplicate numbers")
-            }
-        }
-
-        val jokerCount = tiles.count { it.isJoker }
-        var requiredJokers = 0
-
-        for (i in 1 until numbers.size) {
-            requiredJokers += (numbers[i] - numbers[i - 1] - 1)
-        }
-
-        if (requiredJokers > jokerCount) {
-            return invalid("INVALID_RUN", "The run has gaps that jokers cannot fill")
-        }
-
-        return ValidationResult(isValid = true)
-    }
-
-    private fun invalid(code: String, message: String): ValidationResult {
-        return ValidationResult(
-            isValid = false,
-            violations = listOf(RuleViolation(code, message))
-        )
-    }
-}
-```
-
-This is a good MVP run validator:
-
-- same color
-- no duplicate numbers
-- jokers can fill gaps if enough exist
-
-Later, you can make it stricter.
-
-### 12.9 Tile conservation validation
-
-This is one of the most useful validators.
-
-It checks that the move does not:
-
-- create tiles
-- delete tiles
-- duplicate tiles
-
-The easiest way is to compare tile IDs before and after.
-
-#### Idea
-
-Before turn:
-
-- confirmed board plus active player's hand
-
-After turn:
-
-- draft board plus draft hand
-
-These must contain exactly the same tile IDs.
-
-```kotlin
-@Service
-class TileConservationService {
-
-    fun validate(game: Game, draft: TurnDraft): ValidationResult {
-        val activePlayer = game.players.firstOrNull { it.userId == game.currentTurnPlayerId }
-            ?: return invalid("GAME_STATE_INVALID", "Current turn player not found")
-
-        val beforeIds = (
-            game.board.flatMap { it.tiles } +
-            activePlayer.hand
-        ).map { it.id }.sorted()
-
-        val afterIds = (
-            draft.draftBoard.flatMap { it.tiles } +
-            draft.draftHand
-        ).map { it.id }.sorted()
-
-        return if (beforeIds == afterIds) {
-            ValidationResult(isValid = true)
-        } else {
-            invalid("TILE_CONSERVATION_FAILED", "Tiles were lost, duplicated, or illegally changed")
-        }
-    }
-
-    private fun invalid(code: String, message: String): ValidationResult {
-        return ValidationResult(
-            isValid = false,
-            violations = listOf(RuleViolation(code, message))
-        )
-    }
-}
-```
-
-### 12.10 First move validation
-
-This depends on the version of Rummikub you want.
-
-A common rule is:
-
-- the player's first meld must have a minimum value, often 30
-- only tiles from their hand count toward that
-
-For MVP, you can keep this service simple or even temporarily bypass it.
-
-```kotlin
-@Service
-class FirstMoveValidationService {
-
-    fun validate(game: Game, draft: TurnDraft): ValidationResult {
-        val player = game.players.firstOrNull { it.userId == draft.playerId }
-            ?: return ValidationResult(false)
-
-        if (player.hasPlayedInitialMeld) {
-            return ValidationResult(isValid = true)
-        }
-
-        // Simplified MVP version:
-        // no first move rule enforced yet
-        return ValidationResult(isValid = true)
-    }
-}
-```
-
-### 12.11 Validation result model
-
-```kotlin
-data class ValidationResult(
-    val isValid: Boolean,
-    val violations: List<RuleViolation> = emptyList()
-)
-```
-
-```kotlin
-data class RuleViolation(
-    val code: String,
-    val message: String
-)
-```
-
-### 12.12 Recommended implementation order for the rule system
-
-#### Phase 1
-
-- `ValidationResult`
-- `RuleViolation`
-- `GroupValidationService`
-- `RunValidationService`
-
-#### Phase 2
-
-- `SetValidationService`
-- `BoardValidationService`
-
-#### Phase 3
-
-- `TileConservationService`
-
-#### Phase 4
-
-- `RummikubRuleService`
-
-#### Phase 5
-
-- `FirstMoveValidationService`
-
----
+- draft updates stay lightweight and permissive
+- full rule validation happens only when the turn is submitted
+- the backend decides whether final sets are legal as groups or runs
 
 ## 13. Persistence Strategy
 

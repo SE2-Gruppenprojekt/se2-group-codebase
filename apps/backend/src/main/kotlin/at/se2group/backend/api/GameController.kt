@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import at.se2group.backend.dto.DraftResponse
+import at.se2group.backend.dto.TurnDraftResponse
 import jakarta.validation.Valid
 
 @RestController
@@ -31,7 +31,7 @@ class GameController(
         @PathVariable gameId: String,
         @RequestHeader("X-User-Id") userId: String,
         @Valid @RequestBody request: UpdateDraftRequest
-    ): DraftResponse {
+    ): TurnDraftResponse {
 
         return turnDraftService.updateDraft(gameId, userId, request).toResponse()
     }

@@ -5,7 +5,6 @@ import at.se2group.backend.dto.*
 import at.se2group.backend.persistence.TurnDraftEntity
 import at.se2group.backend.persistence.TurnDraftBoardSetEntity
 import java.util.UUID
-import at.se2group.backend.dto.DraftResponse
 
 fun UpdateDraftRequest.toDomain(gameId: String, userId: String): TurnDraft {
     return TurnDraft(
@@ -26,15 +25,16 @@ fun BoardSetRequest.toBoardSetDomain(): BoardSet {
 
 fun TileRequest.toTileDomain(): Tile {
     return if (joker) {
-        JokerTile(TileColor.valueOf(color))
+        JokerTile(tileId, TileColor.valueOf(color))
     } else {
         require(number != null) { "Number required for non-joker" }
-        NumberedTile(TileColor.valueOf(color), number)
+        NumberedTile(tileId, TileColor.valueOf(color), number)
     }
 }
 
 fun TurnDraft.toEntity(existing: TurnDraftEntity): TurnDraftEntity {
     existing.boardSets.clear()
+    existing.version = version
 
     val newBoardSets = boardSets.map { set ->
         TurnDraftBoardSetEntity(
@@ -64,16 +64,18 @@ fun TurnDraftEntity.toDomain(): TurnDraft {
                 tiles = set.tiles.map { it.toDomain() }
             )
         },
-        rackTiles = rackTiles.map { it.toDomain() }
+        rackTiles = rackTiles.map { it.toDomain() },
+        version = version
     )
 }
 
 
-fun TurnDraft.toResponse(): DraftResponse {
-    return DraftResponse(
+fun TurnDraft.toResponse(): TurnDraftResponse {
+    return TurnDraftResponse(
         gameId = gameId,
         playerUserId = playerUserId,
-        boardSets = boardSets.map { it.toResponse() },
-        rackTiles = rackTiles.map { it.toResponse() }
+        draftBoard = boardSets.map { it.toResponse() },
+        draftHand = rackTiles.map { it.toResponse() },
+        version = version
     )
 }

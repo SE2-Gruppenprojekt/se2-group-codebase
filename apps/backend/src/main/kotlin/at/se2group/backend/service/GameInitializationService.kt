@@ -77,7 +77,8 @@ class GameInitializationService(
             gameId = confirmedGame.gameId,
             playerUserId = firstPlayer.userId,
             boardSets = emptyList(),
-            rackTiles = firstPlayer.rackTiles
+            rackTiles = firstPlayer.rackTiles,
+            version = 0
         )
         turnDraftRepository.save(draft.toEntity())
 
@@ -132,6 +133,7 @@ class GameInitializationService(
     private fun TurnDraft.toEntity() = TurnDraftEntity(
         gameId = gameId,
         playerUserId = playerUserId,
+        version = version,
         boardSets = mutableListOf(),
         rackTiles = rackTiles.map { it.toEmbeddable() }.toMutableList()
     )
