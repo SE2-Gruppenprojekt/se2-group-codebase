@@ -5,14 +5,19 @@ import at.aau.serg.android.core.network.WebSocketManager
 import com.squareup.moshi.Moshi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapNotNull
+import shared.models.EventPayLoad
+import shared.models.lobby.event.LobbyDeletedPayload
+import shared.models.lobby.event.LobbyEvent
+import shared.models.lobby.event.LobbyStartedPayload
+import shared.models.lobby.event.LobbyUpdatedPayload
 
 class LobbyWebSocketService(
     private val moshi: Moshi,
     private val ws: WebSocketManager = WebSocketManager()
 ) {
-    private val typeAdapter = moshi.adapter(LobbyEventType::class.java)
+    private val typeAdapter = moshi.adapter(EventPayLoad::class.java)
 
-    fun subscribe(lobbyId: String): Flow<LobbyEvent> {
+    suspend fun subscribe(lobbyId: String): Flow<LobbyEvent> {
         return ws
             .subscribe(WebConfig.Topics.lobby(lobbyId))
             .mapNotNull { parseLobbyEvent(it) }
@@ -20,18 +25,17 @@ class LobbyWebSocketService(
 
     private fun parseLobbyEvent(message: String): LobbyEvent? {
         return when (typeAdapter.fromJson(message)?.type) {
-
-            "lobby.updated" ->
+            LobbyUpdatedPayload.TYPE ->
                 moshi.adapter(LobbyUpdatedPayload::class.java)
                     .fromJson(message)
                     ?.let { LobbyEvent.Updated(it) }
 
-            "lobby.deleted" ->
+            LobbyDeletedPayload.TYPE ->
                 moshi.adapter(LobbyDeletedPayload::class.java)
                     .fromJson(message)
                     ?.let { LobbyEvent.Deleted(it) }
 
-            "lobby.started" ->
+            LobbyStartedPayload.TYPE ->
                 moshi.adapter(LobbyStartedPayload::class.java)
                     .fromJson(message)
                     ?.let { LobbyEvent.Started(it) }

@@ -6,7 +6,6 @@ import at.aau.serg.android.core.datastore.ProtoStore
 import at.aau.serg.android.core.network.RetrofitProvider
 import at.aau.serg.android.core.network.ServiceLocator
 import at.aau.serg.android.core.network.lobby.LobbyAPI
-import at.aau.serg.android.core.network.lobby.LobbyEvent
 import at.aau.serg.android.core.network.lobby.LobbyService
 import at.aau.serg.android.core.network.lobby.LobbyWebSocketService
 import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
@@ -25,6 +24,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import shared.models.lobby.domain.Lobby
+import shared.models.lobby.event.LobbyEvent
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LobbyWaitingViewModel(
