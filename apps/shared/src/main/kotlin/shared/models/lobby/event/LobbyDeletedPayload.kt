@@ -1,10 +1,12 @@
 package shared.models.lobby.event
 
-import shared.models.EventPayLoad
+import shared.models.EventPayload
 
 data class LobbyDeletedPayload(
     val lobbyId: String
-) : EventPayLoad(TYPE) {
+) : EventPayload {
+    override val type = TYPE
+
     companion object {
         const val TYPE = "lobby.deleted"
     }

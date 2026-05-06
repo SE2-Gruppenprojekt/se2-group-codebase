@@ -1,5 +1,5 @@
 package shared.models
 
-open class EventPayLoad(
+interface EventPayload {
     val type: String
-)
+}
