@@ -5,7 +5,7 @@ import at.aau.serg.android.core.network.WebSocketManager
 import com.squareup.moshi.Moshi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapNotNull
-import shared.models.EventPayLoad
+import shared.models.EventPayload
 import shared.models.lobby.event.LobbyDeletedPayload
 import shared.models.lobby.event.LobbyEvent
 import shared.models.lobby.event.LobbyStartedPayload
@@ -15,7 +15,7 @@ class LobbyWebSocketService(
     private val moshi: Moshi,
     private val ws: WebSocketManager = WebSocketManager()
 ) {
-    private val typeAdapter = moshi.adapter(EventPayLoad::class.java)
+    private val typeAdapter = moshi.adapter(EventPayload::class.java)
 
     suspend fun subscribe(lobbyId: String): Flow<LobbyEvent> {
         return ws
