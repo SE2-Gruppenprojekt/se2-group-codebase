@@ -1,19 +1,19 @@
 package at.se2group.backend.service
 
-import at.se2group.backend.domain.Lobby
-import at.se2group.backend.domain.LobbyPlayer
-import at.se2group.backend.domain.LobbySettings
-import at.se2group.backend.domain.LobbyStatus
 import at.se2group.backend.dto.CreateLobbyRequest
 import at.se2group.backend.dto.JoinLobbyRequest
 import at.se2group.backend.dto.UpdateLobbySettingsRequest
 import at.se2group.backend.mapper.toDomain
 import at.se2group.backend.mapper.toEntity
 import at.se2group.backend.persistence.GameRepository
+import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.persistence.LobbyRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.Instant
+import shared.models.lobby.domain.Lobby
+import shared.models.lobby.domain.LobbyPlayer
+import shared.models.lobby.domain.LobbySettings
+import shared.models.lobby.domain.LobbyStatus
 
 /**
  * Service responsible for managing lobby lifecycle and lobby player state.
@@ -108,8 +108,7 @@ class LobbyService(
                 LobbyPlayer(
                     userId = userId,
                     displayName = request.displayName,
-                    isReady = false,
-                    joinedAt = Instant.now()
+                    isReady = false
                 )
             ),
             status = LobbyStatus.OPEN,
@@ -117,8 +116,7 @@ class LobbyService(
                 maxPlayers = request.maxPlayers,
                 isPrivate = request.isPrivate,
                 allowGuests = request.allowGuests
-            ),
-            createdAt = Instant.now()
+            )
         )
 
         // Persist first so the broadcast reflects the stored lobby state.
@@ -138,11 +136,7 @@ class LobbyService(
      * @throws NoSuchElementException if no lobby exists for the given id.
      */
     fun getLobby(lobbyId: String): Lobby {
-        return lobbyRepository.findById(lobbyId)
-            .orElseThrow {
-                NoSuchElementException("Lobby not found")
-            }
-            .toDomain()
+        return requireLobbyEntity(lobbyId).toDomain()
     }
 
     /**
@@ -160,7 +154,8 @@ class LobbyService(
      */
     @Transactional
     fun joinLobby(lobbyId: String, request: JoinLobbyRequest): Lobby {
-        val lobby = getLobby(lobbyId)
+        val lobbyEntity = requireLobbyEntity(lobbyId)
+        val lobby = lobbyEntity.toDomain()
 
         check(lobby.status == LobbyStatus.OPEN) { "Lobby is not open" }
 
@@ -172,12 +167,11 @@ class LobbyService(
             players = lobby.players + LobbyPlayer(
                 userId = request.userId,
                 displayName = request.displayName,
-                isReady = false,
-                joinedAt = Instant.now()
+                isReady = false
             )
         )
 
-        val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(updatedLobby.toEntity(lobbyEntity)).toDomain()
         lobbyBroadcastService.broadcastLobbyUpdated(saved)
         return saved
     }
@@ -200,7 +194,8 @@ class LobbyService(
      */
     @Transactional
     fun updateLobbySettings(lobbyId: String, userId: String, request: UpdateLobbySettingsRequest): Lobby {
-        val lobby = getLobby(lobbyId)
+        val lobbyEntity = requireLobbyEntity(lobbyId)
+        val lobby = lobbyEntity.toDomain()
 
         // Only the host may change shared lobby configuration.
         if (lobby.hostUserId != userId) {
@@ -221,7 +216,7 @@ class LobbyService(
             )
         )
 
-        val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(updatedLobby.toEntity(lobbyEntity)).toDomain()
         lobbyBroadcastService.broadcastLobbyUpdated(saved)
         return saved
     }
@@ -244,7 +239,8 @@ class LobbyService(
      */
     @Transactional
     fun startLobby(lobbyId: String, userId: String): Lobby {
-        val lobby = getLobby(lobbyId)
+        val lobbyEntity = requireLobbyEntity(lobbyId)
+        val lobby = lobbyEntity.toDomain()
 
         // Restrict match start to the current lobby host.
         if (lobby.hostUserId != userId) {
@@ -261,7 +257,7 @@ class LobbyService(
             status = LobbyStatus.IN_GAME
         )
 
-        val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(updatedLobby.toEntity(lobbyEntity)).toDomain()
 
         // Create the initial confirmed game state only after the lobby has been transitioned to IN_GAME.
         val gameStart = gameInitializationService.createGameFromLobby(saved)
@@ -287,7 +283,8 @@ class LobbyService(
      */
     @Transactional
     fun leaveLobby(lobbyId: String, userId: String): Lobby? {
-        val lobby = getLobby(lobbyId)
+        val lobbyEntity = requireLobbyEntity(lobbyId)
+        val lobby = lobbyEntity.toDomain()
 
         check(lobby.status == LobbyStatus.OPEN) { "Cannot leave an unopen lobby" }
 
@@ -314,7 +311,7 @@ class LobbyService(
             players = lobby.players.filter { it.userId != userId }
         )
 
-        val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(updatedLobby.toEntity(lobbyEntity)).toDomain()
         lobbyBroadcastService.broadcastLobbyUpdated(saved)
         return saved
     }
@@ -333,7 +330,8 @@ class LobbyService(
      */
     @Transactional
     fun readyLobby(lobbyId: String, userId: String): Lobby {
-        val lobby = getLobby(lobbyId)
+        val lobbyEntity = requireLobbyEntity(lobbyId)
+        val lobby = lobbyEntity.toDomain()
 
         check(lobby.status == LobbyStatus.OPEN) { "You cannot change the ready status, while lobby is not open" }
 
@@ -346,7 +344,7 @@ class LobbyService(
             }
         )
 
-        val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(updatedLobby.toEntity(lobbyEntity)).toDomain()
         lobbyBroadcastService.broadcastLobbyUpdated(saved)
         return saved
     }
@@ -365,7 +363,8 @@ class LobbyService(
      */
     @Transactional
     fun unreadyLobby(lobbyId: String, userId: String): Lobby {
-        val lobby = getLobby(lobbyId)
+        val lobbyEntity = requireLobbyEntity(lobbyId)
+        val lobby = lobbyEntity.toDomain()
 
         check(lobby.status == LobbyStatus.OPEN) { "You cannot change the ready status, while lobby is not open" }
 
@@ -377,7 +376,7 @@ class LobbyService(
                 if (it.userId == userId) it.copy(isReady = false) else it
             }
         )
-        val saved = lobbyRepository.save(updatedLobby.toEntity()).toDomain()
+        val saved = lobbyRepository.save(updatedLobby.toEntity(lobbyEntity)).toDomain()
         lobbyBroadcastService.broadcastLobbyUpdated(saved)
         return saved
     }
@@ -404,4 +403,8 @@ class LobbyService(
         lobbyRepository.deleteById(lobbyId)
         lobbyBroadcastService.broadcastLobbyDeleted(lobbyId)
     }
+
+    private fun requireLobbyEntity(lobbyId: String): LobbyEntity =
+        lobbyRepository.findById(lobbyId)
+            .orElseThrow { NoSuchElementException("Lobby not found") }
 }

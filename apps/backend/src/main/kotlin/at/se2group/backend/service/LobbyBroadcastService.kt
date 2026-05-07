@@ -1,12 +1,12 @@
 package at.se2group.backend.service
 
-import at.se2group.backend.domain.Lobby
 import at.se2group.backend.dto.LobbyDeletedEvent
 import at.se2group.backend.dto.LobbyStartedEvent
 import at.se2group.backend.dto.LobbyUpdatedEvent
 import at.se2group.backend.mapper.toResponse
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Service
+import shared.models.lobby.domain.Lobby
 
 @Service
 class LobbyBroadcastService(

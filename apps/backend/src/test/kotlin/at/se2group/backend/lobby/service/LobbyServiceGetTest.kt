@@ -1,6 +1,6 @@
 package at.se2group.backend.lobby.service
 
-import at.se2group.backend.domain.LobbyStatus
+import shared.models.lobby.domain.LobbyStatus
 import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
@@ -50,13 +50,11 @@ class LobbyServiceGetTest {
             maxPlayers = 4,
             isPrivate = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable(
                     userId = "host-1",
                     displayName = "Alice",
                     isReady = false,
-                    joinedAt = Instant.now()
                 )
             )
         )

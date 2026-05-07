@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 import at.se2group.backend.persistence.TurnDraftRepository
 import at.se2group.backend.persistence.TurnDraftEntity
+import shared.models.lobby.domain.Lobby
 
 /**
  * Service responsible for creating the initial confirmedGame state from a lobby that has already been

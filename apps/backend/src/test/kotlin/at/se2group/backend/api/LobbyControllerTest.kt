@@ -16,11 +16,10 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.delete
-import at.se2group.backend.domain.Lobby
-import at.se2group.backend.domain.LobbySettings
-import at.se2group.backend.domain.LobbyStatus
-import at.se2group.backend.domain.LobbyPlayer
-import java.time.Instant
+import shared.models.lobby.domain.Lobby
+import shared.models.lobby.domain.LobbySettings
+import shared.models.lobby.domain.LobbyStatus
+import shared.models.lobby.domain.LobbyPlayer
 import org.springframework.test.web.servlet.patch
 
 @SpringBootTest
@@ -51,8 +50,7 @@ class LobbyControllerTest {
                 LobbyPlayer(
                     userId = "user1",
                     displayName = "Stefan",
-                    isReady = false,
-                    joinedAt = Instant.now()
+                    isReady = false
                 )
             ),
             status = LobbyStatus.OPEN,
@@ -60,8 +58,7 @@ class LobbyControllerTest {
                 maxPlayers = 4,
                 isPrivate = false,
                 allowGuests = true
-            ),
-            createdAt = Instant.now()
+            )
         )
 
         `when`(lobbyService.createLobby(any(), any()))
@@ -107,16 +104,15 @@ class LobbyControllerTest {
             lobbyId = "123",
             hostUserId = "user1",
             players = listOf(
-                LobbyPlayer("user1", "Stefan", false, Instant.now()),
-                LobbyPlayer("user2", "Max", false, Instant.now())
+                LobbyPlayer("user1", "Stefan", false),
+                LobbyPlayer("user2", "Max", false)
             ),
             status = LobbyStatus.OPEN,
             settings = LobbySettings(
                 maxPlayers = 4,
                 isPrivate = false,
                 allowGuests = true
-            ),
-            createdAt = Instant.now()
+            )
         )
 
         `when`(lobbyService.joinLobby(any(), any()))
@@ -138,8 +134,7 @@ class LobbyControllerTest {
             hostUserId = "user1",
             players = emptyList(),
             status = LobbyStatus.OPEN,
-            settings = LobbySettings(4, false, true),
-            createdAt = Instant.now()
+            settings = LobbySettings(4, false, true)
         )
 
         `when`(lobbyService.getLobby(any()))
@@ -176,8 +171,7 @@ class LobbyControllerTest {
                 maxPlayers = 4,
                 isPrivate = false,
                 allowGuests = true
-            ),
-            createdAt = Instant.now()
+            )
         )
 
         `when`(lobbyService.readyLobby(any(), any()))
@@ -202,8 +196,7 @@ class LobbyControllerTest {
                 maxPlayers = 4,
                 isPrivate = false,
                 allowGuests = true
-            ),
-            createdAt = Instant.now()
+            )
         )
 
         `when`(lobbyService.unreadyLobby(any(), any()))
@@ -224,8 +217,7 @@ class LobbyControllerTest {
             hostUserId = "user1",
             players = emptyList(),
             status = LobbyStatus.IN_GAME,
-            settings = LobbySettings(4, false, true),
-            createdAt = Instant.now()
+            settings = LobbySettings(4, false, true)
         )
 
         `when`(lobbyService.startLobby(any(), any()))
@@ -254,8 +246,7 @@ class LobbyControllerTest {
             hostUserId = "user1",
             players = emptyList(),
             status = LobbyStatus.OPEN,
-            settings = LobbySettings(4, false, true),
-            createdAt = Instant.now()
+            settings = LobbySettings(4, false, true)
         )
 
         `when`(lobbyService.updateLobbySettings(any(), any(), any()))
@@ -278,8 +269,7 @@ class LobbyControllerTest {
             hostUserId = "user2",
             players = emptyList(),
             status = LobbyStatus.OPEN,
-            settings = LobbySettings(4, false, true),
-            createdAt = Instant.now()
+            settings = LobbySettings(4, false, true)
         )
 
         `when`(lobbyService.leaveLobby(any(), any()))
@@ -314,8 +304,7 @@ class LobbyControllerTest {
                 hostUserId = "user1",
                 players = emptyList(),
                 status = LobbyStatus.OPEN,
-                settings = LobbySettings(4, false, true),
-                createdAt = Instant.now()
+                settings = LobbySettings(4, false, true)
             )
         )
 
