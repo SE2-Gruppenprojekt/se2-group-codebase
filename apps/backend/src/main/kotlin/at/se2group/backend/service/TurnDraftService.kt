@@ -39,7 +39,8 @@ import org.springframework.transaction.annotation.Transactional
 class TurnDraftService(
     private val gameRepository: GameRepository,
     private val turnDraftRepository: TurnDraftRepository,
-    private val tileConservationService: TileConservationService
+    private val tileConservationService: TileConservationService,
+    private val gameBroadcastService: GameBroadcastService
 ) {
 
     /**
@@ -105,8 +106,12 @@ class TurnDraftService(
             activePlayerUserId = userId,
             candidateDraft = proposedDraft
         )
-        return turnDraftRepository.save(
+        val updatedDraft = turnDraftRepository.save(
             proposedDraft.copy(version = draftEntity.version + 1).toEntity(draftEntity)
         ).toDomain()
+
+        gameBroadcastService.broadcastDraftUpdated(updatedDraft)
+
+        return updatedDraft
     }
 }
