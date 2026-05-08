@@ -17,6 +17,7 @@ import shared.models.game.domain.TurnDraft
 import shared.models.game.event.GameDraftUpdatedEvent
 import shared.models.game.event.GameUpdatedEvent
 import shared.models.game.event.TurnChangedEvent
+import shared.models.game.event.TurnTimedOutEvent
 import java.time.Instant
 
 @ExtendWith(MockitoExtension::class)
@@ -141,6 +142,31 @@ class GameBroadcastServiceTest {
         assertEquals("turn.changed", event.type)
         assertEquals("game-1", event.gameId)
         assertEquals("user-2", event.currentTurnPlayerId)
+
+        verifyNoMoreInteractions(messagingTemplate)
+    }
+
+    @Test
+    fun `broadcastTurnTimedOut sends turn timed out event to game topic`() {
+        val service = GameBroadcastService(messagingTemplate)
+
+        val payloadCaptor = ArgumentCaptor.forClass(TurnTimedOutEvent::class.java)
+
+        service.broadcastTurnTimedOut(
+            gameId = "game-1",
+            previousTurnPlayerId = "user-1"
+        )
+
+        verify(messagingTemplate).convertAndSend(
+            org.mockito.Mockito.eq("$TOPIC_GAMES_PATH/game-1"),
+            payloadCaptor.capture()
+        )
+
+        val event = payloadCaptor.value
+
+        assertEquals("turn.timed_out", event.type)
+        assertEquals("game-1", event.gameId)
+        assertEquals("user-1", event.previousTurnPlayerId)
 
         verifyNoMoreInteractions(messagingTemplate)
     }
