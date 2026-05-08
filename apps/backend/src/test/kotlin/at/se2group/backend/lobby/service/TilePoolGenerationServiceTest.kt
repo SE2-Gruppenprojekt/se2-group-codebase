@@ -1,7 +1,7 @@
 package at.se2group.backend.service
 
-import at.se2group.backend.domain.JokerTile
-import at.se2group.backend.domain.NumberedTile
+import shared.models.game.domain.JokerTile
+import shared.models.game.domain.NumberedTile
 import shared.models.game.domain.TileColor
 import at.se2group.backend.domain.TileRules
 import org.junit.jupiter.api.Assertions.assertEquals

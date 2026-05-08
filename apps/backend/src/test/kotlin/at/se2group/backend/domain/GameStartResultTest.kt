@@ -1,4 +1,8 @@
 package at.se2group.backend.domain
+import shared.models.game.domain.ConfirmedGame
+import shared.models.game.domain.GamePlayer
+import shared.models.game.domain.NumberedTile
+import shared.models.game.domain.TurnDraft
 import shared.models.game.domain.TileColor
 import shared.models.game.domain.GameStatus
 

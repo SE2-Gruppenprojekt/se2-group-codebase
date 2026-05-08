@@ -1,12 +1,12 @@
 package at.se2group.backend.mapper
 
-import at.se2group.backend.domain.BoardSet
+import shared.models.game.domain.BoardSet
 import shared.models.game.domain.BoardSetType
-import at.se2group.backend.domain.ConfirmedGame
-import at.se2group.backend.domain.GamePlayer
+import shared.models.game.domain.ConfirmedGame
+import shared.models.game.domain.GamePlayer
 import shared.models.game.domain.GameStatus
-import at.se2group.backend.domain.JokerTile
-import at.se2group.backend.domain.NumberedTile
+import shared.models.game.domain.JokerTile
+import shared.models.game.domain.NumberedTile
 import shared.models.game.domain.TileColor
 import at.se2group.backend.persistence.BoardSetEntity
 import at.se2group.backend.persistence.GameEntity

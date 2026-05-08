@@ -1,14 +1,12 @@
 package at.se2group.backend.lobby.service
 
-import at.se2group.backend.domain.*
+import shared.models.game.domain.*
 import at.se2group.backend.service.TileConservationService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.Instant
-import shared.models.game.domain.GameStatus
-import shared.models.game.domain.TileColor
 
 class TileConservationServiceTest {
 

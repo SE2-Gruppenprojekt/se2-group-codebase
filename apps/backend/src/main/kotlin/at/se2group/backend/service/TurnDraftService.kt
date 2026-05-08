@@ -1,6 +1,6 @@
 package at.se2group.backend.service
 
-import at.se2group.backend.domain.TurnDraft
+import shared.models.game.domain.TurnDraft
 import at.se2group.backend.dto.UpdateDraftRequest
 import at.se2group.backend.mapper.toDomain
 import at.se2group.backend.mapper.toDomain as toGameDomain

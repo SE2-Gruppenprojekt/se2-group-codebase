@@ -1,5 +1,4 @@
-package at.se2group.backend.domain
-import shared.models.game.domain.GameStatus
+package shared.models.game.domain
 
 import java.time.Instant
 

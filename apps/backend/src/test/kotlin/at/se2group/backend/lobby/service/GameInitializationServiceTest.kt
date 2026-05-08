@@ -4,8 +4,8 @@ import shared.models.lobby.domain.Lobby
 import shared.models.lobby.domain.LobbyPlayer
 import shared.models.lobby.domain.LobbySettings
 import shared.models.lobby.domain.LobbyStatus
-import at.se2group.backend.domain.NumberedTile
-import at.se2group.backend.domain.Tile
+import shared.models.game.domain.NumberedTile
+import shared.models.game.domain.Tile
 import shared.models.game.domain.TileColor
 import shared.models.game.domain.GameStatus
 import org.junit.jupiter.api.Assertions.assertEquals

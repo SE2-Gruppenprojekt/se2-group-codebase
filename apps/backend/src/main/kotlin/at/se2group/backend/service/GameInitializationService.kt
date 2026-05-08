@@ -2,13 +2,13 @@ package at.se2group.backend.service
 
 import at.se2group.backend.mapper.toEmbeddable
 
-import at.se2group.backend.domain.*
+import at.se2group.backend.domain.GameStartResult
+import shared.models.game.domain.*
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 import at.se2group.backend.persistence.TurnDraftRepository
 import at.se2group.backend.persistence.TurnDraftEntity
-import shared.models.game.domain.GameStatus
 import shared.models.lobby.domain.Lobby
 
 /**
@@ -31,12 +31,6 @@ class GameInitializationService(
     private val tileShuffleService: TileShuffleService,
     private val turnDraftRepository: TurnDraftRepository
 ) {
-    companion object {
-        private const val INITIAL_HAND_SIZE = 14
-    }
-
-
-
     /**
      * Creates the initial confirmed confirmedGame state and first draft from a validated lobby.
      *

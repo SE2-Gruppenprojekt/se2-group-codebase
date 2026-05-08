@@ -1,9 +1,9 @@
 package at.se2group.backend.service
 
-import at.se2group.backend.domain.ConfirmedGame
-import at.se2group.backend.domain.TurnDraft
+import shared.models.game.domain.ConfirmedGame
+import shared.models.game.domain.TurnDraft
 import org.springframework.stereotype.Service
-import at.se2group.backend.domain.Tile
+import shared.models.game.domain.Tile
 
 /**
  * Service responsible for validating that a candidate turn draft conserves the

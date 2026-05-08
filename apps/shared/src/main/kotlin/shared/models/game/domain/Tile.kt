@@ -1,5 +1,4 @@
-package at.se2group.backend.domain
-import shared.models.game.domain.TileColor
+package shared.models.game.domain
 
 sealed interface Tile {
     val tileId: String

@@ -1,9 +1,9 @@
 package at.se2group.backend.api
 
-import at.se2group.backend.domain.ConfirmedGame
-import at.se2group.backend.domain.GamePlayer
+import shared.models.game.domain.ConfirmedGame
+import shared.models.game.domain.GamePlayer
 import shared.models.game.domain.GameStatus
-import at.se2group.backend.domain.NumberedTile
+import shared.models.game.domain.NumberedTile
 import shared.models.game.domain.TileColor
 import at.se2group.backend.service.GameService
 import at.se2group.backend.service.TurnDraftService
@@ -16,7 +16,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import java.time.Instant
-import at.se2group.backend.domain.TurnDraft
+import shared.models.game.domain.TurnDraft
 import org.springframework.test.web.servlet.put
 import org.springframework.http.MediaType
 import org.mockito.kotlin.any
