@@ -1,7 +1,9 @@
 package at.se2group.backend.mapper
 
 import shared.models.game.domain.*
-import at.se2group.backend.dto.*
+import shared.models.game.request.BoardSetRequest
+import shared.models.game.request.TileRequest
+import shared.models.game.request.UpdateDraftRequest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

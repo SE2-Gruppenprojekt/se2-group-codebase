@@ -270,6 +270,7 @@ apps/backend/src/main/kotlin/at/se2group/backend/
 │   │   ├── TurnDraftResponse.kt
 │   │   ├── UpdateDraftRequest.kt
 │   │   ├── EndTurnRequest.kt
+│   │   ├── DrawTileRequest.kt
 │   │   ├── GameDraftUpdatedEvent.kt
 │   │   ├── GameUpdatedEvent.kt
 │   │   ├── TurnChangedEvent.kt

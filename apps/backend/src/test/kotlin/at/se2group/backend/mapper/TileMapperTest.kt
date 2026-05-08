@@ -1,7 +1,7 @@
 package at.se2group.backend.mapper
 
 import shared.models.game.domain.*
-import at.se2group.backend.dto.TileRequest
+import shared.models.game.request.TileRequest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
