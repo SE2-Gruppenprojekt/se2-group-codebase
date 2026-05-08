@@ -15,6 +15,7 @@ import shared.models.game.domain.GamePlayer
 import shared.models.game.domain.GameStatus
 import shared.models.game.domain.TurnDraft
 import shared.models.game.event.GameDraftUpdatedEvent
+import shared.models.game.event.GameEndedEvent
 import shared.models.game.event.GameUpdatedEvent
 import shared.models.game.event.TurnChangedEvent
 import shared.models.game.event.TurnTimedOutEvent
@@ -167,6 +168,31 @@ class GameBroadcastServiceTest {
         assertEquals("turn.timed_out", event.type)
         assertEquals("game-1", event.gameId)
         assertEquals("user-1", event.previousTurnPlayerId)
+
+        verifyNoMoreInteractions(messagingTemplate)
+    }
+
+    @Test
+    fun `broadcastGameEnded sends game ended event to game topic`() {
+        val service = GameBroadcastService(messagingTemplate)
+
+        val payloadCaptor = ArgumentCaptor.forClass(GameEndedEvent::class.java)
+
+        service.broadcastGameEnded(
+            gameId = "game-1",
+            winnerUserId = "user-1"
+        )
+
+        verify(messagingTemplate).convertAndSend(
+            org.mockito.Mockito.eq("$TOPIC_GAMES_PATH/game-1"),
+            payloadCaptor.capture()
+        )
+
+        val event = payloadCaptor.value
+
+        assertEquals("game.ended", event.type)
+        assertEquals("game-1", event.gameId)
+        assertEquals("user-1", event.winnerUserId)
 
         verifyNoMoreInteractions(messagingTemplate)
     }
