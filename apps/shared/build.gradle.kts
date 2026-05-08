@@ -3,23 +3,13 @@ plugins {
 }
 
 java {
-    toolchain {
-        languageVersion.set(
-            JavaLanguageVersion.of(
-                libs.versions.jvmTarget.get().toInt()
-            )
-        )
+     toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
 kotlin {
-    compilerOptions {
-        jvmTarget.set(
-            org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(
-                libs.versions.jvmTarget.get()
-            )
-        )
-    }
+    jvmToolchain(21)
 }
 
 dependencies {
