@@ -8,6 +8,7 @@ import shared.models.game.domain.TurnDraft
 import shared.models.game.event.GameDraftUpdatedEvent
 import shared.models.game.event.GameUpdatedEvent
 import shared.models.game.event.TurnChangedEvent
+import shared.models.game.event.TurnTimedOutEvent
 
 @Service
 class GameBroadcastService(
@@ -46,6 +47,16 @@ class GameBroadcastService(
             TurnChangedEvent(
                 gameId = gameId,
                 currentTurnPlayerId = currentTurnPlayerId
+            )
+        )
+    }
+
+    fun broadcastTurnTimedOut(gameId: String, previousTurnPlayerId: String) {
+        messagingTemplate.convertAndSend(
+            gameTopic(gameId),
+            TurnTimedOutEvent(
+                gameId = gameId,
+                previousTurnPlayerId = previousTurnPlayerId
             )
         )
     }
