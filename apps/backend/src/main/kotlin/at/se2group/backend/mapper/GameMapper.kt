@@ -6,10 +6,10 @@ import shared.models.game.domain.GamePlayer
 import shared.models.game.domain.JokerTile
 import shared.models.game.domain.NumberedTile
 import shared.models.game.domain.Tile
-import at.se2group.backend.dto.BoardSetResponse
-import at.se2group.backend.dto.GamePlayerResponse
-import at.se2group.backend.dto.GameResponse
-import at.se2group.backend.dto.TileResponse
+import shared.models.game.response.BoardSetResponse
+import shared.models.game.response.GamePlayerResponse
+import shared.models.game.response.GameResponse
+import shared.models.game.response.TileResponse
 import at.se2group.backend.persistence.BoardSetEntity
 import at.se2group.backend.persistence.GameEntity
 import at.se2group.backend.persistence.GamePlayerEntity

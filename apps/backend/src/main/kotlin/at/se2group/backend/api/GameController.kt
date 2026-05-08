@@ -1,6 +1,6 @@
 package at.se2group.backend.api
 
-import at.se2group.backend.dto.GameResponse
+import shared.models.game.response.GameResponse
 import at.se2group.backend.mapper.toResponse
 import at.se2group.backend.service.GameService
 import at.se2group.backend.service.TurnDraftService
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import at.se2group.backend.dto.TurnDraftResponse
+import shared.models.game.response.TurnDraftResponse
 import jakarta.validation.Valid
 
 @RestController

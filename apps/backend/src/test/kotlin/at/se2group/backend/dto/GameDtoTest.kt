@@ -4,6 +4,11 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNull
+import shared.models.game.response.BoardSetResponse
+import shared.models.game.response.GamePlayerResponse
+import shared.models.game.response.GameResponse
+import shared.models.game.response.TileResponse
+import shared.models.game.response.TurnDraftResponse
 import java.time.Instant
 
 class GameDtoTest {

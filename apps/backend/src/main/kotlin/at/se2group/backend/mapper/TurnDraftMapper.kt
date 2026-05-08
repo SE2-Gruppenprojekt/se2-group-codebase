@@ -1,6 +1,7 @@
 package at.se2group.backend.mapper
 
 import shared.models.game.domain.*
+import shared.models.game.response.TurnDraftResponse
 import at.se2group.backend.dto.*
 import at.se2group.backend.persistence.TurnDraftEntity
 import at.se2group.backend.persistence.TurnDraftBoardSetEntity
