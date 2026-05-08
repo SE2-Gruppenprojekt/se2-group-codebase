@@ -10,8 +10,13 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.messaging.simp.SimpMessagingTemplate
+import shared.models.game.domain.ConfirmedGame
+import shared.models.game.domain.GamePlayer
+import shared.models.game.domain.GameStatus
 import shared.models.game.domain.TurnDraft
 import shared.models.game.event.GameDraftUpdatedEvent
+import shared.models.game.event.GameUpdatedEvent
+import java.time.Instant
 
 @ExtendWith(MockitoExtension::class)
 class GameBroadcastServiceTest {
@@ -54,6 +59,62 @@ class GameBroadcastServiceTest {
         assertEquals(3, event.draft.version)
         assertEquals(0, event.draft.draftBoard.size)
         assertEquals(0, event.draft.draftHand.size)
+
+        verifyNoMoreInteractions(messagingTemplate)
+    }
+
+    @Test
+    fun `broadcastGameUpdated sends game updated event to game topic`() {
+        val service = GameBroadcastService(messagingTemplate)
+
+        val createdAt = Instant.parse("2026-05-08T12:00:00Z")
+        val player = GamePlayer(
+            userId = "user-1",
+            displayName = "Alice",
+            turnOrder = 0,
+            rackTiles = emptyList(),
+            hasCompletedInitialMeld = false,
+            score = 0,
+            joinedAt = createdAt
+        )
+        val game = ConfirmedGame(
+            gameId = "game-1",
+            lobbyId = "lobby-1",
+            players = listOf(player),
+            boardSets = emptyList(),
+            drawPile = emptyList(),
+            currentPlayerUserId = "user-1",
+            status = GameStatus.ACTIVE,
+            createdAt = createdAt,
+            startedAt = null,
+            finishedAt = null
+        )
+
+        val payloadCaptor = ArgumentCaptor.forClass(GameUpdatedEvent::class.java)
+
+        service.broadcastGameUpdated(game)
+
+        verify(messagingTemplate).convertAndSend(
+            org.mockito.Mockito.eq("$TOPIC_GAMES_PATH/game-1"),
+            payloadCaptor.capture()
+        )
+
+        val event = payloadCaptor.value
+
+        assertEquals("game.updated", event.type)
+        assertEquals("game-1", event.gameId)
+        assertEquals("game-1", event.game.gameId)
+        assertEquals("lobby-1", event.game.lobbyId)
+        assertEquals("user-1", event.game.currentPlayerUserId)
+        assertEquals("user-1", event.game.currentTurnPlayerId)
+        assertEquals("ACTIVE", event.game.status)
+        assertEquals(1, event.game.players.size)
+        assertEquals("user-1", event.game.players.first().userId)
+        assertEquals("Alice", event.game.players.first().displayName)
+        assertEquals(0, event.game.board.size)
+        assertEquals(0, event.game.drawPile.size)
+        assertEquals(0, event.game.drawPileCount)
+        assertEquals(createdAt, event.game.createdAt)
 
         verifyNoMoreInteractions(messagingTemplate)
     }
