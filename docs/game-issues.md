@@ -1,29 +1,34 @@
 # Backend Match / Game Architecture & Business Logic - Backend Issues Split
 
+## Shared monorepo model and transport layer
+
+These issues should be implemented once in `apps/shared` and then consumed from both `apps/backend` and the frontend app. This replaces the old backend-only game domain/DTO work and the duplicated frontend model/DTO work for shared game structures.
+
+1. feat(shared)(game): add shared game enums for tile color, board set type, game status, and turn draft status
+2. feat(shared)(game): add shared tile and board set domain models
+3. feat(shared)(game): add shared game player, confirmed game, and turn draft domain models
+4. feat(shared)(game): add shared response DTOs for tile, board set, game player, confirmed game, and turn draft
+5. feat(shared)(game): add shared command/request DTOs for draft update, end turn, and draw tile flows
+6. feat(shared)(game): add shared websocket event DTOs for draft, game, turn change, timeout, and game end events
+7. feat(shared)(game): add shared API error response DTO if game endpoints should use it directly
+8. feat(shared)(game): switch backend match code to consume shared game models and DTO classes
+9. feat(shared)(game): switch frontend match code to consume shared game models and DTO classes
+
+---
+
 ## 1. Core game domain model
 
-1. feat(backend)(game): add tile color enum
-2. feat(backend)(game): add board set type enum with UNRESOLVED state
-3. feat(backend)(game): add game status enum
-4. feat(backend)(game): add turn draft status enum
-5. feat(backend)(game): add tile domain model
-6. feat(backend)(game): add board set domain model
-7. feat(backend)(game): add game player domain model
-8. feat(backend)(game): add confirmed game domain model
-9. feat(backend)(game): add turn draft domain model
+Moved to the shared monorepo model and transport layer above.
+
+The backend should consume these classes from `apps/shared` instead of redefining them locally.
 
 ---
 
 ## 2. DTO model for game and draft
 
-10. feat(backend)(game): add tile response dto
-11. feat(backend)(game): add board set response dto
-12. feat(backend)(game): add game player response dto
-13. feat(backend)(game): add confirmed game response dto
-14. feat(backend)(game): add turn draft response dto
-15. feat(backend)(game): add update draft request dto
-16. feat(backend)(game): add end turn request dto
-17. feat(backend)(game): add draw tile response dto
+Moved to the shared monorepo model and transport layer above.
+
+The backend should consume these DTO classes from `apps/shared` instead of keeping backend-only copies.
 
 ---
 
@@ -406,16 +411,15 @@
 
 A good implementation order for the backend parent issue groups is:
 
-### 1. Domain and DTO foundations
+### 1. Shared monorepo model and transport layer
 
 Start with:
 
-- Core game domain model
-- DTO model for game and draft
+- Shared monorepo model and transport layer
 
 Why first:
 
-- all later backend work depends on the basic game models and API payload shapes
+- all later backend and frontend work depends on one shared source of truth for the game domain model and transport payloads
 
 ### 2. Persistence and initialization
 
@@ -533,40 +537,24 @@ Why here:
 
 # Frontend Match / Game Architecture & Business Logic - Frontend Issues Split
 
-## 1. Core frontend model layer
+## 1. Core frontend-only model layer
 
-1. feat(frontend)(game): add tile color enum
-2. feat(frontend)(game): add board set type enum with UNRESOLVED state
-3. feat(frontend)(game): add game status enum
-4. feat(frontend)(game): add turn draft status enum
-5. feat(frontend)(game): add tile ui/data model
-6. feat(frontend)(game): add board set ui/data model
-7. feat(frontend)(game): add game player ui/data model
-8. feat(frontend)(game): add confirmed game state model
-9. feat(frontend)(game): add live turn draft state model
-10. feat(frontend)(game): add game ui state model
-11. feat(frontend)(game): add connection status model
-12. feat(frontend)(game): add local drag interaction state model
-13. feat(frontend)(game): add local board-set layout state model
-14. feat(frontend)(game): add local hand-tile layout state model
-15. feat(frontend)(game): add turn timer ui state model
+The shared game domain models and transport DTOs now belong in the shared monorepo subsection above. The frontend-only model layer should contain only local UI state and interaction state that should not be shared with the backend.
+
+1. feat(frontend)(game): add game ui state model
+2. feat(frontend)(game): add connection status model
+3. feat(frontend)(game): add local drag interaction state model
+4. feat(frontend)(game): add local board-set layout state model
+5. feat(frontend)(game): add local hand-tile layout state model
+6. feat(frontend)(game): add turn timer ui state model
 
 ---
 
 ## 2. Frontend DTOs for backend integration
 
-13. feat(frontend)(game): add tile response dto
-14. feat(frontend)(game): add board set response dto
-15. feat(frontend)(game): add game player response dto
-16. feat(frontend)(game): add confirmed game response dto
-17. feat(frontend)(game): add turn draft response dto
-18. feat(frontend)(game): add update draft request dto
-19. feat(frontend)(game): add end turn request dto
-20. feat(frontend)(game): add game draft updated event dto
-21. feat(frontend)(game): add game updated event dto
-22. feat(frontend)(game): add turn changed event dto
-23. feat(frontend)(game): add turn timed out event dto
-24. feat(frontend)(game): add game ended event dto
+Moved to the shared monorepo model and transport layer above.
+
+The frontend should consume these DTO and event payload classes from `apps/shared` instead of maintaining a separate frontend-only copy of the transport model.
 
 ---
 
@@ -1026,17 +1014,17 @@ Why here:
 
 A good implementation order for the frontend parent issue groups is:
 
-### 1. Models, DTOs, and mappers
+### 1. Shared models, frontend-only state, and mappers
 
 Start with:
 
-- Core frontend model layer
-- Frontend DTOs for backend integration
+- Shared monorepo model and transport layer
+- Core frontend-only model layer
 - Mapper layer
 
 Why first:
 
-- the UI, repository, and websocket layers all depend on stable frontend models and payload mappings
+- the frontend should first depend on the shared source-of-truth game models and DTOs, then add only its own local UI state and mapping layer on top
 
 ### 2. Communication foundations
 
