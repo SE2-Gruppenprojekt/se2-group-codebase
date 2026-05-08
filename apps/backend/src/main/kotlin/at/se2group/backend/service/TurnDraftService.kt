@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional
  * - validating that the acting user is allowed to modify that draft
  * - applying incoming draft updates from the API layer
  * - persisting the resulting updated draft state
+ * - broadcasting successful live draft updates to subscribed game clients
  *
  * Confirmed, authoritative game state is handled separately through game-level
  * services and repositories. This service only deals with the temporary live
@@ -65,7 +66,9 @@ class TurnDraftService(
      * - checks that the acting user is the owner of the draft
      * - maps the incoming [UpdateDraftRequest] into the backend domain draft model
      * - applies that state onto the existing persistence entity
-     * - saves the updated draft and returns it as a domain object
+     * - saves the updated draft
+     * - broadcasts the persisted draft update to subscribed game clients
+     * - returns the updated draft as a domain object
      *
      * This method only updates temporary live draft state. It does not validate
      * or commit a final turn result into confirmed game state.
