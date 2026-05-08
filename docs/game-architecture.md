@@ -265,16 +265,21 @@ apps/backend/src/main/kotlin/at/se2group/backend/
 │   │   ├── BoardSetType.kt
 │   │   ├── GameStatus.kt
 │   │   └── TurnDraftStatus.kt
-│   ├── dto/
-│   │   ├── GameResponse.kt
-│   │   ├── TurnDraftResponse.kt
-│   │   ├── UpdateDraftRequest.kt
-│   │   ├── EndTurnRequest.kt
-│   │   ├── DrawTileRequest.kt
-│   │   ├── GameDraftUpdatedEvent.kt
-│   │   ├── GameUpdatedEvent.kt
-│   │   ├── TurnChangedEvent.kt
-│   │   └── GameEndedEvent.kt
+│   ├── shared/
+│   │   └── models/game/
+│   │       ├── request/
+│   │       │   ├── UpdateDraftRequest.kt
+│   │       │   ├── EndTurnRequest.kt
+│   │       │   └── DrawTileRequest.kt
+│   │       ├── response/
+│   │       │   ├── GameResponse.kt
+│   │       │   └── TurnDraftResponse.kt
+│   │       └── event/
+│   │           ├── GameDraftUpdatedEvent.kt
+│   │           ├── GameUpdatedEvent.kt
+│   │           ├── TurnChangedEvent.kt
+│   │           ├── TurnTimedOutEvent.kt
+│   │           └── GameEndedEvent.kt
 │   ├── mapper/
 │   │   ├── GameMapper.kt
 │   │   └── TurnDraftMapper.kt
