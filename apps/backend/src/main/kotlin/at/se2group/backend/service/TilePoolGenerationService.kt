@@ -3,6 +3,7 @@ package at.se2group.backend.service
 import at.se2group.backend.domain.*
 import org.springframework.stereotype.Service
 import java.util.UUID
+import shared.models.game.domain.TileColor
 
 /**
  * Service responsible for creating the full initial Rummikub tile pool.

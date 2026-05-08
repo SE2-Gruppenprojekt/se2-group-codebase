@@ -1,4 +1,5 @@
 package at.se2group.backend.domain
+import shared.models.game.domain.BoardSetType
 
 data class BoardSet(
     val boardSetId: String,

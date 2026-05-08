@@ -3,7 +3,7 @@ package at.se2group.backend.lobby.service
 import at.se2group.backend.domain.ConfirmedGame
 import at.se2group.backend.domain.GamePlayer
 import at.se2group.backend.domain.GameStartResult
-import at.se2group.backend.domain.GameStatus
+import shared.models.game.domain.GameStatus
 import at.se2group.backend.persistence.LobbyEntity
 import shared.models.lobby.domain.LobbyStatus
 import at.se2group.backend.domain.TurnDraft

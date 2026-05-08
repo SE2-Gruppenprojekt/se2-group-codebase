@@ -6,6 +6,8 @@ import at.se2group.backend.persistence.TurnDraftBoardSetEntity
 import at.se2group.backend.persistence.TileEmbeddable
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import shared.models.game.domain.BoardSetType
+import shared.models.game.domain.TileColor
 
 class TurnDraftEntityMapperTest {
 

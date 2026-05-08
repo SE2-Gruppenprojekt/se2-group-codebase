@@ -2,9 +2,9 @@ package at.se2group.backend.api
 
 import at.se2group.backend.domain.ConfirmedGame
 import at.se2group.backend.domain.GamePlayer
-import at.se2group.backend.domain.GameStatus
+import shared.models.game.domain.GameStatus
 import at.se2group.backend.domain.NumberedTile
-import at.se2group.backend.domain.TileColor
+import shared.models.game.domain.TileColor
 import at.se2group.backend.service.GameService
 import at.se2group.backend.service.TurnDraftService
 import org.junit.jupiter.api.Test

@@ -1,4 +1,6 @@
 package at.se2group.backend.domain
+import shared.models.game.domain.TileColor
+import shared.models.game.domain.TurnDraftStatus
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*

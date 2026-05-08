@@ -3,11 +3,11 @@ package at.se2group.backend.game.service
 import at.se2group.backend.domain.BoardSet
 import at.se2group.backend.domain.ConfirmedGame
 import at.se2group.backend.domain.GamePlayer
-import at.se2group.backend.domain.GameStatus
+import shared.models.game.domain.GameStatus
 import at.se2group.backend.domain.JokerTile
 import at.se2group.backend.domain.NumberedTile
 import at.se2group.backend.domain.Tile
-import at.se2group.backend.domain.TileColor
+import shared.models.game.domain.TileColor
 import at.se2group.backend.domain.TurnDraft
 import at.se2group.backend.service.TileConservationService
 import org.junit.jupiter.api.Test

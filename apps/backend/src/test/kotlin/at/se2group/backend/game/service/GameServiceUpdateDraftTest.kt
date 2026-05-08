@@ -1,6 +1,6 @@
 package at.se2group.backend.game.service
 
-import at.se2group.backend.domain.GameStatus
+import shared.models.game.domain.GameStatus
 import at.se2group.backend.dto.UpdateDraftRequest
 import at.se2group.backend.persistence.*
 import at.se2group.backend.service.TurnDraftService

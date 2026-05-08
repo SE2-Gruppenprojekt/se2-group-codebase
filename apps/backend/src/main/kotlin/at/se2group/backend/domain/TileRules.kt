@@ -1,4 +1,5 @@
 package at.se2group.backend.domain
+import shared.models.game.domain.TileColor
 
 object TileRules {
     const val NUMBERED_TILE_COPY_COUNT = 2

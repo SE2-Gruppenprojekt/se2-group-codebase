@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.Instant
+import shared.models.game.domain.GameStatus
+import shared.models.game.domain.TileColor
 
 class TileConservationServiceTest {
 
