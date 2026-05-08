@@ -3,6 +3,7 @@ package at.se2group.backend.lobby.service
 import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.GamePlayer
 import at.se2group.backend.domain.GameStartResult
+import at.se2group.backend.persistence.GameEntity
 import shared.models.game.domain.GameStatus
 import at.se2group.backend.persistence.LobbyEntity
 import shared.models.lobby.domain.LobbyStatus
@@ -10,6 +11,7 @@ import shared.models.game.domain.TurnDraft
 import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
+import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.service.GameInitializationService
 import at.se2group.backend.service.LobbyService
@@ -42,6 +44,9 @@ class LobbyServiceStartTest {
 
     @Mock
     lateinit var gameRepository: GameRepository
+
+    @Mock
+    lateinit var gameBroadcastService: GameBroadcastService
 
     @InjectMocks
     lateinit var lobbyService: LobbyService
@@ -93,6 +98,8 @@ class LobbyServiceStartTest {
                 )
             )
 
+        `when`(gameRepository.save(any<GameEntity>()))
+            .thenAnswer { it.arguments[0] as GameEntity }
 
         val result = lobbyService.startLobby("lobby-1", "host-1")
 
@@ -113,6 +120,7 @@ class LobbyServiceStartTest {
         verify(gameInitializationService).createGameFromLobby(result)
         verify(lobbyBroadcastService).broadcastLobbyStarted(result.lobbyId, "game-123")
         verify(gameRepository).save(any())
+        verify(gameBroadcastService).broadcastGameUpdated(any())
     }
 
     @Test
@@ -140,6 +148,7 @@ class LobbyServiceStartTest {
         verify(lobbyRepository, never()).save(any())
         verifyNoInteractions(lobbyBroadcastService)
         verifyNoInteractions(gameRepository)
+        verifyNoInteractions(gameBroadcastService)
     }
 
     @Test
@@ -167,6 +176,7 @@ class LobbyServiceStartTest {
         verify(lobbyRepository, never()).save(any())
         verifyNoInteractions(lobbyBroadcastService)
         verifyNoInteractions(gameRepository)
+        verifyNoInteractions(gameBroadcastService)
     }
 
     @Test
@@ -194,6 +204,7 @@ class LobbyServiceStartTest {
         verify(lobbyRepository, never()).save(any())
         verifyNoInteractions(lobbyBroadcastService)
         verifyNoInteractions(gameRepository)
+        verifyNoInteractions(gameBroadcastService)
     }
 
     @Test
@@ -222,6 +233,7 @@ class LobbyServiceStartTest {
         verify(lobbyRepository, never()).save(any())
         verifyNoInteractions(lobbyBroadcastService)
         verifyNoInteractions(gameRepository)
+        verifyNoInteractions(gameBroadcastService)
     }
 
 }

@@ -52,7 +52,8 @@ class LobbyService(
     private val lobbyRepository: LobbyRepository,
     private val lobbyBroadcastService: LobbyBroadcastService,
     private val gameInitializationService: GameInitializationService,
-    private val gameRepository: GameRepository) {
+    private val gameRepository: GameRepository,
+    private val gameBroadcastService: GameBroadcastService) {
 
     /**
      * Internal constants used by [LobbyService].
@@ -261,8 +262,10 @@ class LobbyService(
 
         // Create the initial confirmed game state only after the lobby has been transitioned to IN_GAME.
         val gameStart = gameInitializationService.createGameFromLobby(saved)
-        gameRepository.save(gameStart.confirmedGame.toEntity())
-        lobbyBroadcastService.broadcastLobbyStarted(saved.lobbyId, gameStart.confirmedGame.gameId)
+        val savedGame = gameRepository.save(gameStart.confirmedGame.toEntity()).toDomain()
+
+        gameBroadcastService.broadcastGameUpdated(savedGame)
+        lobbyBroadcastService.broadcastLobbyStarted(saved.lobbyId, savedGame.gameId)
         return saved
     }
 

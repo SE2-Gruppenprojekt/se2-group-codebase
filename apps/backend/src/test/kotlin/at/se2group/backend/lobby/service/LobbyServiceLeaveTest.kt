@@ -5,6 +5,7 @@ import shared.models.lobby.domain.LobbyStatus
 import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
+import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.service.GameInitializationService
 import at.se2group.backend.service.LobbyService
@@ -39,6 +40,9 @@ class LobbyServiceLeaveTest {
 
     @Mock
     lateinit var gameRepository: GameRepository
+
+    @Mock
+    lateinit var gameBroadcastService: GameBroadcastService
 
     @InjectMocks
     lateinit var lobbyService: LobbyService

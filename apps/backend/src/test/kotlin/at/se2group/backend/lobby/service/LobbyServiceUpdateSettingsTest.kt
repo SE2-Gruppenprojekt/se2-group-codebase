@@ -7,6 +7,7 @@ import at.se2group.backend.persistence.LobbyRepository
 import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.dto.UpdateLobbySettingsRequest
 import at.se2group.backend.persistence.GameRepository
+import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.GameInitializationService
 import at.se2group.backend.service.LobbyService
 import org.junit.jupiter.api.extension.ExtendWith
@@ -39,6 +40,9 @@ class LobbyServiceUpdateSettingsTest {
 
     @Mock
     lateinit var gameRepository: GameRepository
+
+    @Mock
+    lateinit var gameBroadcastService: GameBroadcastService
 
     @InjectMocks
     lateinit var lobbyService: LobbyService

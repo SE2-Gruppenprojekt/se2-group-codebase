@@ -5,6 +5,7 @@ import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
+import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.service.GameInitializationService
 import at.se2group.backend.service.LobbyService
@@ -37,6 +38,9 @@ class LobbyServiceDeleteTest {
 
     @Mock
     lateinit var gameRepository: GameRepository
+
+    @Mock
+    lateinit var gameBroadcastService: GameBroadcastService
 
     @InjectMocks
     lateinit var lobbyService: LobbyService
