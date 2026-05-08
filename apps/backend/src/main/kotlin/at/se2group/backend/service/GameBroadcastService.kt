@@ -7,6 +7,7 @@ import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.TurnDraft
 import shared.models.game.event.GameDraftUpdatedEvent
 import shared.models.game.event.GameUpdatedEvent
+import shared.models.game.event.TurnChangedEvent
 
 @Service
 class GameBroadcastService(
@@ -35,6 +36,16 @@ class GameBroadcastService(
             GameUpdatedEvent(
                 gameId = game.gameId,
                 game = game.toResponse()
+            )
+        )
+    }
+
+    fun broadcastTurnChanged(gameId: String, currentTurnPlayerId: String) {
+        messagingTemplate.convertAndSend(
+            gameTopic(gameId),
+            TurnChangedEvent(
+                gameId = gameId,
+                currentTurnPlayerId = currentTurnPlayerId
             )
         )
     }
