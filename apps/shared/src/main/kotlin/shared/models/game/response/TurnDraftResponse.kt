@@ -1,4 +1,4 @@
-package at.se2group.backend.dto
+package shared.models.game.response
 
 data class TurnDraftResponse(
     val gameId: String,

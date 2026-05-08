@@ -1,4 +1,4 @@
-package at.se2group.backend.dto
+package shared.models.game.response
 
 import java.time.Instant
 

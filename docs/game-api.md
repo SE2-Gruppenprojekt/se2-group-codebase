@@ -674,13 +674,17 @@ Used when the player cannot or chooses not to play tiles.
 
 ### Request type
 
-Can be either empty or use a small request DTO like:
+`DrawTileRequest`
 
 ```json
 {
     "playerId": "player-1"
 }
 ```
+
+Fields:
+
+- `playerId: String`
 
 ### Response type
 

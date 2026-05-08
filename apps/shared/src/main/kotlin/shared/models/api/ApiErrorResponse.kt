@@ -1,4 +1,4 @@
-package at.se2group.backend.dto
+package shared.models.api
 
 data class ApiErrorResponse(
     val errorCode: String,

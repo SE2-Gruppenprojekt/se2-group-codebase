@@ -1,4 +1,4 @@
-package at.se2group.backend.domain
+package shared.models.game.domain
 
 data class BoardSet(
     val boardSetId: String,

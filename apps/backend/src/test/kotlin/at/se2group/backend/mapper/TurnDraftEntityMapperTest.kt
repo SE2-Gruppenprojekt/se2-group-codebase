@@ -1,6 +1,6 @@
 package at.se2group.backend.mapper
 
-import at.se2group.backend.domain.*
+import shared.models.game.domain.*
 import at.se2group.backend.persistence.TurnDraftEntity
 import at.se2group.backend.persistence.TurnDraftBoardSetEntity
 import at.se2group.backend.persistence.TileEmbeddable

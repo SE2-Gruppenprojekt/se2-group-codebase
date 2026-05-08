@@ -1,12 +1,12 @@
 package at.se2group.backend.lobby.service
 
-import at.se2group.backend.domain.ConfirmedGame
-import at.se2group.backend.domain.GamePlayer
+import shared.models.game.domain.ConfirmedGame
+import shared.models.game.domain.GamePlayer
 import at.se2group.backend.domain.GameStartResult
-import at.se2group.backend.domain.GameStatus
+import shared.models.game.domain.GameStatus
 import at.se2group.backend.persistence.LobbyEntity
-import at.se2group.backend.domain.LobbyStatus
-import at.se2group.backend.domain.TurnDraft
+import shared.models.lobby.domain.LobbyStatus
+import shared.models.game.domain.TurnDraft
 import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
@@ -61,7 +61,6 @@ class LobbyServiceStartTest {
             maxPlayers = 4,
             isPrivate = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable("host-1", "Anna", true, Instant.now()),
                 LobbyPlayerEmbeddable("player-2", "Marco", true, Instant.now()),
@@ -125,7 +124,6 @@ class LobbyServiceStartTest {
             maxPlayers = 4,
             isPrivate = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable("host-1", "Anna", true, Instant.now()),
                 LobbyPlayerEmbeddable("player-2", "Marco", true, Instant.now())
@@ -153,7 +151,6 @@ class LobbyServiceStartTest {
             maxPlayers = 4,
             isPrivate = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable("host-1", "Anna", true, Instant.now()),
                 LobbyPlayerEmbeddable("player-2", "Marco", true, Instant.now())
@@ -181,7 +178,6 @@ class LobbyServiceStartTest {
             maxPlayers = 4,
             isPrivate = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable("host-1", "Anna", true, Instant.now())
             )
@@ -209,7 +205,6 @@ class LobbyServiceStartTest {
             maxPlayers = 4,
             isPrivate = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable("host-1", "Anna", true, Instant.now()),
                 LobbyPlayerEmbeddable("player-2", "Marco", false, Instant.now()),

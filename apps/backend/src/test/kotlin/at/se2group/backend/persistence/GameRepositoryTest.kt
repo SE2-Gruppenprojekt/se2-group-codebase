@@ -1,8 +1,8 @@
 package at.se2group.backend.persistence
 
-import at.se2group.backend.domain.BoardSetType
-import at.se2group.backend.domain.GameStatus
-import at.se2group.backend.domain.TileColor
+import shared.models.game.domain.BoardSetType
+import shared.models.game.domain.GameStatus
+import shared.models.game.domain.TileColor
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue

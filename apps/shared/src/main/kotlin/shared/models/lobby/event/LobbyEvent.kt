@@ -1,4 +1,4 @@
-package at.aau.serg.android.core.network.lobby
+package shared.models.lobby.event
 
 sealed interface LobbyEvent {
     data class Updated(val payload: LobbyUpdatedPayload) : LobbyEvent

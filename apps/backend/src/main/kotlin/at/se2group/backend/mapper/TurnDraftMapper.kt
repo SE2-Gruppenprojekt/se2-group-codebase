@@ -1,6 +1,10 @@
 package at.se2group.backend.mapper
 
-import at.se2group.backend.domain.*
+import shared.models.game.domain.*
+import shared.models.game.request.BoardSetRequest
+import shared.models.game.request.TileRequest
+import shared.models.game.request.UpdateDraftRequest
+import shared.models.game.response.TurnDraftResponse
 import at.se2group.backend.dto.*
 import at.se2group.backend.persistence.TurnDraftEntity
 import at.se2group.backend.persistence.TurnDraftBoardSetEntity
@@ -27,8 +31,8 @@ fun TileRequest.toTileDomain(): Tile {
     return if (joker) {
         JokerTile(tileId, TileColor.valueOf(color))
     } else {
-        require(number != null) { "Number required for non-joker" }
-        NumberedTile(tileId, TileColor.valueOf(color), number)
+        val tileNumber = number ?: throw IllegalArgumentException("Number required for non-joker")
+        NumberedTile(tileId, TileColor.valueOf(color), tileNumber)
     }
 }
 
