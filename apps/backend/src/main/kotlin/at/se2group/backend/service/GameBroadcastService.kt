@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service
 import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.TurnDraft
 import shared.models.game.event.GameDraftUpdatedEvent
+import shared.models.game.event.GameEndedEvent
 import shared.models.game.event.GameUpdatedEvent
 import shared.models.game.event.TurnChangedEvent
 import shared.models.game.event.TurnTimedOutEvent
@@ -57,6 +58,16 @@ class GameBroadcastService(
             TurnTimedOutEvent(
                 gameId = gameId,
                 previousTurnPlayerId = previousTurnPlayerId
+            )
+        )
+    }
+
+    fun broadcastGameEnded(gameId: String, winnerUserId: String) {
+        messagingTemplate.convertAndSend(
+            gameTopic(gameId),
+            GameEndedEvent(
+                gameId = gameId,
+                winnerUserId = winnerUserId
             )
         )
     }
