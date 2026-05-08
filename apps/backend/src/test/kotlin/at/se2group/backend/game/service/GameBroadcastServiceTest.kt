@@ -16,6 +16,7 @@ import shared.models.game.domain.GameStatus
 import shared.models.game.domain.TurnDraft
 import shared.models.game.event.GameDraftUpdatedEvent
 import shared.models.game.event.GameUpdatedEvent
+import shared.models.game.event.TurnChangedEvent
 import java.time.Instant
 
 @ExtendWith(MockitoExtension::class)
@@ -115,6 +116,31 @@ class GameBroadcastServiceTest {
         assertEquals(0, event.game.drawPile.size)
         assertEquals(0, event.game.drawPileCount)
         assertEquals(createdAt, event.game.createdAt)
+
+        verifyNoMoreInteractions(messagingTemplate)
+    }
+
+    @Test
+    fun `broadcastTurnChanged sends turn changed event to game topic`() {
+        val service = GameBroadcastService(messagingTemplate)
+
+        val payloadCaptor = ArgumentCaptor.forClass(TurnChangedEvent::class.java)
+
+        service.broadcastTurnChanged(
+            gameId = "game-1",
+            currentTurnPlayerId = "user-2"
+        )
+
+        verify(messagingTemplate).convertAndSend(
+            org.mockito.Mockito.eq("$TOPIC_GAMES_PATH/game-1"),
+            payloadCaptor.capture()
+        )
+
+        val event = payloadCaptor.value
+
+        assertEquals("turn.changed", event.type)
+        assertEquals("game-1", event.gameId)
+        assertEquals("user-2", event.currentTurnPlayerId)
 
         verifyNoMoreInteractions(messagingTemplate)
     }
