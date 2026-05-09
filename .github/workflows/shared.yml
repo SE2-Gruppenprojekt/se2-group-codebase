@@ -1,0 +1,81 @@
+name: Shared CI
+
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches: [main]
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      shared: ${{ steps.filter.outputs.shared }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            shared:
+              - 'apps/shared/**'
+              - 'gradle/**'
+              - 'gradlew'
+              - 'gradlew.bat'
+              - 'settings.gradle.kts'
+              - 'build.gradle.kts'
+              - '.github/workflows/**'
+
+  shared-build-sonar:
+    needs: changes
+    if: needs.changes.outputs.shared == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: ${{ runner.os }}-gradle
+
+      - name: Run shared tests + Sonar
+        run: ./gradlew :apps:shared:test sonar
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  shared-required:
+    name: shared-required
+    needs: [changes, shared-build-sonar]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pass when shared not affected
+        if: needs.changes.outputs.shared != 'true'
+        run: echo "No shared-related changes."
+
+      - name: Fail if shared job failed
+        if: needs.changes.outputs.shared == 'true' && needs.shared-build-sonar.result != 'success'
+        run: exit 1
+
+      - name: Pass if shared job succeeded
+        if: needs.changes.outputs.shared == 'true' && needs.shared-build-sonar.result == 'success'
+        run: echo "Shared checks passed."

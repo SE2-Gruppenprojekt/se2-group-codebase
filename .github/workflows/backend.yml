@@ -1,0 +1,85 @@
+name: Backend CI
+
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches: [main]
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'apps/backend/**'
+              - 'apps/shared/**'
+              - 'gradle/**'
+              - 'gradlew'
+              - 'gradlew.bat'
+              - 'settings.gradle.kts'
+              - 'build.gradle.kts'
+              - '.github/workflows/**'
+
+  backend-build-sonar:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: ${{ runner.os }}-gradle
+
+      - name: Build backend tests and coverage
+        run: ./gradlew :apps:backend:test :apps:backend:jacocoTestReport --info
+
+      - name: Analyze backend with SonarQube
+        run: ./gradlew :apps:backend:sonar -Dsonar.qualitygate.wait=true --info
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  backend-required:
+    name: backend-required
+    needs: [changes, backend-build-sonar]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pass when backend not affected
+        if: needs.changes.outputs.backend != 'true'
+        run: echo "No backend-related changes."
+
+      - name: Fail if backend job failed
+        if: needs.changes.outputs.backend == 'true' && needs.backend-build-sonar.result != 'success'
+        run: exit 1
+
+      - name: Pass if backend job succeeded
+        if: needs.changes.outputs.backend == 'true' && needs.backend-build-sonar.result == 'success'
+        run: echo "Backend checks passed."
