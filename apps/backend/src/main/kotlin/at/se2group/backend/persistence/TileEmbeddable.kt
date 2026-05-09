@@ -1,6 +1,6 @@
 package at.se2group.backend.persistence
 
-import at.se2group.backend.domain.TileColor
+import shared.models.game.domain.TileColor
 import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 import jakarta.persistence.EnumType

@@ -2,7 +2,7 @@ package at.se2group.backend.domain
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
-import java.time.Instant
+import shared.models.lobby.domain.LobbyPlayer
 
 class LobbyPlayerTest {
 
@@ -16,21 +16,16 @@ class LobbyPlayerTest {
         assertEquals("u1", player.userId)
         assertEquals("Stefan", player.displayName)
         assertFalse(player.isReady)
-        assertNotNull(player.joinedAt)
     }
 
     @Test
     fun `should allow custom values`() {
-        val time = Instant.now()
-
         val player = LobbyPlayer(
             userId = "u2",
             displayName = "Test",
-            isReady = true,
-            joinedAt = time
+            isReady = true
         )
 
         assertTrue(player.isReady)
-        assertEquals(time, player.joinedAt)
     }
 }

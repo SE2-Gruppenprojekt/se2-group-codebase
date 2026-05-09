@@ -1,10 +1,10 @@
 package at.se2group.backend.api
 
-import at.se2group.backend.dto.ApiErrorResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import shared.models.api.ApiErrorResponse
 
 @RestControllerAdvice
 class GlobalExceptionHandler {

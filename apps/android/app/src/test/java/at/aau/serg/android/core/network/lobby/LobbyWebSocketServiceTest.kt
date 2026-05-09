@@ -17,6 +17,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import shared.models.lobby.event.LobbyEvent
 
 class LobbyWebSocketServiceTest {
     private lateinit var moshi: Moshi

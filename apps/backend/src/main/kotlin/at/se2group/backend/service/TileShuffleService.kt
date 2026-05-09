@@ -1,8 +1,8 @@
 package at.se2group.backend.service
 
-import at.se2group.backend.domain.GamePlayer
+import shared.models.game.domain.GamePlayer
 import org.springframework.stereotype.Service
-import at.se2group.backend.domain.Tile
+import shared.models.game.domain.Tile
 
 
 /**

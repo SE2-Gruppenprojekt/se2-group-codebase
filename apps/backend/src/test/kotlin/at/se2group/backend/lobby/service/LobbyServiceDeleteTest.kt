@@ -1,6 +1,6 @@
 package at.se2group.backend.lobby.service
 
-import at.se2group.backend.domain.LobbyStatus
+import shared.models.lobby.domain.LobbyStatus
 import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
@@ -50,7 +50,6 @@ class LobbyServiceDeleteTest {
             maxPlayers = 4,
             isPrivate = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable("host-1", "Alice", false, Instant.now())
             )
@@ -75,7 +74,6 @@ class LobbyServiceDeleteTest {
             maxPlayers = 4,
             isPrivate = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable("host-1", "Alice", false, Instant.now()),
                 LobbyPlayerEmbeddable("player-2", "Bob", false, Instant.now())

@@ -1,6 +1,6 @@
 package at.se2group.backend.lobby.service
 
-import at.se2group.backend.domain.*
+import shared.models.game.domain.*
 import at.se2group.backend.service.TileConservationService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows

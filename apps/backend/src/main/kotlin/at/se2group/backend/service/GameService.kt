@@ -23,7 +23,7 @@ package at.se2group.backend.service
  * @property gameRepository repository used to load persisted confirmed game
  * state by its identifier.
  */
-import at.se2group.backend.domain.ConfirmedGame
+import shared.models.game.domain.ConfirmedGame
 import at.se2group.backend.mapper.toDomain
 import at.se2group.backend.persistence.GameRepository
 import org.springframework.stereotype.Service

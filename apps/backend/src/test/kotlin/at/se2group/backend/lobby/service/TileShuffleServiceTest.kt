@@ -1,9 +1,9 @@
 package at.se2group.backend.lobby.service
 
-import at.se2group.backend.domain.GamePlayer
-import at.se2group.backend.domain.NumberedTile
-import at.se2group.backend.domain.Tile
-import at.se2group.backend.domain.TileColor
+import shared.models.game.domain.GamePlayer
+import shared.models.game.domain.NumberedTile
+import shared.models.game.domain.Tile
+import shared.models.game.domain.TileColor
 import at.se2group.backend.service.TileShuffleService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertIterableEquals

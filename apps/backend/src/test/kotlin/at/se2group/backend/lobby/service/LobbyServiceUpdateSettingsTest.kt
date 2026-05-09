@@ -1,7 +1,7 @@
 package at.se2group.backend.lobby.service
 
 import at.se2group.backend.persistence.LobbyEntity
-import at.se2group.backend.domain.LobbyStatus
+import shared.models.lobby.domain.LobbyStatus
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
 import at.se2group.backend.service.LobbyBroadcastService
@@ -59,7 +59,6 @@ class LobbyServiceUpdateSettingsTest {
             maxPlayers = 4,
             isPrivate  = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable("host-1", "Anna", false, Instant.now())
             )
@@ -100,7 +99,6 @@ class LobbyServiceUpdateSettingsTest {
             maxPlayers = 4,
             isPrivate  = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable("host-1", "Anna", false, Instant.now()),
                 LobbyPlayerEmbeddable("player-2", "Marco", false, Instant.now())
@@ -128,7 +126,6 @@ class LobbyServiceUpdateSettingsTest {
             maxPlayers = 4,
             isPrivate  = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable("host-1", "Anna", false, Instant.now()),
 
@@ -156,7 +153,6 @@ class LobbyServiceUpdateSettingsTest {
             maxPlayers = 4,
             isPrivate  = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable("host-1", "Anna", false, Instant.now()),
                 LobbyPlayerEmbeddable("player-2", "Marco", false, Instant.now()),

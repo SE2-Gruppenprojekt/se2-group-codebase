@@ -2,6 +2,7 @@ package at.se2group.backend.domain
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
+import shared.models.lobby.domain.LobbySettings
 
 class LobbySettingsTest {
 
