@@ -1,16 +1,18 @@
 package at.aau.serg.android.core.network
 
 object WebConfig {
-    // Emulator
-    //private const val HOST = "10.0.2.2:8080"
-    // Lokale TestAdresse
+    // Backup example for local testing
     //private const val HOST = "192.168.178.41:8080"
-    private const val HOST = "10.0.0.20:8080"
-    private const val HTTP = "http://"
-    private const val WS = "ws://"
+    //const val API_URL = "$HTTP$HOST/api/"
 
-    const val API_URL = "$HTTP$HOST/api/"
-    const val SOCKET_URL = "$WS$HOST/ws"
+    private const val HOST = "se2-group-codebase.onrender.com"
+    private const val HTTP = "http://"
+    private const val HTTPS = "https://"
+    private const val WS = "ws://"
+    private const val WSS = "wss://"
+
+    const val API_URL = "$HTTPS$HOST/api/"
+    const val SOCKET_URL = "$WSS$HOST/ws"
 
     object Socket {
         // Number of retries before connection to server is assumed as lost
