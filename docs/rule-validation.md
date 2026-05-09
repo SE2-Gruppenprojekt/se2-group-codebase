@@ -194,7 +194,7 @@ This avoids a separate classification pass that duplicates much of the same reas
 
 ---
 
-# `GroupValidationService`
+### `GroupValidationService`
 
 A group usually means:
 
