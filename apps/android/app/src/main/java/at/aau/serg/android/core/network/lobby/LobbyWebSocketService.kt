@@ -3,9 +3,9 @@ package at.aau.serg.android.core.network.lobby
 import at.aau.serg.android.core.network.WebConfig
 import at.aau.serg.android.core.network.WebSocketManager
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapNotNull
-import shared.models.EventPayload
 import shared.models.lobby.event.LobbyDeletedPayload
 import shared.models.lobby.event.LobbyEvent
 import shared.models.lobby.event.LobbyStartedPayload
@@ -15,7 +15,13 @@ class LobbyWebSocketService(
     private val moshi: Moshi,
     private val ws: WebSocketManager = WebSocketManager()
 ) {
-    private val typeAdapter = moshi.adapter(EventPayload::class.java)
+    private val messageTypeAdapter = moshi.adapter<Map<String, Any?>>(
+        Types.newParameterizedType(
+            Map::class.java,
+            String::class.java,
+            Any::class.java
+        )
+    )
 
     suspend fun subscribe(lobbyId: String): Flow<LobbyEvent> {
         return ws
@@ -24,7 +30,9 @@ class LobbyWebSocketService(
     }
 
     private fun parseLobbyEvent(message: String): LobbyEvent? {
-        return when (typeAdapter.fromJson(message)?.type) {
+        val type = messageTypeAdapter.fromJson(message)?.get("type") as? String
+
+        return when (type) {
             LobbyUpdatedPayload.TYPE ->
                 moshi.adapter(LobbyUpdatedPayload::class.java)
                     .fromJson(message)
