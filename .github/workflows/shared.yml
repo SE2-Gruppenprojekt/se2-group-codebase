@@ -41,7 +41,7 @@ jobs:
           java-version: 21
 
       - name: Run shared tests + Sonar
-        run: ./gradlew :apps:shared:test :apps:shared:sonar
+        run: ./gradlew :apps:shared:test sonar
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
