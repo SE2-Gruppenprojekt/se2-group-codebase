@@ -211,6 +211,35 @@ class WebSocketManagerTest {
     }
 
     @Test
+    fun reconnect_emitsNewErrorForEachFailedAttempt() = runTest {
+        val provider = FakeClientProvider(fakeSession)
+        val manager = WebSocketManager(
+            clientProvider = provider,
+            scope = backgroundScope,
+            autoReconnect = true
+        )
+
+        manager.ensureConnected()
+
+        manager.errors.test {
+            provider.failNextConnect = true
+            manager.simulateSessionLossForTest()
+
+            val error1 = awaitItem()
+            assertTrue(error1 is AppError.WebSocket.ConnectionFailed)
+
+            provider.failNextConnect = true
+            advanceTimeBy(WebConfig.Socket.MAX_ATTEMPT_DELAY)
+
+            val error2 = awaitItem()
+            assertTrue(error2 is AppError.WebSocket.ConnectionFailed)
+
+            assertTrue(error1.message != error2.message)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun getIdleTimerFlow_onTimeout_emitsUnit() = runTest {
         val provider = FakeClientProvider(fakeSession)
         val manager = WebSocketManager(

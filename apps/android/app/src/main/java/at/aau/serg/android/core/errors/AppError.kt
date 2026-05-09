@@ -15,11 +15,10 @@ sealed class AppError {
 
     // WebSocket / STOMP
     sealed class WebSocket : AppError() {
-        data object ConnectionFailed : WebSocket()
+        data class ConnectionFailed(val message: String) : WebSocket()
         data object Disconnected : WebSocket()
         data object SubscriptionFailed : WebSocket()
         data object ProtocolError : WebSocket()
-        data class Serialization(val message: String) : WebSocket()
         data class Unknown(val message: String) : WebSocket()
     }
 
@@ -34,7 +33,6 @@ sealed class AppError {
             Rest.NotFound,
             Rest.Conflict,
             Unknown,
-            WebSocket.ConnectionFailed,
             WebSocket.Disconnected,
             WebSocket.SubscriptionFailed,
             WebSocket.ProtocolError

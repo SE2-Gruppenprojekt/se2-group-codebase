@@ -200,7 +200,7 @@ class WebSocketManager(
                 ensureConnected()
                 return
             } catch (e: Exception) {
-                handleSessionFailure(e, AppError.WebSocket.ConnectionFailed)
+                handleSessionFailure(e, AppError.WebSocket.ConnectionFailed("Reconnect failed (attempt: $attempt)."))
                 val delayMs = minOf(
                     WebConfig.Socket.MAX_ATTEMPT_DELAY,
                     WebConfig.Socket.ATTEMPT_DELAY * attempt

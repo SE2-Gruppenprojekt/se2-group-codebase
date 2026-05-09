@@ -18,10 +18,9 @@ object ErrorUiMapper {
             AppError.Unknown -> "Unexpected error"
 
             // WebSocket
-            AppError.WebSocket.ConnectionFailed -> "WebSocket connection failed"
+            is AppError.WebSocket.ConnectionFailed -> error.message
             AppError.WebSocket.Disconnected -> "WebSocket disconnected"
             AppError.WebSocket.ProtocolError -> "WebSocket protocol error"
-            is AppError.WebSocket.Serialization -> "WebSocket serialization error: ${error.message}"
             AppError.WebSocket.SubscriptionFailed -> "WebSocket subscription failed"
             is AppError.WebSocket.Unknown -> "WebSocket error: ${error.message}"
         }
