@@ -1,23 +1,42 @@
 package at.aau.serg.android.core.errors
 
 sealed class AppError {
-    data object Network : AppError()
-    data object Server : AppError()
-    data object BadRequest : AppError()
-    data object Forbidden : AppError()
-    data object NotFound : AppError()
-    data object Conflict : AppError()
-    data class Api(val message: String) : AppError()
+
+    // REST / HTTP
+    sealed class Rest : AppError() {
+        data object Network : Rest()
+        data object Server : Rest()
+        data object BadRequest : Rest()
+        data object Forbidden : Rest()
+        data object NotFound : Rest()
+        data object Conflict : Rest()
+        data class Api(val message: String) : Rest()
+    }
+
+    // WebSocket / STOMP
+    sealed class WebSocket : AppError() {
+        data class ConnectionFailed(val message: String) : WebSocket()
+        data object Disconnected : WebSocket()
+        data object SubscriptionFailed : WebSocket()
+        data object ProtocolError : WebSocket()
+        data class Unknown(val message: String) : WebSocket()
+    }
+
     data object Unknown : AppError()
+
     companion object {
         fun allStaticErrors(): List<AppError> = listOf(
-            Network,
-            Server,
-            BadRequest,
-            Forbidden,
-            NotFound,
-            Conflict,
-            Unknown
+            Rest.Network,
+            Rest.Server,
+            Rest.BadRequest,
+            Rest.Forbidden,
+            Rest.NotFound,
+            Rest.Conflict,
+            Unknown,
+            WebSocket.Disconnected,
+            WebSocket.SubscriptionFailed,
+            WebSocket.ProtocolError
         )
     }
 }
+

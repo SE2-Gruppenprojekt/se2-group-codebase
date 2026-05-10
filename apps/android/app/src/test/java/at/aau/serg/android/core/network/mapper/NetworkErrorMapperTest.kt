@@ -28,7 +28,7 @@ class NetworkErrorMapperTest {
     fun map_returnsNetworkError_forIOException() {
         val result = NetworkErrorMapper.map(IOException("network down"))
 
-        assertEquals(AppError.Network, result)
+        assertEquals(AppError.Rest.Network, result)
     }
 
     @Test
@@ -50,7 +50,7 @@ class NetworkErrorMapperTest {
         val ex = httpException(400, json)
         val result = NetworkErrorMapper.map(ex)
 
-        assertEquals(AppError.Api("Something bad happened"), result)
+        assertEquals(AppError.Rest.Api("Something bad happened"), result)
     }
 
     @Test
@@ -65,7 +65,7 @@ class NetworkErrorMapperTest {
         val ex = httpException(400, json)
         val result = NetworkErrorMapper.map(ex)
 
-        assertEquals(AppError.BadRequest, result)
+        assertEquals(AppError.Rest.BadRequest, result)
     }
 
     @Test
@@ -80,7 +80,7 @@ class NetworkErrorMapperTest {
         val ex = httpException(404, json)
         val result = NetworkErrorMapper.map(ex)
 
-        assertEquals(AppError.NotFound, result)
+        assertEquals(AppError.Rest.NotFound, result)
     }
 
 
@@ -89,7 +89,7 @@ class NetworkErrorMapperTest {
         val ex = httpException(403, null)
         val result = NetworkErrorMapper.map(ex)
 
-        assertEquals(AppError.Forbidden, result)
+        assertEquals(AppError.Rest.Forbidden, result)
     }
 
     @Test
@@ -97,7 +97,7 @@ class NetworkErrorMapperTest {
         val ex = httpException(409)
         val result = NetworkErrorMapper.map(ex)
 
-        assertEquals(AppError.Conflict, result)
+        assertEquals(AppError.Rest.Conflict, result)
     }
 
     @Test
@@ -105,7 +105,7 @@ class NetworkErrorMapperTest {
         val ex = httpException(500)
         val result = NetworkErrorMapper.map(ex)
 
-        assertEquals(AppError.Server, result)
+        assertEquals(AppError.Rest.Server, result)
     }
 
     @Test

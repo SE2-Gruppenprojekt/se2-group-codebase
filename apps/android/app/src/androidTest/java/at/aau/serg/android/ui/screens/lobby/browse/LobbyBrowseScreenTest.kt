@@ -186,11 +186,11 @@ class LobbyBrowseScreenTest {
     @Test
     fun errorMessage_isDisplayed() {
         setScreen(
-            loadState = LoadState.Error(AppError.Network)
+            loadState = LoadState.Error(AppError.Rest.Network)
         )
 
         composeRule
-            .onNodeWithText(ErrorUiMapper.toMessage(AppError.Network))
+            .onNodeWithText(ErrorUiMapper.toMessage(AppError.Rest.Network))
             .assertIsDisplayed()
     }
 
