@@ -1,55 +1,27 @@
 package at.aau.serg.android.ui.screens.game
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import at.aau.serg.android.ui.components.BackButton
-import at.aau.serg.android.ui.screens.game.components.TileItem
 import at.aau.serg.android.ui.screens.game.components.TileRow
 import at.aau.serg.android.ui.screens.game.components.TileRowPlaceholder
 import at.aau.serg.android.ui.theme.ThemeState
@@ -63,7 +35,6 @@ fun GameScreen(
     val dark = ThemeState.isDarkMode.value
 
     val boardBorder = if (dark) Color.White.copy(alpha = 0.2f) else Color(0xFF86EFAC)
-
     val iconBtnBg = if (dark) Color(0xFF334155) else Color(0xFFE2E8F0)
     val iconBtnTint = if (dark) Color.White else Color(0xFF475569)
 
@@ -73,6 +44,7 @@ fun GameScreen(
         Modifier
             .fillMaxSize()
             .background(if (dark) Color(0xFF0F172A) else Color(0xFFF1F5F9))
+            .testTag(GameTestTags.SCREEN)
     ) {
         Column(Modifier.fillMaxSize()) {
 
@@ -82,6 +54,7 @@ fun GameScreen(
                     .fillMaxWidth()
                     .background(if (dark) Color(0xFF1E293B) else Color.White)
                     .padding(12.dp)
+                    .testTag(GameTestTags.HEADER)
             ) {
                 BackButton(onBack = onBack)
 
@@ -116,7 +89,8 @@ fun GameScreen(
                             .padding(12.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(if (dark) Color(0xFF1E293B) else Color.White)
-                            .padding(12.dp),
+                            .padding(12.dp)
+                            .testTag(GameTestTags.BOARD),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         items(uiState.boardSets) { boardSet ->
@@ -153,6 +127,7 @@ fun GameScreen(
                             .fillMaxWidth()
                             .background(if (dark) Color(0xFF1E293B) else Color.White)
                             .padding(16.dp)
+                            .testTag(GameTestTags.RACK)
                     ) {
                         Column {
 
@@ -186,11 +161,13 @@ fun GameScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
+
                                 Button(
                                     onClick = { },
                                     modifier = Modifier
                                         .weight(1f)
-                                        .height(52.dp),
+                                        .height(52.dp)
+                                        .testTag(GameTestTags.ACTION_END_TURN),
                                     shape = RoundedCornerShape(14.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9D3CFF))
                                 ) {
@@ -205,6 +182,7 @@ fun GameScreen(
                                         .size(52.dp)
                                         .clip(RoundedCornerShape(14.dp))
                                         .background(iconBtnBg)
+                                        .testTag(GameTestTags.ACTION_ADD)
                                 ) {
                                     Icon(Icons.Filled.Add, contentDescription = "Add", tint = iconBtnTint)
                                 }
@@ -215,11 +193,11 @@ fun GameScreen(
                                         .size(52.dp)
                                         .clip(RoundedCornerShape(14.dp))
                                         .background(iconBtnBg)
+                                        .testTag(GameTestTags.ACTION_RESET)
                                 ) {
                                     Icon(Icons.Filled.Refresh, contentDescription = "Reset", tint = iconBtnTint)
                                 }
                             }
-
                         }
                     }
                 }
