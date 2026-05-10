@@ -21,7 +21,6 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
@@ -53,6 +52,11 @@ class LobbyServiceJoinTest {
     @InjectMocks
     lateinit var lobbyService: LobbyService
 
+    private fun runDeferredAction(invocation: org.mockito.invocation.InvocationOnMock) {
+        @Suppress("UNCHECKED_CAST")
+        (invocation.arguments[0] as () -> Unit).invoke()
+    }
+
     @Test
     fun `joinLobby allows a player to join an open lobby successfully`() {
         val entity = LobbyEntity(
@@ -76,15 +80,14 @@ class LobbyServiceJoinTest {
             displayName = "Bob"
         )
 
-        Mockito.`when`(lobbyRepository.findById("lobby-1"))
+        `when`(lobbyRepository.findById("lobby-1"))
             .thenReturn(Optional.of(entity))
-        Mockito.`when`(lobbyRepository.save(any(LobbyEntity::class.java)))
+        `when`(lobbyRepository.save(any(LobbyEntity::class.java)))
             .thenAnswer { it.arguments[0] as LobbyEntity }
 
         `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
             .thenAnswer {
-                val action = it.arguments[0] as () -> Unit
-                action()
+                runDeferredAction(it)
             }
 
         val result = lobbyService.joinLobby("lobby-1", request)
@@ -158,7 +161,7 @@ class LobbyServiceJoinTest {
             displayName = "Charlie"
         )
 
-        Mockito.`when`(lobbyRepository.findById("lobby-1"))
+        `when`(lobbyRepository.findById("lobby-1"))
             .thenReturn(Optional.of(entity))
 
         val exception = assertThrows<IllegalStateException> {
@@ -200,7 +203,7 @@ class LobbyServiceJoinTest {
             displayName = "Charlie"
         )
 
-        Mockito.`when`(lobbyRepository.findById("lobby-1"))
+        `when`(lobbyRepository.findById("lobby-1"))
             .thenReturn(Optional.of(entity))
 
         val exception = assertThrows<IllegalStateException> {
@@ -242,7 +245,7 @@ class LobbyServiceJoinTest {
             displayName = "Bob"
         )
 
-        Mockito.`when`(lobbyRepository.findById("lobby-1"))
+        `when`(lobbyRepository.findById("lobby-1"))
             .thenReturn(Optional.of(entity))
 
         val exception = assertThrows<IllegalStateException> {
@@ -279,9 +282,9 @@ class LobbyServiceJoinTest {
             displayName = "Bob"
         )
 
-        Mockito.`when`(lobbyRepository.findById("lobby-1"))
+        `when`(lobbyRepository.findById("lobby-1"))
             .thenReturn(Optional.of(entity))
-        Mockito.`when`(lobbyRepository.save(any(LobbyEntity::class.java)))
+        `when`(lobbyRepository.save(any(LobbyEntity::class.java)))
             .thenAnswer { it.arguments[0] as LobbyEntity }
 
         lobbyService.joinLobby("lobby-1", request)

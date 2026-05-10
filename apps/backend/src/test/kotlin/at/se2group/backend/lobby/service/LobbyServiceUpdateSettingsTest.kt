@@ -57,6 +57,10 @@ class LobbyServiceUpdateSettingsTest {
         return null as T
     }
 
+    private fun runDeferredAction(invocation: org.mockito.invocation.InvocationOnMock) {
+        @Suppress("UNCHECKED_CAST")
+        (invocation.arguments[0] as () -> Unit).invoke()
+    }
 
     @Test
     fun ` updateLobbySettings allows host to update successfully`() {
@@ -78,8 +82,7 @@ class LobbyServiceUpdateSettingsTest {
 
         `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
             .thenAnswer {
-                val action = it.arguments[0] as () -> Unit
-                action()
+                runDeferredAction(it)
             }
 
         val request = UpdateLobbySettingsRequest(maxPlayers = 3, isPrivate = true, allowGuests = false)

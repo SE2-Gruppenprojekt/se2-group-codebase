@@ -61,6 +61,11 @@ class LobbyServiceStartTest {
         return null as T
     }
 
+    private fun runDeferredAction(invocation: org.mockito.invocation.InvocationOnMock) {
+        @Suppress("UNCHECKED_CAST")
+        (invocation.arguments[0] as () -> Unit).invoke()
+    }
+
     @Test
     fun `startLobby allows host to start successfully`() {
         val entity = LobbyEntity(
@@ -107,8 +112,7 @@ class LobbyServiceStartTest {
 
         `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
             .thenAnswer {
-                val action = it.arguments[0] as () -> Unit
-                action()
+                runDeferredAction(it)
             }
 
         val result = lobbyService.startLobby("lobby-1", "host-1")

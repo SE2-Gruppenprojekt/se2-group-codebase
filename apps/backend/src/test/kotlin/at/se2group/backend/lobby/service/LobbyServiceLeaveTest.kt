@@ -57,6 +57,11 @@ class LobbyServiceLeaveTest {
         return null as T
     }
 
+    private fun runDeferredAction(invocation: org.mockito.invocation.InvocationOnMock) {
+        @Suppress("UNCHECKED_CAST")
+        (invocation.arguments[0] as () -> Unit).invoke()
+    }
+
     @Test
     fun `leaveLobby allows player to leave successfully`() {
         val entity = LobbyEntity(
@@ -78,8 +83,7 @@ class LobbyServiceLeaveTest {
 
         `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
             .thenAnswer {
-                val action = it.arguments[0] as () -> Unit
-                action()
+                runDeferredAction(it)
             }
 
         val result = lobbyService.leaveLobby("lobby-1", "player-2")
@@ -177,8 +181,7 @@ class LobbyServiceLeaveTest {
 
         `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
             .thenAnswer {
-                val action = it.arguments[0] as () -> Unit
-                action()
+                runDeferredAction(it)
             }
 
         val result = lobbyService.leaveLobby("lobby-1", "host-1")
@@ -221,8 +224,7 @@ class LobbyServiceLeaveTest {
         `when`(lobbyRepository.findById("lobby-1")).thenReturn(Optional.of(entity))
         `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
             .thenAnswer {
-                val action = it.arguments[0] as () -> Unit
-                action()
+                runDeferredAction(it)
             }
 
         val result = lobbyService.leaveLobby("lobby-1", "host-1")

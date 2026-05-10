@@ -52,6 +52,11 @@ class LobbyServiceUnreadyTest {
     @InjectMocks
     lateinit var lobbyService: LobbyService
 
+    private fun runDeferredAction(invocation: org.mockito.invocation.InvocationOnMock) {
+        @Suppress("UNCHECKED_CAST")
+        (invocation.arguments[0] as () -> Unit).invoke()
+    }
+
     @Test
     fun `unreadyLobby marks player as unready successfully`() {
         val entity = LobbyEntity(
@@ -73,8 +78,7 @@ class LobbyServiceUnreadyTest {
 
         `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
             .thenAnswer {
-                val action = it.arguments[0] as () -> Unit
-                action()
+                runDeferredAction(it)
             }
 
         val result = lobbyService.unreadyLobby("lobby-1", "player-2")
