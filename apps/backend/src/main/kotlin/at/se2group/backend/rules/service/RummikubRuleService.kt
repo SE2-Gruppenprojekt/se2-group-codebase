@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service
 import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.TurnDraft
 import shared.models.game.validation.ValidationResult
+import shared.models.game.validation.valid
 
 /**
  * Top-level orchestration entry point for backend Rummikub rule validation.
@@ -60,6 +61,6 @@ class RummikubRuleService {
         actingPlayerUserId: String,
         submittedDraft: TurnDraft
     ): ValidationResult {
-        return ValidationResult()
+        return valid()
     }
 }
