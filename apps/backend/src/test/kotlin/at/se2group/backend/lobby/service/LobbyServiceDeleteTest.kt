@@ -49,6 +49,11 @@ class LobbyServiceDeleteTest {
     @InjectMocks
     lateinit var lobbyService: LobbyService
 
+    private fun runDeferredAction(invocation: org.mockito.invocation.InvocationOnMock) {
+        @Suppress("UNCHECKED_CAST")
+        (invocation.arguments[0] as () -> Unit).invoke()
+    }
+
     @Test
     fun `deleteLobby allows host to delete lobby successfully`() {
         val entity = LobbyEntity(
@@ -67,8 +72,7 @@ class LobbyServiceDeleteTest {
 
         `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
             .thenAnswer {
-                val action = it.arguments[0] as () -> Unit
-                action()
+                runDeferredAction(it)
             }
 
         lobbyService.deleteLobby("lobby-1", "host-1")

@@ -20,10 +20,10 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import kotlin.IllegalArgumentException
 
@@ -51,6 +51,11 @@ class LobbyServiceCreateTest {
     @InjectMocks
     lateinit var lobbyService: LobbyService
 
+    private fun runDeferredAction(invocation: org.mockito.invocation.InvocationOnMock) {
+        @Suppress("UNCHECKED_CAST")
+        (invocation.arguments[0] as () -> Unit).invoke()
+    }
+
     @Test
     fun `createLobby creates a valid open lobby with host as first player`() {
         val request = CreateLobbyRequest(
@@ -60,13 +65,12 @@ class LobbyServiceCreateTest {
             allowGuests = true
         )
 
-        Mockito.`when`(lobbyRepository.save(any(LobbyEntity::class.java)))
+        `when`(lobbyRepository.save(any(LobbyEntity::class.java)))
             .thenAnswer { it.arguments[0] as LobbyEntity }
 
-        Mockito.`when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
+        `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
             .thenAnswer {
-                val action = it.arguments[0] as () -> Unit
-                action()
+                runDeferredAction(it)
             }
 
         val result = lobbyService.createLobby("host alice", request)
@@ -146,7 +150,7 @@ class LobbyServiceCreateTest {
             allowGuests = true
         )
 
-        Mockito.`when`(lobbyRepository.save(any(LobbyEntity::class.java)))
+        `when`(lobbyRepository.save(any(LobbyEntity::class.java)))
             .thenAnswer { it.arguments[0] as LobbyEntity }
 
         lobbyService.createLobby("host alice", request)
