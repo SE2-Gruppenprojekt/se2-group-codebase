@@ -5,6 +5,7 @@ import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
+import at.se2group.backend.service.AfterCommitExecutor
 import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.service.GameInitializationService
@@ -45,6 +46,9 @@ class LobbyServiceUnreadyTest {
     @Mock
     lateinit var gameBroadcastService: GameBroadcastService
 
+    @Mock
+    lateinit var afterCommitExecutor: AfterCommitExecutor
+
     @InjectMocks
     lateinit var lobbyService: LobbyService
 
@@ -66,6 +70,12 @@ class LobbyServiceUnreadyTest {
         `when`(lobbyRepository.findById("lobby-1")).thenReturn(Optional.of(entity))
         `when`(lobbyRepository.save(any(LobbyEntity::class.java)))
             .thenAnswer { it.arguments[0] as LobbyEntity }
+
+        `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
+            .thenAnswer {
+                val action = it.arguments[0] as () -> Unit
+                action()
+            }
 
         val result = lobbyService.unreadyLobby("lobby-1", "player-2")
         assertEquals("lobby-1", result.lobbyId)
@@ -97,6 +107,7 @@ class LobbyServiceUnreadyTest {
         assertFalse(saved.players.first { it.userId == "player-2" }.isReady)
         assertTrue(saved.players.first { it.userId == "host-1" }.isReady)
 
+        verify(afterCommitExecutor).execute(org.mockito.kotlin.any())
         verify(lobbyBroadcastService).broadcastLobbyUpdated(result)
     }
 

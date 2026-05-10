@@ -11,6 +11,7 @@ import shared.models.game.domain.TurnDraft
 import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
+import at.se2group.backend.service.AfterCommitExecutor
 import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.service.GameInitializationService
@@ -47,6 +48,9 @@ class LobbyServiceStartTest {
 
     @Mock
     lateinit var gameBroadcastService: GameBroadcastService
+
+    @Mock
+    lateinit var afterCommitExecutor: AfterCommitExecutor
 
     @InjectMocks
     lateinit var lobbyService: LobbyService
@@ -101,6 +105,12 @@ class LobbyServiceStartTest {
         `when`(gameRepository.save(any<GameEntity>()))
             .thenAnswer { it.arguments[0] as GameEntity }
 
+        `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
+            .thenAnswer {
+                val action = it.arguments[0] as () -> Unit
+                action()
+            }
+
         val result = lobbyService.startLobby("lobby-1", "host-1")
 
         assertEquals("lobby-1", result.lobbyId)
@@ -118,9 +128,11 @@ class LobbyServiceStartTest {
 
 
         verify(gameInitializationService).createGameFromLobby(result)
-        verify(lobbyBroadcastService).broadcastLobbyStarted(result.lobbyId, "game-123")
         verify(gameRepository).save(any())
+
+        verify(afterCommitExecutor).execute(org.mockito.kotlin.any())
         verify(gameBroadcastService).broadcastGameUpdated(any())
+        verify(lobbyBroadcastService).broadcastLobbyStarted(result.lobbyId, "game-123")
     }
 
     @Test

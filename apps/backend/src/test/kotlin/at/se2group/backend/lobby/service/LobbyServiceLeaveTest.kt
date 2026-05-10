@@ -5,6 +5,7 @@ import shared.models.lobby.domain.LobbyStatus
 import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
+import at.se2group.backend.service.AfterCommitExecutor
 import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.service.GameInitializationService
@@ -44,6 +45,9 @@ class LobbyServiceLeaveTest {
     @Mock
     lateinit var gameBroadcastService: GameBroadcastService
 
+    @Mock
+    lateinit var afterCommitExecutor: AfterCommitExecutor
+
     @InjectMocks
     lateinit var lobbyService: LobbyService
 
@@ -72,6 +76,12 @@ class LobbyServiceLeaveTest {
         `when`(lobbyRepository.save(any()))
             .thenAnswer {it.arguments[0] as LobbyEntity}
 
+        `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
+            .thenAnswer {
+                val action = it.arguments[0] as () -> Unit
+                action()
+            }
+
         val result = lobbyService.leaveLobby("lobby-1", "player-2")
 
         assertEquals("lobby-1", result!!.lobbyId)
@@ -88,7 +98,7 @@ class LobbyServiceLeaveTest {
         assertEquals(1, saved.players.size)
         assertEquals("host-1", saved.players[0].userId)
 
-
+        verify(afterCommitExecutor).execute(org.mockito.kotlin.any())
         verify(lobbyBroadcastService).broadcastLobbyUpdated(any())
     }
 
@@ -165,6 +175,12 @@ class LobbyServiceLeaveTest {
         `when`(lobbyRepository.save(any()))
             .thenAnswer {it.arguments[0] as LobbyEntity }
 
+        `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
+            .thenAnswer {
+                val action = it.arguments[0] as () -> Unit
+                action()
+            }
+
         val result = lobbyService.leaveLobby("lobby-1", "host-1")
 
         assertEquals("lobby-1", result!!.lobbyId)
@@ -181,6 +197,7 @@ class LobbyServiceLeaveTest {
         assertEquals(1, saved.players.size)
         assertEquals("player-2", saved.players[0].userId)
 
+        verify(afterCommitExecutor).execute(org.mockito.kotlin.any())
         verify(lobbyBroadcastService).broadcastLobbyUpdated(any())
     }
 
@@ -202,13 +219,18 @@ class LobbyServiceLeaveTest {
         )
 
         `when`(lobbyRepository.findById("lobby-1")).thenReturn(Optional.of(entity))
+        `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
+            .thenAnswer {
+                val action = it.arguments[0] as () -> Unit
+                action()
+            }
 
+        val result = lobbyService.leaveLobby("lobby-1", "host-1")
 
-            lobbyService.leaveLobby("lobby-1", "host-1")
-
-
+        assertEquals(null, result)
 
         verify(lobbyRepository).deleteById("lobby-1")
+        verify(afterCommitExecutor).execute(org.mockito.kotlin.any())
         verify(lobbyBroadcastService).broadcastLobbyDeleted("lobby-1")
     }
 }

@@ -5,6 +5,7 @@ import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
+import at.se2group.backend.service.AfterCommitExecutor
 import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.service.GameInitializationService
@@ -42,6 +43,9 @@ class LobbyServiceDeleteTest {
     @Mock
     lateinit var gameBroadcastService: GameBroadcastService
 
+    @Mock
+    lateinit var afterCommitExecutor: AfterCommitExecutor
+
     @InjectMocks
     lateinit var lobbyService: LobbyService
 
@@ -61,10 +65,17 @@ class LobbyServiceDeleteTest {
 
         `when`(lobbyRepository.findById("lobby-1")).thenReturn(Optional.of(entity))
 
+        `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
+            .thenAnswer {
+                val action = it.arguments[0] as () -> Unit
+                action()
+            }
+
         lobbyService.deleteLobby("lobby-1", "host-1")
 
         verify(lobbyRepository).findById("lobby-1")
         verify(lobbyRepository).deleteById("lobby-1")
+        verify(afterCommitExecutor).execute(org.mockito.kotlin.any())
         verify(lobbyBroadcastService).broadcastLobbyDeleted("lobby-1")
         verifyNoMoreInteractions(lobbyRepository, lobbyBroadcastService)
     }

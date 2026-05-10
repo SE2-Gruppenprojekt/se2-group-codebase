@@ -5,6 +5,7 @@ import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
+import at.se2group.backend.service.AfterCommitExecutor
 import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.service.GameInitializationService
@@ -40,6 +41,9 @@ class LobbyServiceGetTest {
 
     @Mock
     lateinit var gameBroadcastService: GameBroadcastService
+
+    @Mock
+    lateinit var afterCommitExecutor: AfterCommitExecutor
 
     @InjectMocks
     lateinit var lobbyService: LobbyService

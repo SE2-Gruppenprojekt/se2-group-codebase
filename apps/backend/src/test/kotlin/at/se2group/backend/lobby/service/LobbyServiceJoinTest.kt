@@ -6,6 +6,7 @@ import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
+import at.se2group.backend.service.AfterCommitExecutor
 import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.service.GameInitializationService
@@ -24,6 +25,7 @@ import org.mockito.Mockito
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import java.util.Optional
 
@@ -44,6 +46,9 @@ class LobbyServiceJoinTest {
 
     @Mock
     lateinit var gameBroadcastService: GameBroadcastService
+
+    @Mock
+    lateinit var afterCommitExecutor: AfterCommitExecutor
 
     @InjectMocks
     lateinit var lobbyService: LobbyService
@@ -75,6 +80,12 @@ class LobbyServiceJoinTest {
             .thenReturn(Optional.of(entity))
         Mockito.`when`(lobbyRepository.save(any(LobbyEntity::class.java)))
             .thenAnswer { it.arguments[0] as LobbyEntity }
+
+        `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
+            .thenAnswer {
+                val action = it.arguments[0] as () -> Unit
+                action()
+            }
 
         val result = lobbyService.joinLobby("lobby-1", request)
 
@@ -115,6 +126,7 @@ class LobbyServiceJoinTest {
         assertEquals("Bob", saved.players.last().displayName)
         assertFalse(saved.players.last().isReady)
 
+        verify(afterCommitExecutor).execute(org.mockito.kotlin.any())
         verify(lobbyBroadcastService).broadcastLobbyUpdated(result)
     }
 

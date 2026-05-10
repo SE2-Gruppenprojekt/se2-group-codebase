@@ -7,6 +7,7 @@ import at.se2group.backend.persistence.LobbyRepository
 import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.dto.UpdateLobbySettingsRequest
 import at.se2group.backend.persistence.GameRepository
+import at.se2group.backend.service.AfterCommitExecutor
 import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.GameInitializationService
 import at.se2group.backend.service.LobbyService
@@ -44,6 +45,9 @@ class LobbyServiceUpdateSettingsTest {
     @Mock
     lateinit var gameBroadcastService: GameBroadcastService
 
+    @Mock
+    lateinit var afterCommitExecutor: AfterCommitExecutor
+
     @InjectMocks
     lateinit var lobbyService: LobbyService
 
@@ -72,6 +76,12 @@ class LobbyServiceUpdateSettingsTest {
         `when`(lobbyRepository.save(any()))
         .thenAnswer { it.arguments[0] as LobbyEntity }
 
+        `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
+            .thenAnswer {
+                val action = it.arguments[0] as () -> Unit
+                action()
+            }
+
         val request = UpdateLobbySettingsRequest(maxPlayers = 3, isPrivate = true, allowGuests = false)
         val result = lobbyService.updateLobbySettings("lobby-1", "host-1", request)
 
@@ -91,6 +101,8 @@ class LobbyServiceUpdateSettingsTest {
         assertEquals(false, saved.allowGuests)
 
         assertEquals(3, result.settings.maxPlayers)
+
+        verify(afterCommitExecutor).execute(org.mockito.kotlin.any())
         verify(lobbyBroadcastService).broadcastLobbyUpdated(result)
     }
 
