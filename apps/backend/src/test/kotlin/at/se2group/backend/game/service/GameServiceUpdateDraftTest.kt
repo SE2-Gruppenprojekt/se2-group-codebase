@@ -3,6 +3,8 @@ package at.se2group.backend.game.service
 import shared.models.game.domain.GameStatus
 import shared.models.game.request.UpdateDraftRequest
 import at.se2group.backend.persistence.*
+import at.se2group.backend.service.AfterCommitExecutor
+import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.TurnDraftService
 import at.se2group.backend.service.TileConservationService
 import org.junit.jupiter.api.Assertions.*
@@ -16,8 +18,16 @@ class TurnDraftServiceTest {
     private val gameRepository: GameRepository = mock()
     private val turnDraftRepository: TurnDraftRepository = mock()
     private val tileConservationService: TileConservationService = mock()
+    private val gameBroadcastService: GameBroadcastService = mock()
+    private val afterCommitExecutor = AfterCommitExecutor()
 
-    private val turnDraftService = TurnDraftService(gameRepository, turnDraftRepository, tileConservationService)
+    private val turnDraftService = TurnDraftService(
+        gameRepository,
+        turnDraftRepository,
+        tileConservationService,
+        gameBroadcastService,
+        afterCommitExecutor
+    )
 
     private fun gameEntity(currentPlayer: String = "user-1"): GameEntity {
         val game = GameEntity(
@@ -43,6 +53,8 @@ class TurnDraftServiceTest {
         assertThrows(NoSuchElementException::class.java) {
             turnDraftService.updateDraft("game-1", "user-1", request)
         }
+
+        verify(gameBroadcastService, never()).broadcastDraftUpdated(any())
     }
 
     @Test
@@ -73,6 +85,8 @@ class TurnDraftServiceTest {
         assertEquals("game-1", result.gameId)
         assertEquals("user-1", result.playerUserId)
         assertEquals(3, result.version)
+
+        verify(gameBroadcastService).broadcastDraftUpdated(any())
     }
 
     @Test
@@ -92,6 +106,8 @@ class TurnDraftServiceTest {
                 mock()
             )
         }
+
+        verify(gameBroadcastService, never()).broadcastDraftUpdated(any())
     }
 
     @Test
@@ -102,6 +118,8 @@ class TurnDraftServiceTest {
         assertThrows(IllegalStateException::class.java) {
             turnDraftService.updateDraft("game-1", "user-2", mock())
         }
+
+        verify(gameBroadcastService, never()).broadcastDraftUpdated(any())
     }
 
     @Test
@@ -112,6 +130,8 @@ class TurnDraftServiceTest {
         assertThrows(IllegalStateException::class.java) {
             turnDraftService.updateDraft("game-1", "user-2", mock())
         }
+
+        verify(gameBroadcastService, never()).broadcastDraftUpdated(any())
     }
 
     @Test
@@ -122,6 +142,8 @@ class TurnDraftServiceTest {
         assertThrows(IllegalStateException::class.java) {
             turnDraftService.updateDraft("game-1", "user-1", mock())
         }
+
+        verify(gameBroadcastService, never()).broadcastDraftUpdated(any())
     }
 
 
@@ -136,5 +158,7 @@ class TurnDraftServiceTest {
         }
 
         verify(turnDraftRepository, never()).save(any())
+
+        verify(gameBroadcastService, never()).broadcastDraftUpdated(any())
     }
 }

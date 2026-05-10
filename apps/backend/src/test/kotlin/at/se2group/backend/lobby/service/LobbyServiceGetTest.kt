@@ -5,6 +5,8 @@ import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
+import at.se2group.backend.service.AfterCommitExecutor
+import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.service.GameInitializationService
 import at.se2group.backend.service.LobbyService
@@ -20,7 +22,6 @@ import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.junit.jupiter.MockitoExtension
-import java.time.Instant
 import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
@@ -37,6 +38,12 @@ class LobbyServiceGetTest {
 
     @Mock
     lateinit var gameRepository: GameRepository
+
+    @Mock
+    lateinit var gameBroadcastService: GameBroadcastService
+
+    @Mock
+    lateinit var afterCommitExecutor: AfterCommitExecutor
 
     @InjectMocks
     lateinit var lobbyService: LobbyService
