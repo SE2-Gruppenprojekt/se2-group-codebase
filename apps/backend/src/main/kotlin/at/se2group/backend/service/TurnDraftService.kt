@@ -41,7 +41,8 @@ class TurnDraftService(
     private val gameRepository: GameRepository,
     private val turnDraftRepository: TurnDraftRepository,
     private val tileConservationService: TileConservationService,
-    private val gameBroadcastService: GameBroadcastService
+    private val gameBroadcastService: GameBroadcastService,
+    private val afterCommitExecutor: AfterCommitExecutor
 ) {
 
     /**
@@ -113,7 +114,9 @@ class TurnDraftService(
             proposedDraft.copy(version = draftEntity.version + 1).toEntity(draftEntity)
         ).toDomain()
 
-        gameBroadcastService.broadcastDraftUpdated(updatedDraft)
+        afterCommitExecutor.execute {
+            gameBroadcastService.broadcastDraftUpdated(updatedDraft)
+        }
 
         return updatedDraft
     }

@@ -3,6 +3,7 @@ package at.se2group.backend.game.service
 import shared.models.game.domain.GameStatus
 import shared.models.game.request.UpdateDraftRequest
 import at.se2group.backend.persistence.*
+import at.se2group.backend.service.AfterCommitExecutor
 import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.TurnDraftService
 import at.se2group.backend.service.TileConservationService
@@ -18,8 +19,15 @@ class TurnDraftServiceTest {
     private val turnDraftRepository: TurnDraftRepository = mock()
     private val tileConservationService: TileConservationService = mock()
     private val gameBroadcastService: GameBroadcastService = mock()
+    private val afterCommitExecutor = AfterCommitExecutor()
 
-    private val turnDraftService = TurnDraftService(gameRepository, turnDraftRepository, tileConservationService, gameBroadcastService)
+    private val turnDraftService = TurnDraftService(
+        gameRepository,
+        turnDraftRepository,
+        tileConservationService,
+        gameBroadcastService,
+        afterCommitExecutor
+    )
 
     private fun gameEntity(currentPlayer: String = "user-1"): GameEntity {
         val game = GameEntity(
