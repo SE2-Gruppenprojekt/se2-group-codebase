@@ -182,13 +182,13 @@ The service should answer:
 - is this set valid as a group?
 - is this set valid as a run?
 - is it invalid as both?
-- is it valid as both and therefore ambiguous?
+- if both interpretations work, should it still be accepted?
 
 A good practical strategy is:
 
 - let `GroupValidationService` validate the set
 - let `RunValidationService` validate the set
-- let `SetValidationService` decide based on those two results
+- let `SetValidationService` decide based on those two results and accept the set if at least one interpretation is valid
 
 This avoids a separate classification pass that duplicates much of the same reasoning.
 
@@ -287,7 +287,7 @@ fun validateRun(set: BoardSet): ValidationResult {
 ### `SetValidationService`
 
 This service should not trust a pre-existing `BoardSetType` from the client.
-Instead, it should validate the set as both a group and a run and then decide the outcome.
+Instead, it should validate the set as both a group and a run and then accept the set if at least one interpretation succeeds.
 
 ### Example
 
@@ -300,13 +300,10 @@ class SetValidationService(
         val groupResult = groupValidationService.validate(set)
         val runResult = runValidationService.validate(set)
 
-        return when {
-            groupResult.isValid && !runResult.isValid -> valid()
-            runResult.isValid && !groupResult.isValid -> valid()
-            groupResult.isValid && runResult.isValid -> invalid(
-                "Set is ambiguous because it is valid as both a group and a run"
-            )
-            else -> invalid(
+        return if (groupResult.isValid || runResult.isValid) {
+            valid()
+        } else {
+            invalid(
                 violations = groupResult.violations + runResult.violations
             )
         }
@@ -314,7 +311,7 @@ class SetValidationService(
 }
 ```
 
-This is the core change from the earlier architecture.
+This is the core change from the earlier architecture: the backend no longer rejects sets just because both interpretations happen to succeed. A set is accepted if at least one interpretation is valid.
 
 ---
 
@@ -914,7 +911,7 @@ If a submitted draft contains the same tile twice, the backend should reject it 
 
 ## 6.3 Invalid end-turn because a set cannot be resolved as a legal group or run
 
-If a final submitted set is neither a legal group nor a legal run, the backend should reject end-turn and return a set-resolution or set-validation error.
+If a final submitted set is neither a legal group nor a legal run, the backend should reject end-turn and return a set-validation error.
 
 ---
 
@@ -947,7 +944,7 @@ If implementing incrementally, a good order is:
 This order works well because:
 
 - draft update safety depends heavily on tile conservation
-- end-turn now depends on trying both group and run validation inside set validation
+- end-turn now depends on trying both group and run validation inside set validation and accepting the set if at least one interpretation works
 - first-move validation depends on board validity already existing
 
 ---
