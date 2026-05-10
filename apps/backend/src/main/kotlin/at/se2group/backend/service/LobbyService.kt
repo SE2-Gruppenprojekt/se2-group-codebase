@@ -273,6 +273,11 @@ class LobbyService(
 
         afterCommitExecutor.execute {
             gameBroadcastService.broadcastGameUpdated(savedGame)
+
+            gameStart.turnDraft?.let { initialDraft ->
+                gameBroadcastService.broadcastDraftUpdated(initialDraft)
+            }
+
             lobbyBroadcastService.broadcastLobbyStarted(saved.lobbyId, savedGame.gameId)
         }
         return saved
