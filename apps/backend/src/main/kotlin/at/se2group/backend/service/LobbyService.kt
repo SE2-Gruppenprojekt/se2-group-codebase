@@ -52,7 +52,9 @@ class LobbyService(
     private val lobbyRepository: LobbyRepository,
     private val lobbyBroadcastService: LobbyBroadcastService,
     private val gameInitializationService: GameInitializationService,
-    private val gameRepository: GameRepository) {
+    private val gameRepository: GameRepository,
+    private val gameBroadcastService: GameBroadcastService,
+    private val afterCommitExecutor: AfterCommitExecutor) {
 
     /**
      * Internal constants used by [LobbyService].
@@ -121,7 +123,9 @@ class LobbyService(
 
         // Persist first so the broadcast reflects the stored lobby state.
         val saved = lobbyRepository.save(lobby.toEntity()).toDomain()
-        lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        afterCommitExecutor.execute {
+            lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        }
         return saved
     }
 
@@ -172,7 +176,9 @@ class LobbyService(
         )
 
         val saved = lobbyRepository.save(updatedLobby.toEntity(lobbyEntity)).toDomain()
-        lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        afterCommitExecutor.execute {
+            lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        }
         return saved
     }
 
@@ -217,7 +223,9 @@ class LobbyService(
         )
 
         val saved = lobbyRepository.save(updatedLobby.toEntity(lobbyEntity)).toDomain()
-        lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        afterCommitExecutor.execute {
+            lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        }
         return saved
     }
 
@@ -261,8 +269,17 @@ class LobbyService(
 
         // Create the initial confirmed game state only after the lobby has been transitioned to IN_GAME.
         val gameStart = gameInitializationService.createGameFromLobby(saved)
-        gameRepository.save(gameStart.confirmedGame.toEntity())
-        lobbyBroadcastService.broadcastLobbyStarted(saved.lobbyId, gameStart.confirmedGame.gameId)
+        val savedGame = gameRepository.save(gameStart.confirmedGame.toEntity()).toDomain()
+
+        afterCommitExecutor.execute {
+            gameBroadcastService.broadcastGameUpdated(savedGame)
+
+            gameStart.turnDraft?.let { initialDraft ->
+                gameBroadcastService.broadcastDraftUpdated(initialDraft)
+            }
+
+            lobbyBroadcastService.broadcastLobbyStarted(saved.lobbyId, savedGame.gameId)
+        }
         return saved
     }
 
@@ -295,7 +312,9 @@ class LobbyService(
         // Delete the lobby entirely once the last remaining player leaves.
         if (remainingPlayers.isEmpty()) {
             lobbyRepository.deleteById(lobbyId)
-            lobbyBroadcastService.broadcastLobbyDeleted(lobbyId)
+            afterCommitExecutor.execute {
+                lobbyBroadcastService.broadcastLobbyDeleted(lobbyId)
+            }
             return null
         }
 
@@ -312,7 +331,9 @@ class LobbyService(
         )
 
         val saved = lobbyRepository.save(updatedLobby.toEntity(lobbyEntity)).toDomain()
-        lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        afterCommitExecutor.execute {
+            lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        }
         return saved
     }
 
@@ -345,7 +366,9 @@ class LobbyService(
         )
 
         val saved = lobbyRepository.save(updatedLobby.toEntity(lobbyEntity)).toDomain()
-        lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        afterCommitExecutor.execute {
+            lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        }
         return saved
     }
 
@@ -377,7 +400,9 @@ class LobbyService(
             }
         )
         val saved = lobbyRepository.save(updatedLobby.toEntity(lobbyEntity)).toDomain()
-        lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        afterCommitExecutor.execute {
+            lobbyBroadcastService.broadcastLobbyUpdated(saved)
+        }
         return saved
     }
 
@@ -392,6 +417,7 @@ class LobbyService(
      * @throws SecurityException if the acting user is not the host.
      * @throws NoSuchElementException if the lobby does not exist.
      */
+    @Transactional
     fun deleteLobby(lobbyId: String, userId: String) {
         val lobby = getLobby(lobbyId)
 
@@ -401,7 +427,9 @@ class LobbyService(
         }
 
         lobbyRepository.deleteById(lobbyId)
-        lobbyBroadcastService.broadcastLobbyDeleted(lobbyId)
+        afterCommitExecutor.execute {
+            lobbyBroadcastService.broadcastLobbyDeleted(lobbyId)
+        }
     }
 
     private fun requireLobbyEntity(lobbyId: String): LobbyEntity =
