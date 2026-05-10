@@ -3,35 +3,32 @@ package at.aau.serg.android.core.network.lobby
 import at.aau.serg.android.core.network.MoshiProvider
 import at.aau.serg.android.core.network.WebConfig
 import at.aau.serg.android.core.network.WebSocketManager
+import at.aau.serg.android.core.network.socket.FakeClientProvider
+import at.aau.serg.android.core.network.socket.FakeStompSessionWrapper
 import com.squareup.moshi.Moshi
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.spyk
+import io.mockk.unmockkAll
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import org.hildan.krossbow.stomp.StompClient
-import org.hildan.krossbow.stomp.StompSession
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import shared.models.lobby.event.LobbyEvent
 
 class LobbyWebSocketServiceTest {
-
     private lateinit var moshi: Moshi
     private lateinit var service: LobbyWebSocketService
-
-    private lateinit var client: StompClient
-    private lateinit var session: StompSession
+    private val fakeSession: FakeStompSessionWrapper = FakeStompSessionWrapper()
     private lateinit var manager: WebSocketManager
 
     @Before
     fun setup() {
-
         moshi = MoshiProvider.moshi
-        client = mockk()
-        session = mockk()
-        manager = spyk(WebSocketManager(client))
+        manager = spyk(WebSocketManager(FakeClientProvider(fakeSession)))
         service = LobbyWebSocketService(moshi, manager)
     }
 
