@@ -19,9 +19,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import shared.models.match.domain.JokerTile
-import shared.models.match.domain.NumberedTile
-import shared.models.match.domain.Tile
+import shared.models.game.domain.JokerTile
+import shared.models.game.domain.NumberedTile
+import shared.models.game.domain.Tile
 
 @Composable
 fun TileItem(

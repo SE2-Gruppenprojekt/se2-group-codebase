@@ -3,19 +3,16 @@ package at.aau.serg.android.ui.screens.game
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import at.aau.serg.android.core.datastore.ProtoStore
-import at.aau.serg.android.core.network.RetrofitProvider
-import at.aau.serg.android.core.network.lobby.LobbyAPI
-import at.aau.serg.android.core.network.lobby.LobbyService
 import at.aau.serg.android.datastore.proto.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import shared.models.match.domain.BoardSet
-import shared.models.match.domain.BoardSetType
-import shared.models.match.domain.NumberedTile
-import shared.models.match.domain.Tile
-import shared.models.match.domain.TileColor
+import shared.models.game.domain.BoardSet
+import shared.models.game.domain.BoardSetType
+import shared.models.game.domain.NumberedTile
+import shared.models.game.domain.Tile
+import shared.models.game.domain.TileColor
 import java.util.UUID
 
 
@@ -32,17 +29,17 @@ class GameViewModel(
             BoardSet(
                 boardSetId = "row1",
                 tiles = listOf(
-                    NumberedTile(TileColor.RED, 3),
-                    NumberedTile(TileColor.RED, 4),
-                    NumberedTile(TileColor.RED, 5)
+                    NumberedTile("x1", TileColor.RED, 3),
+                    NumberedTile("x2", TileColor.RED, 4),
+                    NumberedTile("x3", TileColor.RED, 5)
                 )
             ),
             BoardSet(
                 boardSetId = "row2",
                 tiles = listOf(
-                    NumberedTile(TileColor.BLACK, 10),
-                    NumberedTile(TileColor.RED, 10),
-                    NumberedTile(TileColor.BLUE, 10)
+                    NumberedTile("x4", TileColor.BLACK, 10),
+                    NumberedTile("x5", TileColor.RED, 10),
+                    NumberedTile("x6", TileColor.BLUE, 10)
                 )
             )
         )
@@ -50,6 +47,7 @@ class GameViewModel(
         // Create random rack tiles
         val rackTiles = List(14) {
             NumberedTile(
+                tileId = (1..999999).random().toString(),
                 color = TileColor.entries.toTypedArray().random(),
                 number = (1..13).random()
             )

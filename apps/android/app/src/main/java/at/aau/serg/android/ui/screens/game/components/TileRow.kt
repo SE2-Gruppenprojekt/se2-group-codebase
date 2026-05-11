@@ -15,10 +15,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.screens.game.GameViewModel
-import shared.models.match.domain.Tile
+import shared.models.game.domain.Tile
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import sh.calvin.reorderable.*
-
 
 
 @Composable
@@ -55,13 +54,14 @@ fun TileRow(
     LazyRow(
         modifier = baseModifier,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
-        state = lazyListState) {
+        state = lazyListState
+    ) {
         items(
             items = tiles,
-            key = { it.id }) {
+            key = { it.tileId }) {
             ReorderableItem(
                 state = reorderableLazyListState,
-                key = it.id
+                key = it.tileId
             ) { isDragging ->
 
                 TileItem(

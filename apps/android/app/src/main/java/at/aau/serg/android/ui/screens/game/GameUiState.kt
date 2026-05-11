@@ -2,8 +2,8 @@ package at.aau.serg.android.ui.screens.game
 
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.state.LoadState
-import shared.models.match.domain.BoardSet
-import shared.models.match.domain.Tile
+import shared.models.game.domain.BoardSet
+import shared.models.game.domain.Tile
 
 
 data class GameUiState(
