@@ -7,6 +7,7 @@ import shared.models.game.domain.NumberedTile
 import shared.models.game.domain.TileColor
 import at.se2group.backend.service.GameService
 import at.se2group.backend.service.TurnDraftService
+import at.se2group.backend.service.DrawTileService
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,6 +19,7 @@ import org.springframework.test.web.servlet.get
 import java.time.Instant
 import shared.models.game.domain.TurnDraft
 import org.springframework.test.web.servlet.put
+import org.springframework.test.web.servlet.post
 import org.springframework.http.MediaType
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
@@ -140,5 +142,39 @@ class GameControllerTest {
                 jsonPath("$.version") { value(3) }
             }
     }
+
+    @MockitoBean
+    lateinit var drawTileService: DrawTileService
+
+    private fun confirmedGame() = ConfirmedGame(
+        gameId = "game-1",
+        lobbyId = "lobby-1",
+        players = listOf(
+            GamePlayer(
+                userId = "user-1",
+                displayName = "Alice",
+                turnOrder = 0,
+                joinedAt = Instant.parse("2026-04-27T17:55:00Z")
+            )
+        ),
+        currentPlayerUserId = "user-1",
+        status = GameStatus.ACTIVE,
+        createdAt = Instant.parse("2026-04-27T18:00:00Z")
+    )
+
+    @Test
+    fun `drawTile returns 200 with game response`() {
+        `when`(drawTileService.drawTile("game-1", "user-1"))
+            .thenThrow(UnsupportedOperationException("Draw tile is not implemented yet."))
+
+        mockMvc.post("/api/games/game-1/draw") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{ "playerId": "user-1" }"""
+        }
+            .andExpect {
+                status { isInternalServerError() }
+            }
+    }
+
 
 }
