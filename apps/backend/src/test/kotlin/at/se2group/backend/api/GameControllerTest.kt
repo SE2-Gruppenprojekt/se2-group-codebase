@@ -164,15 +164,19 @@ class GameControllerTest {
 
     @Test
     fun `drawTile returns 200 with game response`() {
+        val game = confirmedGame()
         `when`(drawTileService.drawTile("game-1", "user-1"))
-            .thenThrow(UnsupportedOperationException("Draw tile is not implemented yet."))
+            .thenReturn(game)
 
         mockMvc.post("/api/games/game-1/draw") {
             contentType = MediaType.APPLICATION_JSON
             content = """{ "playerId": "user-1" }"""
         }
             .andExpect {
-                status { isInternalServerError() }
+                status { isOk() }
+                jsonPath("$.gameId") { value("game-1") }
+                jsonPath("$.currentPlayerUserId") { value("user-1") }
+                jsonPath("$.status") { value("ACTIVE") }
             }
     }
 
