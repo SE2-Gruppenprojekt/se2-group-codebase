@@ -95,5 +95,18 @@ class DrawTileServiceTest {
         assertEquals("Game not found", exception.message)
     }
 
+    @Test
+    fun `rejects draw when game is not active`() {
+        val entity = gameEntity(status = GameStatus.WAITING)
+        `when`(gameRepository.findById("game-1"))
+            .thenReturn(Optional.of(entity))
+
+        val exception = assertThrows<IllegalStateException> {
+            drawTileService.drawTile("game-1", "user-1")
+        }
+
+        assertEquals("Game is not active", exception.message)
+    }
+
 
 }

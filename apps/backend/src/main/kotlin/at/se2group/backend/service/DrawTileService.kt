@@ -5,6 +5,7 @@ import at.se2group.backend.persistence.GameRepository
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.stereotype.Service
 import shared.models.game.domain.ConfirmedGame
+import shared.models.game.domain.GameStatus
 
 
 /**
@@ -39,6 +40,8 @@ class DrawTileService(
         val game = gameRepository.findById(gameId)
             .orElseThrow { NoSuchElementException(GAME_NOT_FOUND) }
             .toDomain()
+
+        check(game.status == GameStatus.ACTIVE) { GAME_NOT_ACTIVE }
 
         return game
     }
