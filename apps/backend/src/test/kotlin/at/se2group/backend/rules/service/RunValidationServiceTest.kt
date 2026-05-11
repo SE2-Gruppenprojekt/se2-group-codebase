@@ -31,9 +31,9 @@ class RunValidationServiceTest {
     fun `validate 3 tile run with consecutive numbers and same color`() {
         val result = service.validate(
             set(
-                tile("tile-1", TileColor.BLUE, 1),
-                tile("tile-2", TileColor.BLUE, 2),
-                tile("tile-3", TileColor.BLUE, 3)
+                tile("tile-1", TileColor.RED, 3),
+                tile("tile-2", TileColor.RED, 4),
+                tile("tile-3", TileColor.RED, 5)
 
             )
         )
@@ -45,10 +45,10 @@ class RunValidationServiceTest {
     fun `validate 4 tile run with consecutive numbers and same color`() {
         val result = service.validate(
             set(
-                tile("tile-1", TileColor.BLUE, 8),
-                tile("tile-2", TileColor.BLUE, 9),
-                tile("tile-3", TileColor.BLUE, 10),
-                tile("tile-4", TileColor.BLUE, 11)
+                tile("tile-1", TileColor.BLUE, 10),
+                tile("tile-2", TileColor.BLUE, 11),
+                tile("tile-3", TileColor.BLUE, 12),
+                tile("tile-4", TileColor.BLUE, 13)
             )
         )
         assertTrue(result.isValid)
@@ -59,8 +59,8 @@ class RunValidationServiceTest {
     fun `reject run if tiles are less than 3`() {
         val result = service.validate(
             set(
-                tile("tile-1", TileColor.BLUE, 1),
-                tile("tile-2", TileColor.BLUE, 2),
+                tile("tile-1", TileColor.RED, 7),
+                tile("tile-2", TileColor.RED, 8)
             )
         )
         assertFalse(result.isValid)
@@ -72,9 +72,9 @@ class RunValidationServiceTest {
     fun `rejects runs if tiles colors are mixed`() {
         val result = service.validate(
             set(
-                tile("tile-1", TileColor.RED, 1),
-                tile("tile-2", TileColor.BLUE, 2),
-                tile("tile-3", TileColor.BLACK, 3),
+                tile("tile-1", TileColor.RED, 3),
+                tile("tile-2", TileColor.BLUE, 4),
+                tile("tile-3", TileColor.RED, 5)
             )
         )
         assertFalse(result.isValid)
@@ -86,9 +86,9 @@ class RunValidationServiceTest {
     fun`rejects run containing duplicate numbers`() {
         val result = service.validate(
             set(
-                tile("tile-1", TileColor.BLUE, 4),
-                tile("tile-2", TileColor.BLUE, 4),
-                tile("tile-3", TileColor.BLUE, 5),
+                tile("tile-1", TileColor.RED, 7),
+                tile("tile-2", TileColor.RED, 7),
+                tile("tile-3", TileColor.RED, 8)
             )
         )
         assertFalse(result.isValid)
@@ -97,12 +97,12 @@ class RunValidationServiceTest {
     }
 
     @Test
-    fun `rejects run with non consecutive numbers`() {
+    fun `rejects run with a gap in the sequence`() {
         val result = service.validate(
             set(
-                tile("tile-1", TileColor.BLUE, 6),
-                tile("tile-2", TileColor.BLUE, 8),
-                tile("tile-3", TileColor.BLUE, 9),
+                tile("tile-1", TileColor.RED, 3),
+                tile("tile-2", TileColor.RED, 5),
+                tile("tile-3", TileColor.RED, 6)
             )
         )
         assertFalse(result.isValid)
@@ -112,12 +112,12 @@ class RunValidationServiceTest {
 
 
     @Test
-    fun `accept run if tiles are submitted with mixed sequence numbers`() {
+    fun `accept run if tiles are submitted with mixed order numbers`() {
         val result = service.validate(
             set(
-                tile("tile-1", TileColor.BLUE, 3),
-                tile("tile-2", TileColor.BLUE, 1),
-                tile("tile-3", TileColor.BLUE, 2),
+                tile("tile-1", TileColor.RED, 5),
+                tile("tile-2", TileColor.RED, 4),
+                tile("tile-3", TileColor.RED, 3)
             )
         )
         assertTrue(result.isValid)
@@ -130,7 +130,7 @@ class RunValidationServiceTest {
             set(
                 tile("tile-1", TileColor.BLUE, 4),
                 tile("tile-2", TileColor.BLUE, 7),
-                tile("tile-3", TileColor.BLUE, 8),
+                tile("tile-3", TileColor.BLUE, 8)
             )
         )
         assertFalse(result.isValid)
@@ -141,8 +141,8 @@ class RunValidationServiceTest {
     fun `rejects run containing joker`() {
         val result = service.validate(
             set(
-                tile("tile-1", TileColor.BLUE, 1),
-                tile("tile-2", TileColor.BLUE, 2),
+                tile("tile-1", TileColor.RED, 3),
+                tile("tile-2", TileColor.RED, 4),
                 joker("tile-3", TileColor.BLACK),
             )
         )
