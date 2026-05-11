@@ -160,7 +160,43 @@ class DrawTileServiceTest {
         assertEquals(1, activePlayer.rackTiles.size)
         assertEquals("tile-1", activePlayer.rackTiles.first().tileId)
 
+    }
 
+    @Test
+    fun `draw tile decreases by one after successful draw`() {
+        val tile1 = tileEmbeddable("tile-1")
+        val tile2 = tileEmbeddable("tile-2")
+        val entity = gameEntity(drawPile = mutableListOf(tile1, tile2))
+        `when`(gameRepository.findById("game-1"))
+            .thenReturn(Optional.of(entity))
+
+        val result = drawTileService.drawTile("game-1", "user-1")
+
+        assertEquals(1, result.drawPile.size)
+    }
+
+    @Test
+    fun `turn goes to next player after successful draw`() {
+        val tile = tileEmbeddable("tile-1")
+        val entity = gameEntity(currentPlayerUserId = "user-1", drawPile = mutableListOf(tile))
+        `when`(gameRepository.findById("game-1"))
+            .thenReturn(Optional.of(entity))
+
+        val result = drawTileService.drawTile("game-1", "user-1")
+
+        assertEquals("user-2", result.currentPlayerUserId)
+    }
+
+    @Test
+    fun `turn wraps around to first player after successful last player's draw`() {
+        val tile = tileEmbeddable("tile-1")
+        val entity = gameEntity(currentPlayerUserId = "user-2", drawPile = mutableListOf(tile))
+        `when`(gameRepository.findById("game-1"))
+            .thenReturn(Optional.of(entity))
+
+        val result = drawTileService.drawTile("game-1", "user-2")
+
+        assertEquals("user-1", result.currentPlayerUserId)
     }
 
 
