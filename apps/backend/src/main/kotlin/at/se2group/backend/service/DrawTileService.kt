@@ -1,11 +1,13 @@
 package at.se2group.backend.service
 
 import at.se2group.backend.mapper.toDomain
+import at.se2group.backend.mapper.toEntity
 import at.se2group.backend.persistence.GameRepository
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.stereotype.Service
 import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.GameStatus
+
 
 
 /**
@@ -63,6 +65,6 @@ class DrawTileService(
                 drawPile = game.drawPile.drop(1),
                 currentPlayerUserId = gameService.nextPlayerId(game, playerId)
             )
-            return updatedGame
+            return gameRepository.save(updatedGame.toEntity()).toDomain()
     }
 }
