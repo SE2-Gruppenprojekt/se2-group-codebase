@@ -121,5 +121,17 @@ class DrawTileServiceTest {
         assertEquals("Player is not in the game", exception.message)
     }
 
+    @Test
+    fun `rejects draw when it is not the player's turn`() {
+        val entity = gameEntity(currentPlayerUserId = "user-1")
+        `when`(gameRepository.findById("game-1"))
+            .thenReturn(Optional.of(entity))
+
+        val exception = assertThrows<IllegalStateException> {
+            drawTileService.drawTile("game-1", "user-2")
+        }
+        assertEquals("User is not the active player", exception.message)
+    }
+
 
 }
