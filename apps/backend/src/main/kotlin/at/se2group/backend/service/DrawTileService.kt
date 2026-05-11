@@ -1,6 +1,7 @@
 package at.se2group.backend.service
 
 import org.springframework.stereotype.Service
+import shared.models.game.domain.ConfirmedGame
 
 /**
 * Service responsible for handling draw tile action during a player's turn.
@@ -18,7 +19,7 @@ import org.springframework.stereotype.Service
 @Service
 class DrawTileService {
 
-    fun drawTile(gameId: String, playerId: String) {
+    fun drawTile(gameId: String, playerId: String): ConfirmedGame {
         throw UnsupportedOperationException("Draw tile is not implemented yet.")
     }
 }
