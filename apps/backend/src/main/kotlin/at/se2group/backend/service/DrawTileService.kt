@@ -1,7 +1,11 @@
 package at.se2group.backend.service
 
+import at.se2group.backend.mapper.toDomain
+import at.se2group.backend.persistence.GameRepository
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.stereotype.Service
 import shared.models.game.domain.ConfirmedGame
+
 
 /**
 * Service responsible for handling draw tile action during a player's turn.
@@ -17,9 +21,25 @@ import shared.models.game.domain.ConfirmedGame
 
 
 @Service
-class DrawTileService {
+class DrawTileService(
+    private val gameRepository: GameRepository,
+    private val gameService: GameService
+) {
 
+    private companion object {
+        const val GAME_NOT_FOUND = "Game not found"
+        const val GAME_NOT_ACTIVE = "Game is not active"
+        const val PLAYER_NOT_IN_GAME = "Player is not in the game"
+        const val NOT_ACTIVE_PLAYER = "User is not the active player"
+        const val DRAW_PILE_EMPTY = "Draw pile is empty"
+    }
+
+    @Transactional
     fun drawTile(gameId: String, playerId: String): ConfirmedGame {
-        throw UnsupportedOperationException("Draw tile is not implemented yet.")
+        val game = gameRepository.findById(gameId)
+            .orElseThrow { NoSuchElementException(GAME_NOT_FOUND) }
+            .toDomain()
+
+        return game
     }
 }
