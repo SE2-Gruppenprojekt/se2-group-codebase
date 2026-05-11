@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
+import org.mockito.kotlin.any
 import java.util.Optional
 import java.time.Instant
 
@@ -144,6 +145,22 @@ class DrawTileServiceTest {
         }
 
         assertEquals("Draw pile is empty", exception.message)
+    }
+
+    @Test
+    fun `draw tile added to active player's rack`() {
+        val tile = tileEmbeddable("tile-1")
+        val entity = gameEntity(drawPile = mutableListOf(tile))
+        `when`(gameRepository.findById("game-1"))
+            .thenReturn(Optional.of(entity))
+
+        val result = drawTileService.drawTile("game-1", "user-1")
+
+        val activePlayer = result.players.first { it.userId == "user-1" }
+        assertEquals(1, activePlayer.rackTiles.size)
+        assertEquals("tile-1", activePlayer.rackTiles.first().tileId)
+
+
     }
 
 

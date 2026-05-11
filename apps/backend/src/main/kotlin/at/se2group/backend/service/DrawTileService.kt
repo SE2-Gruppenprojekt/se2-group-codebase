@@ -49,6 +49,20 @@ class DrawTileService(
 
         check(game.drawPile.isNotEmpty()) { DRAW_PILE_EMPTY }
 
-        return game
+        val drawnTile = game.drawPile.first()
+
+        val updatedPlayers = game.players.map { player ->
+            if (player.userId == playerId) {
+                player.copy(rackTiles = player.rackTiles + drawnTile)
+            } else {
+                player
+            }
+        }
+            val updatedGame = game.copy(
+                players = updatedPlayers,
+                drawPile = game.drawPile.drop(1),
+                currentPlayerUserId = gameService.nextPlayerId(game, playerId)
+            )
+            return updatedGame
     }
 }
