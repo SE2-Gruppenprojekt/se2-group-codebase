@@ -68,4 +68,11 @@ class GameService(
             .orElseThrow { NoSuchElementException(GAME_NOT_FOUND) }
             .toDomain()
     }
+
+    fun nextPlayerId(game: ConfirmedGame, currentPlayerId: String): String{
+        val sorted = game.players.sortedBy { it.turnOrder }
+        val currentIndex = sorted.indexOfFirst { it.userId == currentPlayerId }
+        val nextIndex = (currentIndex + 1) % sorted.size
+        return sorted[nextIndex].userId
+    }
 }
