@@ -107,7 +107,8 @@ class GameViewModel(
             state.copy(
                 rackTiles = newRack,
                 boardSets = updatedBoardSets,
-                selectedTiles = emptySet()
+                selectedTiles = emptySet(),
+                activeSelectionRow = null
             )
         }
     }
