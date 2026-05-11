@@ -180,5 +180,38 @@ class GameControllerTest {
             }
     }
 
+    @Test
+    fun `drawTile returns 404 when game does not exist`() {
+        `when`(drawTileService.drawTile(any(), any()))
+            .thenThrow(NoSuchElementException("Game not found"))
+
+        mockMvc.post("/api/games/missing-game/draw") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{ "playerId": "user-1" }"""
+        }
+            .andExpect{
+                status { isNotFound() }
+                jsonPath("$.errorCode") { value("NOT_FOUND") }
+                jsonPath("$.errorMessage") { value("Game not found") }
+            }
+    }
+
+    @Test
+    fun `drawTile returns 409 when game rule is violated`() {
+        `when`(drawTileService.drawTile(any(), any()))
+            .thenThrow(IllegalStateException("Game is not active"))
+
+        mockMvc.post("/api/games/game-1/draw") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{ "playerId": "user-1" }"""
+        }
+
+            .andExpect{
+                status { isConflict() }
+                jsonPath("$.errorCode") { value("CONFLICT") }
+                jsonPath("$.errorMessage") { value("Game is not active") }
+            }
+    }
+
 
 }
