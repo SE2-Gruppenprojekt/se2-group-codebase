@@ -11,6 +11,5 @@ object HomeTestTags {
     const val ACTION_CREATE_LOBBY = "home_action_create_lobby"
     const val ACTION_BROWSE_LOBBY = "home_action_browse_lobby"
     const val ACTION_SETTINGS = "home_action_settings"
-
     const val USERNAME_TEXT = "home_username"
 }
