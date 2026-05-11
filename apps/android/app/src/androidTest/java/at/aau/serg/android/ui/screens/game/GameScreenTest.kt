@@ -1,18 +1,29 @@
 package at.aau.serg.android.ui.screens.game
 
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.filter
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
-import io.mockk.*
+import androidx.compose.ui.test.onChildren
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import at.aau.serg.android.ui.theme.ThemeState
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import shared.models.match.domain.BoardSet
-import shared.models.match.domain.NumberedTile
-import shared.models.match.domain.TileColor
-import at.aau.serg.android.ui.theme.ThemeState
+import shared.models.game.domain.BoardSet
+import shared.models.game.domain.NumberedTile
+import shared.models.game.domain.TileColor
 
 class GameScreenTest {
 
@@ -31,15 +42,15 @@ class GameScreenTest {
         stateFlow = MutableStateFlow(
             GameUiState(
                 rackTiles = listOf(
-                    NumberedTile(TileColor.RED, 1),
-                    NumberedTile(TileColor.BLUE, 2)
+                    NumberedTile("x1", TileColor.RED, 1),
+                    NumberedTile("x2", TileColor.BLUE, 2)
                 ),
                 boardSets = listOf(
                     BoardSet(
                         boardSetId = "row1",
                         tiles = listOf(
-                            NumberedTile(TileColor.BLACK, 10),
-                            NumberedTile(TileColor.RED, 10)
+                            NumberedTile("x3", TileColor.BLACK, 10),
+                            NumberedTile("x4", TileColor.RED, 10)
                         )
                     )
                 )
@@ -178,7 +189,7 @@ class GameScreenTest {
     @Test
     fun gameScreen_showsPlaceholder_whenTilesSelected() {
 
-        val selectedTile = NumberedTile(TileColor.RED, 5)
+        val selectedTile = NumberedTile("x1", TileColor.RED, 5)
 
         stateFlow.value = stateFlow.value.copy(
             selectedTiles = setOf(selectedTile)
@@ -244,9 +255,9 @@ class GameScreenTest {
 
         stateFlow.value = stateFlow.value.copy(
             rackTiles = listOf(
-                NumberedTile(TileColor.RED, 1),
-                NumberedTile(TileColor.RED, 2),
-                NumberedTile(TileColor.RED, 3)
+                NumberedTile("x1", TileColor.RED, 1),
+                NumberedTile("x2", TileColor.RED, 2),
+                NumberedTile("x3", TileColor.RED, 3)
             )
         )
 
