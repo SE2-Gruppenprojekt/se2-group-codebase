@@ -133,5 +133,18 @@ class DrawTileServiceTest {
         assertEquals("User is not the active player", exception.message)
     }
 
+    @Test
+    fun `rejects draw when draw pile is empty`() {
+        val entity = gameEntity(drawPile = mutableListOf())
+        `when`(gameRepository.findById("game-1"))
+            .thenReturn(Optional.of(entity))
+
+        val exception = assertThrows<IllegalStateException> {
+            drawTileService.drawTile("game-1", "user-1")
+        }
+
+        assertEquals("Draw pile is empty", exception.message)
+    }
+
 
 }

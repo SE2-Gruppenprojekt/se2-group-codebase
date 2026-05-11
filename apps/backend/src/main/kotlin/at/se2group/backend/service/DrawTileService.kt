@@ -47,6 +47,8 @@ class DrawTileService(
 
         check(game.currentPlayerUserId == playerId) { NOT_ACTIVE_PLAYER }
 
+        check(game.drawPile.isNotEmpty()) { DRAW_PILE_EMPTY }
+
         return game
     }
 }
