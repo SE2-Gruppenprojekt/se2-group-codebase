@@ -43,6 +43,8 @@ class DrawTileService(
 
         check(game.status == GameStatus.ACTIVE) { GAME_NOT_ACTIVE }
 
+        check(game.players.any { it.userId == playerId }) { PLAYER_NOT_IN_GAME }
+
         return game
     }
 }
