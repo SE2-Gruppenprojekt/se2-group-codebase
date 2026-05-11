@@ -1,13 +1,14 @@
 package at.se2group.backend.mapper
 
-import at.se2group.backend.domain.Lobby
-import at.se2group.backend.domain.LobbyPlayer
-import at.se2group.backend.domain.LobbySettings
 import at.se2group.backend.dto.LobbyListItemResponse
 import at.se2group.backend.dto.LobbyPlayerResponse
 import at.se2group.backend.dto.LobbyResponse
 import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
+import shared.models.lobby.domain.Lobby
+import shared.models.lobby.domain.LobbyPlayer
+import shared.models.lobby.domain.LobbySettings
+import java.time.Instant
 
 fun LobbyEntity.toDomain(): Lobby =
     Lobby(
@@ -17,8 +18,7 @@ fun LobbyEntity.toDomain(): Lobby =
             LobbyPlayer(
                 userId = it.userId,
                 displayName = it.displayName,
-                isReady = it.isReady,
-                joinedAt = it.joinedAt
+                isReady = it.isReady
             )
         },
         status = status,
@@ -26,11 +26,10 @@ fun LobbyEntity.toDomain(): Lobby =
             maxPlayers = maxPlayers,
             isPrivate = isPrivate,
             allowGuests = allowGuests
-        ),
-        createdAt = createdAt
+        )
     )
 
-fun Lobby.toEntity(): LobbyEntity =
+fun Lobby.toEntity(existing: LobbyEntity? = null): LobbyEntity =
     LobbyEntity(
         lobbyId = lobbyId,
         hostUserId = hostUserId,
@@ -38,13 +37,14 @@ fun Lobby.toEntity(): LobbyEntity =
         maxPlayers = settings.maxPlayers,
         isPrivate = settings.isPrivate,
         allowGuests = settings.allowGuests,
-        createdAt = createdAt,
+        createdAt = existing?.createdAt ?: Instant.now(),
         players = players.map {
+            val existingPlayer = existing?.players?.firstOrNull { persisted -> persisted.userId == it.userId }
             LobbyPlayerEmbeddable(
                 userId = it.userId,
                 displayName = it.displayName,
                 isReady = it.isReady,
-                joinedAt = it.joinedAt
+                joinedAt = existingPlayer?.joinedAt ?: Instant.now()
             )
         }.toMutableList()
     )

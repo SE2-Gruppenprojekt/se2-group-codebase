@@ -40,7 +40,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import at.aau.serg.android.ui.components.TopBar
 import at.aau.serg.android.ui.state.LoadState
-import at.aau.serg.android.ui.theme.ThemeState
+import at.aau.serg.android.ui.theme.AccentBlue
+import at.aau.serg.android.ui.theme.AccentPurple
+import at.aau.serg.android.ui.theme.HomeCreateBrushEnd
+import at.aau.serg.android.ui.theme.HomeCreateBrushStart
+import at.aau.serg.android.ui.theme.HomeIconGradientEnd
+import at.aau.serg.android.ui.theme.appColors
 import at.aau.serg.android.ui.util.ErrorUiMapper
 
 @Composable
@@ -60,52 +65,15 @@ fun HomeScreenContent(
     uiState: HomeUiState,
     onEvent: (HomeEvent) -> Unit
 ) {
-    val darkMode = ThemeState.isDarkMode.value
+    val c = appColors()
 
-    // background gradient for light and dark mode
+    // background gradient
     val backgroundGradient = Brush.verticalGradient(
-        colors = listOf(
-            if (darkMode) MaterialTheme.colorScheme.background else Color(0xFFF6F8FD),
-            if (darkMode) Color(0xFF121A31) else Color(0xFFEFF3FF),
-            if (darkMode) Color(0xFF0E1429) else Color(0xFFE7ECFA)
-        )
+        colors = listOf(c.home.bgTop, c.home.bgMid, c.home.bgBottom)
     )
-
-    // title color
-    val titleColor = if (darkMode) Color(0xFFEAEFFF) else Color(0xFF1D2750)
-
-    // subtitle color
-    val subtitleColor = if (darkMode) {
-        Color.White.copy(alpha = 0.78f)
-    } else {
-        Color(0xFF4D5A78)
-    }
-
-    // error text color
-    val errorColor = if (darkMode) {
-        Color(0xFFFF8F8F)
-    } else {
-        Color(0xFFC74141)
-    }
-
-    // settings button gradient
     val settingsBrush = Brush.horizontalGradient(
-        colors = if (darkMode) {
-            listOf(Color(0xFF2D3951), Color(0xFF253046))
-        } else {
-            listOf(Color(0xFFD7DEEA), Color(0xFFC9D2E2))
-        }
+        colors = listOf(c.home.settingsGradientStart, c.home.settingsGradientEnd)
     )
-
-    // shared ui colors for neutral buttons and bottom profile bar
-    val neutralButtonContentColor = if (darkMode) Color.White else Color(0xFF23314C)
-
-    val playerBarBackground = if (darkMode) Color(0xFF151D34) else Color(0xFFF3F6FC)
-    val playerBarBorder = if (darkMode) Color.White.copy(alpha = 0.05f) else Color(0xFFD5DDEA)
-    val playerIconBackground = if (darkMode) Color(0xFF27324A) else Color(0xFFE3E9F4)
-    val playerNameColor = if (darkMode) Color.White else Color(0xFF1E2847)
-    val playerLevelColor = if (darkMode) Color(0xFFFFD93D) else Color(0xFFC08A00)
-    val xpColor = if (darkMode) Color(0xFF9AA6C0) else Color(0xFF6A7692)
 
     // root screen layout
     Column(
@@ -118,9 +86,7 @@ fun HomeScreenContent(
 
         TopBar(
             subtitle = "Main Menu",
-            onSettings = { onEvent(HomeEvent.OnSettings) },
-            modifier = Modifier.padding(16.dp),
-            settingsButtonModifier = Modifier.testTag(HomeTestTags.TOPBAR_SETTINGS_BUTTON)
+            modifier = Modifier.padding(16.dp)
         )
 
         // main content section
@@ -141,7 +107,7 @@ fun HomeScreenContent(
                     .clip(RoundedCornerShape(28.dp))
                     .background(
                         Brush.linearGradient(
-                            listOf(Color(0xFF4F8DFF), Color(0xFF9B42FF))
+                            listOf(AccentBlue, HomeIconGradientEnd)
                         )
                     ),
                 contentAlignment = Alignment.Center
@@ -160,13 +126,13 @@ fun HomeScreenContent(
                 text = "RUMMIKUB",
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Black,
-                color = titleColor
+                color = c.home.title
             )
 
             Text(
                 text = "Classic Tile Game",
                 style = MaterialTheme.typography.bodyLarge,
-                color = subtitleColor
+                color = c.home.subtitle
             )
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -176,7 +142,7 @@ fun HomeScreenContent(
                 LoadState.Loading -> {
                     CircularProgressIndicator(
                         modifier = Modifier.testTag(HomeTestTags.LOADING),
-                        color = if (darkMode) Color.White else Color(0xFF9D3CFF)
+                        color = c.home.loadingIndicator
                     )
                     Spacer(modifier = Modifier.height(14.dp))
                 }
@@ -184,7 +150,7 @@ fun HomeScreenContent(
                 is LoadState.Error -> {
                     Text(
                         text = ErrorUiMapper.toMessage(state.error),
-                        color = errorColor,
+                        color = c.home.error,
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.testTag(HomeTestTags.ERROR_TEXT)
                     )
@@ -202,8 +168,9 @@ fun HomeScreenContent(
                     Icon(Icons.Filled.Person, null, tint = tint, modifier = Modifier.size(24.dp))
                 },
                 containerBrush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xE24B68FF), Color(0xD74B3FD4))
+                    colors = listOf(HomeCreateBrushStart, HomeCreateBrushEnd)
                 ),
+                contentColor = c.home.buttonText,
                 modifier = Modifier.testTag(HomeTestTags.ACTION_CREATE_LOBBY)
             )
 
@@ -217,8 +184,9 @@ fun HomeScreenContent(
                     Icon(Icons.Filled.Groups, null, tint = tint, modifier = Modifier.size(24.dp))
                 },
                 containerBrush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF9D3CFF), Color(0xFF9D3CFF))
+                    colors = listOf(AccentPurple, AccentPurple)
                 ),
+                contentColor = c.home.buttonText,
                 modifier = Modifier.testTag(HomeTestTags.ACTION_BROWSE_LOBBY)
             )
 
@@ -232,8 +200,8 @@ fun HomeScreenContent(
                     Icon(Icons.Filled.Settings, null, tint = tint, modifier = Modifier.size(22.dp))
                 },
                 containerBrush = settingsBrush,
-                modifier = Modifier.testTag(HomeTestTags.ACTION_SETTINGS),
-                contentColor = neutralButtonContentColor
+                contentColor = c.home.buttonText,
+                modifier = Modifier.testTag(HomeTestTags.ACTION_SETTINGS)
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -244,10 +212,10 @@ fun HomeScreenContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp))
-                .background(playerBarBackground)
+                .background(c.home.playerBar)
                 .border(
                     width = 1.dp,
-                    color = playerBarBorder,
+                    color = c.home.playerBarBorder,
                     shape = RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)
                 )
                 .padding(horizontal = 20.dp, vertical = 10.dp),
@@ -261,13 +229,13 @@ fun HomeScreenContent(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(playerIconBackground),
+                        .background(c.home.playerIconBg),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Filled.Person,
                         null,
-                        tint = playerNameColor,
+                        tint = c.home.playerName,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -277,13 +245,13 @@ fun HomeScreenContent(
                 Column {
                     Text(
                         text = uiState.user?.displayName ?: "Guest",
-                        color = playerNameColor,
+                        color = c.home.playerName,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.testTag(HomeTestTags.USERNAME_TEXT)
                     )
                     Text(
                         text = "#482731",
-                        color = xpColor
+                        color = c.home.xp
                     )
                 }
             }
@@ -292,12 +260,12 @@ fun HomeScreenContent(
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "Level 12",
-                    color = playerLevelColor,
+                    color = c.home.playerLevel,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = "850 XP",
-                    color = xpColor
+                    color = c.home.xp
                 )
             }
         }

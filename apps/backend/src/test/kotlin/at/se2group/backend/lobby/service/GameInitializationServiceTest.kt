@@ -1,13 +1,13 @@
 package at.se2group.backend.service
 
-import at.se2group.backend.domain.Lobby
-import at.se2group.backend.domain.LobbyPlayer
-import at.se2group.backend.domain.LobbySettings
-import at.se2group.backend.domain.LobbyStatus
-import at.se2group.backend.domain.NumberedTile
-import at.se2group.backend.domain.Tile
-import at.se2group.backend.domain.TileColor
-import at.se2group.backend.domain.GameStatus
+import shared.models.lobby.domain.Lobby
+import shared.models.lobby.domain.LobbyPlayer
+import shared.models.lobby.domain.LobbySettings
+import shared.models.lobby.domain.LobbyStatus
+import shared.models.game.domain.NumberedTile
+import shared.models.game.domain.Tile
+import shared.models.game.domain.TileColor
+import shared.models.game.domain.GameStatus
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -16,7 +16,6 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
-import java.time.Instant
 import org.mockito.kotlin.mock
 
 @ExtendWith(MockitoExtension::class)
@@ -40,14 +39,12 @@ class GameInitializationServiceTest {
                 LobbyPlayer(
                     userId = "host-1",
                     displayName = "Alice",
-                    isReady = true,
-                    joinedAt = Instant.parse("2026-04-26T10:00:00Z")
+                    isReady = true
                 ),
                 LobbyPlayer(
                     userId = "user-2",
                     displayName = "Bob",
-                    isReady = true,
-                    joinedAt = Instant.parse("2026-04-26T10:01:00Z")
+                    isReady = true
                 )
             ),
             status = LobbyStatus.IN_GAME,
@@ -55,8 +52,7 @@ class GameInitializationServiceTest {
                 maxPlayers = 4,
                 isPrivate = false,
                 allowGuests = true
-            ),
-            createdAt = Instant.parse("2026-04-26T09:00:00Z")
+            )
         )
 
         val orderedPool = createTiles(40)
@@ -96,6 +92,7 @@ class GameInitializationServiceTest {
         assertEquals(firstPlayer.userId, result.turnDraft?.playerUserId)
         assertEquals(firstPlayer.rackTiles, result.turnDraft?.rackTiles)
         assertEquals(emptyList<Nothing>(), result.turnDraft?.boardSets)
+        assertEquals(0, result.turnDraft?.version)
 
         verify(tilePoolGenerationService).createTilePool()
     }
@@ -103,6 +100,7 @@ class GameInitializationServiceTest {
     private fun createTiles(count: Int): List<Tile> {
         return (0 until count).map { index ->
             NumberedTile(
+                tileId = "tile-$index",
                 color = TileColor.entries[index % TileColor.entries.size],
                 number = (index % 13) + 1
             )

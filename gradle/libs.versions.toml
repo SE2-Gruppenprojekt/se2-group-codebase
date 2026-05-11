@@ -35,6 +35,7 @@ kotlinxCoroutinesTest = "1.8.1"
 mockk = "1.13.10"
 navigation = "2.9.7"
 androidxTestCore = "1.5.0"
+turbine = "1.1.0"
 
 # Networking & Serialization
 ktor = "2.3.10"
@@ -92,6 +93,7 @@ mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "moc
 navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
 navigation-testing = { group = "androidx.navigation", name = "navigation-testing", version.ref = "navigation" }
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
 # Spring Boot (Backend)
 spring-boot-starter-web = { group = "org.springframework.boot", name = "spring-boot-starter-web" }

@@ -16,7 +16,7 @@ class ErrorUiMapperTest {
 
     @Test
     fun maps_api_error_with_message() {
-        val error = AppError.Api("custom failure")
+        val error = AppError.Rest.Api("custom failure")
 
         assertEquals(
             "custom failure",

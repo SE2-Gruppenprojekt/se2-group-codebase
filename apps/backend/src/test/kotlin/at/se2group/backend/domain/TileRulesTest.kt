@@ -1,4 +1,5 @@
 package at.se2group.backend.domain
+import shared.models.game.domain.TileColor
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

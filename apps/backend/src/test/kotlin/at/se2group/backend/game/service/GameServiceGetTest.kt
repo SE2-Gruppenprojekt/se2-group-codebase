@@ -1,6 +1,6 @@
 package at.se2group.backend.game.service
 
-import at.se2group.backend.domain.GameStatus
+import shared.models.game.domain.GameStatus
 import at.se2group.backend.persistence.GameEntity
 import at.se2group.backend.persistence.GamePlayerEntity
 import at.se2group.backend.persistence.GameRepository
@@ -17,7 +17,6 @@ import org.mockito.junit.jupiter.MockitoExtension
 import java.time.Instant
 import java.util.Optional
 import org.junit.jupiter.api.BeforeEach
-import at.se2group.backend.persistence.TurnDraftRepository
 
 @ExtendWith(MockitoExtension::class)
 class GameServiceGetTest {
@@ -27,12 +26,9 @@ class GameServiceGetTest {
 
     lateinit var gameService: GameService
 
-    @Mock
-    lateinit var turnDraftRepository: TurnDraftRepository
-
     @BeforeEach
     fun setup() {
-        gameService = GameService(gameRepository, turnDraftRepository)
+        gameService = GameService(gameRepository)
     }
 
     @Test

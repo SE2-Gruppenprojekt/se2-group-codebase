@@ -1,19 +1,47 @@
 package at.se2group.backend.game.service
 
-import at.se2group.backend.dto.UpdateDraftRequest
+import shared.models.game.domain.GameStatus
+import shared.models.game.request.UpdateDraftRequest
 import at.se2group.backend.persistence.*
-import at.se2group.backend.service.GameService
+import at.se2group.backend.service.AfterCommitExecutor
+import at.se2group.backend.service.GameBroadcastService
+import at.se2group.backend.service.TurnDraftService
+import at.se2group.backend.service.TileConservationService
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
+import java.time.Instant
 import java.util.Optional
 
-class GameServiceUpdateDraftTest {
+class TurnDraftServiceTest {
 
     private val gameRepository: GameRepository = mock()
     private val turnDraftRepository: TurnDraftRepository = mock()
+    private val tileConservationService: TileConservationService = mock()
+    private val gameBroadcastService: GameBroadcastService = mock()
+    private val afterCommitExecutor = AfterCommitExecutor()
 
-    private val gameService = GameService(gameRepository, turnDraftRepository)
+    private val turnDraftService = TurnDraftService(
+        gameRepository,
+        turnDraftRepository,
+        tileConservationService,
+        gameBroadcastService,
+        afterCommitExecutor
+    )
+
+    private fun gameEntity(currentPlayer: String = "user-1"): GameEntity {
+        val game = GameEntity(
+            gameId = "game-1",
+            lobbyId = "lobby-1",
+            currentPlayerUserId = currentPlayer,
+            status = GameStatus.ACTIVE,
+            createdAt = Instant.now()
+        )
+        game.players = mutableListOf(
+            GamePlayerEntity(game = game, userId = currentPlayer, displayName = "Anna", turnOrder = 0)
+        )
+        return game
+    }
 
     @Test
     fun `updateDraft throws when game not found`() {
@@ -23,24 +51,24 @@ class GameServiceUpdateDraftTest {
         val request = UpdateDraftRequest(emptyList(), emptyList())
 
         assertThrows(NoSuchElementException::class.java) {
-            gameService.updateDraft("game-1", "user-1", request)
+            turnDraftService.updateDraft("game-1", "user-1", request)
         }
+
+        verify(gameBroadcastService, never()).broadcastDraftUpdated(any())
     }
 
     @Test
     fun `updateDraft returns draft when valid`() {
 
-        val game = GameEntity().apply {
-            gameId = "game-1"
-        }
 
         val draft = TurnDraftEntity(
             gameId = "game-1",
-            playerUserId = "user-1"
+            playerUserId = "user-1",
+            version = 2
         )
 
         whenever(gameRepository.findById("game-1"))
-            .thenReturn(Optional.of(game))
+            .thenReturn(Optional.of(gameEntity()))
 
         whenever(turnDraftRepository.findByGameId("game-1"))
             .thenReturn(draft)
@@ -48,7 +76,7 @@ class GameServiceUpdateDraftTest {
         whenever(turnDraftRepository.save(any()))
             .thenReturn(draft)
 
-        val result = gameService.updateDraft(
+        val result = turnDraftService.updateDraft(
             "game-1",
             "user-1",
             mock()
@@ -56,27 +84,81 @@ class GameServiceUpdateDraftTest {
 
         assertEquals("game-1", result.gameId)
         assertEquals("user-1", result.playerUserId)
+        assertEquals(3, result.version)
+
+        verify(gameBroadcastService).broadcastDraftUpdated(any())
     }
 
     @Test
     fun `updateDraft throws when draft not found`() {
 
-        val game = GameEntity().apply {
-            gameId = "game-1"
-        }
 
         whenever(gameRepository.findById("game-1"))
-            .thenReturn(Optional.of(game))
+            .thenReturn(Optional.of(gameEntity()))
 
         whenever(turnDraftRepository.findByGameId("game-1"))
             .thenReturn(null)
 
         assertThrows(NoSuchElementException::class.java) {
-            gameService.updateDraft(
+            turnDraftService.updateDraft(
                 "game-1",
                 "user-1",
                 mock()
             )
         }
+
+        verify(gameBroadcastService, never()).broadcastDraftUpdated(any())
+    }
+
+    @Test
+    fun `updateDraft throws when player is not active`() {
+        whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(gameEntity(currentPlayer = "user-1")))
+        whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(TurnDraftEntity(gameId = "game-1", playerUserId = "user-2"))
+
+        assertThrows(IllegalStateException::class.java) {
+            turnDraftService.updateDraft("game-1", "user-2", mock())
+        }
+
+        verify(gameBroadcastService, never()).broadcastDraftUpdated(any())
+    }
+
+    @Test
+    fun `updateDraft throws when draft belongs to different user`() {
+        whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(gameEntity(currentPlayer = "user-2")))
+        whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(TurnDraftEntity(gameId = "game-1", playerUserId = "user-1"))
+
+        assertThrows(IllegalStateException::class.java) {
+            turnDraftService.updateDraft("game-1", "user-2", mock())
+        }
+
+        verify(gameBroadcastService, never()).broadcastDraftUpdated(any())
+    }
+
+    @Test
+    fun `updateDraft throws when user is draft owner but not active player`() {
+        whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(gameEntity(currentPlayer = "user-2")))
+        whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(TurnDraftEntity(gameId = "game-1", playerUserId = "user-1"))
+
+        assertThrows(IllegalStateException::class.java) {
+            turnDraftService.updateDraft("game-1", "user-1", mock())
+        }
+
+        verify(gameBroadcastService, never()).broadcastDraftUpdated(any())
+    }
+
+
+    @Test
+    fun `updateDraft does not persist when tile conservation fails`(){
+        whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(gameEntity()))
+        whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(TurnDraftEntity(gameId = "game-1", playerUserId = "user-1"))
+        whenever(tileConservationService.validate(any(), any(), any())).thenThrow(IllegalArgumentException("Tile conservation failed!"))
+
+        runCatching {
+            turnDraftService.updateDraft("game-1", "user-1", UpdateDraftRequest(emptyList(), emptyList()))
+        }
+
+        verify(turnDraftRepository, never()).save(any())
+
+        verify(gameBroadcastService, never()).broadcastDraftUpdated(any())
     }
 }

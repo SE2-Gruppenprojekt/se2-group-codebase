@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import at.aau.serg.android.ui.theme.AccentPurple
 
 @Composable
 fun CreateLobbyButton(
@@ -16,7 +17,7 @@ fun CreateLobbyButton(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF9D3CFF),
+            containerColor = AccentPurple,
             contentColor = Color.White
         )
     ) {

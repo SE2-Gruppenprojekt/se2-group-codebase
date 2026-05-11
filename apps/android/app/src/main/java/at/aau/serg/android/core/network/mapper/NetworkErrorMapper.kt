@@ -21,7 +21,7 @@ object NetworkErrorMapper {
 
     fun map(e: Throwable): AppError =
         when (e) {
-            is IOException -> AppError.Network
+            is IOException -> AppError.Rest.Network
             is HttpException -> mapHttpError(e)
             else -> AppError.Unknown
         }
@@ -31,14 +31,14 @@ object NetworkErrorMapper {
         val parsed = body?.let { adapter.fromJson(it) }
 
         val message = parsed?.errorMessage?.takeIf { it.isNotBlank() }
-        if (message != null) return AppError.Api(message)
+        if (message != null) return AppError.Rest.Api(message)
 
         return when (e.code()) {
-            400 -> AppError.BadRequest
-            403 -> AppError.Forbidden
-            404 -> AppError.NotFound
-            409 -> AppError.Conflict
-            in 500..599 -> AppError.Server
+            400 -> AppError.Rest.BadRequest
+            403 -> AppError.Rest.Forbidden
+            404 -> AppError.Rest.NotFound
+            409 -> AppError.Rest.Conflict
+            in 500..599 -> AppError.Rest.Server
             else -> AppError.Unknown
         }
     }

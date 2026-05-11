@@ -3,35 +3,47 @@ package at.aau.serg.android.core.network.lobby
 import at.aau.serg.android.core.network.WebConfig
 import at.aau.serg.android.core.network.WebSocketManager
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapNotNull
+import shared.models.lobby.event.LobbyDeletedPayload
+import shared.models.lobby.event.LobbyEvent
+import shared.models.lobby.event.LobbyStartedPayload
+import shared.models.lobby.event.LobbyUpdatedPayload
 
 class LobbyWebSocketService(
     private val moshi: Moshi,
     private val ws: WebSocketManager = WebSocketManager()
 ) {
-    private val typeAdapter = moshi.adapter(LobbyEventType::class.java)
+    private val messageTypeAdapter = moshi.adapter<Map<String, Any?>>(
+        Types.newParameterizedType(
+            Map::class.java,
+            String::class.java,
+            Any::class.java
+        )
+    )
 
-    fun subscribe(lobbyId: String): Flow<LobbyEvent> {
+    suspend fun subscribe(lobbyId: String): Flow<LobbyEvent> {
         return ws
             .subscribe(WebConfig.Topics.lobby(lobbyId))
             .mapNotNull { parseLobbyEvent(it) }
     }
 
     private fun parseLobbyEvent(message: String): LobbyEvent? {
-        return when (typeAdapter.fromJson(message)?.type) {
+        val type = messageTypeAdapter.fromJson(message)?.get("type") as? String
 
-            "lobby.updated" ->
+        return when (type) {
+            LobbyUpdatedPayload.TYPE ->
                 moshi.adapter(LobbyUpdatedPayload::class.java)
                     .fromJson(message)
                     ?.let { LobbyEvent.Updated(it) }
 
-            "lobby.deleted" ->
+            LobbyDeletedPayload.TYPE ->
                 moshi.adapter(LobbyDeletedPayload::class.java)
                     .fromJson(message)
                     ?.let { LobbyEvent.Deleted(it) }
 
-            "lobby.started" ->
+            LobbyStartedPayload.TYPE ->
                 moshi.adapter(LobbyStartedPayload::class.java)
                     .fromJson(message)
                     ?.let { LobbyEvent.Started(it) }

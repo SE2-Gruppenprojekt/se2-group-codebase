@@ -132,6 +132,7 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
     testImplementation(libs.androidx.test.core)
+    testImplementation(libs.turbine)
 
     // Android UI Testing (instrumentation)
     androidTestImplementation(libs.androidx.junit)

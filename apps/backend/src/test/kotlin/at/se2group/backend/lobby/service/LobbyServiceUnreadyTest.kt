@@ -1,10 +1,12 @@
 package at.se2group.backend.lobby.service
 
-import at.se2group.backend.domain.LobbyStatus
+import shared.models.lobby.domain.LobbyStatus
 import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
+import at.se2group.backend.service.AfterCommitExecutor
+import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.service.GameInitializationService
 import at.se2group.backend.service.LobbyService
@@ -41,8 +43,19 @@ class LobbyServiceUnreadyTest {
     @Mock
     lateinit var gameRepository: GameRepository
 
+    @Mock
+    lateinit var gameBroadcastService: GameBroadcastService
+
+    @Mock
+    lateinit var afterCommitExecutor: AfterCommitExecutor
+
     @InjectMocks
     lateinit var lobbyService: LobbyService
+
+    private fun runDeferredAction(invocation: org.mockito.invocation.InvocationOnMock) {
+        @Suppress("UNCHECKED_CAST")
+        (invocation.arguments[0] as () -> Unit).invoke()
+    }
 
     @Test
     fun `unreadyLobby marks player as unready successfully`() {
@@ -53,7 +66,6 @@ class LobbyServiceUnreadyTest {
             maxPlayers = 4,
             isPrivate = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable("host-1", "Alice", true, Instant.now()),
                 LobbyPlayerEmbeddable("player-2", "Bob", true, Instant.now())
@@ -63,6 +75,11 @@ class LobbyServiceUnreadyTest {
         `when`(lobbyRepository.findById("lobby-1")).thenReturn(Optional.of(entity))
         `when`(lobbyRepository.save(any(LobbyEntity::class.java)))
             .thenAnswer { it.arguments[0] as LobbyEntity }
+
+        `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
+            .thenAnswer {
+                runDeferredAction(it)
+            }
 
         val result = lobbyService.unreadyLobby("lobby-1", "player-2")
         assertEquals("lobby-1", result.lobbyId)
@@ -94,6 +111,7 @@ class LobbyServiceUnreadyTest {
         assertFalse(saved.players.first { it.userId == "player-2" }.isReady)
         assertTrue(saved.players.first { it.userId == "host-1" }.isReady)
 
+        verify(afterCommitExecutor).execute(org.mockito.kotlin.any())
         verify(lobbyBroadcastService).broadcastLobbyUpdated(result)
     }
 
@@ -106,7 +124,6 @@ class LobbyServiceUnreadyTest {
             maxPlayers = 4,
             isPrivate = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable("player-2", "Bob", true, Instant.now())
             )
@@ -132,7 +149,6 @@ class LobbyServiceUnreadyTest {
             maxPlayers = 4,
             isPrivate = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable("host-1", "Alice", true, Instant.now())
             )

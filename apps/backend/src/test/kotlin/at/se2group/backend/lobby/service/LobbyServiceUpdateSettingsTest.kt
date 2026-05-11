@@ -1,12 +1,14 @@
 package at.se2group.backend.lobby.service
 
 import at.se2group.backend.persistence.LobbyEntity
-import at.se2group.backend.domain.LobbyStatus
+import shared.models.lobby.domain.LobbyStatus
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
 import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.dto.UpdateLobbySettingsRequest
 import at.se2group.backend.persistence.GameRepository
+import at.se2group.backend.service.AfterCommitExecutor
+import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.GameInitializationService
 import at.se2group.backend.service.LobbyService
 import org.junit.jupiter.api.extension.ExtendWith
@@ -40,6 +42,12 @@ class LobbyServiceUpdateSettingsTest {
     @Mock
     lateinit var gameRepository: GameRepository
 
+    @Mock
+    lateinit var gameBroadcastService: GameBroadcastService
+
+    @Mock
+    lateinit var afterCommitExecutor: AfterCommitExecutor
+
     @InjectMocks
     lateinit var lobbyService: LobbyService
 
@@ -49,6 +57,10 @@ class LobbyServiceUpdateSettingsTest {
         return null as T
     }
 
+    private fun runDeferredAction(invocation: org.mockito.invocation.InvocationOnMock) {
+        @Suppress("UNCHECKED_CAST")
+        (invocation.arguments[0] as () -> Unit).invoke()
+    }
 
     @Test
     fun ` updateLobbySettings allows host to update successfully`() {
@@ -59,7 +71,6 @@ class LobbyServiceUpdateSettingsTest {
             maxPlayers = 4,
             isPrivate  = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable("host-1", "Anna", false, Instant.now())
             )
@@ -68,6 +79,11 @@ class LobbyServiceUpdateSettingsTest {
         `when`(lobbyRepository.findById("lobby-1")).thenReturn(Optional.of(entity))
         `when`(lobbyRepository.save(any()))
         .thenAnswer { it.arguments[0] as LobbyEntity }
+
+        `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
+            .thenAnswer {
+                runDeferredAction(it)
+            }
 
         val request = UpdateLobbySettingsRequest(maxPlayers = 3, isPrivate = true, allowGuests = false)
         val result = lobbyService.updateLobbySettings("lobby-1", "host-1", request)
@@ -88,6 +104,8 @@ class LobbyServiceUpdateSettingsTest {
         assertEquals(false, saved.allowGuests)
 
         assertEquals(3, result.settings.maxPlayers)
+
+        verify(afterCommitExecutor).execute(org.mockito.kotlin.any())
         verify(lobbyBroadcastService).broadcastLobbyUpdated(result)
     }
 
@@ -100,7 +118,6 @@ class LobbyServiceUpdateSettingsTest {
             maxPlayers = 4,
             isPrivate  = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable("host-1", "Anna", false, Instant.now()),
                 LobbyPlayerEmbeddable("player-2", "Marco", false, Instant.now())
@@ -128,7 +145,6 @@ class LobbyServiceUpdateSettingsTest {
             maxPlayers = 4,
             isPrivate  = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable("host-1", "Anna", false, Instant.now()),
 
@@ -156,7 +172,6 @@ class LobbyServiceUpdateSettingsTest {
             maxPlayers = 4,
             isPrivate  = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable("host-1", "Anna", false, Instant.now()),
                 LobbyPlayerEmbeddable("player-2", "Marco", false, Instant.now()),

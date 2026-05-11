@@ -10,9 +10,11 @@ class TurnDraftEntity(
 
     var playerUserId: String = "",
 
+    var version: Long = 0,
+
     @ElementCollection
     var rackTiles: MutableList<TileEmbeddable> = mutableListOf(),
 
-    @ElementCollection
-    var boardTiles: MutableList<TileEmbeddable> = mutableListOf()
+    @OneToMany(mappedBy = "draft", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var boardSets: MutableList<TurnDraftBoardSetEntity> = mutableListOf()
 )

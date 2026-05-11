@@ -1,6 +1,6 @@
 package at.se2group.backend.persistence
 
-import at.se2group.backend.domain.GameStatus
+import shared.models.game.domain.GameStatus
 import jakarta.persistence.CascadeType
 import jakarta.persistence.CollectionTable
 import jakarta.persistence.Column

@@ -1,4 +1,10 @@
 package at.se2group.backend.domain
+import shared.models.game.domain.ConfirmedGame
+import shared.models.game.domain.GamePlayer
+import shared.models.game.domain.NumberedTile
+import shared.models.game.domain.TurnDraft
+import shared.models.game.domain.TileColor
+import shared.models.game.domain.GameStatus
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -12,7 +18,7 @@ class GameStartResultTest {
             userId = "user-1",
             displayName = "Player One",
             turnOrder = 0,
-            rackTiles = listOf(NumberedTile(color = TileColor.RED, number = 3)),
+            rackTiles = listOf(NumberedTile(tileId = "tile-1", color = TileColor.RED, number = 3)),
             hasCompletedInitialMeld = false,
             score = 0
         )
@@ -22,7 +28,7 @@ class GameStartResultTest {
             lobbyId = "lobby-1",
             players = listOf(player),
             boardSets = emptyList(),
-            drawPile = listOf(NumberedTile(color = TileColor.BLUE, number = 5)),
+            drawPile = listOf(NumberedTile(tileId = "tile-2", color = TileColor.BLUE, number = 5)),
             currentPlayerUserId = player.userId,
             status = GameStatus.ACTIVE
         )

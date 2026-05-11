@@ -1,15 +1,15 @@
 package at.se2group.backend.mapper
 
-import at.se2group.backend.domain.BoardSet
-import at.se2group.backend.domain.ConfirmedGame
-import at.se2group.backend.domain.GamePlayer
-import at.se2group.backend.domain.JokerTile
-import at.se2group.backend.domain.NumberedTile
-import at.se2group.backend.domain.Tile
-import at.se2group.backend.dto.BoardSetResponse
-import at.se2group.backend.dto.GamePlayerResponse
-import at.se2group.backend.dto.GameResponse
-import at.se2group.backend.dto.TileResponse
+import shared.models.game.domain.BoardSet
+import shared.models.game.domain.ConfirmedGame
+import shared.models.game.domain.GamePlayer
+import shared.models.game.domain.JokerTile
+import shared.models.game.domain.NumberedTile
+import shared.models.game.domain.Tile
+import shared.models.game.response.BoardSetResponse
+import shared.models.game.response.GamePlayerResponse
+import shared.models.game.response.GameResponse
+import shared.models.game.response.TileResponse
 import at.se2group.backend.persistence.BoardSetEntity
 import at.se2group.backend.persistence.GameEntity
 import at.se2group.backend.persistence.GamePlayerEntity
@@ -87,19 +87,25 @@ fun BoardSet.toEntity(game: GameEntity): BoardSetEntity =
 
 fun TileEmbeddable.toDomain(): Tile =
     if (joker) {
-        JokerTile(color)
+        JokerTile(tileId, color)
     } else {
-        NumberedTile(color, number ?: throw IllegalStateException("Numbered tile must have a number"))
+        NumberedTile(
+            tileId,
+            color,
+            number ?: throw IllegalStateException("Numbered tile must have a number")
+        )
     }
 
 fun Tile.toEmbeddable(): TileEmbeddable =
     when (this) {
         is JokerTile -> TileEmbeddable(
+            tileId = tileId,
             color = color,
             number = null,
             joker = true
         )
         is NumberedTile -> TileEmbeddable(
+            tileId = tileId,
             color = color,
             number = number,
             joker = false
@@ -111,9 +117,13 @@ fun ConfirmedGame.toResponse(): GameResponse =
         gameId = gameId,
         lobbyId = lobbyId,
         players = players.map { it.toResponse() },
-        boardSets = boardSets.map { it.toResponse() },
+        board = boardSets.map { it.toResponse() },
         drawPile = drawPile.map { it.toResponse() },
+        drawPileCount = drawPile.size,
         currentPlayerUserId = currentPlayerUserId,
+        currentTurnPlayerId = currentPlayerUserId,
+        turnDeadline = null,
+        remainingTurnSeconds = null,
         status = status.name,
         createdAt = createdAt,
         startedAt = startedAt,
@@ -141,13 +151,15 @@ fun BoardSet.toResponse(): BoardSetResponse =
 fun Tile.toResponse(): TileResponse =
     when (this) {
         is JokerTile -> TileResponse(
+            tileId = tileId,
             color = color.name,
             number = null,
-            joker = true
+            isJoker = true
         )
         is NumberedTile -> TileResponse(
+            tileId = tileId,
             color = color.name,
             number = number,
-            joker = false
+            isJoker = false
         )
     }

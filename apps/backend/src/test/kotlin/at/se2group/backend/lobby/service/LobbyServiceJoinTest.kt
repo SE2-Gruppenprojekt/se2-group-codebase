@@ -1,11 +1,13 @@
 package at.se2group.backend.lobby.service
 
-import at.se2group.backend.domain.LobbyStatus
+import shared.models.lobby.domain.LobbyStatus
 import at.se2group.backend.dto.JoinLobbyRequest
 import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
+import at.se2group.backend.service.AfterCommitExecutor
+import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.service.GameInitializationService
 import at.se2group.backend.service.LobbyService
@@ -19,12 +21,11 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
-import java.time.Instant
 import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
@@ -42,8 +43,19 @@ class LobbyServiceJoinTest {
     @Mock
     lateinit var gameRepository: GameRepository
 
+    @Mock
+    lateinit var gameBroadcastService: GameBroadcastService
+
+    @Mock
+    lateinit var afterCommitExecutor: AfterCommitExecutor
+
     @InjectMocks
     lateinit var lobbyService: LobbyService
+
+    private fun runDeferredAction(invocation: org.mockito.invocation.InvocationOnMock) {
+        @Suppress("UNCHECKED_CAST")
+        (invocation.arguments[0] as () -> Unit).invoke()
+    }
 
     @Test
     fun `joinLobby allows a player to join an open lobby successfully`() {
@@ -54,13 +66,11 @@ class LobbyServiceJoinTest {
             maxPlayers = 4,
             isPrivate = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable(
                     userId = "host-1",
                     displayName = "Alice",
                     isReady = false,
-                    joinedAt = Instant.now()
                 )
             )
         )
@@ -70,10 +80,15 @@ class LobbyServiceJoinTest {
             displayName = "Bob"
         )
 
-        Mockito.`when`(lobbyRepository.findById("lobby-1"))
+        `when`(lobbyRepository.findById("lobby-1"))
             .thenReturn(Optional.of(entity))
-        Mockito.`when`(lobbyRepository.save(any(LobbyEntity::class.java)))
+        `when`(lobbyRepository.save(any(LobbyEntity::class.java)))
             .thenAnswer { it.arguments[0] as LobbyEntity }
+
+        `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
+            .thenAnswer {
+                runDeferredAction(it)
+            }
 
         val result = lobbyService.joinLobby("lobby-1", request)
 
@@ -114,6 +129,7 @@ class LobbyServiceJoinTest {
         assertEquals("Bob", saved.players.last().displayName)
         assertFalse(saved.players.last().isReady)
 
+        verify(afterCommitExecutor).execute(org.mockito.kotlin.any())
         verify(lobbyBroadcastService).broadcastLobbyUpdated(result)
     }
 
@@ -126,19 +142,16 @@ class LobbyServiceJoinTest {
             maxPlayers = 2,
             isPrivate = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable(
                     userId = "host-1",
                     displayName = "Alice",
                     isReady = false,
-                    joinedAt = Instant.now()
                 ),
                 LobbyPlayerEmbeddable(
                     userId = "player-2",
                     displayName = "Bob",
                     isReady = false,
-                    joinedAt = Instant.now()
                 )
             )
         )
@@ -148,7 +161,7 @@ class LobbyServiceJoinTest {
             displayName = "Charlie"
         )
 
-        Mockito.`when`(lobbyRepository.findById("lobby-1"))
+        `when`(lobbyRepository.findById("lobby-1"))
             .thenReturn(Optional.of(entity))
 
         val exception = assertThrows<IllegalStateException> {
@@ -171,19 +184,16 @@ class LobbyServiceJoinTest {
             maxPlayers = 2,
             isPrivate = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable(
                     userId = "host-1",
                     displayName = "Alice",
                     isReady = false,
-                    joinedAt = Instant.now()
                 ),
                 LobbyPlayerEmbeddable(
                     userId = "player-2",
                     displayName = "Bob",
                     isReady = false,
-                    joinedAt = Instant.now()
                 )
             )
         )
@@ -193,7 +203,7 @@ class LobbyServiceJoinTest {
             displayName = "Charlie"
         )
 
-        Mockito.`when`(lobbyRepository.findById("lobby-1"))
+        `when`(lobbyRepository.findById("lobby-1"))
             .thenReturn(Optional.of(entity))
 
         val exception = assertThrows<IllegalStateException> {
@@ -216,19 +226,16 @@ class LobbyServiceJoinTest {
             maxPlayers = 4,
             isPrivate = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable(
                     userId = "host-1",
                     displayName = "Alice",
                     isReady = false,
-                    joinedAt = Instant.now()
                 ),
                 LobbyPlayerEmbeddable(
                     userId = "player-2",
                     displayName = "Bob",
                     isReady = false,
-                    joinedAt = Instant.now()
                 )
             )
         )
@@ -238,7 +245,7 @@ class LobbyServiceJoinTest {
             displayName = "Bob"
         )
 
-        Mockito.`when`(lobbyRepository.findById("lobby-1"))
+        `when`(lobbyRepository.findById("lobby-1"))
             .thenReturn(Optional.of(entity))
 
         val exception = assertThrows<IllegalStateException> {
@@ -261,13 +268,11 @@ class LobbyServiceJoinTest {
             maxPlayers = 4,
             isPrivate = false,
             allowGuests = true,
-            createdAt = Instant.now(),
             players = mutableListOf(
                 LobbyPlayerEmbeddable(
                     userId = "host-1",
                     displayName = "Alice",
                     isReady = false,
-                    joinedAt = Instant.now()
                 )
             )
         )
@@ -277,9 +282,9 @@ class LobbyServiceJoinTest {
             displayName = "Bob"
         )
 
-        Mockito.`when`(lobbyRepository.findById("lobby-1"))
+        `when`(lobbyRepository.findById("lobby-1"))
             .thenReturn(Optional.of(entity))
-        Mockito.`when`(lobbyRepository.save(any(LobbyEntity::class.java)))
+        `when`(lobbyRepository.save(any(LobbyEntity::class.java)))
             .thenAnswer { it.arguments[0] as LobbyEntity }
 
         lobbyService.joinLobby("lobby-1", request)

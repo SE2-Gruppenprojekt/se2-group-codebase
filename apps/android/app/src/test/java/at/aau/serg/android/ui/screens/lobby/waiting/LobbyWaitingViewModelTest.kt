@@ -3,10 +3,6 @@ package at.aau.serg.android.ui.screens.lobby.waiting
 import at.aau.serg.android.MainDispatcherRule
 import at.aau.serg.android.core.datastore.InMemoryProtoStore
 import at.aau.serg.android.core.network.lobby.LobbyAPI
-import at.aau.serg.android.core.network.lobby.LobbyDeletedPayload
-import at.aau.serg.android.core.network.lobby.LobbyEvent
-import at.aau.serg.android.core.network.lobby.LobbyStartedPayload
-import at.aau.serg.android.core.network.lobby.LobbyUpdatedPayload
 import at.aau.serg.android.core.network.lobby.LobbyWebSocketService
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.state.LoadState
@@ -25,6 +21,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import shared.models.lobby.event.LobbyDeletedPayload
+import shared.models.lobby.event.LobbyEvent
+import shared.models.lobby.event.LobbyStartedPayload
+import shared.models.lobby.event.LobbyUpdatedPayload
 import shared.models.lobby.response.LobbyPlayerResponse
 import shared.models.lobby.response.LobbyResponse
 import kotlinx.coroutines.runBlocking

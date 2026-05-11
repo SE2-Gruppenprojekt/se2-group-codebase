@@ -1,6 +1,6 @@
 package at.se2group.backend.persistence
 
-import at.se2group.backend.domain.TileColor
+import shared.models.game.domain.TileColor
 import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 import jakarta.persistence.EnumType
@@ -8,6 +8,9 @@ import jakarta.persistence.Enumerated
 
 @Embeddable
 data class TileEmbeddable(
+    @Column(name = "tile_id", nullable = false)
+    var tileId: String = "",
+
     @Enumerated(EnumType.STRING)
     @Column(name = "color", nullable = false)
     var color: TileColor = TileColor.BLACK,

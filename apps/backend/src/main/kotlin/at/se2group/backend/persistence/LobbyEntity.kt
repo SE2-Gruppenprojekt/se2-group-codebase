@@ -1,6 +1,5 @@
 package at.se2group.backend.persistence
 
-import at.se2group.backend.domain.LobbyStatus
 import jakarta.persistence.CollectionTable
 import jakarta.persistence.Column
 import jakarta.persistence.ElementCollection
@@ -11,6 +10,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.Table
 import java.time.Instant
+import shared.models.lobby.domain.LobbyStatus
 
 @Entity
 @Table(name = "lobbies")

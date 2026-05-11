@@ -1,10 +1,12 @@
 package at.se2group.backend.lobby.service
 
-import at.se2group.backend.domain.LobbyStatus
+import shared.models.lobby.domain.LobbyStatus
 import at.se2group.backend.dto.CreateLobbyRequest
 import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.persistence.LobbyRepository
+import at.se2group.backend.service.AfterCommitExecutor
+import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.LobbyBroadcastService
 import at.se2group.backend.service.GameInitializationService
 import at.se2group.backend.service.LobbyService
@@ -18,10 +20,10 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import kotlin.IllegalArgumentException
 
@@ -40,8 +42,19 @@ class LobbyServiceCreateTest {
     @Mock
     lateinit var gameRepository: GameRepository
 
+    @Mock
+    lateinit var gameBroadcastService: GameBroadcastService
+
+    @Mock
+    lateinit var afterCommitExecutor: AfterCommitExecutor
+
     @InjectMocks
     lateinit var lobbyService: LobbyService
+
+    private fun runDeferredAction(invocation: org.mockito.invocation.InvocationOnMock) {
+        @Suppress("UNCHECKED_CAST")
+        (invocation.arguments[0] as () -> Unit).invoke()
+    }
 
     @Test
     fun `createLobby creates a valid open lobby with host as first player`() {
@@ -52,8 +65,13 @@ class LobbyServiceCreateTest {
             allowGuests = true
         )
 
-        Mockito.`when`(lobbyRepository.save(any(LobbyEntity::class.java)))
+        `when`(lobbyRepository.save(any(LobbyEntity::class.java)))
             .thenAnswer { it.arguments[0] as LobbyEntity }
+
+        `when`(afterCommitExecutor.execute(org.mockito.kotlin.any()))
+            .thenAnswer {
+                runDeferredAction(it)
+            }
 
         val result = lobbyService.createLobby("host alice", request)
 
@@ -81,6 +99,7 @@ class LobbyServiceCreateTest {
         assertEquals("Alice", saved.players.first().displayName)
         assertFalse(saved.players.first().isReady)
 
+        verify(afterCommitExecutor).execute(org.mockito.kotlin.any())
         verify(lobbyBroadcastService).broadcastLobbyUpdated(result)
     }
 
@@ -131,7 +150,7 @@ class LobbyServiceCreateTest {
             allowGuests = true
         )
 
-        Mockito.`when`(lobbyRepository.save(any(LobbyEntity::class.java)))
+        `when`(lobbyRepository.save(any(LobbyEntity::class.java)))
             .thenAnswer { it.arguments[0] as LobbyEntity }
 
         lobbyService.createLobby("host alice", request)

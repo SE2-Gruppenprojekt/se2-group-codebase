@@ -1,9 +1,9 @@
 package at.se2group.backend.lobby.service
 
-import at.se2group.backend.domain.Lobby
-import at.se2group.backend.domain.LobbyPlayer
-import at.se2group.backend.domain.LobbySettings
-import at.se2group.backend.domain.LobbyStatus
+import shared.models.lobby.domain.Lobby
+import shared.models.lobby.domain.LobbyPlayer
+import shared.models.lobby.domain.LobbySettings
+import shared.models.lobby.domain.LobbyStatus
 import at.se2group.backend.dto.LobbyDeletedEvent
 import at.se2group.backend.dto.LobbyStartedEvent
 import at.se2group.backend.dto.LobbyUpdatedEvent
@@ -18,7 +18,6 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.messaging.simp.SimpMessagingTemplate
-import java.time.Instant
 
 @ExtendWith(MockitoExtension::class)
 class LobbyBroadcastServiceTest {
@@ -42,8 +41,7 @@ class LobbyBroadcastServiceTest {
                 LobbyPlayer(
                     userId = "host-1",
                     displayName = "Alice",
-                    isReady = true,
-                    joinedAt = Instant.parse("2026-04-12T10:00:00Z")
+                    isReady = true
                 )
             ),
             status = LobbyStatus.OPEN,
@@ -51,8 +49,7 @@ class LobbyBroadcastServiceTest {
                 maxPlayers = 4,
                 isPrivate = false,
                 allowGuests = true
-            ),
-            createdAt = Instant.parse("2026-04-12T09:00:00Z")
+            )
         )
 
         val payloadCaptor = ArgumentCaptor.forClass(LobbyUpdatedEvent::class.java)

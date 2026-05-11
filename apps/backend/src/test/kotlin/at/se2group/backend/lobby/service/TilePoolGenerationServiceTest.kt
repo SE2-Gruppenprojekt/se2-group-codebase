@@ -1,8 +1,8 @@
 package at.se2group.backend.service
 
-import at.se2group.backend.domain.JokerTile
-import at.se2group.backend.domain.NumberedTile
-import at.se2group.backend.domain.TileColor
+import shared.models.game.domain.JokerTile
+import shared.models.game.domain.NumberedTile
+import shared.models.game.domain.TileColor
 import at.se2group.backend.domain.TileRules
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -62,5 +62,13 @@ class TilePoolGenerationServiceTest {
         val jokerTiles = tiles.filterIsInstance<JokerTile>()
 
         assertTrue(jokerTiles.all { it.color in TileRules.jokerColors })
+    }
+
+    @Test
+    fun `createTilePool assigns unique tile ids`() {
+        val tiles = service.createTilePool()
+
+        assertEquals(tiles.size, tiles.map { it.tileId }.toSet().size)
+        assertTrue(tiles.all { it.tileId.isNotBlank() })
     }
 }

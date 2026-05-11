@@ -1,13 +1,13 @@
 package at.se2group.backend.mapper
 
-import at.se2group.backend.domain.BoardSet
-import at.se2group.backend.domain.BoardSetType
-import at.se2group.backend.domain.ConfirmedGame
-import at.se2group.backend.domain.GamePlayer
-import at.se2group.backend.domain.GameStatus
-import at.se2group.backend.domain.JokerTile
-import at.se2group.backend.domain.NumberedTile
-import at.se2group.backend.domain.TileColor
+import shared.models.game.domain.BoardSet
+import shared.models.game.domain.BoardSetType
+import shared.models.game.domain.ConfirmedGame
+import shared.models.game.domain.GamePlayer
+import shared.models.game.domain.GameStatus
+import shared.models.game.domain.JokerTile
+import shared.models.game.domain.NumberedTile
+import shared.models.game.domain.TileColor
 import at.se2group.backend.persistence.BoardSetEntity
 import at.se2group.backend.persistence.GameEntity
 import at.se2group.backend.persistence.GamePlayerEntity
@@ -33,8 +33,8 @@ class GameMapperTest {
                     displayName = "Alice",
                     turnOrder = 0,
                     rackTiles = listOf(
-                        NumberedTile(TileColor.BLUE, 3),
-                        JokerTile(TileColor.RED)
+                        numbered("tile-1", TileColor.BLUE, 3),
+                        joker("tile-2", TileColor.RED)
                     ),
                     hasCompletedInitialMeld = true,
                     score = 25,
@@ -45,7 +45,7 @@ class GameMapperTest {
                     displayName = "Bob",
                     turnOrder = 1,
                     rackTiles = listOf(
-                        NumberedTile(TileColor.BLACK, 11)
+                        numbered("tile-3", TileColor.BLACK, 11)
                     ),
                     hasCompletedInitialMeld = false,
                     score = 10,
@@ -57,15 +57,15 @@ class GameMapperTest {
                     boardSetId = "set-1",
                     type = BoardSetType.RUN,
                     tiles = listOf(
-                        NumberedTile(TileColor.BLUE, 7),
-                        NumberedTile(TileColor.BLUE, 8),
-                        NumberedTile(TileColor.BLUE, 9)
+                        numbered("tile-4", TileColor.BLUE, 7),
+                        numbered("tile-5", TileColor.BLUE, 8),
+                        numbered("tile-6", TileColor.BLUE, 9)
                     )
                 )
             ),
             drawPile = listOf(
-                NumberedTile(TileColor.ORANGE, 5),
-                JokerTile(TileColor.BLACK)
+                numbered("tile-7", TileColor.ORANGE, 5),
+                joker("tile-8", TileColor.BLACK)
             ),
             currentPlayerUserId = "user-1",
             status = GameStatus.ACTIVE,
@@ -97,9 +97,11 @@ class GameMapperTest {
         assertTrue(entity.boardSets.all { it.game === entity })
 
         assertEquals(2, entity.drawPile.size)
+        assertEquals("tile-7", entity.drawPile[0].tileId)
         assertEquals(TileColor.ORANGE, entity.drawPile[0].color)
         assertEquals(5, entity.drawPile[0].number)
         assertEquals(false, entity.drawPile[0].joker)
+        assertEquals("tile-8", entity.drawPile[1].tileId)
         assertEquals(true, entity.drawPile[1].joker)
     }
 
@@ -114,8 +116,8 @@ class GameMapperTest {
             startedAt = Instant.parse("2026-04-27T18:05:00Z"),
             finishedAt = null,
             drawPile = mutableListOf(
-                TileEmbeddable(color = TileColor.RED, number = 6, joker = false),
-                TileEmbeddable(color = TileColor.BLUE, number = null, joker = true)
+                embeddable("tile-9", TileColor.RED, 6, false),
+                embeddable("tile-10", TileColor.BLUE, null, true)
             )
         )
 
@@ -126,7 +128,7 @@ class GameMapperTest {
                 displayName = "Alice",
                 turnOrder = 0,
                 rackTiles = mutableListOf(
-                    TileEmbeddable(color = TileColor.BLACK, number = 4, joker = false)
+                    embeddable("tile-11", TileColor.BLACK, 4, false)
                 ),
                 hasCompletedInitialMeld = true,
                 score = 20,
@@ -138,7 +140,7 @@ class GameMapperTest {
                 displayName = "Bob",
                 turnOrder = 1,
                 rackTiles = mutableListOf(
-                    TileEmbeddable(color = TileColor.ORANGE, number = null, joker = true)
+                    embeddable("tile-12", TileColor.ORANGE, null, true)
                 ),
                 hasCompletedInitialMeld = false,
                 score = 15,
@@ -150,11 +152,11 @@ class GameMapperTest {
             BoardSetEntity(
                 game = entity,
                 boardSetId = "set-1",
-                type = BoardSetType.SET,
+                type = BoardSetType.GROUP,
                 tiles = mutableListOf(
-                    TileEmbeddable(color = TileColor.RED, number = 10, joker = false),
-                    TileEmbeddable(color = TileColor.BLUE, number = 10, joker = false),
-                    TileEmbeddable(color = TileColor.BLACK, number = 10, joker = false)
+                    embeddable("tile-13", TileColor.RED, 10, false),
+                    embeddable("tile-14", TileColor.BLUE, 10, false),
+                    embeddable("tile-15", TileColor.BLACK, 10, false)
                 )
             )
         )
@@ -173,12 +175,12 @@ class GameMapperTest {
 
         assertEquals(1, game.boardSets.size)
         assertEquals("set-1", game.boardSets[0].boardSetId)
-        assertEquals(BoardSetType.SET, game.boardSets[0].type)
+        assertEquals(BoardSetType.GROUP, game.boardSets[0].type)
         assertEquals(3, game.boardSets[0].tiles.size)
 
         assertEquals(2, game.drawPile.size)
-        assertEquals(NumberedTile(TileColor.RED, 6), game.drawPile[0])
-        assertEquals(JokerTile(TileColor.BLUE), game.drawPile[1])
+        assertEquals(numbered("tile-9", TileColor.RED, 6), game.drawPile[0])
+        assertEquals(joker("tile-10", TileColor.BLUE), game.drawPile[1])
     }
 
     @Test
@@ -193,17 +195,17 @@ class GameMapperTest {
             boardSets = listOf(
                 BoardSet(
                     boardSetId = "set-b",
-                    tiles = listOf(NumberedTile(TileColor.RED, 1))
+                    tiles = listOf(numbered("tile-16", TileColor.RED, 1))
                 ),
                 BoardSet(
                     boardSetId = "set-a",
-                    tiles = listOf(NumberedTile(TileColor.BLUE, 2))
+                    tiles = listOf(numbered("tile-17", TileColor.BLUE, 2))
                 )
             ),
             drawPile = listOf(
-                NumberedTile(TileColor.BLACK, 13),
-                JokerTile(TileColor.ORANGE),
-                NumberedTile(TileColor.BLUE, 1)
+                numbered("tile-18", TileColor.BLACK, 13),
+                joker("tile-19", TileColor.ORANGE),
+                numbered("tile-20", TileColor.BLUE, 1)
             ),
             currentPlayerUserId = "user-2"
         )
@@ -221,6 +223,7 @@ class GameMapperTest {
     @Test
     fun `tile embeddable toDomain throws when numbered tile has no number`() {
         val tile = TileEmbeddable(
+            tileId = "tile-21",
             color = TileColor.RED,
             number = null,
             joker = false
@@ -247,8 +250,8 @@ class GameMapperTest {
                     displayName = "Alice",
                     turnOrder = 0,
                     rackTiles = listOf(
-                        NumberedTile(TileColor.BLUE, 3),
-                        JokerTile(TileColor.RED)
+                        numbered("tile-22", TileColor.BLUE, 3),
+                        joker("tile-23", TileColor.RED)
                     ),
                     hasCompletedInitialMeld = true,
                     score = 25,
@@ -260,15 +263,15 @@ class GameMapperTest {
                     boardSetId = "set-1",
                     type = BoardSetType.RUN,
                     tiles = listOf(
-                        NumberedTile(TileColor.BLUE, 7),
-                        NumberedTile(TileColor.BLUE, 8),
-                        JokerTile(TileColor.BLACK)
+                        numbered("tile-24", TileColor.BLUE, 7),
+                        numbered("tile-25", TileColor.BLUE, 8),
+                        joker("tile-26", TileColor.BLACK)
                     )
                 )
             ),
             drawPile = listOf(
-                NumberedTile(TileColor.ORANGE, 5),
-                JokerTile(TileColor.BLUE)
+                numbered("tile-27", TileColor.ORANGE, 5),
+                joker("tile-28", TileColor.BLUE)
             ),
             currentPlayerUserId = "user-1",
             status = GameStatus.ACTIVE,
@@ -282,52 +285,72 @@ class GameMapperTest {
         assertEquals("game-1", response.gameId)
         assertEquals("lobby-1", response.lobbyId)
         assertEquals("user-1", response.currentPlayerUserId)
+        assertEquals("user-1", response.currentTurnPlayerId)
         assertEquals("ACTIVE", response.status)
         assertEquals(createdAt, response.createdAt)
         assertEquals(startedAt, response.startedAt)
         assertEquals(1, response.players.size)
-        assertEquals(1, response.boardSets.size)
+        assertEquals(1, response.board.size)
         assertEquals(2, response.drawPile.size)
+        assertEquals(2, response.drawPileCount)
+        assertEquals(null, response.turnDeadline)
+        assertEquals(null, response.remainingTurnSeconds)
 
         assertEquals("user-1", response.players[0].userId)
         assertEquals("Alice", response.players[0].displayName)
         assertEquals(0, response.players[0].turnOrder)
         assertEquals(2, response.players[0].rackTiles.size)
+        assertEquals("tile-22", response.players[0].rackTiles[0].tileId)
         assertEquals("BLUE", response.players[0].rackTiles[0].color)
         assertEquals(3, response.players[0].rackTiles[0].number)
-        assertEquals(false, response.players[0].rackTiles[0].joker)
+        assertEquals(false, response.players[0].rackTiles[0].isJoker)
+        assertEquals("tile-23", response.players[0].rackTiles[1].tileId)
         assertEquals("RED", response.players[0].rackTiles[1].color)
         assertEquals(null, response.players[0].rackTiles[1].number)
-        assertEquals(true, response.players[0].rackTiles[1].joker)
+        assertEquals(true, response.players[0].rackTiles[1].isJoker)
 
-        assertEquals("set-1", response.boardSets[0].boardSetId)
-        assertEquals("RUN", response.boardSets[0].type)
-        assertEquals(3, response.boardSets[0].tiles.size)
-        assertEquals("BLACK", response.boardSets[0].tiles[2].color)
-        assertEquals(true, response.boardSets[0].tiles[2].joker)
+        assertEquals("set-1", response.board[0].boardSetId)
+        assertEquals("RUN", response.board[0].type)
+        assertEquals(3, response.board[0].tiles.size)
+        assertEquals("tile-26", response.board[0].tiles[2].tileId)
+        assertEquals("BLACK", response.board[0].tiles[2].color)
+        assertEquals(true, response.board[0].tiles[2].isJoker)
 
+        assertEquals("tile-27", response.drawPile[0].tileId)
         assertEquals("ORANGE", response.drawPile[0].color)
         assertEquals(5, response.drawPile[0].number)
-        assertEquals(false, response.drawPile[0].joker)
+        assertEquals(false, response.drawPile[0].isJoker)
+        assertEquals("tile-28", response.drawPile[1].tileId)
         assertEquals("BLUE", response.drawPile[1].color)
         assertEquals(null, response.drawPile[1].number)
-        assertEquals(true, response.drawPile[1].joker)
+        assertEquals(true, response.drawPile[1].isJoker)
     }
 
     @Test
     fun `tile toResponse maps numbered and joker tiles`() {
-        val numbered = NumberedTile(TileColor.BLACK, 11)
-        val joker = JokerTile(TileColor.ORANGE)
+        val numbered = numbered("tile-29", TileColor.BLACK, 11)
+        val joker = joker("tile-30", TileColor.ORANGE)
 
         val numberedResponse = numbered.toResponse()
         val jokerResponse = joker.toResponse()
 
+        assertEquals("tile-29", numberedResponse.tileId)
         assertEquals("BLACK", numberedResponse.color)
         assertEquals(11, numberedResponse.number)
-        assertEquals(false, numberedResponse.joker)
+        assertEquals(false, numberedResponse.isJoker)
 
+        assertEquals("tile-30", jokerResponse.tileId)
         assertEquals("ORANGE", jokerResponse.color)
         assertEquals(null, jokerResponse.number)
-        assertEquals(true, jokerResponse.joker)
+        assertEquals(true, jokerResponse.isJoker)
     }
+
+    private fun numbered(tileId: String, color: TileColor, number: Int) =
+        NumberedTile(tileId = tileId, color = color, number = number)
+
+    private fun joker(tileId: String, color: TileColor) =
+        JokerTile(tileId = tileId, color = color)
+
+    private fun embeddable(tileId: String, color: TileColor, number: Int?, joker: Boolean) =
+        TileEmbeddable(tileId = tileId, color = color, number = number, joker = joker)
 }

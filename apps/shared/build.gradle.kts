@@ -13,15 +13,16 @@ java {
 }
 
 kotlin {
-    compilerOptions {
-        jvmTarget.set(
-            org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(
-                libs.versions.jvmTarget.get()
-            )
-        )
-    }
+    jvmToolchain(
+        libs.versions.jvmTarget.get().toInt()
+    )
 }
 
 dependencies {
     implementation(kotlin("stdlib"))
+    testImplementation(kotlin("test"))
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
