@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
+import org.mockito.Mockito.verify
 import java.util.Optional
 import java.time.Instant
 
@@ -153,6 +154,9 @@ class DrawTileServiceTest {
         val entity = gameEntity(drawPile = mutableListOf(tile))
         `when`(gameRepository.findById("game-1"))
             .thenReturn(Optional.of(entity))
+        `when`(gameRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+
 
         val result = drawTileService.drawTile("game-1", "user-1")
 
@@ -169,6 +173,9 @@ class DrawTileServiceTest {
         val entity = gameEntity(drawPile = mutableListOf(tile1, tile2))
         `when`(gameRepository.findById("game-1"))
             .thenReturn(Optional.of(entity))
+        `when`(gameRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+
 
         val result = drawTileService.drawTile("game-1", "user-1")
 
@@ -181,6 +188,9 @@ class DrawTileServiceTest {
         val entity = gameEntity(currentPlayerUserId = "user-1", drawPile = mutableListOf(tile))
         `when`(gameRepository.findById("game-1"))
             .thenReturn(Optional.of(entity))
+        `when`(gameRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+
 
         val result = drawTileService.drawTile("game-1", "user-1")
 
@@ -193,10 +203,27 @@ class DrawTileServiceTest {
         val entity = gameEntity(currentPlayerUserId = "user-2", drawPile = mutableListOf(tile))
         `when`(gameRepository.findById("game-1"))
             .thenReturn(Optional.of(entity))
+        `when`(gameRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+
 
         val result = drawTileService.drawTile("game-1", "user-2")
 
         assertEquals("user-1", result.currentPlayerUserId)
+    }
+
+    @Test
+    fun `persists game after successful draw`() {
+        val tile = tileEmbeddable("tile-1")
+        val entity = gameEntity(drawPile = mutableListOf(tile))
+        `when`(gameRepository.findById("game-1"))
+            .thenReturn(Optional.of(entity))
+        `when`(gameRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+
+        drawTileService.drawTile("game-1", "user-1")
+
+        verify(gameRepository).save(any())
     }
 
 
