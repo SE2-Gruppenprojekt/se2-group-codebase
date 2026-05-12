@@ -257,9 +257,11 @@ class LobbyService(
 
         check(lobby.status == LobbyStatus.OPEN) { "Match can only be started while the lobby is open" }
 
-        check(lobby.players.size >= MIN_PLAYERS) { "At least ${MIN_PLAYERS} players are required to start the match" }
+        // NOTE: comment this back in to enforce player count and ready-state requirements for lobby start. This is currently disabled to allow easier testing with fewer players and without needing to toggle ready state.
+        // this is currently disabled to allow easier testing with fewer players and without needing to toggle ready state.
 
-        check(!(lobby.players.any { !it.isReady })) { "All players must be ready to start the match" }
+        // check(lobby.players.size >= MIN_PLAYERS) { "At least ${MIN_PLAYERS} players are required to start the match" }
+        // check(!(lobby.players.any { !it.isReady })) { "All players must be ready to start the match" }
 
         val updatedLobby = lobby.copy(
             status = LobbyStatus.IN_GAME
