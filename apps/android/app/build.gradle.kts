@@ -94,6 +94,7 @@ dependencies {
     implementation(libs.material.icons.extended)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.lifecycle.runtime)
+    implementation(libs.reorderable)
 
     // Navigation (App structure)
     implementation(libs.navigation.compose)
@@ -122,6 +123,9 @@ dependencies {
     implementation(libs.datastore.preferences)
     implementation(libs.datastore.core)
     implementation(libs.protobuf.javalite)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.animation.core)
+    implementation(libs.androidx.foundation)
 
     // Unit testing
     testImplementation(libs.junit4)
