@@ -15,6 +15,8 @@ class TurnDraftMapperTest {
         val request = UpdateDraftRequest(
             boardSets = listOf(
                 BoardSetRequest(
+                    boardSetId = "set-1",
+                    type = BoardSetType.RUN,
                     tiles = listOf(
                         TileRequest("tile-1", "RED", 3, false),
                         TileRequest("tile-2", "BLUE", 4, false)
@@ -36,6 +38,8 @@ class TurnDraftMapperTest {
         assertEquals(0, result.version)
 
         assertEquals(1, result.boardSets.size)
+        assertEquals("set-1", result.boardSets[0].boardSetId)
+        assertEquals(BoardSetType.RUN, result.boardSets[0].type)
         assertEquals(2, result.boardSets[0].tiles.size)
         assertEquals("tile-1", (result.boardSets[0].tiles[0] as NumberedTile).tileId)
 
@@ -50,7 +54,7 @@ class TurnDraftMapperTest {
             tileId = "tile-4",
             color = "RED",
             number = null,
-            joker = true
+            isJoker = true
         )
 
         val result = request.toTileDomain()
@@ -65,7 +69,7 @@ class TurnDraftMapperTest {
             tileId = "tile-5",
             color = "RED",
             number = null,
-            joker = false
+            isJoker = false
         )
 
         assertThrows(IllegalArgumentException::class.java) {

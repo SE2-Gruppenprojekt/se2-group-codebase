@@ -39,6 +39,8 @@ class TurnDraftEntityMapperTest {
         )
 
         assertEquals(1, entity.boardSets.size)
+        assertEquals("1", entity.boardSets[0].boardSetId)
+        assertEquals(BoardSetType.UNRESOLVED, entity.boardSets[0].type)
         assertEquals(2, entity.boardSets[0].tiles.size)
         assertEquals(1, entity.rackTiles.size)
 
@@ -58,6 +60,8 @@ class TurnDraftEntityMapperTest {
 
         val boardSet = TurnDraftBoardSetEntity(
             draft = entity,
+            boardSetId = "set-1",
+            type = BoardSetType.RUN,
             tiles = mutableListOf(
                 TileEmbeddable("tile-4", TileColor.RED, 5, false),
                 TileEmbeddable("tile-5", TileColor.BLUE, 6, false)
@@ -73,6 +77,8 @@ class TurnDraftEntityMapperTest {
         val domain = entity.toDomain()
 
         assertEquals(1, domain.boardSets.size)
+        assertEquals("set-1", domain.boardSets[0].boardSetId)
+        assertEquals(BoardSetType.RUN, domain.boardSets[0].type)
         assertEquals(2, domain.boardSets[0].tiles.size)
         assertEquals(1, domain.rackTiles.size)
         assertEquals(6, domain.version)
