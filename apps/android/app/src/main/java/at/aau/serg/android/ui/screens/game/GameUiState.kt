@@ -12,5 +12,7 @@ data class GameUiState(
     val rackTiles: List<Tile> = emptyList(),
     val boardSets: List<BoardSet> = emptyList(),
     val selectedTiles: Set<Tile> = emptySet(),
-    val activeSelectionRow: String? = null
+    val activeSelectionRow: String? = null,
+    val originalBoardSets: List<BoardSet> = emptyList(),
+    val originalRackTiles: List<Tile> = emptyList(),
 )

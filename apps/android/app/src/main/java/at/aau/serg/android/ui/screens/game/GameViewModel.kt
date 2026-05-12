@@ -90,6 +90,14 @@ class GameViewModel(
         _uiState.update { state ->
             val selected = state.selectedTiles
 
+            val backupBoard =
+                if (state.originalBoardSets.isEmpty()) state.boardSets
+                else state.originalBoardSets
+
+            val backupRack =
+                if (state.originalRackTiles.isEmpty()) state.rackTiles
+                else state.originalRackTiles
+
             val newRack = state.rackTiles.filter { it !in selected }
             val cleanedBoardSets = state.boardSets
                 .mapNotNull { set ->
@@ -108,7 +116,9 @@ class GameViewModel(
                 rackTiles = newRack,
                 boardSets = updatedBoardSets,
                 selectedTiles = emptySet(),
-                activeSelectionRow = null
+                activeSelectionRow = null,
+                originalBoardSets = backupBoard,
+                originalRackTiles = backupRack
             )
         }
     }
@@ -117,6 +127,14 @@ class GameViewModel(
         _uiState.update { state ->
             val selected = state.selectedTiles
             if (selected.isEmpty()) return@update state
+
+            val backupBoard =
+                if (state.originalBoardSets.isEmpty()) state.boardSets
+                else state.originalBoardSets
+
+            val backupRack =
+                if (state.originalRackTiles.isEmpty()) state.rackTiles
+                else state.originalRackTiles
 
             val newRack = state.rackTiles.filter { it !in selected }
             val cleanedBoardSets = state.boardSets
@@ -146,7 +164,9 @@ class GameViewModel(
                 rackTiles = finalRack,
                 boardSets = updatedBoardSets,
                 selectedTiles = emptySet(),
-                activeSelectionRow = null
+                activeSelectionRow = null,
+                originalBoardSets = backupBoard,
+                originalRackTiles = backupRack
             )
         }
     }
@@ -174,6 +194,55 @@ class GameViewModel(
                 state.copy(boardSets = updatedSets)
             }
         }
+    }
+
+    fun endTurn() {
+        _uiState.update { state ->
+            state.copy(
+                selectedTiles = emptySet(),
+                activeSelectionRow = null
+            )
+        }
+
+        println("END TURN clicked")
+    }
+
+    fun resetSelection() {
+        _uiState.update { state ->
+
+            state.copy(
+                rackTiles = state.originalRackTiles,
+                boardSets = state.originalBoardSets,
+                selectedTiles = emptySet(),
+                activeSelectionRow = null,
+                originalBoardSets = emptyList(),
+                originalRackTiles = emptyList()
+            )
+        }
+
+        println("RESET clicked")
+    }
+
+    fun addTile() {
+        _uiState.update { state ->
+            if (state.rackTiles.isEmpty()) return@update state
+
+            val newTile = NumberedTile(
+                tileId = UUID.randomUUID().toString(),
+                color = TileColor.entries.random(),
+                number = (1..13).random()
+            )
+
+            state.copy(
+                rackTiles = state.rackTiles + newTile
+            )
+        }
+
+        println("ADD clicked")
+    }
+
+    fun setUiStateForTest(state: GameUiState) {
+        _uiState.value = state
     }
 
 }
