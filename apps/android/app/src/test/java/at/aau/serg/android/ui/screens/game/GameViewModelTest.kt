@@ -1,5 +1,6 @@
 package at.aau.serg.android.ui.screens.game
 
+import androidx.lifecycle.viewmodel.compose.viewModel
 import at.aau.serg.android.MainDispatcherRule
 import at.aau.serg.android.core.datastore.InMemoryProtoStore
 import at.aau.serg.android.datastore.proto.User
@@ -10,6 +11,10 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import shared.models.game.domain.BoardSet
+import shared.models.game.domain.BoardSetType
+import shared.models.game.domain.NumberedTile
+import shared.models.game.domain.TileColor
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class GameViewModelTest {
@@ -185,5 +190,151 @@ class GameViewModelTest {
         viewmodel.moveInSameRow(null, 0, 0)
 
         assertEquals(before, viewmodel.uiState.value)
+    }
+
+    @Test
+    fun endTurn_clearsSelectionAndActiveRow() {
+        val tile = NumberedTile(
+            tileId = "1",
+            color = TileColor.RED,
+            number = 5
+        )
+
+        viewmodel.onTileSelected(tile, true, "row1")
+
+        viewmodel.endTurn()
+
+        val state = viewmodel.uiState.value
+
+        assertTrue(state.selectedTiles.isEmpty())
+        assertNull(state.activeSelectionRow)
+    }
+
+    @Test
+    fun addTile_addsNewTileToRack() {
+
+        val before = viewmodel.uiState.value.rackTiles.size
+
+        viewmodel.addTile()
+
+        val after = viewmodel.uiState.value.rackTiles.size
+
+        assertEquals(before + 1, after)
+    }
+
+    @Test
+    fun resetSelection_restoresOriginalBoardAndRack() {
+
+        val originalTile = NumberedTile(
+            tileId = "1",
+            color = TileColor.RED,
+            number = 5
+        )
+
+        val movedTile = NumberedTile(
+            tileId = "2",
+            color = TileColor.BLUE,
+            number = 9
+        )
+
+        val originalBoard = listOf(
+            BoardSet(
+                boardSetId = "row1",
+                tiles = listOf(originalTile)
+            )
+        )
+
+        val modifiedBoard = listOf(
+            BoardSet(
+                boardSetId = "row1",
+                tiles = listOf(originalTile)
+            ),
+            BoardSet(
+                boardSetId = "newRow",
+                type = BoardSetType.UNRESOLVED,
+                tiles = listOf(movedTile)
+            )
+        )
+
+        viewmodel.setUiStateForTest(
+            GameUiState(
+                rackTiles = listOf(movedTile),
+                boardSets = modifiedBoard,
+                originalBoardSets = originalBoard,
+                originalRackTiles = listOf(movedTile),
+                selectedTiles = setOf(movedTile),
+                activeSelectionRow = "newRow"
+            )
+        )
+
+        viewmodel.resetSelection()
+
+        val state = viewmodel.uiState.value
+
+        assertEquals(originalBoard, state.boardSets)
+        assertEquals(listOf(movedTile), state.rackTiles)
+        assertTrue(state.selectedTiles.isEmpty())
+        assertNull(state.activeSelectionRow)
+        assertTrue(state.originalBoardSets.isEmpty())
+        assertTrue(state.originalRackTiles.isEmpty())
+    }
+
+    @Test
+    fun resetSelection_clearsSelection_andRestoresOriginalState() {
+
+        val tileOriginal = NumberedTile(
+            tileId = "1",
+            color = TileColor.RED,
+            number = 5
+        )
+
+        val tileMoved = NumberedTile(
+            tileId = "2",
+            color = TileColor.BLUE,
+            number = 9
+        )
+
+        val originalBoard = listOf(
+            BoardSet(
+                boardSetId = "row1",
+                tiles = listOf(tileOriginal)
+            )
+        )
+
+        val modifiedBoard = listOf(
+            BoardSet(
+                boardSetId = "row1",
+                tiles = listOf(tileOriginal)
+            ),
+            BoardSet(
+                boardSetId = "row2",
+                type = BoardSetType.UNRESOLVED,
+                tiles = listOf(tileMoved)
+            )
+        )
+
+        val initialState = GameUiState(
+            rackTiles = listOf(tileMoved),
+            boardSets = modifiedBoard,
+            selectedTiles = setOf(tileMoved),
+            activeSelectionRow = "row2",
+            originalBoardSets = originalBoard,
+            originalRackTiles = listOf(tileOriginal)
+        )
+
+        viewmodel.setUiStateForTest(initialState)
+
+        viewmodel.resetSelection()
+
+        val state = viewmodel.uiState.value
+
+        assertEquals(originalBoard, state.boardSets)
+        assertEquals(listOf(tileOriginal), state.rackTiles)
+
+        assertTrue(state.selectedTiles.isEmpty())
+        assertNull(state.activeSelectionRow)
+
+        assertTrue(state.originalBoardSets.isEmpty())
+        assertTrue(state.originalRackTiles.isEmpty())
     }
 }
