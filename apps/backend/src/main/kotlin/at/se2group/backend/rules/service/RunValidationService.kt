@@ -49,17 +49,17 @@ class RunValidationService {
                 )
             }
 
-            for (i in 1 until sortedNumbers.size) {
-            if (sortedNumbers[i] != sortedNumbers[i - 1] + 1) {
-                    return invalid(
+            val isConsecutive = sortedNumbers
+                .zipWithNext()
+                .all { (a, b) -> b == a + 1 }
+
+            if (!isConsecutive) {
+                return invalid(
                     code = "RUN_NOT_CONSECUTIVE",
                     message = "Run tiles must create a consecutive ascending sequence",
                     tileIds = numberedTiles.map { it.tileId }
                 )
             }
-        }
             return valid()
+        }
     }
-
-
-}
