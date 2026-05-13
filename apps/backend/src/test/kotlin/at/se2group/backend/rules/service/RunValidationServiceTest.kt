@@ -115,9 +115,9 @@ class RunValidationServiceTest {
     fun `accept run if tiles are submitted with mixed order numbers`() {
         val result = service.validate(
             set(
-                tile("tile-1", TileColor.RED, 5),
-                tile("tile-2", TileColor.RED, 4),
-                tile("tile-3", TileColor.RED, 3)
+                tile("tile-1", TileColor.RED, 4),
+                tile("tile-2", TileColor.RED, 6),
+                tile("tile-3", TileColor.RED, 5)
             )
         )
         assertTrue(result.isValid)
