@@ -17,6 +17,7 @@ import at.aau.serg.android.ui.screens.auth.AuthMode
 import at.aau.serg.android.ui.screens.auth.AuthScreen
 import at.aau.serg.android.ui.screens.auth.AuthViewModel
 import at.aau.serg.android.ui.screens.game.GameScreen
+import at.aau.serg.android.ui.screens.game.GameViewModel
 import at.aau.serg.android.ui.screens.home.HomeEffect
 import at.aau.serg.android.ui.screens.home.HomeScreen
 import at.aau.serg.android.ui.screens.home.HomeViewModel
@@ -124,7 +125,14 @@ fun NavGraphBuilder.homeGraph(
         }
 
         composable("${Routes.GAME}/{matchId}") {
+            val userStore = remember { provider.getStore<User>() }
+
+            val vm: GameViewModel = viewModel(
+                factory = GenericViewModelFactory { GameViewModel(userStore) }
+            )
+
             GameScreen(
+                viewModel = vm,
                 onBack = { navController.popBackStack() },
                 onSettings = { navController.navigate(Routes.SETTINGS) }
             )

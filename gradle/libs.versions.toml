@@ -15,6 +15,7 @@ springDependencyManagement = "1.1.7"
 # Jetpack Compose
 composeBom = "2026.03.00"
 composeCompiler = "1.5.14"
+reorderable = "3.1.0"
 
 # AndroidX Core Libraries
 coreKtx = "1.18.0"
@@ -46,6 +47,9 @@ krossbow = "9.3.0"
 # Retrofit
 retrofit = "2.11.0"
 moshi = "1.15.1"
+material3 = "1.4.0"
+animationCore = "1.11.0"
+foundation = "1.11.0"
 
 
 [libraries]
@@ -71,7 +75,7 @@ compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 material3 = { group = "androidx.compose.material3", name = "material3" }
 material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
-
+reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 
 # Compose Testing
 compose-ui-test = { group = "androidx.compose.ui", name = "ui-test-junit4" }
@@ -119,6 +123,9 @@ retrofit-moshi = { group = "com.squareup.retrofit2", name = "converter-moshi", v
 
 moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "moshi" }
 moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
+androidx-animation-core = { group = "androidx.compose.animation", name = "animation-core", version.ref = "animationCore" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 
 [plugins]
