@@ -57,57 +57,71 @@ class RunValidationServiceTest {
 
     @Test
     fun `reject run if tiles are less than 3`() {
-        val result = service.validate(
-            set(
+        val boardSet = set(
                 tile("tile-1", TileColor.RED, 7),
                 tile("tile-2", TileColor.RED, 8)
             )
-        )
+
+        val result = service.validate(boardSet)
+        val violation = result.violations.single()
+
         assertFalse(result.isValid)
-        assertEquals("RUN_MIN_SIZE", result.violations.single().code)
-        assertEquals("Run must contain at least 3 tiles", result.violations.single().message)
+        assertEquals("RUN_MIN_SIZE", violation.code)
+        assertEquals("Run must contain at least 3 tiles", violation.message)
+        assertEquals(0, violation.setIndex)
+        assertEquals(boardSet.tiles.map { it.tileId}, violation.tileIds)
     }
 
     @Test
     fun `rejects runs if tiles colors are mixed`() {
-        val result = service.validate(
-            set(
+        val boardSet = set(
                 tile("tile-1", TileColor.RED, 3),
                 tile("tile-2", TileColor.BLUE, 4),
                 tile("tile-3", TileColor.RED, 5)
             )
-        )
+
+        val result = service.validate(boardSet)
+        val violation = result.violations.single()
+
         assertFalse(result.isValid)
-        assertEquals("RUN_COLOR_MISMATCH", result.violations.single().code)
-        assertEquals("All run tiles must have the same color", result.violations.single().message)
+        assertEquals("RUN_COLOR_MISMATCH", violation.code)
+        assertEquals("All run tiles must have the same color", violation.message)
+        assertEquals(0, violation.setIndex)
+        assertEquals(boardSet.tiles.map { it.tileId}, violation.tileIds)
     }
 
     @Test
     fun`rejects run containing duplicate numbers`() {
-        val result = service.validate(
-            set(
+        val boardSet = set(
                 tile("tile-1", TileColor.RED, 7),
                 tile("tile-2", TileColor.RED, 7),
                 tile("tile-3", TileColor.RED, 8)
             )
-        )
+        val result = service.validate(boardSet)
+        val violation = result.violations.single()
+
         assertFalse(result.isValid)
-        assertEquals("RUN_DUPLICATE_NUMBER", result.violations.single().code)
-        assertEquals("Run tiles must not have duplicate numbers", result.violations.single().message)
+        assertEquals("RUN_DUPLICATE_NUMBER", violation.code)
+        assertEquals("Run tiles must not have duplicate numbers", violation.message)
+        assertEquals(0, violation.setIndex)
+        assertEquals(boardSet.tiles.map { it.tileId}, violation.tileIds)
     }
 
     @Test
     fun `rejects run with a gap in the sequence`() {
-        val result = service.validate(
-            set(
+        val boardSet = set(
                 tile("tile-1", TileColor.RED, 3),
                 tile("tile-2", TileColor.RED, 5),
                 tile("tile-3", TileColor.RED, 6)
             )
-        )
+        val result = service.validate(boardSet)
+        val violation = result.violations.single()
+
         assertFalse(result.isValid)
-        assertEquals("RUN_NOT_CONSECUTIVE", result.violations.single().code)
-        assertEquals("Run tiles must create a consecutive ascending sequence", result.violations.single().message)
+        assertEquals("RUN_NOT_CONSECUTIVE", violation.code)
+        assertEquals("Run tiles must create a consecutive ascending sequence", violation.message)
+        assertEquals(0, violation.setIndex)
+        assertEquals(boardSet.tiles.map { it.tileId}, violation.tileIds)
     }
 
 
@@ -139,7 +153,7 @@ class RunValidationServiceTest {
 
     @Test
     fun `rejects run containing joker`() {
-        val result = service.validate(
+        val result  = service.validate(
             set(
                 tile("tile-1", TileColor.RED, 3),
                 tile("tile-2", TileColor.RED, 4),
@@ -147,9 +161,15 @@ class RunValidationServiceTest {
             )
         )
 
+
+        val violation = result.violations.single()
+
         assertFalse(result.isValid)
-        assertEquals("RUN_JOKER_NOT_SUPPORTED", result.violations.single().code)
-        assertEquals("Joker support is not implemented yet", result.violations.single().message)
+        assertEquals("RUN_JOKER_NOT_SUPPORTED", violation.code)
+        assertEquals("Joker support is not implemented yet", violation.message)
+        assertEquals(0, violation.setIndex)
+        assertEquals(listOf("tile-3"), violation.tileIds)
+
     }
 
     @Test
