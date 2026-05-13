@@ -180,7 +180,7 @@ fun GameScreen(
 
                                 IconButton(
                                     onClick = {
-                                        viewModel.addTile()
+                                        viewModel.drawTile()
                                     },
                                     modifier = Modifier
                                         .size(52.dp)

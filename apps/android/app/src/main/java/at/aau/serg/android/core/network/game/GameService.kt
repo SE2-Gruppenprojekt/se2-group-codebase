@@ -10,7 +10,7 @@ class GameService(
     private val api: GameAPI
 ) {
 
-    suspend fun loadGame(gameId: String): GameResponse {
+    suspend fun getGame(gameId: String): GameResponse {
         return api.getGame(gameId)
     }
 
