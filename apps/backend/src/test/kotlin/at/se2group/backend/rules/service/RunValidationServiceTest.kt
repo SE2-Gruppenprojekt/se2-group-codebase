@@ -152,4 +152,17 @@ class RunValidationServiceTest {
         assertEquals("Joker support is not implemented yet", result.violations.single().message)
     }
 
+    @Test
+    fun `reject duplicate number violation before non-consecutive validation`() {
+        val result = service.validate(
+            set(
+                tile("tile-1", TileColor.RED, 3),
+                tile("tile-2", TileColor.RED, 3),
+                tile("tile-3", TileColor.RED, 5)
+            )
+        )
+        assertFalse(result.isValid)
+        assertEquals("RUN_DUPLICATE_NUMBER", result.violations.single().code)
+    }
+
 }
