@@ -60,19 +60,20 @@ jobs:
         run: ./gradlew :apps:android:app:testDebugUnitTest
 
       - name: Run frontend Sonar analysis
-        run: >
-          ./gradlew sonar
-          -Dsonar.projectKey=se2-gruppenprojekt_se2-group-codebase_frontend
-          -Dsonar.organization=se2-gruppenprojekt
-          -Dsonar.host.url=https://sonarcloud.io
-          -Dsonar.projectBaseDir=apps/android/app
-          -Dsonar.sources=src/main/java
-          -Dsonar.tests=src/test
-          -Dsonar.java.binaries=build/tmp/kotlin-classes/debug
-          -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/testDebugUnitTestCoverage/testDebugUnitTestCoverage.xml
+        uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_ANDROID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=se2-gruppenprojekt_se2-group-codebase_frontend
+            -Dsonar.organization=se2-gruppenprojekt
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.projectBaseDir=apps/android/app
+            -Dsonar.sources=src/main/java
+            -Dsonar.tests=src/test
+            -Dsonar.java.binaries=build/tmp/kotlin-classes/debug
+            -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/testDebugUnitTestCoverage/testDebugUnitTestCoverage.xml
 
   frontend-required:
     name: frontend-required
