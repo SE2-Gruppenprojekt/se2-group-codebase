@@ -125,9 +125,9 @@ fun ConfirmedGame.toResponse(): GameResponse =
         turnDeadline = null,
         remainingTurnSeconds = null,
         status = status.name,
-        createdAt = createdAt,
-        startedAt = startedAt,
-        finishedAt = finishedAt
+        createdAt = createdAt.toString(),
+        startedAt = startedAt?.toString(),
+        finishedAt = finishedAt?.toString()
     )
 
 fun GamePlayer.toResponse(): GamePlayerResponse =
@@ -138,7 +138,7 @@ fun GamePlayer.toResponse(): GamePlayerResponse =
         rackTiles = rackTiles.map { it.toResponse() },
         hasCompletedInitialMeld = hasCompletedInitialMeld,
         score = score,
-        joinedAt = joinedAt
+        joinedAt = joinedAt.toString()
     )
 
 fun BoardSet.toResponse(): BoardSetResponse =
