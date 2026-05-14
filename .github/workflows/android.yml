@@ -27,7 +27,7 @@ jobs:
               - 'build.gradle.kts'
               - '.github/workflows/**'
 
-  frontend-build-sonar:
+  frontend-build:
     needs: changes
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
@@ -56,15 +56,26 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
           restore-keys: ${{ runner.os }}-gradle
 
-      - name: Run frontend tests + Sonar
-        run: ./gradlew :apps:android:app:testDebugUnitTest sonar
+      - name: Run frontend tests
+        run: ./gradlew :apps:android:app:testDebugUnitTest
+
+      - name: Run frontend Sonar analysis
+        run: >
+          ./gradlew sonar
+          -Dsonar.projectKey=se2-gruppenprojekt_se2-group-codebase_frontend
+          -Dsonar.organization=se2-gruppenprojekt
+          -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.sources=apps/android/app/src/main/java
+          -Dsonar.tests=apps/android/app/src/test
+          -Dsonar.java.binaries=apps/android/app/build/tmp/kotlin-classes/debug
+          -Dsonar.coverage.jacoco.xmlReportPaths=apps/android/app/build/reports/jacoco/testDebugUnitTestCoverage/testDebugUnitTestCoverage.xml
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   frontend-required:
     name: frontend-required
-    needs: [changes, frontend-build-sonar]
+    needs: [changes, frontend-build]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -73,9 +84,9 @@ jobs:
         run: echo "No frontend-related changes."
 
       - name: Fail if frontend job failed
-        if: needs.changes.outputs.frontend == 'true' && needs.frontend-build-sonar.result != 'success'
+        if: needs.changes.outputs.frontend == 'true' && needs.frontend-build.result != 'success'
         run: exit 1
 
       - name: Pass if frontend job succeeded
-        if: needs.changes.outputs.frontend == 'true' && needs.frontend-build-sonar.result == 'success'
+        if: needs.changes.outputs.frontend == 'true' && needs.frontend-build.result == 'success'
         run: echo "Frontend checks passed."
