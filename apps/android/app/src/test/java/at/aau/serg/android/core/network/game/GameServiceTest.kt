@@ -20,9 +20,9 @@ class GameServiceTest {
     fun getGame_returnsFromApi() = runBlocking {
         val expected = mockk<GameResponse>()
 
-        coEvery { api.getGame("game123") } returns expected
+        coEvery { api.loadGame("game123") } returns expected
 
-        val result = service.getGame("game123")
+        val result = service.loadGame("game123")
 
         assertEquals(expected, result)
     }

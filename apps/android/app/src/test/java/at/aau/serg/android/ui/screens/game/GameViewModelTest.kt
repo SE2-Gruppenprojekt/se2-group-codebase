@@ -131,7 +131,7 @@ class GameViewModelTest {
         store = InMemoryProtoStore(User.getDefaultInstance())
         service = mockk()
 
-        coEvery { service.getGame(any()) } returns fakeGameResponse
+        coEvery { service.loadGame(any()) } returns fakeGameResponse
         coEvery { service.endTurn(any(), any()) } returns fakeGameResponse
         coEvery { service.drawTile(any(), any()) } returns fakeGameResponse
 
@@ -418,7 +418,7 @@ class GameViewModelTest {
 
     @Test
     fun loadGame_emitsErrorState_onFailure() = runTest {
-        coEvery { service.getGame(any()) } throws RuntimeException()
+        coEvery { service.loadGame(any()) } throws RuntimeException()
 
         viewmodel.loadGame()
 
