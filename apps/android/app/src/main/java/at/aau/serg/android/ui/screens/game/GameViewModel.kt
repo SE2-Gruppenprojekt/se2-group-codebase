@@ -68,7 +68,7 @@ class GameViewModel(
             val user = userStore.data.first()
 
             try {
-                val gameState = gameService.getGame(user.gameId).toDomain()
+                val gameState = gameService.loadGame(user.gameId).toDomain()
                 applyGameState(gameState)
                 _uiState.update {
                     it.copy(loadState = LoadState.Success)

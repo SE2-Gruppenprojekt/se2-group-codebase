@@ -13,7 +13,7 @@ import shared.models.game.response.TurnDraftResponse
 interface GameAPI {
 
     @GET("games/{gameId}")
-    suspend fun getGame(
+    suspend fun loadGame(
         @Path("gameId") gameId: String
     ): GameResponse
 
