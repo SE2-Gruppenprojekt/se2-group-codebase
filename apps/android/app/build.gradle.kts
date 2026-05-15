@@ -123,6 +123,13 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         "**/*inlined*.*",
         "**/*lambda*.*",
 
+        // Protocol Buffers Generated Files
+        "**/at/aau/serg/android/datastore/proto/**",
+        "**/*OuterClass*",
+        "**/*ProtoDataStore*",
+        "**/*\$Builder*",
+        "**/*\$OrBuilder*",
+
         "**/R.class",
         "**/R$*.class",
         "**/BuildConfig.*",
