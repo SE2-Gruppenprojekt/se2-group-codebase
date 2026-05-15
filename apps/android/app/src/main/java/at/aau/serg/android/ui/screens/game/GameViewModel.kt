@@ -3,14 +3,18 @@ package at.aau.serg.android.ui.screens.game
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import at.aau.serg.android.core.datastore.ProtoStore
+import at.aau.serg.android.core.errors.AppError
 import at.aau.serg.android.core.network.RetrofitProvider
+import at.aau.serg.android.core.network.ServiceLocator
 import at.aau.serg.android.core.network.game.GameAPI
 import at.aau.serg.android.core.network.game.GameService
+import at.aau.serg.android.core.network.game.GameWebSocketService
 import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
 import at.aau.serg.android.core.network.mapper.toDomain
 import at.aau.serg.android.core.network.mapper.toRequest
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.state.LoadState
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -20,6 +24,7 @@ import shared.models.game.domain.BoardSet
 import shared.models.game.domain.BoardSetType
 import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.Tile
+import shared.models.game.event.GameEvent
 import shared.models.game.request.UpdateDraftRequest
 import java.util.UUID
 
@@ -29,7 +34,10 @@ class GameViewModel(
     private val gameService: GameService = GameService(
         RetrofitProvider.retrofit.create(GameAPI::class.java)
     ),
+    private val socket: GameWebSocketService = ServiceLocator.gameWebSocketService
 ) : ViewModel() {
+
+    private var socketJob: Job? = null
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState
 
@@ -38,7 +46,16 @@ class GameViewModel(
             userStore.data.collect { user ->
                 _uiState.update { it.copy(user = user) }
                 loadGame()
+                startSocket(user.gameId)
             }
+        }
+    }
+
+    private fun startSocket(gameId: String) {
+        socketJob?.cancel()
+
+        socketJob = viewModelScope.launch {
+            socket.subscribe(gameId).collect { handleGameSocketEvent(it) }
         }
     }
 
@@ -268,11 +285,6 @@ class GameViewModel(
         viewModelScope.launch {
             val user = userStore.data.first()
 
-            _uiState.update {
-                it.copy(loadState = LoadState.Success
-                )
-            }
-
             try {
                 val request = UpdateDraftRequest(
                     boardSets = uiState.value.boardSets.map { it.toRequest() },
@@ -289,6 +301,53 @@ class GameViewModel(
                     it.copy(loadState = LoadState.Error(appError))
                 }
             }
+        }
+    }
+
+    internal fun handleGameSocketEvent(event: GameEvent) {
+        when (event) {
+            is GameEvent.DraftUpdated -> {
+                viewModelScope.launch {
+                    val user = userStore.data.first()
+                    if (user.uid == event.payload.playerId) return@launch
+
+                    _uiState.update {
+                        it.copy(boardSets = event.payload.draft.draftBoard.map { it.toDomain() })
+                    }
+                }
+            }
+
+            is GameEvent.Ended -> TODO()
+
+            is GameEvent.TurnChanged -> {
+                _uiState.update { state ->
+                    state.copy(
+                        gameState = state.gameState?.copy(
+                            currentPlayerUserId = event.payload.currentTurnPlayerId
+                        )
+                    )
+                }
+            }
+
+            is GameEvent.TurnTimedOut -> {
+                viewModelScope.launch {
+                    val user = userStore.data.first()
+
+                    if (user.uid == event.payload.previousTurnPlayerId) {
+                        _uiState.update {
+                            it.copy(loadState = LoadState.Error(AppError.Game.TurnTimedOut))
+                        }
+                    }
+                }
+            }
+
+            is GameEvent.Updated -> {
+                _uiState.update {
+                    it.copy(gameState = event.payload.game.toDomain())
+                }
+            }
+
+            else -> {}
         }
     }
 
