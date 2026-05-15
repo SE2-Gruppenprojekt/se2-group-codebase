@@ -77,7 +77,7 @@ jobs:
             -Dsonar.sources=src/main/java
             -Dsonar.tests=src/test
             -Dsonar.java.binaries=build/tmp/kotlin-classes/debug
-            -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/testDebugUnitTestCoverage/testDebugUnitTestCoverage.xml
+            -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/jacoco.xml
 
   frontend-required:
     name: frontend-required
