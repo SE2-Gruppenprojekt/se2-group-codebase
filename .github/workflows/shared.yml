@@ -63,12 +63,22 @@ jobs:
       - name: Run shared tests
         run: ./gradlew :apps:shared:test
 
-      - name: Analyze shared with SonarQube
-        run: ./gradlew :apps:shared:sonar -Dsonar.qualitygate.wait=true --info
+      - name: Run shared Sonar analysis
+        uses: SonarSource/sonarqube-scan-action@v5
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_SHARED }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+        with:
+          args: >
+            -Dsonar.projectKey=se2-gruppenprojekt_se2-group-codebase_backend
+            -Dsonar.organization=se2-gruppenprojekt
+            -Dsonar.projectName="shared"
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.projectBaseDir=apps/shared
+            -Dsonar.sources=src/main/kotlin
+            -Dsonar.tests=src/test/kotlin
+            -Dsonar.java.binaries=build/classes/kotlin/main
+            -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/testDebugUnitTestCoverage/testDebugUnitTestCoverage.xml
   shared-required:
     name: shared-required
     needs: [changes, shared-build-sonar]
