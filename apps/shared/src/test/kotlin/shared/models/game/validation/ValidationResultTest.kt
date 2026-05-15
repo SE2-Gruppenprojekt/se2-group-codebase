@@ -47,11 +47,11 @@ class ValidationResultTest {
         val violation = RuleViolation(
             code = "TILE_DUPLICATED",
             message = "Submitted draft contains a duplicated tile",
-            boardSetId = 1,
+            boardSetId = "set-1",
             tileIds = listOf("tile-17", "tile-22")
         )
 
-        assertEquals(1, violation.boardSetId)
+        assertEquals("set-1", violation.boardSetId)
         assertEquals(listOf("tile-17", "tile-22"), violation.tileIds)
     }
 }

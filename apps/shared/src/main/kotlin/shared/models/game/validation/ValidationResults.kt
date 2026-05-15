@@ -55,7 +55,7 @@ fun invalid(violations: List<RuleViolation>): ValidationResult =
 fun invalid(
     code: String,
     message: String,
-    boardSetId: Int? = null,
+    boardSetId: String? = null,
     tileIds: List<String> = emptyList()
 ): ValidationResult =
     invalid(

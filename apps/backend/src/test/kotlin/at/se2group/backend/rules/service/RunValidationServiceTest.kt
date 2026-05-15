@@ -68,7 +68,7 @@ class RunValidationServiceTest {
         assertFalse(result.isValid)
         assertEquals("RUN_MIN_SIZE", violation.code)
         assertEquals("Run must contain at least 3 tiles", violation.message)
-        assertEquals(0, violation.boardSetId)
+        assertEquals("set-1", violation.boardSetId)
         assertEquals(boardSet.tiles.map { it.tileId}, violation.tileIds)
     }
 
@@ -86,7 +86,7 @@ class RunValidationServiceTest {
         assertFalse(result.isValid)
         assertEquals("RUN_COLOR_MISMATCH", violation.code)
         assertEquals("All run tiles must have the same color", violation.message)
-        assertEquals(0, violation.boardSetId)
+        assertEquals("set-1", violation.boardSetId)
         assertEquals(boardSet.tiles.map { it.tileId}, violation.tileIds)
     }
 
@@ -103,7 +103,7 @@ class RunValidationServiceTest {
         assertFalse(result.isValid)
         assertEquals("RUN_DUPLICATE_NUMBER", violation.code)
         assertEquals("Run tiles must not have duplicate numbers", violation.message)
-        assertEquals(0, violation.boardSetId)
+        assertEquals("set-1", violation.boardSetId)
         assertEquals(boardSet.tiles.map { it.tileId}, violation.tileIds)
     }
 
@@ -120,7 +120,7 @@ class RunValidationServiceTest {
         assertFalse(result.isValid)
         assertEquals("RUN_NOT_CONSECUTIVE", violation.code)
         assertEquals("Run tiles must create a consecutive ascending sequence", violation.message)
-        assertEquals(0, violation.boardSetId)
+        assertEquals("set-1", violation.boardSetId)
         assertEquals(boardSet.tiles.map { it.tileId}, violation.tileIds)
     }
 
@@ -167,7 +167,7 @@ class RunValidationServiceTest {
         assertFalse(result.isValid)
         assertEquals("RUN_JOKER_NOT_SUPPORTED", violation.code)
         assertEquals("Joker support is not implemented yet", violation.message)
-        assertEquals(0, violation.boardSetId)
+        assertEquals("set-1", violation.boardSetId)
         assertEquals(listOf("tile-3"), violation.tileIds)
 
     }
