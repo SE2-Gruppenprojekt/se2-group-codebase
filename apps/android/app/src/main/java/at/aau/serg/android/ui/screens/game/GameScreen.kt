@@ -163,7 +163,9 @@ fun GameScreen(
                             ) {
 
                                 Button(
-                                    onClick = { },
+                                    onClick = {
+                                        viewModel.endTurn()
+                                    },
                                     modifier = Modifier
                                         .weight(1f)
                                         .height(52.dp)
@@ -177,7 +179,9 @@ fun GameScreen(
                                 }
 
                                 IconButton(
-                                    onClick = { },
+                                    onClick = {
+                                        viewModel.drawTile()
+                                    },
                                     modifier = Modifier
                                         .size(52.dp)
                                         .clip(RoundedCornerShape(14.dp))
@@ -188,7 +192,9 @@ fun GameScreen(
                                 }
 
                                 IconButton(
-                                    onClick = { },
+                                    onClick = {
+                                        viewModel.resetSelection()
+                                    },
                                     modifier = Modifier
                                         .size(52.dp)
                                         .clip(RoundedCornerShape(14.dp))

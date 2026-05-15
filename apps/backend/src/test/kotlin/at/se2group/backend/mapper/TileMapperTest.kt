@@ -13,7 +13,7 @@ class TileMapperTest {
             tileId = "tile-1",
             color = "RED",
             number = 5,
-            joker = false
+            isJoker = false
         )
 
         val result = req.toTileDomain()
@@ -32,7 +32,7 @@ class TileMapperTest {
             tileId = "tile-2",
             color = "BLACK",
             number = null,
-            joker = true
+            isJoker = true
         )
 
         val result = req.toTileDomain()

@@ -10,6 +10,11 @@ import androidx.navigation.compose.navigation
 import at.aau.serg.android.core.datastore.DataStoreProvider
 import at.aau.serg.android.core.datastore.getStore
 import at.aau.serg.android.core.datastore.user.UserStore
+import at.aau.serg.android.core.network.RetrofitProvider
+import at.aau.serg.android.core.network.game.GameAPI
+import at.aau.serg.android.core.network.game.GameService
+import at.aau.serg.android.core.network.lobby.LobbyAPI
+import at.aau.serg.android.core.network.lobby.LobbyService
 import at.aau.serg.android.core.util.GenericViewModelFactory
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.screens.auth.AuthEffect

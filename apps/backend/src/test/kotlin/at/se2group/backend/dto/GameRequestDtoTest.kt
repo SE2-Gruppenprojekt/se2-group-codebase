@@ -2,6 +2,7 @@ package at.se2group.backend.dto
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import shared.models.game.domain.BoardSetType
 import shared.models.game.request.BoardSetRequest
 import shared.models.game.request.DrawTileRequest
 import shared.models.game.request.EndTurnRequest
@@ -15,6 +16,8 @@ class GameRequestDtoTest {
         val request = UpdateDraftRequest(
             boardSets = listOf(
                 BoardSetRequest(
+                    boardSetId = "set-1",
+                    type = BoardSetType.UNRESOLVED,
                     tiles = listOf(TileRequest("tile-1", "RED", 3, false))
                 )
             ),
@@ -23,6 +26,8 @@ class GameRequestDtoTest {
 
         assertEquals(1, request.boardSets.size)
         assertEquals(1, request.rackTiles.size)
+        assertEquals("set-1", request.boardSets.first().boardSetId)
+        assertEquals(BoardSetType.UNRESOLVED, request.boardSets.first().type)
         assertEquals("tile-1", request.boardSets.first().tiles.first().tileId)
         assertEquals("tile-2", request.rackTiles.first().tileId)
     }

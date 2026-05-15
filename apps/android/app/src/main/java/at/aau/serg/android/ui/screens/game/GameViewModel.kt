@@ -3,64 +3,82 @@ package at.aau.serg.android.ui.screens.game
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import at.aau.serg.android.core.datastore.ProtoStore
+import at.aau.serg.android.core.network.RetrofitProvider
+import at.aau.serg.android.core.network.game.GameAPI
+import at.aau.serg.android.core.network.game.GameService
+import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
+import at.aau.serg.android.core.network.mapper.toDomain
+import at.aau.serg.android.core.network.mapper.toRequest
 import at.aau.serg.android.datastore.proto.User
+import at.aau.serg.android.ui.state.LoadState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import shared.models.game.domain.BoardSet
 import shared.models.game.domain.BoardSetType
-import shared.models.game.domain.NumberedTile
+import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.Tile
-import shared.models.game.domain.TileColor
+import shared.models.game.request.UpdateDraftRequest
 import java.util.UUID
 
 
 class GameViewModel(
-    private val userStore: ProtoStore<User>
+    private val userStore: ProtoStore<User>,
+    private val gameService: GameService = GameService(
+        RetrofitProvider.retrofit.create(GameAPI::class.java)
+    ),
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState
 
-
     init {
-
-        val boardSets = listOf(
-            BoardSet(
-                boardSetId = "row1",
-                tiles = listOf(
-                    NumberedTile("x1", TileColor.RED, 3),
-                    NumberedTile("x2", TileColor.RED, 4),
-                    NumberedTile("x3", TileColor.RED, 5)
-                )
-            ),
-            BoardSet(
-                boardSetId = "row2",
-                tiles = listOf(
-                    NumberedTile("x4", TileColor.BLACK, 10),
-                    NumberedTile("x5", TileColor.RED, 10),
-                    NumberedTile("x6", TileColor.BLUE, 10)
-                )
-            )
-        )
-
-        // Create random rack tiles
-        val rackTiles = List(14) {
-            NumberedTile(
-                tileId = (1..999999).random().toString(),
-                color = TileColor.entries.toTypedArray().random(),
-                number = (1..13).random()
-            )
-        }
-
-        _uiState.value = GameUiState(
-            rackTiles = rackTiles,
-            boardSets = boardSets
-        )
-
         viewModelScope.launch {
             userStore.data.collect { user ->
                 _uiState.update { it.copy(user = user) }
+                loadGame()
+            }
+        }
+    }
+
+    fun applyGameState(game: ConfirmedGame) {
+        val currentUserId = _uiState.value.user?.uid
+
+        val newRack = game.players
+            .firstOrNull { it.userId == currentUserId }
+            ?.rackTiles ?: emptyList()
+
+        val newBoard = game.boardSets
+
+        _uiState.update { old ->
+            old.copy(
+                gameState = game,
+                rackTiles = newRack,
+                boardSets = newBoard
+            )
+        }
+    }
+
+    fun loadGame() {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(loadState = LoadState.Loading)
+            }
+            val user = userStore.data.first()
+
+            try {
+                val gameState = gameService.loadGame(user.gameId).toDomain()
+                applyGameState(gameState)
+                _uiState.update {
+                    it.copy(loadState = LoadState.Success)
+                }
+            } catch (e: Throwable) {
+                val appError = NetworkErrorMapper.map(e)
+
+                _uiState.update {
+                    it.copy(loadState = LoadState.Error(appError))
+                }
             }
         }
     }
@@ -76,7 +94,7 @@ class GameViewModel(
                 } else {
                     if (selected) selectedTiles.add(tile)
                     else selectedTiles.remove(tile)
-                    selectedTiles
+                    selectedTiles.toSet()
                 }
 
             state.copy(
@@ -111,6 +129,7 @@ class GameViewModel(
                 activeSelectionRow = null
             )
         }
+        sendTurnDraft()
     }
 
     fun moveTiles(boardSetId: String? = null) {
@@ -128,7 +147,6 @@ class GameViewModel(
 
             val updatedBoardSets =
                 if (boardSetId == null) {
-                    // Move tiles into the rack
                     cleanedBoardSets
                 } else {
                     cleanedBoardSets.map { set ->
@@ -149,6 +167,7 @@ class GameViewModel(
                 activeSelectionRow = null
             )
         }
+        sendTurnDraft()
     }
 
     fun moveInSameRow(srcRowId: String?, from: Int, to: Int) {
@@ -174,6 +193,106 @@ class GameViewModel(
                 state.copy(boardSets = updatedSets)
             }
         }
+        sendTurnDraft()
     }
 
+    fun resetSelection() {
+        _uiState.value.gameState?.let { applyGameState(it) }
+        _uiState.update { state ->
+            state.copy(
+                selectedTiles = emptySet(),
+                activeSelectionRow = null
+            )
+        }
+        println("RESET clicked")
+    }
+
+    fun drawTile() {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(loadState = LoadState.Loading)
+            }
+            val user = userStore.data.first()
+
+            try {
+                val gameState = gameService.drawTile(user.gameId, user.uid).toDomain()
+                applyGameState(gameState)
+                _uiState.update {
+                    it.copy(
+                        loadState = LoadState.Success,
+                        gameState = gameState,
+                    )
+                }
+            } catch (e: Throwable) {
+                val appError = NetworkErrorMapper.map(e)
+
+                _uiState.update {
+                    it.copy(loadState = LoadState.Error(appError))
+                }
+            }
+        }
+    }
+
+    fun endTurn() {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(loadState = LoadState.Loading)
+            }
+            val user = userStore.data.first()
+
+            try {
+                val gameState = gameService.endTurn(
+                    user.gameId,
+                    user.uid,
+
+                    ).toDomain()
+                applyGameState(gameState)
+                _uiState.update {
+                    it.copy(
+                        selectedTiles = emptySet(),
+                        activeSelectionRow = null,
+                        loadState = LoadState.Success
+                    )
+                }
+            } catch (e: Throwable) {
+                val appError = NetworkErrorMapper.map(e)
+
+                _uiState.update {
+                    it.copy(loadState = LoadState.Error(appError))
+                }
+            }
+        }
+    }
+
+    fun sendTurnDraft() {
+        viewModelScope.launch {
+            val user = userStore.data.first()
+
+            _uiState.update {
+                it.copy(loadState = LoadState.Success
+                )
+            }
+
+            try {
+                val request = UpdateDraftRequest(
+                    boardSets = uiState.value.boardSets.map { it.toRequest() },
+                    rackTiles = uiState.value.rackTiles.map { it.toRequest() }
+                )
+                gameService.updateDraft(
+                    gameId = user.gameId,
+                    request = request
+                )
+            } catch (e: Throwable) {
+                val appError = NetworkErrorMapper.map(e)
+
+                _uiState.update {
+                    it.copy(loadState = LoadState.Error(appError))
+                }
+            }
+        }
+    }
+
+    fun setUiStateForTest(state: GameUiState) {
+        _uiState.value = state
+    }
 }
