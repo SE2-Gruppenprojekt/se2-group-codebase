@@ -67,6 +67,13 @@ class LobbyWaitingViewModel(
             }
             is LobbyEvent.Started -> {
                 viewModelScope.launch {
+                    userStore.save(
+                        User.newBuilder()
+                            .setUid(uiState.value.user?.uid)
+                            .setDisplayName(uiState.value.user?.displayName)
+                            .setGameId(event.payload.matchId)
+                            .build()
+                    )
                     _effect.emit(LobbyWaitingEffect.NavigateToMatch(event.payload.matchId))
                 }
             }

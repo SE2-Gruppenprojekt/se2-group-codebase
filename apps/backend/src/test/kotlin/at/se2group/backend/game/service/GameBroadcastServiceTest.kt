@@ -117,7 +117,7 @@ class GameBroadcastServiceTest {
         assertEquals(0, event.game.board.size)
         assertEquals(0, event.game.drawPile.size)
         assertEquals(0, event.game.drawPileCount)
-        assertEquals(createdAt, event.game.createdAt)
+        assertEquals(createdAt.toString(), event.game.createdAt)
 
         verifyNoMoreInteractions(messagingTemplate)
     }

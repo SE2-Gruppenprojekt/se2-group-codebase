@@ -1,7 +1,5 @@
 package shared.models.game.response
 
-import java.time.Instant
-
 data class GameResponse(
     val gameId: String,
     val lobbyId: String,
@@ -11,10 +9,10 @@ data class GameResponse(
     val drawPileCount: Int,
     val currentPlayerUserId: String,
     val currentTurnPlayerId: String,
-    val turnDeadline: Instant?,
+    val turnDeadline: String?,
     val remainingTurnSeconds: Int?,
     val status: String,
-    val createdAt: Instant,
-    val startedAt: Instant?,
-    val finishedAt: Instant?
+    val createdAt: String,
+    val startedAt: String?,
+    val finishedAt: String?
 )
