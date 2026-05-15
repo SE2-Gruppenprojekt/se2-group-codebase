@@ -12,7 +12,7 @@ package shared.models.game.validation
  * Each violation should remain small, stable, and transport-friendly:
  * - [code] identifies the violated rule in a machine-readable way
  * - [message] explains the failure in human-readable form
- * - [setIndex] can point to one affected board set if the violation is set-scoped
+ * - [boardSetId] can point to one affected board set if the violation is set-scoped
  * - [tileIds] can point to the specific tiles involved when tile-level
  *   highlighting or debugging is needed
  *
@@ -22,12 +22,12 @@ package shared.models.game.validation
  *
  * @property code stable machine-readable identifier for the violated rule
  * @property message human-readable explanation of the problem
- * @property setIndex optional board-set index for violations tied to one set
+ * @property boardSetId optional board-set index for violations tied to one set
  * @property tileIds optional list of tile identifiers involved in the failure
  */
 data class RuleViolation(
     val code: String,
     val message: String,
-    val setIndex: Int? = null,
+    val boardSetId: Int? = null,
     val tileIds: List<String> = emptyList()
 )

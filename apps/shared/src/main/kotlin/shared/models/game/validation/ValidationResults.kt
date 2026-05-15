@@ -62,7 +62,7 @@ fun invalid(
         RuleViolation(
             code = code,
             message = message,
-            setIndex = setIndex,
+            boardSetId = setIndex,
             tileIds = tileIds
         )
     )

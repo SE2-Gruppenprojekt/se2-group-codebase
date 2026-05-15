@@ -39,7 +39,7 @@ class ValidationResultsHelperTest {
 
         assertFalse(result.isValid)
         assertEquals("GROUP_MIN_SIZE", result.violations.single().code)
-        assertEquals(2, result.violations.single().setIndex)
+        assertEquals(2, result.violations.single().boardSetId)
         assertEquals(listOf("tile-7"), result.violations.single().tileIds)
     }
 
