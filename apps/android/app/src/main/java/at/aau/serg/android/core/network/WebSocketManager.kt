@@ -1,5 +1,6 @@
 package at.aau.serg.android.core.network
 
+import androidx.annotation.VisibleForTesting
 import at.aau.serg.android.core.errors.AppError
 import at.aau.serg.android.core.network.socket.ConnectionState
 import at.aau.serg.android.core.network.socket.DefaultClientProvider
@@ -36,6 +37,7 @@ class WebSocketManager(
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + dispatcher),
     private val autoReconnect: Boolean = true,
+    private val maxReconnectAttempts: Int = WebConfig.Socket.MAX_ATTEMPTS,
     private val idleTimeoutMs: Long = WebConfig.Socket.IDLE_TIMEOUT,
 ) {
     private val connectionMutex = Mutex()
@@ -49,11 +51,12 @@ class WebSocketManager(
     val errors: SharedFlow<AppError> = _errors
 
     private var manualDisconnect = false
-    internal var maxReconnectAttemptsForTest: Int? = null
     val activeSubscriptions = MutableStateFlow(0)
+
 
     private var supervisorJob: Job? = null
     private var idleWatcherJob: Job? = null
+    private var reconnectionJob: Job? = null
 
     init {
         activateBackgroundProcesses()
@@ -86,6 +89,7 @@ class WebSocketManager(
         }
     }
 
+    @VisibleForTesting
     internal fun getIdleTimerFlow(): Flow<Unit> = combine(
         activeSubscriptions,
         _session
@@ -100,6 +104,7 @@ class WebSocketManager(
         }
     }
 
+    @VisibleForTesting
     internal suspend fun ensureConnected(): StompSessionWrapper {
         return connectionMutex.withLock {
             session.value?.let { return it }
@@ -117,14 +122,20 @@ class WebSocketManager(
         }
     }
 
-    private fun activateBackgroundProcesses() {
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun activateBackgroundProcesses() {
         if (supervisorJob?.isActive != true && autoReconnect) {
             supervisorJob = scope.launch {
                 _connectionState.collect { state ->
                     val isUnexpectedDisconnection = state == ConnectionState.Disconnected || state is ConnectionState.Failed
 
                     if (isUnexpectedDisconnection && !manualDisconnect) {
-                        reconnectWithBackoff()
+                        if (reconnectionJob?.isActive != true) {
+                            reconnectionJob = scope.launch {
+                                reconnectWithBackoff()
+                            }
+                        }
                     }
                 }
             }
@@ -158,6 +169,8 @@ class WebSocketManager(
             supervisorJob = null
             idleWatcherJob?.cancel()
             idleWatcherJob = null
+            reconnectionJob?.cancel()
+            reconnectionJob = null
         }
 
         val oldSession = _session.value
@@ -172,7 +185,7 @@ class WebSocketManager(
             try {
                 session?.disconnect()
             } catch (e: Exception) {
-                // TODO: possibly create log.txt for error report sending.
+                // probably should log and send error log to server in real world
             }
         }
     }
@@ -182,17 +195,18 @@ class WebSocketManager(
         _errors.emit(appError)
 
         val sessionToClose = resetSessionState(
-            newState = ConnectionState.Failed(error.message ?: "")
+            newState = ConnectionState.Failed(error.message)
         )
 
         safelyDisconnectSession(sessionToClose)
     }
 
-    private suspend fun reconnectWithBackoff() {
-        var attempt = 0
-        while (_session.value == null && attempt < WebConfig.Socket.MAX_ATTEMPTS) {
-            if (maxReconnectAttemptsForTest?.let { attempt >= it } == true) return
+    @VisibleForTesting
+    internal suspend fun reconnectWithBackoff() {
+        if (_session.value != null) return
 
+        var attempt = 0
+        while (attempt < maxReconnectAttempts) {
             attempt++
             _connectionState.value = ConnectionState.Reconnecting(attempt)
 
