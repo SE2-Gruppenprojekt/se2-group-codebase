@@ -1,11 +1,18 @@
+import org.gradle.internal.declarativedsl.language.FunctionArgument
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    id("org.sonarqube")
     alias(libs.plugins.protobuf)
+    jacoco
 }
 
+jacoco {
+    toolVersion = "0.8.11"
+}
 
 
 android {
@@ -24,7 +31,13 @@ android {
 
     buildTypes {
         debug {
+            enableUnitTestCoverage = true
             enableAndroidTestCoverage = true
+        }
+        testOptions {
+            unitTests {
+                isIncludeAndroidResources = true
+            }
         }
         release {
             isMinifyEnabled = false
@@ -74,6 +87,91 @@ protobuf {
                 }
             }
         }
+    }
+}
+
+
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+
+    dependsOn("testReleaseUnitTest")
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+
+        xml.outputLocation.set(
+            layout.buildDirectory.file("reports/jacoco/jacoco.xml")
+        )
+    }
+
+    val excludes = listOf(
+        // androidTest filter
+        "**/ComposableSingletons*.*",
+        "**/MainActivity.*",
+        "**/MainActivityKt.class",
+        "**/*Screen.kt",
+        "**/*Screen*.kt",
+        "**/*ScreenKt.class",
+        "**/*TestTags.*",
+        "**/components/**",
+        "**/navigation/**",
+        "**/theme/**",
+
+        // Compose compiler generated
+        "**/ComposableSingletons*.*",
+        "**/*inlined*.*",
+        "**/*lambda*.*",
+
+        "**/R.class",
+        "**/R$*.class",
+        "**/BuildConfig.*",
+        "**/Manifest*.*",
+        "**/*Test*.*"
+    )
+
+    val kotlinClasses = fileTree(
+        "${layout.buildDirectory.get()}/tmp/kotlin-classes/release"
+    ) {
+        exclude(excludes)
+    }
+
+    val javaClasses = fileTree(
+        "${layout.buildDirectory.get()}/intermediates/javac/release"
+    ) {
+        exclude(excludes)
+    }
+
+    classDirectories.setFrom(
+        files(kotlinClasses, javaClasses)
+    )
+
+    sourceDirectories.setFrom(
+        files(
+            "src/main/java",
+            "src/main/kotlin"
+        )
+    )
+
+    executionData.setFrom(
+        fileTree(layout.buildDirectory.get()) {
+            include(
+                "jacoco/testReleaseUnitTest.exec"
+            )
+        }
+    )
+}
+
+sonar {
+    properties {
+        property("sonar.projectKey", "se2-gruppenprojekt_se2-group-codebase_frontend")
+        property("sonar.organization", "se2-gruppenprojekt")
+        property("sonar.sources", "src/main/java")
+        property("sonar.tests", "src/test/java, src/androidTest/java")
+        property(
+            "sonar.coverage.jacoco.xmlReportPaths",
+            "build/reports/jacoco/test/jacoco.xml"
+        )
     }
 }
 
