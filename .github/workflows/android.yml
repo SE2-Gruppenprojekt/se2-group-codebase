@@ -60,7 +60,7 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle
 
       - name: Run frontend tests
-        run: ./gradlew :apps:android:app:testDebugUnitTest
+        run: ./gradlew :apps:android:app:testDebugUnitTes jacocoTestReport
 
       - name: Run frontend Sonar analysis
         uses: SonarSource/sonarqube-scan-action@v5
