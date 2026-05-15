@@ -1,9 +1,11 @@
 package shared.models.game.event
 
+import shared.models.EventPayload
+
 data class TurnTimedOutEvent(
     val gameId: String,
     val previousTurnPlayerId: String
-) : GameEvent {
+) : EventPayload {
     override val type = TYPE
 
     companion object {
