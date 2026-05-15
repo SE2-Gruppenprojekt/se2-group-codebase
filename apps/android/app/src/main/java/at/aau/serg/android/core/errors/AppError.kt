@@ -19,7 +19,6 @@ sealed class AppError {
         data object Disconnected : WebSocket()
         data object SubscriptionFailed : WebSocket()
         data object ProtocolError : WebSocket()
-        data class Unknown(val message: String) : WebSocket()
     }
 
     data object Unknown : AppError()

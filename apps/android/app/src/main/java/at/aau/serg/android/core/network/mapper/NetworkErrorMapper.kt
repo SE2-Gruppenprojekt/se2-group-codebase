@@ -7,7 +7,6 @@ import retrofit2.HttpException
 import java.io.IOException
 
 data class ApiErrorResponse(
-    val errorCode: String?,
     val errorMessage: String?
 )
 
