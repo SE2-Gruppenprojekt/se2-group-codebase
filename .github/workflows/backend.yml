@@ -30,6 +30,7 @@ jobs:
               - 'gradlew.bat'
               - 'settings.gradle.kts'
               - 'build.gradle.kts'
+              - '.github/workflows/**'
 
   backend-build-sonar:
     needs: changes
@@ -63,23 +64,8 @@ jobs:
       - name: Build backend tests and coverage
         run: ./gradlew :apps:backend:test :apps:backend:jacocoTestReport --info
 
-      - name: Analyze backend with SonarQube (PR)
-        if: github.event_name == 'pull_request'
-        run: >
-          ./gradlew :apps:backend:sonar
-          -Dsonar.qualitygate.wait=true
-          -Dsonar.pullrequest.key=${{ github.event.pull_request.number }}
-          -Dsonar.pullrequest.branch=${{ github.head_ref }}
-          -Dsonar.pullrequest.base=${{ github.base_ref }}
-          -Dsonar.scm.revision=${{ github.event.pull_request.head.sha }}
-          --info
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Analyze backend with SonarQube (branch)
-        if: github.event_name != 'pull_request'
-        run: ./gradlew :apps:backend:sonar -Dsonar.qualitygate.wait=true -Dsonar.scm.revision=${{ github.sha }} --info
+      - name: Analyze backend with SonarQube
+        run: ./gradlew :apps:backend:sonar -Dsonar.qualitygate.wait=true --info
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
