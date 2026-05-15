@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 concurrency:
-  group: android-sonar-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: frontend-sonar-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 jobs:
   changes:
@@ -23,12 +23,6 @@ jobs:
           filters: |
             frontend:
               - 'apps/android/**'
-              - 'gradle/**'
-              - 'gradlew'
-              - 'gradlew.bat'
-              - 'settings.gradle.kts'
-              - 'build.gradle.kts'
-              - '.github/workflows/**'
 
   frontend-build:
     needs: changes
@@ -62,7 +56,8 @@ jobs:
       - name: Run frontend tests
         run: ./gradlew :apps:android:app:testDebugUnitTest
 
-      - name: Run frontend Sonar analysis
+      - name: Run frontend Sonar analysis (PR)
+        if: github.event_name == 'pull_request'
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_ANDROID }}
@@ -77,6 +72,28 @@ jobs:
             -Dsonar.tests=src/test
             -Dsonar.java.binaries=build/tmp/kotlin-classes/debug
             -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/testDebugUnitTestCoverage/testDebugUnitTestCoverage.xml
+            -Dsonar.pullrequest.key=${{ github.event.pull_request.number }}
+            -Dsonar.pullrequest.branch=${{ github.head_ref }}
+            -Dsonar.pullrequest.base=${{ github.base_ref }}
+            -Dsonar.scm.revision=${{ github.event.pull_request.head.sha }}
+
+      - name: Run frontend Sonar analysis (branch)
+        if: github.event_name != 'pull_request'
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_ANDROID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=se2-gruppenprojekt_se2-group-codebase_frontend
+            -Dsonar.organization=se2-gruppenprojekt
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.projectBaseDir=apps/android/app
+            -Dsonar.sources=src/main/java
+            -Dsonar.tests=src/test
+            -Dsonar.java.binaries=build/tmp/kotlin-classes/debug
+            -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/testDebugUnitTestCoverage/testDebugUnitTestCoverage.xml
+            -Dsonar.scm.revision=${{ github.sha }}
 
   frontend-required:
     name: frontend-required
