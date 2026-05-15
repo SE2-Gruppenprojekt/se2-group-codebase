@@ -375,7 +375,7 @@ class LobbyWaitingViewModelTest {
     }
 
     @Test
-    fun toggle_ready_state_sets_success() = runTest {
+    fun toggle_ready_state_sets_success_on_ready() = runTest {
         val userId = fakeLobby.hostUserId
         val lobbyId = fakeLobby.lobbyId
         val payload = LobbyUpdatedPayload(
@@ -393,6 +393,53 @@ class LobbyWaitingViewModelTest {
         advanceUntilIdle()
 
         coEvery { api.ready(userId, lobbyId) } returns true
+
+        viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState(userId))
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Success)
+    }
+
+    @Test
+    fun toggle_ready_state_sets_success_on_unready() = runTest {
+        val userId = fakeLobby.hostUserId
+        val lobbyId = fakeLobby.lobbyId
+
+        val fakeLobby = LobbyResponse(
+            lobbyId = "lobby-123",
+            hostUserId = "user-1",
+            status = "OPEN",
+            players = listOf(
+                LobbyPlayerResponse(
+                    userId = "user-1",
+                    displayName = "Bob",
+                    isReady = true
+                ),
+                LobbyPlayerResponse(
+                    userId = "user-2",
+                    displayName = "Alice",
+                    isReady = false
+                )
+            ),
+            maxPlayers = 4,
+            isPrivate = false,
+            allowGuests = true
+        )
+        val payload = LobbyUpdatedPayload(
+            lobby = fakeLobby
+        )
+
+        viewModel.handleLobbyEvent(LobbyEvent.Updated(payload))
+
+        val updatedUser = User.newBuilder()
+            .setUid(userId)
+            .setDisplayName("Bob")
+            .build()
+
+        store.save(updatedUser)
+        advanceUntilIdle()
+
+
         coEvery { api.unready(userId, lobbyId) } returns true
 
         viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState(userId))

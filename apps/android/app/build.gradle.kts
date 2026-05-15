@@ -170,7 +170,7 @@ sonar {
         property("sonar.tests", "src/test/java, src/androidTest/java")
         property(
             "sonar.coverage.jacoco.xmlReportPaths",
-            "build/reports/jacoco/test/jacoco.xml"
+            "build/reports/jacoco/jacoco.xml"
         )
     }
 }
