@@ -16,7 +16,7 @@ class RunValidationService {
                 return invalid(
                     code = "RUN_MIN_SIZE",
                     message = "Run must contain at least 3 tiles",
-                    setIndex = 0,
+                    boardSetId = 0,
                     tileIds = set.tiles.map { it.tileId }
                 )
             }
@@ -25,7 +25,7 @@ class RunValidationService {
                 return invalid(
                     code = "RUN_JOKER_NOT_SUPPORTED",
                     message = "Joker support is not implemented yet",
-                    setIndex = 0,
+                    boardSetId = 0,
                     tileIds = set.tiles.filterIsInstance<JokerTile>().map { it.tileId }
                 )
             }
@@ -37,7 +37,7 @@ class RunValidationService {
                 return invalid(
                     code = "RUN_COLOR_MISMATCH",
                     message = "All run tiles must have the same color",
-                    setIndex = 0,
+                    boardSetId = 0,
                     tileIds = numberedTiles.map { it.tileId }
                 )
             }
@@ -48,7 +48,7 @@ class RunValidationService {
                 return invalid(
                     code = "RUN_DUPLICATE_NUMBER",
                     message = "Run tiles must not have duplicate numbers",
-                    setIndex = 0,
+                    boardSetId = 0,
                     tileIds = numberedTiles.map { it.tileId }
                 )
             }
@@ -61,7 +61,7 @@ class RunValidationService {
                 return invalid(
                     code = "RUN_NOT_CONSECUTIVE",
                     message = "Run tiles must create a consecutive ascending sequence",
-                    setIndex = 0,
+                    boardSetId = 0,
                     tileIds = numberedTiles.map { it.tileId }
                 )
             }

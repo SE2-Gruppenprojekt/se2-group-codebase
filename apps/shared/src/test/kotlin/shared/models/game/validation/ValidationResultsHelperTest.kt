@@ -33,7 +33,7 @@ class ValidationResultsHelperTest {
         val result = invalid(
             code = "GROUP_MIN_SIZE",
             message = "Group must contain at least three tiles",
-            setIndex = 2,
+            boardSetId = 2,
             tileIds = listOf("tile-7")
         )
 
