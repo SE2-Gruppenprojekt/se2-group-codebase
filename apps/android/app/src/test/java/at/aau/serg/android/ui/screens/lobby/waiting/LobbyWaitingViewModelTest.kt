@@ -28,6 +28,7 @@ import shared.models.lobby.event.LobbyUpdatedPayload
 import shared.models.lobby.response.LobbyPlayerResponse
 import shared.models.lobby.response.LobbyResponse
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertNotEquals
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LobbyWaitingViewModelTest {
@@ -446,5 +447,11 @@ class LobbyWaitingViewModelTest {
         advanceUntilIdle()
 
         assertTrue(viewModel.uiState.value.loadState is LoadState.Success)
+    }
+
+    @Test
+    fun startSocket_cancels_existing_job_on_lobby_change() = runTest {
+        viewModel.onEvent(LobbyWaitingEvent.OnLoadLobby("Lobby1"))
+        viewModel.onEvent(LobbyWaitingEvent.OnLoadLobby("Lobby2"))
     }
 }

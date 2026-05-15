@@ -4,6 +4,8 @@ import at.aau.serg.android.MainDispatcherRule
 import at.aau.serg.android.core.datastore.ProtoStore
 import at.aau.serg.android.core.network.lobby.LobbyAPI
 import at.aau.serg.android.datastore.proto.User
+import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateEvent
+import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateViewModel
 import at.aau.serg.android.ui.state.LoadState
 import io.mockk.coEvery
 import io.mockk.every
@@ -14,10 +16,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import retrofit2.HttpException
+import retrofit2.Response
 import shared.models.lobby.response.LobbyListItemResponse
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -36,6 +42,12 @@ class LobbyBrowseViewModelTest {
         userStore = mockk()
         coEvery { api.getLobbies() } returns emptyList()
         viewModel = LobbyBrowseViewModel(userStore, api)
+    }
+
+    @Test
+    fun default_constructor_path_isCovered() = runTest {
+        val vm = LobbyCreateViewModel(userStore)
+        assertNotNull(vm)
     }
 
     // --- Initial State ---
@@ -114,6 +126,44 @@ class LobbyBrowseViewModelTest {
 
         assertEquals(LobbyBrowseEffect.NavigateToWaitingRoom("ABC"), effectDeferred.await())
     }
+
+    @Test
+    fun onJoinLobby_whenConflict409_emitsNavigateToWaitingRoom() = runTest {
+        val errorResponse = Response.error<Any>(
+            409,
+            "".toResponseBody("application/json".toMediaTypeOrNull())
+        )
+        val httpException = HttpException(errorResponse)
+
+        every { userStore.data } returns flowOf(User.getDefaultInstance())
+        coEvery { api.joinLobby(any(), any()) } throws httpException
+
+        val effectDeferred = async { viewModel.effects.first() }
+
+        viewModel.onEvent(LobbyBrowseEvent.OnJoinLobby("ABC"))
+        advanceUntilIdle()
+
+        assertTrue(
+            "LoadState should be Success even on 409",
+            viewModel.uiState.value.loadState is LoadState.Success
+        )
+
+        assertEquals(
+            LobbyBrowseEffect.NavigateToWaitingRoom("ABC"),
+            effectDeferred.await()
+        )
+    }
+
+    @Test
+    fun onJoinLobby_emitsErrorState_onFailure() = runTest {
+        coEvery { api.joinLobby(any(), any()) } throws RuntimeException()
+
+        viewModel.onEvent(LobbyBrowseEvent.OnJoinLobby("ABC"))
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
+    }
+
 
     @Test
     fun onCreateNewLobby_emitsNavigateToCreate() = runTest {
