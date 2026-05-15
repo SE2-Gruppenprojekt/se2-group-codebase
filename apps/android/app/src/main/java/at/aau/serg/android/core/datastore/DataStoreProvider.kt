@@ -10,31 +10,18 @@ class DataStoreProvider private constructor(context: Context) {
 
     private val appContext = context.applicationContext
 
-    private val stores: Map<KClass<*>, ProtoStore<*>> = mapOf(
-        User::class to createUserStore()
-    )
-
-    private fun createUserStore(): UserStore {
-        val protoStore = object : ProtoStore<User> {
-            override val data = appContext.UserProtoDataStore.data
-
-            override suspend fun save(value: User) {
-                appContext.UserProtoDataStore.updateData { value }
-            }
-
-            override suspend fun wipe() {
-                appContext.UserProtoDataStore.updateData {
-                    User.getDefaultInstance()
-                }
-            }
-        }
-
-        return UserStore(protoStore)
+    private val stores: Map<KClass<*>, ProtoStore<*>> by lazy {
+        mapOf(
+            User::class to UserStore(
+                BaseProtoStore(appContext.UserProtoDataStore, User.getDefaultInstance())
+            )
+        )
     }
 
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> getStore(type: KClass<T>): ProtoStore<T> {
-        return stores[type] as ProtoStore<T>
+        return stores[type] as? ProtoStore<T>
+            ?: throw IllegalArgumentException("No store for ${type.simpleName}")
     }
 
     companion object {
