@@ -29,6 +29,7 @@ jobs:
               - 'gradlew.bat'
               - 'settings.gradle.kts'
               - 'build.gradle.kts'
+              - '.github/workflows/**'
 
   shared-build:
     needs: changes
