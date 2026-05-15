@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 concurrency:
-  group: android-sonar-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: frontend-sonar-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 jobs:
   changes:
@@ -23,12 +23,6 @@ jobs:
           filters: |
             frontend:
               - 'apps/android/**'
-              - 'gradle/**'
-              - 'gradlew'
-              - 'gradlew.bat'
-              - 'settings.gradle.kts'
-              - 'build.gradle.kts'
-              - '.github/workflows/**'
 
   frontend-build:
     needs: changes

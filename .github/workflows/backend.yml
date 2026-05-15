@@ -30,7 +30,6 @@ jobs:
               - 'gradlew.bat'
               - 'settings.gradle.kts'
               - 'build.gradle.kts'
-              - '.github/workflows/**'
 
   backend-build-sonar:
     needs: changes
