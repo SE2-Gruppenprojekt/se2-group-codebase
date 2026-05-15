@@ -6,6 +6,9 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: android-sonar-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   changes:
     runs-on: ubuntu-latest
@@ -27,7 +30,7 @@ jobs:
               - 'build.gradle.kts'
               - '.github/workflows/**'
 
-  frontend-build-sonar:
+  frontend-build:
     needs: changes
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
@@ -56,15 +59,29 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
           restore-keys: ${{ runner.os }}-gradle
 
-      - name: Run frontend tests + Sonar
-        run: ./gradlew :apps:android:app:testDebugUnitTest sonar
+      - name: Run frontend tests
+        run: ./gradlew :apps:android:app:testDebugUnitTest
+
+      - name: Run frontend Sonar analysis
+        uses: SonarSource/sonarqube-scan-action@v5
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_ANDROID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=se2-gruppenprojekt_se2-group-codebase_frontend
+            -Dsonar.organization=se2-gruppenprojekt
+            -Dsonar.projectName="frontend"
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.projectBaseDir=apps/android/app
+            -Dsonar.sources=src/main/java
+            -Dsonar.tests=src/test
+            -Dsonar.java.binaries=build/tmp/kotlin-classes/debug
+            -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/testDebugUnitTestCoverage/testDebugUnitTestCoverage.xml
 
   frontend-required:
     name: frontend-required
-    needs: [changes, frontend-build-sonar]
+    needs: [changes, frontend-build]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -73,9 +90,9 @@ jobs:
         run: echo "No frontend-related changes."
 
       - name: Fail if frontend job failed
-        if: needs.changes.outputs.frontend == 'true' && needs.frontend-build-sonar.result != 'success'
+        if: needs.changes.outputs.frontend == 'true' && needs.frontend-build.result != 'success'
         run: exit 1
 
       - name: Pass if frontend job succeeded
-        if: needs.changes.outputs.frontend == 'true' && needs.frontend-build-sonar.result == 'success'
+        if: needs.changes.outputs.frontend == 'true' && needs.frontend-build.result == 'success'
         run: echo "Frontend checks passed."

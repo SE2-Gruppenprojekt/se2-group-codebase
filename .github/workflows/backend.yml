@@ -6,6 +6,10 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: backend-sonar-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   changes:
     runs-on: ubuntu-latest
@@ -82,4 +86,4 @@ jobs:
 
       - name: Pass if backend job succeeded
         if: needs.changes.outputs.backend == 'true' && needs.backend-build-sonar.result == 'success'
-        run: echo "Backend checks passed."
+        run: echo "Backend checks passed!"
