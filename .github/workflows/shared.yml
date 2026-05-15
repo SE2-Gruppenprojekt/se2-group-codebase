@@ -6,6 +6,10 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: shared-sonar-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   changes:
     runs-on: ubuntu-latest
@@ -56,8 +60,11 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
           restore-keys: ${{ runner.os }}-gradle
 
-      - name: Run shared tests + Sonar
-        run: ./gradlew :apps:shared:test sonar
+      - name: Run shared tests
+        run: ./gradlew :apps:shared:test
+
+      - name: Analyze shared with SonarQube
+        run: ./gradlew :apps:shared:sonar -Dsonar.qualitygate.wait=true --info
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
