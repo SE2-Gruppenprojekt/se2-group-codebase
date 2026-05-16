@@ -65,10 +65,11 @@ class LobbyWebSocketServiceTest {
         assertTrue(result.first() is LobbyEvent.Updated)
     }
 
-    @Test(expected = com.squareup.moshi.JsonDataException::class)
-    fun dispatch_throws_exception_when_payload_is_malformed() {
+    @Test
+    fun parseLobbyEvent_does_not_throw_exception_when_payload_is_malformed() {
         val json = """{"type":"lobby.updated", "lobby": {}}"""
-        service.parseLobbyEvent(json)
+        val result = service.parseLobbyEvent(json)
+        assertEquals(result, null)
     }
 
     @Test

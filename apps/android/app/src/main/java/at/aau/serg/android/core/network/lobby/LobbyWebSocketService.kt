@@ -32,17 +32,21 @@ class LobbyWebSocketService(
 
     @VisibleForTesting
     internal fun parseLobbyEvent(message: String): LobbyEvent? {
-        val map = messageTypeAdapter.fromJson(message) ?: return null
-        val type = map["type"] as? String ?: return null
+        try {
+            val map = messageTypeAdapter.fromJson(message) ?: return null
+            val type = map["type"] as? String ?: return null
 
-        return when (type) {
-            LobbyUpdatedPayload.TYPE ->
-                LobbyEvent.Updated(updatedAdapter.fromJson(message)!!)
-            LobbyDeletedPayload.TYPE ->
-                LobbyEvent.Deleted(deletedAdapter.fromJson(message)!!)
-            LobbyStartedPayload.TYPE ->
-                LobbyEvent.Started(startedAdapter.fromJson(message)!!)
-            else -> null
+            return when (type) {
+                LobbyUpdatedPayload.TYPE ->
+                    LobbyEvent.Updated(updatedAdapter.fromJson(message)!!)
+                LobbyDeletedPayload.TYPE ->
+                    LobbyEvent.Deleted(deletedAdapter.fromJson(message)!!)
+                LobbyStartedPayload.TYPE ->
+                    LobbyEvent.Started(startedAdapter.fromJson(message)!!)
+                else -> null
+            }
+        } catch(e : Exception) {
+            return null
         }
     }
 }

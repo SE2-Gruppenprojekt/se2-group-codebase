@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import shared.models.lobby.domain.Lobby
@@ -52,7 +53,16 @@ class LobbyWaitingViewModel(
 
         socketJob = viewModelScope.launch {
             socket.subscribe(lobbyId)
-                .collect { handleLobbyEvent(it) }
+                .catch { exception ->
+                    _uiState.update {
+                        it.copy(
+                            loadState = LoadState.Error(NetworkErrorMapper.map(exception))
+                        )
+                    }
+                }
+                .collect { event ->
+                    handleLobbyEvent(event)
+                }
         }
     }
 
