@@ -34,17 +34,17 @@ android {
             enableUnitTestCoverage = true
             enableAndroidTestCoverage = true
         }
-        testOptions {
-            unitTests {
-                isIncludeAndroidResources = true
-            }
-        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+    }
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
         }
     }
 
