@@ -94,7 +94,7 @@ protobuf {
 
 tasks.register<JacocoReport>("jacocoTestReport") {
 
-    dependsOn("testReleaseUnitTest")
+    dependsOn("testDebugUnitTest")
 
     reports {
         xml.required.set(true)
