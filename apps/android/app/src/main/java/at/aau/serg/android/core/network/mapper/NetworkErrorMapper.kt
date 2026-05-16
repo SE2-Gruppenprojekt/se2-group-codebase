@@ -7,7 +7,6 @@ import retrofit2.HttpException
 import java.io.IOException
 
 data class ApiErrorResponse(
-    val errorCode: String?,
     val errorMessage: String?
 )
 
@@ -23,7 +22,7 @@ object NetworkErrorMapper {
         when (e) {
             is IOException -> AppError.Rest.Network
             is HttpException -> mapHttpError(e)
-            else -> AppError.Unknown
+            else -> AppError.UnknownNetwork(e.message ?: "Unexpected Network Error")
         }
 
     private fun mapHttpError(e: HttpException): AppError {
@@ -39,7 +38,7 @@ object NetworkErrorMapper {
             404 -> AppError.Rest.NotFound
             409 -> AppError.Rest.Conflict
             in 500..599 -> AppError.Rest.Server
-            else -> AppError.Unknown
+            else -> AppError.Rest.Api("Unresolved error code encountered [http code: ${e.code()}]")
         }
     }
 }

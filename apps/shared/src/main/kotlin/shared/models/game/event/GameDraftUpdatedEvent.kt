@@ -1,12 +1,13 @@
 package shared.models.game.event
 
+import shared.models.EventPayload
 import shared.models.game.response.TurnDraftResponse
 
 data class GameDraftUpdatedEvent(
     val gameId: String,
     val playerId: String,
     val draft: TurnDraftResponse
-) : GameEvent {
+) : EventPayload {
     override val type = TYPE
 
     companion object {

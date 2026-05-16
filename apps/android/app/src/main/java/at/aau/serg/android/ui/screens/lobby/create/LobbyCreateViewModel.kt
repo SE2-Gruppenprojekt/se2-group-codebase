@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import at.aau.serg.android.core.datastore.ProtoStore
 import at.aau.serg.android.core.network.RetrofitProvider
 import at.aau.serg.android.core.network.lobby.LobbyAPI
-import at.aau.serg.android.core.network.lobby.LobbyService
 import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
 import at.aau.serg.android.core.network.mapper.toDomain
 import at.aau.serg.android.datastore.proto.User
@@ -21,9 +20,7 @@ import shared.models.lobby.request.CreateLobbyRequest
 
 class LobbyCreateViewModel(
     private val userStore: ProtoStore<User>,
-    private val api: LobbyAPI = LobbyAPI(
-        RetrofitProvider.retrofit.create(LobbyService::class.java)
-    )
+    private val api: LobbyAPI = RetrofitProvider.retrofit.create(LobbyAPI::class.java)
     ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LobbyCreateUiState())

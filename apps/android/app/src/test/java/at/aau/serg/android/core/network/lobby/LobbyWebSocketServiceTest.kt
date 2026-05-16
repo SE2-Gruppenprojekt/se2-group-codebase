@@ -15,6 +15,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import shared.models.lobby.event.LobbyEvent
@@ -64,14 +65,18 @@ class LobbyWebSocketServiceTest {
         assertTrue(result.first() is LobbyEvent.Updated)
     }
 
+    @Test(expected = com.squareup.moshi.JsonDataException::class)
+    fun dispatch_throws_exception_when_payload_is_malformed() {
+        val json = """{"type":"lobby.updated", "lobby": {}}"""
+        service.parseLobbyEvent(json)
+    }
+
     @Test
     fun subscribe_emits_lobby_deleted_event() = runBlocking {
         val json = """{"type":"lobby.deleted","lobbyId":"123"}"""
-
         coEvery {
             manager.subscribe(any())
         } returns flowOf(json)
-
         val result = service.subscribe("123").toList()
 
         assertTrue(result.first() is LobbyEvent.Deleted)
@@ -80,23 +85,46 @@ class LobbyWebSocketServiceTest {
     @Test
     fun dispatch_emits_started_event() {
         val json = """{ "type": "lobby.started", "lobbyId": "123", "matchId": "MATCH42" }"""
-
-        val result = service.dispatch(json)
+        val result = service.parseLobbyEvent(json)
 
         assertTrue(result is LobbyEvent.Started)
     }
 
     @Test
     fun subscribe_filters_unknown_event() = runBlocking {
-
         val json = """{ "type": "unknown.event" }"""
-
         coEvery {
             manager.subscribe(any())
         } returns flowOf(json)
-
         val result = service.subscribe("123").toList()
 
         assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun parseLobbyEvent_returns_null_when_type_is_unknown() {
+        val json = """{"type": "unknown.event"}"""
+        val result = service.parseLobbyEvent(json)
+        assertNull(result)
+    }
+
+    @Test
+    fun parseLobbyEvent_returns_null_when_json_is_null_literal() {
+        val result = service.parseLobbyEvent("null")
+        assertNull(result)
+    }
+
+    @Test
+    fun parseLobbyEvent_returns_null_when_type_is_missing() {
+        val json = """{"lobbyId":"123"}"""
+        val result = service.parseLobbyEvent(json)
+        assertNull(result)
+    }
+
+    @Test
+    fun parseLobbyEvent_returns_null_when_type_is_not_a_string() {
+        val json = """{"type": 123}"""
+        val result = service.parseLobbyEvent(json)
+        assertNull(result)
     }
 }

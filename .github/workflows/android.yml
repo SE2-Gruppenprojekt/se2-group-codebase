@@ -60,7 +60,7 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle
 
       - name: Run frontend tests
-        run: ./gradlew :apps:android:app:testDebugUnitTest
+        run: ./gradlew :apps:android:app:testDebugUnitTest jacocoTestReport
 
       - name: Run frontend Sonar analysis
         uses: SonarSource/sonarqube-scan-action@v5
@@ -71,13 +71,13 @@ jobs:
           args: >
             -Dsonar.projectKey=se2-gruppenprojekt_se2-group-codebase_frontend
             -Dsonar.organization=se2-gruppenprojekt
-            -Dsonar.projectName="frontend"
+            -Dsonar.projectName=frontend
             -Dsonar.host.url=https://sonarcloud.io
             -Dsonar.projectBaseDir=apps/android/app
             -Dsonar.sources=src/main/java
             -Dsonar.tests=src/test
             -Dsonar.java.binaries=build/tmp/kotlin-classes/debug
-            -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/testDebugUnitTestCoverage/testDebugUnitTestCoverage.xml
+            -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/jacoco.xml
 
   frontend-required:
     name: frontend-required

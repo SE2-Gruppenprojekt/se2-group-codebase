@@ -9,8 +9,8 @@ import at.aau.serg.android.core.network.socket.FakeStompSessionWrapper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -92,11 +92,13 @@ class WebSocketManagerTest {
         }
     }
 
+
     @Test
     fun disconnect_manual_updatesStateToDisconnected() = runTest {
         val manager = WebSocketManager(FakeClientProvider(fakeSession))
 
         manager.ensureConnected()
+        manager.disconnect(manual = true)
         manager.disconnect(manual = true)
 
         assertTrue(fakeSession.isDisconnected)
@@ -110,9 +112,9 @@ class WebSocketManagerTest {
         val manager = WebSocketManager(
             clientProvider = provider,
             scope = backgroundScope,
-            autoReconnect = true
+            autoReconnect = true,
+            maxReconnectAttempts = 1
         )
-        manager.maxReconnectAttemptsForTest = 1
 
         manager.connectionState.test {
             assertEquals(ConnectionState.Idle, awaitItem())
@@ -183,9 +185,9 @@ class WebSocketManagerTest {
         val manager = WebSocketManager(
             clientProvider = provider,
             scope = backgroundScope,
-            autoReconnect = true
+            autoReconnect = true,
+            maxReconnectAttempts = 1
         )
-        manager.maxReconnectAttemptsForTest = 1
 
         manager.connectionState.test {
             assertEquals(ConnectionState.Idle, awaitItem())
@@ -219,6 +221,7 @@ class WebSocketManagerTest {
             autoReconnect = true
         )
 
+
         manager.ensureConnected()
 
         manager.errors.test {
@@ -236,6 +239,71 @@ class WebSocketManagerTest {
 
             assertTrue(error1.message != error2.message)
             cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun reconnect_stopsAfterMaxAttempts() = runTest {
+        val maxAttempts = 3
+        val provider = FakeClientProvider(fakeSession)
+        val testDispatcher = StandardTestDispatcher(testScheduler)
+
+        val manager = WebSocketManager(
+            clientProvider = provider,
+            scope = backgroundScope,
+            dispatcher = testDispatcher,
+            autoReconnect = true,
+            maxReconnectAttempts = maxAttempts
+        )
+
+        manager.ensureConnected()
+
+        manager.errors.test {
+            provider.alwaysFail = true
+
+            manager.simulateSessionLossForTest()
+
+            for (i in 1..maxAttempts) {
+                if (i > 1) {
+                    advanceTimeBy(WebConfig.Socket.ATTEMPT_DELAY * (i - 1))
+                    runCurrent()
+                }
+
+                val error = awaitItem()
+                assertTrue(error is AppError.WebSocket.ConnectionFailed)
+            }
+
+            advanceTimeBy(WebConfig.Socket.MAX_ATTEMPT_DELAY)
+            runCurrent()
+
+            expectNoEvents()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun reconnect_exitsImmediatelyIfAlreadyConnected() = runTest {
+        val maxAttempts = 3
+        val provider = FakeClientProvider(fakeSession)
+        val testDispatcher = StandardTestDispatcher(testScheduler)
+
+        val manager = WebSocketManager(
+            clientProvider = provider,
+            scope = backgroundScope,
+            dispatcher = testDispatcher,
+            autoReconnect = true,
+            maxReconnectAttempts = maxAttempts
+        )
+
+        manager.ensureConnected()
+
+        manager.connectionState.test {
+            assertEquals(ConnectionState.Connected, awaitItem())
+
+            provider.alwaysFail = true
+            manager.reconnectWithBackoff()
+
+            expectNoEvents()
         }
     }
 
@@ -398,4 +466,6 @@ class WebSocketManagerTest {
         manager.ensureConnected()
         manager.disconnect()
     }
+
+
 }
