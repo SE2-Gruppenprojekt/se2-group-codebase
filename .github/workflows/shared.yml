@@ -61,10 +61,10 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle
 
       - name: Run shared tests
-        run: ./gradlew :apps:shared:test
+        run: ./gradlew :apps:shared:test :apps:shared:jacocoTestReport
 
       - name: Run shared Sonar analysis
-        uses: SonarSource/sonarqube-scan-action@v6
+        uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_SHARED }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -75,6 +75,10 @@ jobs:
             -Dsonar.projectName=shared
             -Dsonar.host.url=https://sonarcloud.io
             -Dsonar.projectBaseDir=apps/shared
+            -Dsonar.sources=src/main/kotlin
+            -Dsonar.tests=src/test/kotlin
+            -Dsonar.java.binaries=build/classes/kotlin/main
+            -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/test/jacocoTestReport.xml
 
   shared-required:
     name: shared-required
