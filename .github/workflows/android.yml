@@ -71,7 +71,7 @@ jobs:
           args: >
             -Dsonar.projectKey=se2-gruppenprojekt_se2-group-codebase_frontend
             -Dsonar.organization=se2-gruppenprojekt
-            -Dsonar.projectName="frontend"
+            -Dsonar.projectName=frontend
             -Dsonar.host.url=https://sonarcloud.io
             -Dsonar.projectBaseDir=apps/android/app
             -Dsonar.sources=src/main/java
