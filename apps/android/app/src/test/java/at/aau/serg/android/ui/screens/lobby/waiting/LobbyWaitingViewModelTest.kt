@@ -1,5 +1,6 @@
 package at.aau.serg.android.ui.screens.lobby.waiting
 
+import app.cash.turbine.test
 import at.aau.serg.android.MainDispatcherRule
 import at.aau.serg.android.core.datastore.InMemoryProtoStore
 import at.aau.serg.android.core.network.lobby.LobbyAPI
@@ -10,11 +11,13 @@ import at.aau.serg.android.ui.state.LoadState
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Assert.assertFalse
@@ -37,6 +40,7 @@ class LobbyWaitingViewModelTest {
     val dispatcherRule = MainDispatcherRule()
 
     private lateinit var api: LobbyAPI
+    private lateinit var service: LobbyWebSocketService
     private lateinit var store: InMemoryProtoStore<User>
     private lateinit var viewModel: LobbyWaitingViewModel
 
@@ -65,7 +69,7 @@ class LobbyWaitingViewModelTest {
     fun setup() {
         api = mockk(relaxed = true)
 
-        val service = mockk<LobbyWebSocketService>()
+        service = mockk<LobbyWebSocketService>()
 
         // Mock subscribe to return an empty Flow (no WebSocket interaction)
         coEvery { service.subscribe(any()) } returns flow { }
@@ -420,6 +424,44 @@ class LobbyWaitingViewModelTest {
         val effect = viewModel.effects.first()
 
         assertTrue(effect is LobbyWaitingEffect.NavigateToMatch)
+    }
+
+    @Test
+    fun startSocket_collects_events_on_success() = runTest {
+        val testFlow = MutableSharedFlow<LobbyEvent>()
+        coEvery { service.subscribe("lobby_123") } returns testFlow
+
+
+        viewModel.startSocket("lobby_123")
+        runCurrent()
+        val payload = LobbyStartedPayload(
+            lobbyId = "lobby-1",
+            matchId = "match-1"
+        )
+        val mockEvent = LobbyEvent.Started(payload)
+
+        testFlow.emit(mockEvent)
+        runCurrent()
+    }
+
+    @Test
+    fun startSocket_catches_NetworkException_and_updates_loadState() = runTest {
+        // Force the flow to instantly throw a network exception upon collection
+        val networkException = RuntimeException("Connection lost")
+        coEvery { service.subscribe("lobby_123") } returns flow {
+            throw networkException
+        }
+
+        viewModel.uiState.test {
+            val initialState = awaitItem()
+
+            viewModel.startSocket("lobby_123")
+
+            val errorState = awaitItem()
+            assertTrue(errorState.loadState is LoadState.Error)
+
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test

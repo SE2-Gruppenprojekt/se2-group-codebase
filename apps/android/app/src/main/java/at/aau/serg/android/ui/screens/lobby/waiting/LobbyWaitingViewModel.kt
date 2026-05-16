@@ -48,7 +48,8 @@ class LobbyWaitingViewModel(
         }
     }
 
-    private fun startSocket(lobbyId: String) {
+    @VisibleForTesting
+    internal fun startSocket(lobbyId: String) {
         socketJob?.cancel()
 
         socketJob = viewModelScope.launch {
