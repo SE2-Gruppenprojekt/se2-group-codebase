@@ -48,21 +48,21 @@ fun invalid(violations: List<RuleViolation>): ValidationResult =
  *
  * @param code stable machine-readable rule identifier
  * @param message human-readable explanation of the failure
- * @param setIndex optional affected board-set index
+ * @param boardSetId optional affected board-set index
  * @param tileIds optional affected tile identifiers
  * @return an invalid [ValidationResult] containing the constructed violation
  */
 fun invalid(
     code: String,
     message: String,
-    setIndex: Int? = null,
+    boardSetId: String? = null,
     tileIds: List<String> = emptyList()
 ): ValidationResult =
     invalid(
         RuleViolation(
             code = code,
             message = message,
-            setIndex = setIndex,
+            boardSetId = boardSetId,
             tileIds = tileIds
         )
     )
