@@ -38,6 +38,9 @@ class GameControllerTest {
     @MockitoBean
     lateinit var turnDraftService: TurnDraftService
 
+    @MockitoBean
+    lateinit var drawTileService: DrawTileService
+
     @Test
     fun `getGame returns game response`() {
         val game = ConfirmedGame(
@@ -143,8 +146,7 @@ class GameControllerTest {
             }
     }
 
-    @MockitoBean
-    lateinit var drawTileService: DrawTileService
+
 
     private fun confirmedGame() = ConfirmedGame(
         gameId = "game-1",
