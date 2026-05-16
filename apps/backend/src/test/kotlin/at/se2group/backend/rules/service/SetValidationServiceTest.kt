@@ -30,7 +30,7 @@ class SetValidationServiceTest {
     )
 
     @Test
-    fun `returns valid when only group validator is valid`() {
+    fun `returns valid without violations when group succeeds and run fails with violations`() {
         whenever(groupValidationService.validate(boardSet)).thenReturn(valid())
         whenever(runValidationService.validate(boardSet)).thenReturn(invalid(runViolation()))
 
@@ -43,7 +43,7 @@ class SetValidationServiceTest {
     }
 
     @Test
-    fun `returns valid when only run validator is valid`() {
+    fun `returns valid without violations when run succeeds and group fails with violations`() {
         whenever(groupValidationService.validate(boardSet)).thenReturn(invalid(groupViolation()))
         whenever(runValidationService.validate(boardSet)).thenReturn(valid())
 
