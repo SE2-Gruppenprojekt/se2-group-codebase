@@ -57,15 +57,6 @@ fun WaitingScreenPlayerSection(
         Color.White
     }
 
-    if (isLoading) {
-        Text(
-            text = "Loading players...",
-            color = secondaryTextColor,
-            modifier = Modifier.height(40.dp)
-        )
-        return
-    }
-
     if (fetchedLobby != null) {
         players.forEachIndexed { index, player ->
             val isSelf = player.userId == localId
@@ -83,30 +74,13 @@ fun WaitingScreenPlayerSection(
                 testTag = LobbyWaitingTestTags.Players.ready_tag(player.userId)
             )
         }
-    } else {
-        PlayerItem(
-            name = "You",
-            subtitle = "Level 24",
-            isHost = true,
-            isReady = false,
-            isPlaceholder = false,
-            borderColor = activePlayerBorder,
-            backgroundColor = activePlayerBackground,
-            primaryTextColor = primaryTextColor,
-            secondaryTextColor = secondaryTextColor
+    } else if (isLoading) {
+        Text(
+            text = "Loading players...",
+            color = secondaryTextColor,
+            modifier = Modifier.height(40.dp)
         )
-
-        PlayerItem(
-            name = "Alex",
-            subtitle = "Level 18",
-            isHost = false,
-            isReady = true,
-            isPlaceholder = false,
-            borderColor = secondPlayerBorder,
-            backgroundColor = secondPlayerBackground,
-            primaryTextColor = primaryTextColor,
-            secondaryTextColor = secondaryTextColor
-        )
+        return
     }
 
     val placeholderCount = if (fetchedLobby != null) {
