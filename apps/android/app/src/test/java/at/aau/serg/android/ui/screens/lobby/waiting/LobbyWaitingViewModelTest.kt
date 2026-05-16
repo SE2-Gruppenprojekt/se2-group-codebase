@@ -4,6 +4,7 @@ import at.aau.serg.android.MainDispatcherRule
 import at.aau.serg.android.core.datastore.InMemoryProtoStore
 import at.aau.serg.android.core.network.lobby.LobbyAPI
 import at.aau.serg.android.core.network.lobby.LobbyWebSocketService
+import at.aau.serg.android.core.network.mapper.toDomain
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.state.LoadState
 import io.mockk.coEvery
@@ -12,6 +13,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
@@ -27,8 +29,6 @@ import shared.models.lobby.event.LobbyStartedPayload
 import shared.models.lobby.event.LobbyUpdatedPayload
 import shared.models.lobby.response.LobbyPlayerResponse
 import shared.models.lobby.response.LobbyResponse
-import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertNotEquals
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LobbyWaitingViewModelTest {
@@ -118,7 +118,15 @@ class LobbyWaitingViewModelTest {
 
     @Test
     fun startMatch_emits_effect() = runTest {
-        coEvery { api.startMatch("host", "lobby-123") } returns true
+        val user = User.newBuilder()
+            .setUid(fakeLobby.hostUserId)
+            .setDisplayName("Alice")
+            .build()
+        viewModel.setUiStateForTest(LobbyWaitingUiState(
+            lobby = fakeLobby.toDomain(),
+            user = user
+        ))
+        coEvery { api.startMatch(fakeLobby.hostUserId, fakeLobby.lobbyId) } returns Unit
 
         val job = launch {
             val effect = viewModel.effects.first()
@@ -134,7 +142,46 @@ class LobbyWaitingViewModelTest {
     }
 
     @Test
+    fun startMatch_setsErrorState_when_user_null() = runTest {
+        viewModel.setUiStateForTest(LobbyWaitingUiState(
+            user = null
+        ))
+
+        viewModel.onEvent(LobbyWaitingEvent.onMatchStart)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun startMatch_setsErrorState_if_not_in_lobby() = runTest {
+        val user = User.newBuilder()
+            .setUid("u1")
+            .setDisplayName("Alice")
+            .build()
+        viewModel.setUiStateForTest(LobbyWaitingUiState(
+            lobby = null,
+            user = user
+        ))
+        coEvery { api.startMatch("host", "lobby-123") } returns Unit
+
+
+        viewModel.onEvent(LobbyWaitingEvent.onMatchStart)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
     fun startMatch_sets_ErrorState() = runTest {
+        val user = User.newBuilder()
+            .setUid(fakeLobby.hostUserId)
+            .setDisplayName("Alice")
+            .build()
+        viewModel.setUiStateForTest(LobbyWaitingUiState(
+            lobby = fakeLobby.toDomain(),
+            user = user
+        ))
         coEvery { api.startMatch(any(), any()) } throws RuntimeException("network error")
 
         viewModel.onEvent(LobbyWaitingEvent.onMatchStart)
@@ -305,6 +352,52 @@ class LobbyWaitingViewModelTest {
     }
 
     @Test
+    fun toggleReadyState_setsErrorState_when_lobby_null() = runTest {
+        val user = User.newBuilder()
+            .setUid("u1")
+            .setDisplayName("Alice")
+            .build()
+        viewModel.setUiStateForTest(LobbyWaitingUiState(
+            lobby = null,
+            user = user
+        ))
+
+        viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState("u1"))
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun toggleReadyState_setsErrorState_when_not_in_lobby() = runTest {
+        val user = User.newBuilder()
+            .setUid("u1")
+            .setDisplayName("Alice")
+            .build()
+        viewModel.setUiStateForTest(LobbyWaitingUiState(
+            lobby = fakeLobby.toDomain(),
+            user = user
+        ))
+
+        viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState("u1"))
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun toggleReadyState_setsErrorState_when_user_null() = runTest {
+        viewModel.setUiStateForTest(LobbyWaitingUiState(
+            user = null
+        ))
+
+        viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState("user-2"))
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
     fun socket_deleted_emits_effect() = runTest {
         val payload = LobbyDeletedPayload(
             lobbyId = "lobby-1"
@@ -327,6 +420,21 @@ class LobbyWaitingViewModelTest {
         val effect = viewModel.effects.first()
 
         assertTrue(effect is LobbyWaitingEffect.NavigateToMatch)
+    }
+
+    @Test
+    fun lobbyEventStarted_emits_ErrorState_if_player_null() = runTest {
+        viewModel.setUiStateForTest(LobbyWaitingUiState(
+            user = null
+        ))
+        val payload = LobbyStartedPayload(
+            lobbyId = "lobby-1",
+            matchId = "match-1"
+        )
+        viewModel.handleLobbyEvent(LobbyEvent.Started(payload))
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
     }
 
     @Test
@@ -393,7 +501,7 @@ class LobbyWaitingViewModelTest {
         store.save(updatedUser)
         advanceUntilIdle()
 
-        coEvery { api.ready(userId, lobbyId) } returns true
+        coEvery { api.ready(userId, lobbyId) } returns Unit
 
         viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState(userId))
         advanceUntilIdle()
@@ -441,7 +549,7 @@ class LobbyWaitingViewModelTest {
         advanceUntilIdle()
 
 
-        coEvery { api.unready(userId, lobbyId) } returns true
+        coEvery { api.unready(userId, lobbyId) } returns Unit
 
         viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState(userId))
         advanceUntilIdle()
