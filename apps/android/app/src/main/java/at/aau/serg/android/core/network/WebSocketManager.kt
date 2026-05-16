@@ -130,11 +130,9 @@ class WebSocketManager(
                 _connectionState.collect { state ->
                     val isUnexpectedDisconnection = state == ConnectionState.Disconnected || state is ConnectionState.Failed
 
-                    if (isUnexpectedDisconnection && !manualDisconnect) {
-                        if (reconnectionJob?.isActive != true) {
-                            reconnectionJob = scope.launch {
-                                reconnectWithBackoff()
-                            }
+                    if (isUnexpectedDisconnection && !manualDisconnect && reconnectionJob?.isActive != true) {
+                        reconnectionJob = scope.launch {
+                            reconnectWithBackoff()
                         }
                     }
                 }
