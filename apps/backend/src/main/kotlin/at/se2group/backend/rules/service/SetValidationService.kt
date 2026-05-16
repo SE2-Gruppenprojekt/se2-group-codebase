@@ -16,10 +16,12 @@ class SetValidationService(
         val groupResult = groupValidationService.validate(set)
         val runResult = runValidationService.validate(set)
 
-        if (groupResult.isValid || runResult.isValid) {
-            return valid()
-        }
+        val isValidSet = groupResult.isValid || runResult.isValid
 
-        return invalid(groupResult.violations + runResult.violations)
+        return if (isValidSet) {
+            valid()
+        } else {
+            invalid(groupResult.violations + runResult.violations)
+        }
     }
 }
