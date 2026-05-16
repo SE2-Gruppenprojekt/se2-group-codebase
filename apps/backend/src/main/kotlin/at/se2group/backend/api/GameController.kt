@@ -43,8 +43,8 @@ class GameController(
     @PostMapping("/{gameId}/draw")
     fun drawTile(
         @PathVariable gameId: String,
-        @Valid @RequestBody request: DrawTileRequest
+        @RequestHeader("X-User-Id") userId: String
     ): GameResponse {
-        return drawTileService.drawTile(gameId, request.playerId).toResponse()
+        return drawTileService.drawTile(gameId, userId).toResponse()
     }
 }

@@ -169,8 +169,7 @@ class GameControllerTest {
             .thenReturn(game)
 
         mockMvc.post("/api/games/game-1/draw") {
-            contentType = MediaType.APPLICATION_JSON
-            content = """{ "playerId": "user-1" }"""
+            header("X-User-Id", "user-1")
         }
             .andExpect {
                 status { isOk() }
@@ -186,8 +185,7 @@ class GameControllerTest {
             .thenThrow(NoSuchElementException("Game not found"))
 
         mockMvc.post("/api/games/missing-game/draw") {
-            contentType = MediaType.APPLICATION_JSON
-            content = """{ "playerId": "user-1" }"""
+            header("X-User-Id", "user-1")
         }
             .andExpect{
                 status { isNotFound() }
@@ -202,8 +200,7 @@ class GameControllerTest {
             .thenThrow(IllegalStateException("Game is not active"))
 
         mockMvc.post("/api/games/game-1/draw") {
-            contentType = MediaType.APPLICATION_JSON
-            content = """{ "playerId": "user-1" }"""
+            header("X-User-Id", "user-1")
         }
 
             .andExpect{
