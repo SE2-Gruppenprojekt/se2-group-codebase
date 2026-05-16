@@ -69,9 +69,9 @@ class GameService(
             .toDomain()
     }
 
-    fun nextPlayerId(game: ConfirmedGame, currentPlayerId: String): String{
+    fun nextPlayerId(game: ConfirmedGame): String{
         val sorted = game.players.sortedBy { it.turnOrder }
-        val currentIndex = sorted.indexOfFirst { it.userId == currentPlayerId }
+        val currentIndex = sorted.indexOfFirst { it.userId == game.currentPlayerUserId }
         val nextIndex = (currentIndex + 1) % sorted.size
         return sorted[nextIndex].userId
     }

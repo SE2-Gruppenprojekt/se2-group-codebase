@@ -63,7 +63,7 @@ class DrawTileService(
             val updatedGame = game.copy(
                 players = updatedPlayers,
                 drawPile = game.drawPile.drop(1),
-                currentPlayerUserId = gameService.nextPlayerId(game, playerId)
+                currentPlayerUserId = gameService.nextPlayerId(game)
             )
             return gameRepository.save(updatedGame.toEntity()).toDomain()
     }

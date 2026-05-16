@@ -40,13 +40,15 @@ class NextPlayerServiceTest {
 
     @Test
     fun `advance to next player in turn order`() {
-        val game = game(
+        val game1 = game(
             player("player-1", 0),
             player("player-2", 1),
             player("player-3", 2)
-        )
-        assertEquals("player-2", gameService.nextPlayerId(game, "player-1"))
-        assertEquals("player-3", gameService.nextPlayerId(game, "player-2"))
+        ).copy(currentPlayerUserId = "player-1")
+
+        val game2 = game1.copy(currentPlayerUserId = "player-2")
+        assertEquals("player-2", gameService.nextPlayerId(game1))
+        assertEquals("player-3", gameService.nextPlayerId(game2))
 
     }
 
@@ -56,17 +58,20 @@ class NextPlayerServiceTest {
             player("player-1", 0),
             player("player-2", 1),
             player("player-3", 2)
-        )
-        assertEquals("player-1", gameService.nextPlayerId(game, "player-3"))
+        ).copy(currentPlayerUserId = "player-3")
+
+        assertEquals("player-1", gameService.nextPlayerId(game))
     }
 
     @Test
     fun `alternate correctly between two players`() {
-        val game = game(
+        val game1 = game(
             player("player-1", 0),
             player("player-2", 1)
-        )
-        assertEquals("player-2", gameService.nextPlayerId(game, "player-1"))
-        assertEquals("player-1", gameService.nextPlayerId(game, "player-2"))
+        ).copy(currentPlayerUserId = "player-1")
+
+        val game2 = game1.copy(currentPlayerUserId = "player-2")
+        assertEquals("player-2", gameService.nextPlayerId(game1))
+        assertEquals("player-1", gameService.nextPlayerId(game2))
     }
 }
