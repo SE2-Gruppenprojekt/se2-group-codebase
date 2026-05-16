@@ -28,6 +28,6 @@ object WebConfig {
 
     object Topics {
         fun lobby(lobbyId: String) = "/topic/lobbies/$lobbyId"
-        fun match(matchId: String) = "/topic/matches/$matchId"
+        fun match(gameId: String) = "/topic/games/$gameId"
     }
 }

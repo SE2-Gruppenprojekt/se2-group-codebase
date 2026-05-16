@@ -6,5 +6,5 @@ sealed class ConnectionState {
     object Connected : ConnectionState()
     data class Reconnecting(val attempt: Int) : ConnectionState()
     object Disconnected : ConnectionState()
-    data class Failed(val message: String) : ConnectionState()
+    data class Failed(val message: String?) : ConnectionState()
 }

@@ -1,9 +1,11 @@
 package shared.models.game.event
 
+import shared.models.EventPayload
+
 data class GameEndedEvent(
     val gameId: String,
     val winnerUserId: String
-) : GameEvent {
+) : EventPayload {
     override val type = TYPE
 
     companion object {
