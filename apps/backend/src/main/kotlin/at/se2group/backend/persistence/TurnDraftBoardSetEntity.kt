@@ -1,6 +1,7 @@
 package at.se2group.backend.persistence
 
 import jakarta.persistence.*
+import shared.models.game.domain.BoardSetType
 import java.util.UUID
 
 @Entity
@@ -13,6 +14,13 @@ class TurnDraftBoardSetEntity(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "draft_id")
     var draft: TurnDraftEntity? = null,
+
+    @Column(name = "board_set_id", nullable = false)
+    var boardSetId: String = "",
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    var type: BoardSetType = BoardSetType.UNRESOLVED,
 
     @ElementCollection
     @CollectionTable(

@@ -75,7 +75,7 @@ class GameDtoTest {
             ),
             hasCompletedInitialMeld = true,
             score = 25,
-            joinedAt = joinedAt
+            joinedAt = joinedAt.toString()
         )
 
         assertEquals("user-1", dto.userId)
@@ -84,7 +84,7 @@ class GameDtoTest {
         assertEquals(2, dto.rackTiles.size)
         assertEquals(true, dto.hasCompletedInitialMeld)
         assertEquals(25, dto.score)
-        assertEquals(joinedAt, dto.joinedAt)
+        assertEquals(joinedAt.toString(), dto.joinedAt)
     }
 
     @Test
@@ -103,7 +103,7 @@ class GameDtoTest {
                     rackTiles = listOf(TileResponse("tile-8", "BLUE", 3, false)),
                     hasCompletedInitialMeld = false,
                     score = 10,
-                    joinedAt = Instant.parse("2026-04-27T17:55:00Z")
+                    joinedAt = Instant.parse("2026-04-27T17:55:00Z").toString()
                 )
             ),
             board = listOf(
@@ -127,8 +127,8 @@ class GameDtoTest {
             turnDeadline = null,
             remainingTurnSeconds = null,
             status = "ACTIVE",
-            createdAt = createdAt,
-            startedAt = startedAt,
+            createdAt = createdAt.toString(),
+            startedAt = startedAt.toString(),
             finishedAt = null
         )
 
@@ -141,8 +141,8 @@ class GameDtoTest {
         assertEquals("user-1", dto.currentPlayerUserId)
         assertEquals("user-1", dto.currentTurnPlayerId)
         assertEquals("ACTIVE", dto.status)
-        assertEquals(createdAt, dto.createdAt)
-        assertEquals(startedAt, dto.startedAt)
+        assertEquals(createdAt.toString(), dto.createdAt)
+        assertEquals(startedAt.toString(), dto.startedAt)
         assertNull(dto.finishedAt)
         assertNull(dto.turnDeadline)
         assertNull(dto.remainingTurnSeconds)

@@ -109,10 +109,14 @@ class GameControllerTest {
         val requestJson = """
         {
             "boardSets": [
-                { "tiles": [{ "tileId": "tile-3", "color": "BLUE", "number": 3, "joker": false }] }
+                {
+                    "boardSetId": "set-1",
+                    "type": "UNRESOLVED",
+                    "tiles": [{ "tileId": "tile-3", "color": "BLUE", "number": 3, "isJoker": false }]
+                }
             ],
             "rackTiles": [
-                { "tileId": "tile-4", "color": "RED", "number": 5, "joker": false }
+                { "tileId": "tile-4", "color": "RED", "number": 5, "isJoker": false }
             ]
         }
     """.trimIndent()

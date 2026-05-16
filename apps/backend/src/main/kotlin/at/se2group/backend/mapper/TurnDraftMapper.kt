@@ -5,10 +5,8 @@ import shared.models.game.request.BoardSetRequest
 import shared.models.game.request.TileRequest
 import shared.models.game.request.UpdateDraftRequest
 import shared.models.game.response.TurnDraftResponse
-import at.se2group.backend.dto.*
 import at.se2group.backend.persistence.TurnDraftEntity
 import at.se2group.backend.persistence.TurnDraftBoardSetEntity
-import java.util.UUID
 
 fun UpdateDraftRequest.toDomain(gameId: String, userId: String): TurnDraft {
     return TurnDraft(
@@ -21,14 +19,14 @@ fun UpdateDraftRequest.toDomain(gameId: String, userId: String): TurnDraft {
 
 fun BoardSetRequest.toBoardSetDomain(): BoardSet {
     return BoardSet(
-        boardSetId = UUID.randomUUID().toString(),
-        type = BoardSetType.UNRESOLVED,
+        boardSetId = boardSetId,
+        type = type,
         tiles = tiles.map { it.toTileDomain() }
     )
 }
 
 fun TileRequest.toTileDomain(): Tile {
-    return if (joker) {
+    return if (isJoker) {
         JokerTile(tileId, TileColor.valueOf(color))
     } else {
         val tileNumber = number ?: throw IllegalArgumentException("Number required for non-joker")
@@ -43,6 +41,8 @@ fun TurnDraft.toEntity(existing: TurnDraftEntity): TurnDraftEntity {
     val newBoardSets = boardSets.map { set ->
         TurnDraftBoardSetEntity(
             draft = existing,
+            boardSetId = set.boardSetId,
+            type = set.type,
             tiles = set.tiles
                 .map { it.toEmbeddable() }
                 .toMutableList()
@@ -63,8 +63,8 @@ fun TurnDraftEntity.toDomain(): TurnDraft {
         playerUserId = playerUserId,
         boardSets = boardSets.map { set ->
             BoardSet(
-                boardSetId = set.id,
-                type = BoardSetType.UNRESOLVED,
+                boardSetId = set.boardSetId,
+                type = set.type,
                 tiles = set.tiles.map { it.toDomain() }
             )
         },
