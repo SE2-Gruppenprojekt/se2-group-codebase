@@ -1,45 +1,55 @@
 package at.aau.serg.android.core.network.lobby
 
-import shared.models.lobby.response.*
+import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.Header
+import retrofit2.http.POST
+import retrofit2.http.Path
 import shared.models.lobby.request.*
+import shared.models.lobby.response.*
 
-class LobbyAPI(
-    private val service: LobbyService
-) {
-    suspend fun getLobbies(): List<LobbyListItemResponse> {
-        return service.getLobbies()
-    }
+interface LobbyAPI {
+    @GET("lobbies")
+    suspend fun getLobbies(): List<LobbyListItemResponse>
 
-    suspend fun getLobby(lobbyId: String) : LobbyResponse {
-        return service.getLobby(lobbyId)
-    }
+    @POST("lobbies")
+    suspend fun createLobby(
+        @Header("X-User-Id") userId: String,
+        @Body request: CreateLobbyRequest
+    ): LobbyResponse
 
-    suspend fun createLobby(userId: String, lobbyRequest: CreateLobbyRequest) : LobbyResponse {
-        return service.createLobby(userId, lobbyRequest)
-    }
+    @GET("lobbies/{lobbyId}")
+    suspend fun getLobby(
+        @Path("lobbyId") lobbyId: String
+    ): LobbyResponse
 
-    suspend fun joinLobby(lobbyId: String, request: JoinLobbyRequest): LobbyResponse {
-        return service.joinLobby(lobbyId, request)
-    }
+    @POST("lobbies/{lobbyId}/join")
+    suspend fun joinLobby(
+        @Path("lobbyId") lobbyId: String,
+        @Body request: JoinLobbyRequest
+    ): LobbyResponse
 
-    suspend fun leaveLobby(userId: String, lobbyId: String): Boolean {
-        val response = service.leaveLobby(userId, lobbyId)
-        return response.isSuccessful
-    }
+    @POST("lobbies/{lobbyId}/leave")
+    suspend fun leaveLobby(
+        @Header("X-User-Id") userId: String,
+        @Path("lobbyId") lobbyId: String
+    )
 
-    suspend fun ready(userId: String, lobbyId: String): Boolean {
-        val response = service.ready(userId, lobbyId)
-        return response.isSuccessful
-    }
+    @POST("lobbies/{lobbyId}/ready")
+    suspend fun ready(
+        @Header("X-User-Id") userId: String,
+        @Path("lobbyId") lobbyId: String
+    )
 
-    suspend fun unready(userId: String, lobbyId: String): Boolean {
-        val response = service.unready(userId, lobbyId)
-        return response.isSuccessful
-    }
+    @POST("lobbies/{lobbyId}/unready")
+    suspend fun unready(
+        @Header("X-User-Id") userId: String,
+        @Path("lobbyId") lobbyId: String
+    )
 
-    suspend fun startMatch(userId: String, lobbyId: String): Boolean {
-        val response = service.startMatch(userId, lobbyId)
-        return response.isSuccessful
-    }
-
+    @POST("lobbies/{lobbyId}/start")
+    suspend fun startMatch(
+        @Header("X-User-Id") userId: String,
+        @Path("lobbyId") lobbyId: String
+    )
 }
