@@ -6,6 +6,7 @@ import io.mockk.mockk
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import retrofit2.HttpException
 import retrofit2.Response
@@ -26,11 +27,6 @@ class NetworkErrorMapperTest {
     }
 
     @Test
-    fun map_returnsUnknown_forGeneralException() {
-        assertEquals(AppError.Unknown, NetworkErrorMapper.map(RuntimeException()))
-    }
-
-    @Test
     fun map_returnsApiError_forValidJson() {
         val json = """{"errorMessage": "Valid Error"}"""
         val ex = httpException(400, json)
@@ -39,7 +35,6 @@ class NetworkErrorMapperTest {
 
     @Test
     fun map_returnsBadRequest_forBlankMessage() {
-        // Hits the .isNotBlank() == false branch
         val json = """{"errorMessage": "  "}"""
         val ex = httpException(400, json)
         assertEquals(AppError.Rest.BadRequest, NetworkErrorMapper.map(ex))
@@ -90,13 +85,24 @@ class NetworkErrorMapperTest {
     }
 
     @Test
-    fun map_returnsUnknown_for_code_outside_range() {
+    fun map_returnsRestUnknown_for_code_outside_range() {
         var ex = httpException(418, "{}")
         var result = NetworkErrorMapper.map(ex)
-        assertEquals(AppError.Unknown, result)
+        assertTrue(result is AppError.Rest.Api)
 
         ex = httpException(600, "{}")
         result = NetworkErrorMapper.map(ex)
-        assertEquals(AppError.Unknown, result)
+        assertTrue(result is AppError.Rest.Api)
+    }
+
+    @Test
+    fun map_returnsUnknown_for_uncategorized_error() {
+        var result = NetworkErrorMapper.map(RuntimeException("test"))
+        assertTrue(result is AppError.UnknownNetwork)
+        assertEquals("test", (result as AppError.UnknownNetwork).message)
+
+        result = NetworkErrorMapper.map(RuntimeException())
+        assertTrue(result is AppError.UnknownNetwork)
+        assertEquals("Unexpected Network Error", (result as AppError.UnknownNetwork).message)
     }
 }
