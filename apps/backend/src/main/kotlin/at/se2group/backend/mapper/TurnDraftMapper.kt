@@ -37,6 +37,7 @@ fun TileRequest.toTileDomain(): Tile {
 fun TurnDraft.toEntity(existing: TurnDraftEntity): TurnDraftEntity {
     existing.boardSets.clear()
     existing.version = version
+    existing.drawnTile = drawnTile?.toEmbeddable()
 
     val newBoardSets = boardSets.map { set ->
         TurnDraftBoardSetEntity(
@@ -61,6 +62,7 @@ fun TurnDraftEntity.toDomain(): TurnDraft {
     return TurnDraft(
         gameId = gameId,
         playerUserId = playerUserId,
+        drawnTile = drawnTile?.toDomain(),
         boardSets = boardSets.map { set ->
             BoardSet(
                 boardSetId = set.boardSetId,
