@@ -10,6 +10,7 @@ import at.aau.serg.android.ui.state.LoadState
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -126,6 +127,17 @@ class GameViewModelTest {
         )
     }
 
+    private fun setPlayerTurnInactive() {
+        val user = User.newBuilder()
+            .setUid("1")
+            .setDisplayName("Max")
+            .build()
+        viewmodel.setUiStateForTest(GameUiState(
+            user = user,
+            gameState = fakeGameResponse.toDomain(),
+        ))
+    }
+
     @Before
     fun setup() = runTest {
         store = InMemoryProtoStore(User.getDefaultInstance())
@@ -147,13 +159,17 @@ class GameViewModelTest {
     }
 
     @Test
-    fun init_setsRackAndBoard() = runTest {
-        val state = viewmodel.uiState.value
+    fun init_loadsUser() = runTest {
+        assertEquals(viewmodel.uiState.value.user, User.getDefaultInstance())
+        val user = User.newBuilder()
+            .setUid("1")
+            .setDisplayName("Bob")
+            .setGameId("g1")
+            .build()
 
-        assertEquals(viewmodel.uiState.value.gameState, fakeGameResponse.toDomain())
-
-        assertTrue(state.selectedTiles.isEmpty())
-        assertNull(state.activeSelectionRow)
+        store.save(user)
+        advanceUntilIdle()
+        assertEquals(viewmodel.uiState.value.user, user)
     }
 
     @Test
@@ -173,14 +189,27 @@ class GameViewModelTest {
     }
 
     @Test
-    fun onTileSelected_togglesSelection() = runTest {
+    fun onTileSelected_togglesSelection_for_hand() = runTest {
         setTestGameState()
         val tile = viewmodel.uiState.value.rackTiles.first()
 
-        viewmodel.onTileSelected(tile, true)
+        viewmodel.onUIEvent(GameUIEvent.OnTileSelected(tile, true, null))
         assertTrue(viewmodel.uiState.value.selectedTiles.contains(tile))
 
-        viewmodel.onTileSelected(tile, false)
+        viewmodel.onUIEvent(GameUIEvent.OnTileSelected(tile, false, null))
+        assertFalse(viewmodel.uiState.value.selectedTiles.contains(tile))
+    }
+
+    @Test
+    fun onTileSelected_togglesSelection_for_board() = runTest {
+        setTestGameState()
+        val boardSet = viewmodel.uiState.value.boardSets.first()
+        val tile = boardSet.tiles.first()
+
+        viewmodel.onUIEvent(GameUIEvent.OnTileSelected(tile, true, boardSet.boardSetId))
+        assertTrue(viewmodel.uiState.value.selectedTiles.contains(tile))
+
+        viewmodel.onUIEvent(GameUIEvent.OnTileSelected(tile, false, boardSet.boardSetId))
         assertFalse(viewmodel.uiState.value.selectedTiles.contains(tile))
     }
 
@@ -189,8 +218,8 @@ class GameViewModelTest {
         setTestGameState()
         val tile = viewmodel.uiState.value.rackTiles.first()
 
-        viewmodel.onTileSelected(tile, true, "row1")
-        viewmodel.onTileSelected(tile, true, "row2")
+        viewmodel.onUIEvent(GameUIEvent.OnTileSelected(tile, true, "row1"))
+        viewmodel.onUIEvent(GameUIEvent.OnTileSelected(tile, true, "row2"))
 
         val state = viewmodel.uiState.value
 
@@ -203,8 +232,8 @@ class GameViewModelTest {
         setTestGameState()
         val tile = viewmodel.uiState.value.rackTiles.first()
 
-        viewmodel.onTileSelected(tile, true)
-        viewmodel.addRow()
+        viewmodel.onUIEvent(GameUIEvent.OnTileSelected(tile, true, null))
+        viewmodel.onUIEvent(GameUIEvent.AddRow)
 
         val state = viewmodel.uiState.value
 
@@ -217,8 +246,8 @@ class GameViewModelTest {
         setTestGameState()
         val tile = viewmodel.uiState.value.rackTiles.first()
 
-        viewmodel.onTileSelected(tile, true)
-        viewmodel.moveTiles()
+        viewmodel.onUIEvent(GameUIEvent.OnTileSelected(tile, true, null))
+        viewmodel.onUIEvent(GameUIEvent.MoveTiles(null))
 
         val state = viewmodel.uiState.value
 
@@ -237,8 +266,8 @@ class GameViewModelTest {
 
         val initialRackCount = state.rackTiles.size
 
-        viewmodel.onTileSelected(tile, true)
-        viewmodel.moveTiles(initialRow.boardSetId)
+        viewmodel.onUIEvent(GameUIEvent.OnTileSelected(tile, true, null))
+        viewmodel.onUIEvent(GameUIEvent.MoveTiles(initialRow.boardSetId))
 
         val updatedState = viewmodel.uiState.value
         val updatedRow = updatedState.boardSets.first { it.boardSetId == initialRow.boardSetId }
@@ -251,9 +280,9 @@ class GameViewModelTest {
 
     @Test
     fun moveTiles_emptySelection_doesNothing() = runTest {
+        setTestGameState()
         val before = viewmodel.uiState.value
-
-        viewmodel.moveTiles()
+        viewmodel.onUIEvent(GameUIEvent.MoveTiles(null))
 
         assertEquals(before, viewmodel.uiState.value)
     }
@@ -262,8 +291,7 @@ class GameViewModelTest {
     fun moveInSameRow_rack_movesCorrectly() = runTest {
         setTestGameState()
         val before = viewmodel.uiState.value.rackTiles.toList()
-
-        viewmodel.moveInSameRow(null, 0, 1)
+        viewmodel.onUIEvent(GameUIEvent.MoveInSameRow(null, 0, 1))
 
         val after = viewmodel.uiState.value.rackTiles
 
@@ -277,8 +305,7 @@ class GameViewModelTest {
         val initialRow = viewmodel.uiState.value.boardSets.first()
         val before = initialRow.tiles
         val rowName = initialRow.boardSetId
-
-        viewmodel.moveInSameRow(rowName, 0, 2)
+        viewmodel.onUIEvent(GameUIEvent.MoveInSameRow(rowName, 0, 2))
 
         val after = viewmodel.uiState.value.boardSets
             .first { it.boardSetId == rowName }
@@ -289,36 +316,36 @@ class GameViewModelTest {
 
     @Test
     fun moveInSameRow_invalidRow_doesNothing() = runTest {
+        setTestGameState()
         val before = viewmodel.uiState.value
-
-        viewmodel.moveInSameRow("invalid", 0, 1)
+        viewmodel.onUIEvent(GameUIEvent.MoveInSameRow("invalid", 0, 1))
 
         assertEquals(before, viewmodel.uiState.value)
     }
 
     @Test
     fun moveInSameRow_invalidIndex_negative() = runTest {
+        setTestGameState()
         val before = viewmodel.uiState.value
-
-        viewmodel.moveInSameRow(null, -1, 1)
+        viewmodel.onUIEvent(GameUIEvent.MoveInSameRow(null, -1, 1))
 
         assertEquals(before, viewmodel.uiState.value)
     }
 
     @Test
     fun moveInSameRow_invalidIndex_outOfBounds() = runTest {
+        setTestGameState()
         val before = viewmodel.uiState.value
-
-        viewmodel.moveInSameRow(null, 0, 999)
+        viewmodel.onUIEvent(GameUIEvent.MoveInSameRow(null, 0, 999))
 
         assertEquals(before, viewmodel.uiState.value)
     }
 
     @Test
     fun moveInSameRow_sameIndex_doesNothing() = runTest {
+        setTestGameState()
         val before = viewmodel.uiState.value
-
-        viewmodel.moveInSameRow(null, 0, 0)
+        viewmodel.onUIEvent(GameUIEvent.MoveInSameRow(null, 0, 0))
 
         assertEquals(before, viewmodel.uiState.value)
     }
@@ -328,9 +355,9 @@ class GameViewModelTest {
         setTestGameState()
         val before = viewmodel.uiState.value.gameState
         val tile = viewmodel.uiState.value.rackTiles.first()
-        viewmodel.onTileSelected(tile, true)
+        viewmodel.onUIEvent(GameUIEvent.OnTileSelected(tile, true, null))
 
-        viewmodel.endTurn()
+        viewmodel.onUIEvent(GameUIEvent.EndTurn)
         advanceUntilIdle()
 
         val after = viewmodel.uiState.value.gameState
@@ -343,9 +370,10 @@ class GameViewModelTest {
 
     @Test
     fun endTurn_emitsErrorState_onFailure() = runTest {
+        setTestGameState()
         coEvery { service.endTurn(any(), any()) } throws RuntimeException()
 
-        viewmodel.endTurn()
+        viewmodel.onUIEvent(GameUIEvent.EndTurn)
 
         advanceUntilIdle()
         val state = viewmodel.uiState.value
@@ -353,12 +381,21 @@ class GameViewModelTest {
         assertTrue(state.loadState is LoadState.Error)
     }
 
+    @Test(expected = IllegalStateException::class)
+    fun end_turn_throws_on_user_null() = runTest {
+        viewmodel.setUiStateForTest(GameUiState(
+            user = null
+        ))
+        viewmodel.endTurn()
+        advanceUntilIdle()
+    }
+
     @Test
     fun drawTile_addsNew_updatesGameState() = runTest {
         setTestGameState()
         val before = viewmodel.uiState.value.gameState
 
-        viewmodel.drawTile()
+        viewmodel.onUIEvent(GameUIEvent.DrawTile)
         advanceUntilIdle()
 
         val after = viewmodel.uiState.value.gameState
@@ -367,14 +404,24 @@ class GameViewModelTest {
 
     @Test
     fun drawTile_emitsErrorState_onFailure() = runTest {
+        setTestGameState()
         coEvery { service.drawTile(any(), any()) } throws RuntimeException("Failure")
 
-        viewmodel.drawTile()
+        viewmodel.onUIEvent(GameUIEvent.DrawTile)
 
         advanceUntilIdle()
         val state = viewmodel.uiState.value
 
         assertTrue(state.loadState is LoadState.Error)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun drawTile_throws_on_user_null() = runTest {
+        viewmodel.setUiStateForTest(GameUiState(
+            user = null
+        ))
+        viewmodel.drawTile()
+        advanceUntilIdle()
     }
 
     @Test
@@ -388,14 +435,14 @@ class GameViewModelTest {
         val initialRowTileCount = state.boardSets.first().tiles.size
         assertNotNull(initialRow)
 
-        viewmodel.onTileSelected(tile, true)
-        viewmodel.moveTiles(initialRow.boardSetId)
+        viewmodel.onUIEvent(GameUIEvent.OnTileSelected(tile, true, null))
+        viewmodel.onUIEvent(GameUIEvent.MoveTiles(initialRow.boardSetId))
 
         var updatedState = viewmodel.uiState.value
 
         assertNotEquals(initialRackCount, updatedState.rackTiles.size)
         assertNotEquals(initialRowTileCount, updatedState.boardSets.first().tiles.size)
-        viewmodel.resetSelection()
+        viewmodel.onUIEvent(GameUIEvent.ResetSelection)
 
         updatedState = viewmodel.uiState.value
         assertEquals(initialRackCount, updatedState.rackTiles.size)
@@ -405,12 +452,20 @@ class GameViewModelTest {
         assertNull(updatedState.activeSelectionRow)
     }
 
+    @Test(expected = IllegalStateException::class)
+    fun resetSelection_throws_if_gameState_is_null() {
+        viewmodel.setUiStateForTest(GameUiState(
+            gameState = null
+        ))
+        viewmodel.resetSelection()
+    }
+
     @Test
     fun loadGame_updatesGameState() = runTest {
         setTestGameState()
         val state = viewmodel.uiState.value
 
-        viewmodel.loadGame()
+        viewmodel.onUIEvent(GameUIEvent.OnLoadGame("g1"))
         advanceUntilIdle()
 
         assertNotEquals(state.gameState, viewmodel.uiState.value.gameState)
@@ -420,13 +475,14 @@ class GameViewModelTest {
     fun loadGame_emitsErrorState_onFailure() = runTest {
         coEvery { service.loadGame(any()) } throws RuntimeException()
 
-        viewmodel.loadGame()
+        viewmodel.onUIEvent(GameUIEvent.OnLoadGame("g1"))
 
         advanceUntilIdle()
         val state = viewmodel.uiState.value
 
         assertTrue(state.loadState is LoadState.Error)
     }
+
 
     @Test
     fun sendTurnDraft_updateDraftWorkflowTest() = runTest {
@@ -456,5 +512,131 @@ class GameViewModelTest {
         val state = viewmodel.uiState.value
 
         assertTrue(state.loadState is LoadState.Error)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun sendTurnDraft_emitsErrorState_if_user_is_null() = runTest {
+        viewmodel.setUiStateForTest(GameUiState(
+            user = null
+        ))
+        coEvery { service.updateDraft(any(), any()) }
+
+        viewmodel.sendTurnDraft()
+        advanceUntilIdle()
+    }
+
+    @Test
+    fun addRow_sets_loadState_error_if_not_players_turn() = runTest {
+        setPlayerTurnInactive()
+        viewmodel.onUIEvent(GameUIEvent.AddRow)
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun drawTile_sets_loadState_error_if_not_players_turn() = runTest {
+        setPlayerTurnInactive()
+        viewmodel.onUIEvent(GameUIEvent.DrawTile)
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun endTurn_sets_loadState_error_if_not_players_turn() = runTest {
+        setPlayerTurnInactive()
+        viewmodel.onUIEvent(GameUIEvent.DrawTile)
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun moveInSameRow_sets_loadState_error_if_not_players_turn() = runTest {
+        setPlayerTurnInactive()
+        viewmodel.onUIEvent(GameUIEvent.MoveInSameRow(null, 0, 1))
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun moveTiles_sets_loadState_error_if_not_players_turn() = runTest {
+        setPlayerTurnInactive()
+        viewmodel.onUIEvent(GameUIEvent.MoveTiles(null))
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun loadGame_sets_loadState_success_if_not_players_turn() = runTest {
+        setPlayerTurnInactive()
+        viewmodel.onUIEvent(GameUIEvent.OnLoadGame("g1"))
+        advanceUntilIdle()
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Success)
+    }
+
+    @Test
+    fun tileSelected_sets_loadState_error_if_not_players_turn() = runTest {
+        setTestGameState()
+        val user = User.newBuilder()
+            .setUid("1")
+            .setDisplayName("Max")
+            .build()
+        viewmodel.setUiStateForTest(GameUiState(
+            user = user,
+            rackTiles = viewmodel.uiState.value.rackTiles,
+            gameState = viewmodel.uiState.value.gameState
+        ))
+        val tile = viewmodel.uiState.value.rackTiles.first()
+
+        viewmodel.onUIEvent(GameUIEvent.OnTileSelected(tile, true, null))
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun resetSelection_sets_loadState_error_if_not_players_turn() = runTest {
+        setPlayerTurnInactive()
+        viewmodel.onUIEvent(GameUIEvent.ResetSelection)
+        advanceUntilIdle()
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun onSettings_emitsNavigateToSettings_if_not_players_turn() = runTest {
+        setPlayerTurnInactive()
+        viewmodel.onUIEvent(GameUIEvent.OnSettings)
+
+        val effect = viewmodel.effects.first()
+
+        assertEquals(GameEffect.NavigateToSettings, effect)
+    }
+
+    @Test
+    fun onBack_emitsNavigateBack_if_not_players_turn() = runTest {
+        setPlayerTurnInactive()
+        viewmodel.onUIEvent(GameUIEvent.OnBack)
+
+        val effect = viewmodel.effects.first()
+
+        assertEquals(GameEffect.NavigateBack, effect)
+    }
+
+    @Test
+    fun onBack_emitsNavigateBack() = runTest {
+        viewmodel.onUIEvent(GameUIEvent.OnBack)
+
+        val effect = viewmodel.effects.first()
+
+        assertEquals(GameEffect.NavigateBack, effect)
+    }
+
+    @Test
+    fun onSettings_emitsNavigateToSettings() = runTest {
+        viewmodel.onUIEvent(GameUIEvent.OnSettings)
+
+        val effect = viewmodel.effects.first()
+
+        assertEquals(GameEffect.NavigateToSettings, effect)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun applyGameState_throws_if_player_null() = runTest {
+        viewmodel.setUiStateForTest(GameUiState(
+            user = null
+        ))
+        viewmodel.applyGameState(fakeGameResponse.toDomain())
     }
 }
