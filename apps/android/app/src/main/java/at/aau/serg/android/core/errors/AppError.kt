@@ -23,10 +23,15 @@ sealed class AppError {
         data object Disconnected : WebSocket()
         data object SubscriptionFailed : WebSocket()
         data object ProtocolError : WebSocket()
-        data class Unknown(val message: String) : WebSocket()
     }
 
-    data object Unknown : AppError()
+    sealed class Game : AppError() {
+        data object TurnTimedOut : Game()
+    }
+
+    data class State(val message: String) : AppError()
+    data class Unknown(val message: String) : AppError()
+    data class UnknownNetwork(val message: String) : Rest()
 
     companion object {
         fun allStaticErrors(): List<AppError> = listOf(
@@ -37,10 +42,10 @@ sealed class AppError {
             Rest.Forbidden,
             Rest.NotFound,
             Rest.Conflict,
-            Unknown,
             WebSocket.Disconnected,
             WebSocket.SubscriptionFailed,
-            WebSocket.ProtocolError
+            WebSocket.ProtocolError,
+            Game.TurnTimedOut,
         )
     }
 }

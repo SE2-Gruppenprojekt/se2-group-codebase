@@ -38,7 +38,7 @@ class ValidationResultTest {
 
         assertEquals("GROUP_MIN_SIZE", violation.code)
         assertEquals("Group must contain at least three tiles", violation.message)
-        assertNull(violation.setIndex)
+        assertNull(violation.boardSetId)
         assertTrue(violation.tileIds.isEmpty())
     }
 
@@ -47,11 +47,11 @@ class ValidationResultTest {
         val violation = RuleViolation(
             code = "TILE_DUPLICATED",
             message = "Submitted draft contains a duplicated tile",
-            setIndex = 1,
+            boardSetId = "set-1",
             tileIds = listOf("tile-17", "tile-22")
         )
 
-        assertEquals(1, violation.setIndex)
+        assertEquals("set-1", violation.boardSetId)
         assertEquals(listOf("tile-17", "tile-22"), violation.tileIds)
     }
 }

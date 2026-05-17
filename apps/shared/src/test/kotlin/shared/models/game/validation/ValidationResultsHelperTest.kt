@@ -33,13 +33,13 @@ class ValidationResultsHelperTest {
         val result = invalid(
             code = "GROUP_MIN_SIZE",
             message = "Group must contain at least three tiles",
-            setIndex = 2,
+            boardSetId = "set-2",
             tileIds = listOf("tile-7")
         )
 
         assertFalse(result.isValid)
         assertEquals("GROUP_MIN_SIZE", result.violations.single().code)
-        assertEquals(2, result.violations.single().setIndex)
+        assertEquals("set-2", result.violations.single().boardSetId)
         assertEquals(listOf("tile-7"), result.violations.single().tileIds)
     }
 

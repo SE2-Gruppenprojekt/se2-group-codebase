@@ -82,7 +82,7 @@ class GroupValidationServiceTest {
         assertFalse(result.isValid)
         assertEquals("GROUP_MIN_SIZE", violation.code)
         assertEquals("Group must contain at least 3 tiles", violation.message)
-        assertEquals(0, violation.setIndex)
+        assertEquals("set-1", violation.boardSetId)
         assertEquals(set.tiles.map { it.tileId }, violation.tileIds)
     }
 
@@ -102,7 +102,7 @@ class GroupValidationServiceTest {
         assertFalse(result.isValid)
         assertEquals("GROUP_MAX_SIZE", violation.code)
         assertEquals("Group must contain at most 4 tiles", violation.message)
-        assertEquals(0, violation.setIndex)
+        assertEquals("set-1", violation.boardSetId)
         assertEquals(set.tiles.map { it.tileId }, violation.tileIds)
     }
 
@@ -120,7 +120,7 @@ class GroupValidationServiceTest {
         assertFalse(result.isValid)
         assertEquals("GROUP_NUMBER_MISMATCH", violation.code)
         assertEquals("All group tiles must have the same number", violation.message)
-        assertEquals(0, violation.setIndex)
+        assertEquals("set-1", violation.boardSetId)
         assertEquals(set.tiles.map { it.tileId }, violation.tileIds)
     }
 
@@ -138,7 +138,7 @@ class GroupValidationServiceTest {
         assertFalse(result.isValid)
         assertEquals("GROUP_DUPLICATE_COLOR", violation.code)
         assertEquals("Group tiles must have unique colors", violation.message)
-        assertEquals(0, violation.setIndex)
+        assertEquals("set-1", violation.boardSetId)
         assertEquals(set.tiles.map { it.tileId }, violation.tileIds)
     }
 
@@ -156,7 +156,7 @@ class GroupValidationServiceTest {
         assertFalse(result.isValid)
         assertEquals("GROUP_JOKER_NOT_SUPPORTED", violation.code)
         assertEquals("Joker support is not implemented yet", violation.message)
-        assertEquals(0, violation.setIndex)
+        assertEquals("set-1", violation.boardSetId)
         assertEquals(
             set.tiles.filterIsInstance<JokerTile>().map { it.tileId },
             violation.tileIds
