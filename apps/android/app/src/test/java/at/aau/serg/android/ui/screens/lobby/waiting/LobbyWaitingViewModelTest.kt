@@ -1,18 +1,23 @@
 package at.aau.serg.android.ui.screens.lobby.waiting
 
+import app.cash.turbine.test
 import at.aau.serg.android.MainDispatcherRule
 import at.aau.serg.android.core.datastore.InMemoryProtoStore
 import at.aau.serg.android.core.network.lobby.LobbyAPI
 import at.aau.serg.android.core.network.lobby.LobbyWebSocketService
+import at.aau.serg.android.core.network.mapper.toDomain
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.state.LoadState
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Assert.assertFalse
@@ -27,7 +32,6 @@ import shared.models.lobby.event.LobbyStartedPayload
 import shared.models.lobby.event.LobbyUpdatedPayload
 import shared.models.lobby.response.LobbyPlayerResponse
 import shared.models.lobby.response.LobbyResponse
-import kotlinx.coroutines.runBlocking
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LobbyWaitingViewModelTest {
@@ -36,6 +40,7 @@ class LobbyWaitingViewModelTest {
     val dispatcherRule = MainDispatcherRule()
 
     private lateinit var api: LobbyAPI
+    private lateinit var service: LobbyWebSocketService
     private lateinit var store: InMemoryProtoStore<User>
     private lateinit var viewModel: LobbyWaitingViewModel
 
@@ -64,7 +69,7 @@ class LobbyWaitingViewModelTest {
     fun setup() {
         api = mockk(relaxed = true)
 
-        val service = mockk<LobbyWebSocketService>()
+        service = mockk<LobbyWebSocketService>()
 
         // Mock subscribe to return an empty Flow (no WebSocket interaction)
         coEvery { service.subscribe(any()) } returns flow { }
@@ -117,7 +122,15 @@ class LobbyWaitingViewModelTest {
 
     @Test
     fun startMatch_emits_effect() = runTest {
-        coEvery { api.startMatch("host", "lobby-123") } returns true
+        val user = User.newBuilder()
+            .setUid(fakeLobby.hostUserId)
+            .setDisplayName("Alice")
+            .build()
+        viewModel.setUiStateForTest(LobbyWaitingUiState(
+            lobby = fakeLobby.toDomain(),
+            user = user
+        ))
+        coEvery { api.startMatch(fakeLobby.hostUserId, fakeLobby.lobbyId) } returns Unit
 
         val job = launch {
             val effect = viewModel.effects.first()
@@ -133,7 +146,46 @@ class LobbyWaitingViewModelTest {
     }
 
     @Test
+    fun startMatch_setsErrorState_when_user_null() = runTest {
+        viewModel.setUiStateForTest(LobbyWaitingUiState(
+            user = null
+        ))
+
+        viewModel.onEvent(LobbyWaitingEvent.onMatchStart)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun startMatch_setsErrorState_if_not_in_lobby() = runTest {
+        val user = User.newBuilder()
+            .setUid("u1")
+            .setDisplayName("Alice")
+            .build()
+        viewModel.setUiStateForTest(LobbyWaitingUiState(
+            lobby = null,
+            user = user
+        ))
+        coEvery { api.startMatch("host", "lobby-123") } returns Unit
+
+
+        viewModel.onEvent(LobbyWaitingEvent.onMatchStart)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
     fun startMatch_sets_ErrorState() = runTest {
+        val user = User.newBuilder()
+            .setUid(fakeLobby.hostUserId)
+            .setDisplayName("Alice")
+            .build()
+        viewModel.setUiStateForTest(LobbyWaitingUiState(
+            lobby = fakeLobby.toDomain(),
+            user = user
+        ))
         coEvery { api.startMatch(any(), any()) } throws RuntimeException("network error")
 
         viewModel.onEvent(LobbyWaitingEvent.onMatchStart)
@@ -304,6 +356,52 @@ class LobbyWaitingViewModelTest {
     }
 
     @Test
+    fun toggleReadyState_setsErrorState_when_lobby_null() = runTest {
+        val user = User.newBuilder()
+            .setUid("u1")
+            .setDisplayName("Alice")
+            .build()
+        viewModel.setUiStateForTest(LobbyWaitingUiState(
+            lobby = null,
+            user = user
+        ))
+
+        viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState("u1"))
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun toggleReadyState_setsErrorState_when_not_in_lobby() = runTest {
+        val user = User.newBuilder()
+            .setUid("u1")
+            .setDisplayName("Alice")
+            .build()
+        viewModel.setUiStateForTest(LobbyWaitingUiState(
+            lobby = fakeLobby.toDomain(),
+            user = user
+        ))
+
+        viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState("u1"))
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun toggleReadyState_setsErrorState_when_user_null() = runTest {
+        viewModel.setUiStateForTest(LobbyWaitingUiState(
+            user = null
+        ))
+
+        viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState("user-2"))
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
     fun socket_deleted_emits_effect() = runTest {
         val payload = LobbyDeletedPayload(
             lobbyId = "lobby-1"
@@ -326,6 +424,59 @@ class LobbyWaitingViewModelTest {
         val effect = viewModel.effects.first()
 
         assertTrue(effect is LobbyWaitingEffect.NavigateToMatch)
+    }
+
+    @Test
+    fun startSocket_collects_events_on_success() = runTest {
+        val testFlow = MutableSharedFlow<LobbyEvent>()
+        coEvery { service.subscribe("lobby_123") } returns testFlow
+
+
+        viewModel.startSocket("lobby_123")
+        runCurrent()
+        val payload = LobbyStartedPayload(
+            lobbyId = "lobby-1",
+            matchId = "match-1"
+        )
+        val mockEvent = LobbyEvent.Started(payload)
+
+        testFlow.emit(mockEvent)
+        runCurrent()
+    }
+
+    @Test
+    fun startSocket_catches_NetworkException_and_updates_loadState() = runTest {
+        // Force the flow to instantly throw a network exception upon collection
+        val networkException = RuntimeException("Connection lost")
+        coEvery { service.subscribe("lobby_123") } returns flow {
+            throw networkException
+        }
+
+        viewModel.uiState.test {
+            val initialState = awaitItem()
+
+            viewModel.startSocket("lobby_123")
+
+            val errorState = awaitItem()
+            assertTrue(errorState.loadState is LoadState.Error)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun lobbyEventStarted_emits_ErrorState_if_player_null() = runTest {
+        viewModel.setUiStateForTest(LobbyWaitingUiState(
+            user = null
+        ))
+        val payload = LobbyStartedPayload(
+            lobbyId = "lobby-1",
+            matchId = "match-1"
+        )
+        viewModel.handleLobbyEvent(LobbyEvent.Started(payload))
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
     }
 
     @Test
@@ -375,7 +526,7 @@ class LobbyWaitingViewModelTest {
     }
 
     @Test
-    fun toggle_ready_state_sets_success() = runTest {
+    fun toggle_ready_state_sets_success_on_ready() = runTest {
         val userId = fakeLobby.hostUserId
         val lobbyId = fakeLobby.lobbyId
         val payload = LobbyUpdatedPayload(
@@ -392,12 +543,65 @@ class LobbyWaitingViewModelTest {
         store.save(updatedUser)
         advanceUntilIdle()
 
-        coEvery { api.ready(userId, lobbyId) } returns true
-        coEvery { api.unready(userId, lobbyId) } returns true
+        coEvery { api.ready(userId, lobbyId) } returns Unit
 
         viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState(userId))
         advanceUntilIdle()
 
         assertTrue(viewModel.uiState.value.loadState is LoadState.Success)
+    }
+
+    @Test
+    fun toggle_ready_state_sets_success_on_unready() = runTest {
+        val userId = fakeLobby.hostUserId
+        val lobbyId = fakeLobby.lobbyId
+
+        val fakeLobby = LobbyResponse(
+            lobbyId = "lobby-123",
+            hostUserId = "user-1",
+            status = "OPEN",
+            players = listOf(
+                LobbyPlayerResponse(
+                    userId = "user-1",
+                    displayName = "Bob",
+                    isReady = true
+                ),
+                LobbyPlayerResponse(
+                    userId = "user-2",
+                    displayName = "Alice",
+                    isReady = false
+                )
+            ),
+            maxPlayers = 4,
+            isPrivate = false,
+            allowGuests = true
+        )
+        val payload = LobbyUpdatedPayload(
+            lobby = fakeLobby
+        )
+
+        viewModel.handleLobbyEvent(LobbyEvent.Updated(payload))
+
+        val updatedUser = User.newBuilder()
+            .setUid(userId)
+            .setDisplayName("Bob")
+            .build()
+
+        store.save(updatedUser)
+        advanceUntilIdle()
+
+
+        coEvery { api.unready(userId, lobbyId) } returns Unit
+
+        viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState(userId))
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Success)
+    }
+
+    @Test
+    fun startSocket_cancels_existing_job_on_lobby_change() = runTest {
+        viewModel.onEvent(LobbyWaitingEvent.OnLoadLobby("Lobby1"))
+        viewModel.onEvent(LobbyWaitingEvent.OnLoadLobby("Lobby2"))
     }
 }

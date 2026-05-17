@@ -6,17 +6,16 @@ class FakeClientProvider(
 
     var connectCount = 0
         private set
+    var alwaysFail = false
 
     var failNextConnect: Boolean = false
 
     override suspend fun connect(url: String): StompSessionWrapper {
         connectCount++
-
-        if (failNextConnect) {
+        if (failNextConnect || alwaysFail) {
             failNextConnect = false
-            throw RuntimeException("connect failed")
+            throw Exception("Connection Failed")
         }
-
         return session
     }
 }

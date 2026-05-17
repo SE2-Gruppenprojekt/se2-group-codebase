@@ -7,6 +7,7 @@ import shared.models.game.domain.NumberedTile
 import shared.models.game.domain.TileColor
 import at.se2group.backend.service.GameService
 import at.se2group.backend.service.TurnDraftService
+import at.se2group.backend.service.DrawTileService
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,6 +19,7 @@ import org.springframework.test.web.servlet.get
 import java.time.Instant
 import shared.models.game.domain.TurnDraft
 import org.springframework.test.web.servlet.put
+import org.springframework.test.web.servlet.post
 import org.springframework.http.MediaType
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
@@ -35,6 +37,9 @@ class GameControllerTest {
 
     @MockitoBean
     lateinit var turnDraftService: TurnDraftService
+
+    @MockitoBean
+    lateinit var drawTileService: DrawTileService
 
     @Test
     fun `getGame returns game response`() {
@@ -144,5 +149,72 @@ class GameControllerTest {
                 jsonPath("$.version") { value(3) }
             }
     }
+
+
+
+    private fun confirmedGame() = ConfirmedGame(
+        gameId = "game-1",
+        lobbyId = "lobby-1",
+        players = listOf(
+            GamePlayer(
+                userId = "user-1",
+                displayName = "Alice",
+                turnOrder = 0,
+                joinedAt = Instant.parse("2026-04-27T17:55:00Z")
+            )
+        ),
+        currentPlayerUserId = "user-1",
+        status = GameStatus.ACTIVE,
+        createdAt = Instant.parse("2026-04-27T18:00:00Z")
+    )
+
+    @Test
+    fun `drawTile returns 200 with game response`() {
+        val game = confirmedGame()
+        `when`(drawTileService.drawTile("game-1", "user-1"))
+            .thenReturn(game)
+
+        mockMvc.post("/api/games/game-1/draw") {
+            header("X-User-Id", "user-1")
+        }
+            .andExpect {
+                status { isOk() }
+                jsonPath("$.gameId") { value("game-1") }
+                jsonPath("$.currentPlayerUserId") { value("user-1") }
+                jsonPath("$.status") { value("ACTIVE") }
+            }
+    }
+
+    @Test
+    fun `drawTile returns 404 when game does not exist`() {
+        `when`(drawTileService.drawTile(any(), any()))
+            .thenThrow(NoSuchElementException("Game not found"))
+
+        mockMvc.post("/api/games/missing-game/draw") {
+            header("X-User-Id", "user-1")
+        }
+            .andExpect{
+                status { isNotFound() }
+                jsonPath("$.errorCode") { value("NOT_FOUND") }
+                jsonPath("$.errorMessage") { value("Game not found") }
+            }
+    }
+
+    @Test
+    fun `drawTile returns 409 when game rule is violated`() {
+        `when`(drawTileService.drawTile(any(), any()))
+            .thenThrow(IllegalStateException("Game is not active"))
+
+        mockMvc.post("/api/games/game-1/draw") {
+            header("X-User-Id", "user-1")
+        }
+
+            .andExpect{
+                status { isConflict() }
+                jsonPath("$.errorCode") { value("CONFLICT") }
+                jsonPath("$.errorMessage") { value("Game is not active") }
+            }
+    }
+
 
 }

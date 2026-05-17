@@ -1,9 +1,11 @@
 package shared.models.game.event
 
+import shared.models.EventPayload
+
 data class TurnChangedEvent(
     val gameId: String,
     val currentTurnPlayerId: String
-) : GameEvent {
+) : EventPayload {
     override val type = TYPE
 
     companion object {
