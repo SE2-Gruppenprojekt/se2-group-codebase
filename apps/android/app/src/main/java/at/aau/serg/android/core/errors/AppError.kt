@@ -30,6 +30,7 @@ sealed class AppError {
 
     companion object {
         fun allStaticErrors(): List<AppError> = listOf(
+            Game.TurnTimedOut,
             Rest.Network,
             Rest.Server,
             Rest.BadRequest,
