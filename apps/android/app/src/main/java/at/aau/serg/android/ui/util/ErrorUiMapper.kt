@@ -23,5 +23,6 @@ object ErrorUiMapper {
             AppError.WebSocket.ProtocolError -> "WebSocket protocol error"
             AppError.WebSocket.SubscriptionFailed -> "WebSocket subscription failed"
             is AppError.WebSocket.Unknown -> "WebSocket error: ${error.message}"
+            AppError.Game.TurnTimedOut -> "Your turn timed out"
         }
 }

@@ -82,6 +82,7 @@ fun GameResponse.toDomain(): ConfirmedGame {
         gameId = gameId,
         lobbyId = lobbyId,
         players = players.map { it.toDomain() },
+        boardSets = board.map { it.toDomain() },
         drawPile = drawPile.map { it.toDomain() },
         currentPlayerUserId = currentPlayerUserId,
         status = GameStatus.valueOf(status),
