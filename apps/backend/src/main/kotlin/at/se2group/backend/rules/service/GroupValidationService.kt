@@ -16,7 +16,7 @@ class GroupValidationService {
             return invalid(
                 code = "GROUP_MIN_SIZE",
                 message = "Group must contain at least 3 tiles",
-                setIndex = 0,
+                boardSetId = set.boardSetId,
                 tileIds = set.tiles.map { it.tileId }
             )
         }
@@ -25,7 +25,7 @@ class GroupValidationService {
             return invalid(
                 code = "GROUP_MAX_SIZE",
                 message = "Group must contain at most 4 tiles",
-                setIndex = 0,
+                boardSetId = set.boardSetId,
                 tileIds = set.tiles.map { it.tileId }
             )
         }
@@ -34,7 +34,7 @@ class GroupValidationService {
             return invalid(
                 code = "GROUP_JOKER_NOT_SUPPORTED",
                 message = "Joker support is not implemented yet",
-                setIndex = 0,
+                boardSetId = set.boardSetId,
                 tileIds = set.tiles.filterIsInstance<JokerTile>().map { it.tileId }
             )
         }
@@ -47,7 +47,7 @@ class GroupValidationService {
             return invalid(
                 code = "GROUP_NUMBER_MISMATCH",
                 message = "All group tiles must have the same number",
-                setIndex = 0,
+                boardSetId = set.boardSetId,
                 tileIds = numberedTiles.map { it.tileId }
             )
         }
@@ -57,7 +57,7 @@ class GroupValidationService {
             return invalid(
                 code = "GROUP_DUPLICATE_COLOR",
                 message = "Group tiles must have unique colors",
-                setIndex = 0,
+                boardSetId = set.boardSetId,
                 tileIds = numberedTiles.map { it.tileId }
             )
         }
