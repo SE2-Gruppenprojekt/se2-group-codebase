@@ -1,10 +1,13 @@
 package at.se2group.backend.rules.service
 
+import at.se2group.backend.service.TileConservationService
 import org.springframework.stereotype.Service
 import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.TurnDraft
+import shared.models.game.validation.RuleViolation
 import shared.models.game.validation.ValidationResult
 import shared.models.game.validation.valid
+import shared.models.game.validation.invalid
 
 /**
  * Top-level orchestration entry point for backend Rummikub rule validation.
@@ -32,7 +35,10 @@ import shared.models.game.validation.valid
  * where top-level validation belongs.
  */
 @Service
-class RummikubRuleService {
+class RummikubRuleService(
+    private val tileConservationService: TileConservationService,
+    private val boardValidationService: BoardValidationService
+) {
 
     /**
      * Validates a submitted draft against the authoritative confirmed game
@@ -61,6 +67,22 @@ class RummikubRuleService {
         actingPlayerUserId: String,
         submittedDraft: TurnDraft
     ): ValidationResult {
-        return valid()
+        val violations = mutableListOf<RuleViolation>()
+
+        try {
+            tileConservationService.validate(confirmedGame, actingPlayerUserId, submittedDraft)
+
+        } catch (e: IllegalArgumentException) {
+            violations += RuleViolation(
+                code = "TILE_CONSERVATION_VIOLATION",
+                message = e.message ?: "Tile conservation check failed"
+            )
+        }
+
+        violations += boardValidationService
+            .validate(submittedDraft.boardSets)
+            .violations
+
+        return if (violations.isEmpty()) valid() else invalid(violations)
     }
 }
