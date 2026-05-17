@@ -71,4 +71,12 @@ class TilePoolGenerationServiceTest {
         assertEquals(tiles.size, tiles.map { it.tileId }.toSet().size)
         assertTrue(tiles.all { it.tileId.isNotBlank() })
     }
+
+    @Test
+    fun `createTilePool never creates numbered tile value zero`() {
+        val numberedTiles = service.createTilePool().filterIsInstance<NumberedTile>()
+
+        assertTrue(numberedTiles.all { it.number in TileRules.MIN_TILE_NUMBER..TileRules.MAX_TILE_NUMBER })
+        assertTrue(numberedTiles.none { it.number == 0 })
+    }
 }
