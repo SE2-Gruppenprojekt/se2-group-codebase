@@ -85,7 +85,8 @@ class GameViewModel(
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
-            val user = _uiState.value.user ?: return@launch
+            val user = _uiState.value.user
+                ?: throw IllegalStateException("User must not be null when loadGame is called.")
 
             try {
                 val gameState = gameService.loadGame(user.gameId).toDomain()
@@ -232,7 +233,8 @@ class GameViewModel(
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
-            val user = _uiState.value.user ?: return@launch
+            val user = _uiState.value.user
+                ?: throw IllegalStateException("User must not be null when drawTile is called.")
 
             try {
                 val gameState = gameService.drawTile(user.gameId, user.uid).toDomain()
@@ -258,7 +260,8 @@ class GameViewModel(
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
-            val user = _uiState.value.user ?: return@launch
+            val user = _uiState.value.user
+                ?: throw IllegalStateException("User must not be null when endTurn is called.")
 
             try {
                 val gameState = gameService.endTurn(
@@ -284,7 +287,8 @@ class GameViewModel(
 
     fun sendTurnDraft() {
         viewModelScope.launch {
-            val user = _uiState.value.user ?: return@launch
+            val user = _uiState.value.user
+                ?: throw IllegalStateException("User must not be null when sendTurnDraft is called.")
 
             try {
                 val request = UpdateDraftRequest(
@@ -309,7 +313,8 @@ class GameViewModel(
     internal fun handleGameSocketEvent(event: GameEvent) {
         when (event) {
             is GameEvent.DraftUpdated -> {
-                val user = _uiState.value.user ?: return
+                val user = _uiState.value.user
+                    ?: throw IllegalStateException("User must not be null when DraftUpdated received.")
                 if (user.uid == event.payload.playerId) return
 
                 val boardSets = try {
@@ -337,7 +342,8 @@ class GameViewModel(
             }
 
             is GameEvent.TurnTimedOut -> {
-                val user = _uiState.value.user ?: return
+                val user = _uiState.value.user
+                    ?: throw IllegalStateException("User must not be null when TurnTimedOut received.")
                 if (user.uid == event.payload.previousTurnPlayerId) {
                     _uiState.update {
                         it.copy(loadState = LoadState.Error(AppError.Game.TurnTimedOut))
