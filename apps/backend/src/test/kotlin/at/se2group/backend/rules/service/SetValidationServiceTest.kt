@@ -87,7 +87,7 @@ class SetValidationServiceTest {
         RuleViolation(
             code = "GROUP_INVALID",
             message = "Group validation failed",
-            setIndex = 0,
+            boardSetId = "set-1",
             tileIds = listOf("tile-1")
         )
 
@@ -95,7 +95,7 @@ class SetValidationServiceTest {
         RuleViolation(
             code = "RUN_INVALID",
             message = "Run validation failed",
-            setIndex = 0,
+            boardSetId = "set-1",
             tileIds = listOf("tile-2")
         )
 }
