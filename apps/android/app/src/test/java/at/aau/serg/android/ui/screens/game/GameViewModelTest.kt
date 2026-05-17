@@ -467,6 +467,34 @@ class GameViewModelTest {
     }
 
     @Test
+    fun handleGameSocketEvent_draftUpdated_nullUser_setsErrorState() {
+        viewmodel.setUiStateForTest(GameUiState(user = null))
+
+        viewmodel.handleGameSocketEvent(
+            GameEvent.DraftUpdated(
+                GameDraftUpdatedEvent(
+                    gameId = "Game123",
+                    playerId = "OtherPlayer",
+                    draft = TurnDraftResponse("Game123", "OtherPlayer", emptyList(), emptyList(), 0)
+                )
+            )
+        )
+
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun handleGameSocketEvent_turnTimedOut_nullUser_setsErrorState() {
+        viewmodel.setUiStateForTest(GameUiState(user = null))
+
+        viewmodel.handleGameSocketEvent(
+            GameEvent.TurnTimedOut(TurnTimedOutEvent(gameId = "Game123", previousTurnPlayerId = "User123"))
+        )
+
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
     fun handleGameSocketEvent_draftUpdated_updatesBoardSets_forOtherPlayer() {
         setTestGameState()
 

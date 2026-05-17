@@ -11,6 +11,7 @@ import at.aau.serg.android.core.network.game.GameAPI
 import at.aau.serg.android.core.network.game.GameService
 import at.aau.serg.android.core.network.game.GameWebSocketService
 import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
+import at.aau.serg.android.ui.util.ErrorUiMapper
 import at.aau.serg.android.core.network.mapper.toDomain
 import at.aau.serg.android.core.network.mapper.toRequest
 import at.aau.serg.android.datastore.proto.User
@@ -311,56 +312,55 @@ class GameViewModel(
     }
 
     internal fun handleGameSocketEvent(event: GameEvent) {
-        when (event) {
-            is GameEvent.DraftUpdated -> {
-                val user = _uiState.value.user
-                    ?: throw IllegalStateException("User must not be null when DraftUpdated received.")
-                if (user.uid == event.payload.playerId) return
+        try {
+            when (event) {
+                is GameEvent.DraftUpdated -> {
+                    val user = _uiState.value.user
+                        ?: throw IllegalStateException("User must not be null when DraftUpdated received.")
+                    if (user.uid == event.payload.playerId) return
 
-                val boardSets = try {
-                    event.payload.draft.draftBoard.map { it.toDomain() }
-                } catch (_: Throwable) {
-                    return
-                }
-                _uiState.update { it.copy(boardSets = boardSets) }
-            }
-
-            is GameEvent.Ended -> {
-                _uiState.update {
-                    it.copy(winnerUserId = event.payload.winnerUserId)
-                }
-            }
-
-            is GameEvent.TurnChanged -> {
-                _uiState.update { state ->
-                    state.copy(
-                        gameState = state.gameState?.copy(
-                            currentPlayerUserId = event.payload.currentTurnPlayerId
-                        )
-                    )
-                }
-            }
-
-            is GameEvent.TurnTimedOut -> {
-                val user = _uiState.value.user
-                    ?: throw IllegalStateException("User must not be null when TurnTimedOut received.")
-                if (user.uid == event.payload.previousTurnPlayerId) {
                     _uiState.update {
-                        it.copy(loadState = LoadState.Error(AppError.Game.TurnTimedOut))
+                        it.copy(boardSets = event.payload.draft.draftBoard.map { it.toDomain() })
                     }
                 }
-            }
 
-            is GameEvent.Updated -> {
-                val gameState = try {
-                    event.payload.game.toDomain()
-                } catch (_: Throwable) {
-                    return
+                is GameEvent.Ended -> {
+                    _uiState.update {
+                        it.copy(winnerUserId = event.payload.winnerUserId)
+                    }
                 }
-                _uiState.update { it.copy(gameState = gameState) }
-            }
 
-            else -> {}
+                is GameEvent.TurnChanged -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            gameState = state.gameState?.copy(
+                                currentPlayerUserId = event.payload.currentTurnPlayerId
+                            )
+                        )
+                    }
+                }
+
+                is GameEvent.TurnTimedOut -> {
+                    val user = _uiState.value.user
+                        ?: throw IllegalStateException("User must not be null when TurnTimedOut received.")
+                    if (user.uid == event.payload.previousTurnPlayerId) {
+                        _uiState.update {
+                            it.copy(loadState = LoadState.Error(AppError.Game.TurnTimedOut))
+                        }
+                    }
+                }
+
+                is GameEvent.Updated -> {
+                    _uiState.update {
+                        it.copy(gameState = event.payload.game.toDomain())
+                    }
+                }
+
+                else -> {}
+            }
+        } catch (e: Exception) {
+            val appError = ErrorUiMapper.map(e)
+            _uiState.update { it.copy(loadState = LoadState.Error(appError)) }
         }
     }
 
