@@ -1,13 +1,16 @@
 package at.se2group.backend.game.service
 
 import at.se2group.backend.persistence.GameRepository
+import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.DrawTileService
+import at.se2group.backend.service.AfterCommitExecutor
 import at.se2group.backend.persistence.GameEntity
 import at.se2group.backend.persistence.GamePlayerEntity
 import at.se2group.backend.persistence.TileEmbeddable
+import at.se2group.backend.persistence.TurnDraftEntity
+import at.se2group.backend.persistence.TurnDraftRepository
 import shared.models.game.domain.GameStatus
 import shared.models.game.domain.TileColor
-import at.se2group.backend.service.GameService
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.assertThrows
@@ -18,6 +21,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.never
 import java.util.Optional
 import java.time.Instant
 
@@ -27,13 +31,22 @@ class DrawTileServiceTest {
     @Mock
     lateinit var gameRepository: GameRepository
 
-    lateinit var gameService: GameService
+    @Mock
+    lateinit var turnDraftRepository: TurnDraftRepository
+
+    @Mock
+    lateinit var gameBroadcastService: GameBroadcastService
+
     lateinit var drawTileService: DrawTileService
 
     @BeforeEach
     fun setup() {
-        gameService = GameService(gameRepository)
-        drawTileService = DrawTileService(gameRepository, gameService)
+        drawTileService = DrawTileService(
+            gameRepository,
+            turnDraftRepository,
+            gameBroadcastService,
+            AfterCommitExecutor()
+        )
     }
 
 
@@ -82,6 +95,18 @@ class DrawTileServiceTest {
         TileColor.RED,
         5,
         false
+    )
+
+    fun draftEntity(
+        gameId: String = "game-1",
+        playerUserId: String = "user-1",
+        version: Long = 0,
+        rackTiles: MutableList<TileEmbeddable> = mutableListOf(),
+    ) = TurnDraftEntity(
+        gameId = gameId,
+        playerUserId = playerUserId,
+        version = version,
+        rackTiles = rackTiles
     )
 
 
@@ -136,10 +161,42 @@ class DrawTileServiceTest {
     }
 
     @Test
+    fun `rejects draw when draft does not exist`() {
+        val entity = gameEntity(drawPile = mutableListOf(tileEmbeddable("tile-1")))
+        `when`(gameRepository.findById("game-1"))
+            .thenReturn(Optional.of(entity))
+        `when`(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(null)
+
+        val exception = assertThrows<NoSuchElementException> {
+            drawTileService.drawTile("game-1", "user-1")
+        }
+
+        assertEquals("Draft not found", exception.message)
+    }
+
+    @Test
+    fun `rejects draw when draft belongs to another user`() {
+        val entity = gameEntity(drawPile = mutableListOf(tileEmbeddable("tile-1")))
+        `when`(gameRepository.findById("game-1"))
+            .thenReturn(Optional.of(entity))
+        `when`(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(draftEntity(playerUserId = "user-2"))
+
+        val exception = assertThrows<IllegalStateException> {
+            drawTileService.drawTile("game-1", "user-1")
+        }
+
+        assertEquals("Draft belongs to a different user", exception.message)
+    }
+
+    @Test
     fun `rejects draw when draw pile is empty`() {
         val entity = gameEntity(drawPile = mutableListOf())
         `when`(gameRepository.findById("game-1"))
             .thenReturn(Optional.of(entity))
+        `when`(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(draftEntity())
 
         val exception = assertThrows<IllegalStateException> {
             drawTileService.drawTile("game-1", "user-1")
@@ -152,9 +209,14 @@ class DrawTileServiceTest {
     fun `draw tile added to active player's rack`() {
         val tile = tileEmbeddable("tile-1")
         val entity = gameEntity(drawPile = mutableListOf(tile))
+        val draftEntity = draftEntity()
         `when`(gameRepository.findById("game-1"))
             .thenReturn(Optional.of(entity))
+        `when`(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(draftEntity)
         `when`(gameRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+        `when`(turnDraftRepository.save(any()))
             .thenAnswer { it.arguments[0] }
 
 
@@ -171,9 +233,14 @@ class DrawTileServiceTest {
         val tile1 = tileEmbeddable("tile-1")
         val tile2 = tileEmbeddable("tile-2")
         val entity = gameEntity(drawPile = mutableListOf(tile1, tile2))
+        val draftEntity = draftEntity()
         `when`(gameRepository.findById("game-1"))
             .thenReturn(Optional.of(entity))
+        `when`(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(draftEntity)
         `when`(gameRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+        `when`(turnDraftRepository.save(any()))
             .thenAnswer { it.arguments[0] }
 
 
@@ -183,31 +250,21 @@ class DrawTileServiceTest {
     }
 
     @Test
-    fun `turn goes to next player after successful draw`() {
+    fun `current player stays the same after successful draw`() {
         val tile = tileEmbeddable("tile-1")
         val entity = gameEntity(currentPlayerUserId = "user-1", drawPile = mutableListOf(tile))
+        val draftEntity = draftEntity()
         `when`(gameRepository.findById("game-1"))
             .thenReturn(Optional.of(entity))
+        `when`(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(draftEntity)
         `when`(gameRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+        `when`(turnDraftRepository.save(any()))
             .thenAnswer { it.arguments[0] }
 
 
         val result = drawTileService.drawTile("game-1", "user-1")
-
-        assertEquals("user-2", result.currentPlayerUserId)
-    }
-
-    @Test
-    fun `turn wraps around to first player after successful last player's draw`() {
-        val tile = tileEmbeddable("tile-1")
-        val entity = gameEntity(currentPlayerUserId = "user-2", drawPile = mutableListOf(tile))
-        `when`(gameRepository.findById("game-1"))
-            .thenReturn(Optional.of(entity))
-        `when`(gameRepository.save(any()))
-            .thenAnswer { it.arguments[0] }
-
-
-        val result = drawTileService.drawTile("game-1", "user-2")
 
         assertEquals("user-1", result.currentPlayerUserId)
     }
@@ -216,14 +273,59 @@ class DrawTileServiceTest {
     fun `persists game after successful draw`() {
         val tile = tileEmbeddable("tile-1")
         val entity = gameEntity(drawPile = mutableListOf(tile))
+        val draftEntity = draftEntity()
         `when`(gameRepository.findById("game-1"))
             .thenReturn(Optional.of(entity))
+        `when`(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(draftEntity)
         `when`(gameRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+        `when`(turnDraftRepository.save(any()))
             .thenAnswer { it.arguments[0] }
 
         drawTileService.drawTile("game-1", "user-1")
 
         verify(gameRepository).save(any())
+    }
+
+    @Test
+    fun `updates current draft rack tiles after successful draw`() {
+        val tile = tileEmbeddable("tile-1")
+        val entity = gameEntity(drawPile = mutableListOf(tile))
+        val draftEntity = draftEntity(version = 3)
+        `when`(gameRepository.findById("game-1"))
+            .thenReturn(Optional.of(entity))
+        `when`(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(draftEntity)
+        `when`(gameRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+        `when`(turnDraftRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+
+        drawTileService.drawTile("game-1", "user-1")
+
+        verify(turnDraftRepository).save(any())
+    }
+
+    @Test
+    fun `broadcasts updated game and draft after successful draw`() {
+        val tile = tileEmbeddable("tile-1")
+        val entity = gameEntity(drawPile = mutableListOf(tile))
+        val draftEntity = draftEntity()
+        `when`(gameRepository.findById("game-1"))
+            .thenReturn(Optional.of(entity))
+        `when`(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(draftEntity)
+        `when`(gameRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+        `when`(turnDraftRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+
+        val result = drawTileService.drawTile("game-1", "user-1")
+
+        verify(gameBroadcastService).broadcastGameUpdated(result)
+        verify(gameBroadcastService).broadcastDraftUpdated(any())
+        verify(gameBroadcastService, never()).broadcastTurnChanged(any(), any())
     }
 
 
