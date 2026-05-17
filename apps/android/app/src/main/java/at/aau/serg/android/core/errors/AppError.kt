@@ -2,10 +2,6 @@ package at.aau.serg.android.core.errors
 
 sealed class AppError {
 
-    sealed class Game : AppError() {
-        data object TurnTimedOut : Game()
-    }
-
     // REST / HTTP
     sealed class Rest : AppError() {
         data object Network : Rest()
@@ -45,7 +41,6 @@ sealed class AppError {
             WebSocket.Disconnected,
             WebSocket.SubscriptionFailed,
             WebSocket.ProtocolError,
-            Game.TurnTimedOut,
         )
     }
 }
