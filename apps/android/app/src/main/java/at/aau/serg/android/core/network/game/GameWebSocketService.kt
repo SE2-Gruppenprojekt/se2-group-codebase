@@ -25,6 +25,12 @@ class GameWebSocketService(
         )
     )
 
+    private val draftUpdatedAdapter = moshi.adapter(GameDraftUpdatedEvent::class.java)
+    private val gameEndedAdapter = moshi.adapter(GameEndedEvent::class.java)
+    private val gameUpdatedAdapter = moshi.adapter(GameUpdatedEvent::class.java)
+    private val turnChangedAdapter = moshi.adapter(TurnChangedEvent::class.java)
+    private val turnTimedOutAdapter = moshi.adapter(TurnTimedOutEvent::class.java)
+
     suspend fun subscribe(gameId: String): Flow<GameEvent> {
         return ws
             .subscribe(WebConfig.Topics.match(gameId))
@@ -32,35 +38,29 @@ class GameWebSocketService(
     }
 
     private fun parseGameEvent(message: String): GameEvent? {
-        val type = messageTypeAdapter.fromJson(message)?.get("type") as? String
+        return try {
+            val type = messageTypeAdapter.fromJson(message)?.get("type") as? String
 
-        return when (type) {
-            GameDraftUpdatedEvent.TYPE ->
-                moshi.adapter(GameDraftUpdatedEvent::class.java)
-                    .fromJson(message)
-                    ?.let { GameEvent.DraftUpdated(it) }
+            when (type) {
+                GameDraftUpdatedEvent.TYPE ->
+                    draftUpdatedAdapter.fromJson(message)?.let { GameEvent.DraftUpdated(it) }
 
-            GameEndedEvent.TYPE ->
-                moshi.adapter(GameEndedEvent::class.java)
-                    .fromJson(message)
-                    ?.let { GameEvent.Ended(it) }
+                GameEndedEvent.TYPE ->
+                    gameEndedAdapter.fromJson(message)?.let { GameEvent.Ended(it) }
 
-            GameUpdatedEvent.TYPE ->
-                moshi.adapter(GameUpdatedEvent::class.java)
-                    .fromJson(message)
-                    ?.let { GameEvent.Updated(it) }
+                GameUpdatedEvent.TYPE ->
+                    gameUpdatedAdapter.fromJson(message)?.let { GameEvent.Updated(it) }
 
-            TurnChangedEvent.TYPE ->
-                moshi.adapter(TurnChangedEvent::class.java)
-                    .fromJson(message)
-                    ?.let { GameEvent.TurnChanged(it) }
+                TurnChangedEvent.TYPE ->
+                    turnChangedAdapter.fromJson(message)?.let { GameEvent.TurnChanged(it) }
 
-            TurnTimedOutEvent.TYPE ->
-                moshi.adapter(TurnTimedOutEvent::class.java)
-                    .fromJson(message)
-                    ?.let { GameEvent.TurnTimedOut(it) }
+                TurnTimedOutEvent.TYPE ->
+                    turnTimedOutAdapter.fromJson(message)?.let { GameEvent.TurnTimedOut(it) }
 
-            else -> null
+                else -> null
+            }
+        } catch (_: Throwable) {
+            null
         }
     }
 
