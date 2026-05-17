@@ -69,13 +69,15 @@ class BoardValidationServiceTest {
     fun `returns invalid when multiple board sets are invalid`() {
         val firstSet = boardSet("set-1", 1)
         val secondSet = boardSet("set-2", 4)
-        whenever(setValidationService.validate(firstSet)).thenReturn(invalid(violation("FIRST_INVALID", "tile-1")))
-        whenever(setValidationService.validate(secondSet)).thenReturn(invalid(violation("SECOND_INVALID", "tile-4")))
+        val firstViolation = violation("FIRST_INVALID", "tile-1")
+        val secondViolation = violation("SECOND_INVALID", "tile-4")
+        whenever(setValidationService.validate(firstSet)).thenReturn(invalid(firstViolation))
+        whenever(setValidationService.validate(secondSet)).thenReturn(invalid(secondViolation))
 
         val result = service.validate(listOf(firstSet, secondSet))
 
         assertFalse(result.isValid)
-        assertEquals(2, result.violations.size)
+        assertEquals(listOf(firstViolation, secondViolation), result.violations)
     }
 
     @Test
