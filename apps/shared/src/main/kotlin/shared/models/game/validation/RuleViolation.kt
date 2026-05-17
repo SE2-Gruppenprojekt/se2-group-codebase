@@ -22,7 +22,7 @@ package shared.models.game.validation
  *
  * @property code stable machine-readable identifier for the violated rule
  * @property message human-readable explanation of the problem
- * @property boardSetId optional board-set index for violations tied to one set
+ * @property boardSetId optional board-set identifier for violations tied to one set
  * @property tileIds optional list of tile identifiers involved in the failure
  */
 data class RuleViolation(
