@@ -56,21 +56,22 @@ class BoardValidationServiceTest {
     @Test
     fun `returns invalid when one board set is invalid`() {
         val boardSet = boardSet("set-1", 1)
-        val violation = violation("SET_INVALID", "tile-1")
+        val violation = violation("SET_INVALID", "set-1", "tile-1")
         whenever(setValidationService.validate(boardSet)).thenReturn(invalid(violation))
 
         val result = service.validate(listOf(boardSet))
 
         assertFalse(result.isValid)
         assertEquals(listOf(violation), result.violations)
+        assertEquals("set-1", result.violations.single().boardSetId)
     }
 
     @Test
     fun `returns invalid when multiple board sets are invalid`() {
         val firstSet = boardSet("set-1", 1)
         val secondSet = boardSet("set-2", 4)
-        val firstViolation = violation("FIRST_INVALID", "tile-1")
-        val secondViolation = violation("SECOND_INVALID", "tile-4")
+        val firstViolation = violation("FIRST_INVALID", "set-1", "tile-1")
+        val secondViolation = violation("SECOND_INVALID", "set-2", "tile-4")
         whenever(setValidationService.validate(firstSet)).thenReturn(invalid(firstViolation))
         whenever(setValidationService.validate(secondSet)).thenReturn(invalid(secondViolation))
 
@@ -78,15 +79,16 @@ class BoardValidationServiceTest {
 
         assertFalse(result.isValid)
         assertEquals(listOf(firstViolation, secondViolation), result.violations)
+        assertEquals(listOf("set-1", "set-2"), result.violations.map { it.boardSetId })
     }
 
     @Test
     fun `aggregates all violations from invalid sets`() {
         val firstSet = boardSet("set-1", 1)
         val secondSet = boardSet("set-2", 4)
-        val firstViolation = violation("FIRST_INVALID", "tile-1")
-        val secondViolation = violation("SECOND_INVALID", "tile-4")
-        val thirdViolation = violation("THIRD_INVALID", "tile-5")
+        val firstViolation = violation("FIRST_INVALID", "set-1", "tile-1")
+        val secondViolation = violation("SECOND_INVALID", "set-2", "tile-4")
+        val thirdViolation = violation("THIRD_INVALID", "set-2", "tile-5")
         whenever(setValidationService.validate(firstSet)).thenReturn(invalid(firstViolation))
         whenever(setValidationService.validate(secondSet)).thenReturn(invalid(listOf(secondViolation, thirdViolation)))
 
@@ -94,6 +96,7 @@ class BoardValidationServiceTest {
 
         assertFalse(result.isValid)
         assertEquals(listOf(firstViolation, secondViolation, thirdViolation), result.violations)
+        assertEquals(listOf("set-1", "set-2", "set-2"), result.violations.map { it.boardSetId })
     }
 
     @Test
@@ -102,7 +105,7 @@ class BoardValidationServiceTest {
         val secondSet = boardSet("set-2", 4)
         val thirdSet = boardSet("set-3", 7)
         whenever(setValidationService.validate(firstSet)).thenReturn(valid())
-        whenever(setValidationService.validate(secondSet)).thenReturn(invalid(violation("SET_INVALID", "tile-4")))
+        whenever(setValidationService.validate(secondSet)).thenReturn(invalid(violation("SET_INVALID", "set-2", "tile-4")))
         whenever(setValidationService.validate(thirdSet)).thenReturn(valid())
 
         service.validate(listOf(firstSet, secondSet, thirdSet))
@@ -122,11 +125,11 @@ class BoardValidationServiceTest {
             )
         )
 
-    private fun violation(code: String, tileId: String): RuleViolation =
+    private fun violation(code: String, boardSetId: String, tileId: String): RuleViolation =
         RuleViolation(
             code = code,
             message = "$code failed",
-            setIndex = 0,
+            boardSetId = boardSetId,
             tileIds = listOf(tileId)
         )
 }
