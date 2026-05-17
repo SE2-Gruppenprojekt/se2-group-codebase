@@ -541,12 +541,12 @@ Why here:
 
 The shared game domain models and transport DTOs now belong in the shared monorepo subsection above. The frontend-only model layer should contain only local UI state and interaction state that should not be shared with the backend.
 
-1. feat(frontend)(game): add game ui state model
-2. feat(frontend)(game): add connection status model
-3. feat(frontend)(game): add local drag interaction state model
-4. feat(frontend)(game): add local board-set layout state model
-5. feat(frontend)(game): add local hand-tile layout state model
-6. feat(frontend)(game): add turn timer ui state model
+1. feat(android)(game): add game ui state model
+2. feat(android)(game): add connection status model
+3. feat(android)(game): add local drag interaction state model
+4. feat(android)(game): add local board-set layout state model
+5. feat(android)(game): add local hand-tile layout state model
+6. feat(android)(game): add turn timer ui state model
 
 ---
 
@@ -560,453 +560,310 @@ The frontend should consume these DTO and event payload classes from `apps/share
 
 ## 3. Mapper layer
 
-24. feat(frontend)(game): add tile dto-to-model mapper
-25. feat(frontend)(game): add board set dto-to-model mapper
-26. feat(frontend)(game): add game player dto-to-model mapper
-27. feat(frontend)(game): add confirmed game dto-to-model mapper
-28. feat(frontend)(game): add turn draft dto-to-model mapper
-29. feat(frontend)(game): add model-to-update draft request mapper
-30. feat(frontend)(game): add websocket event dto-to-model mapper
+24. feat(android)(game): add tile and board set dto-to-model mappers
+25. feat(android)(game): add game player, confirmed game, and turn draft dto-to-model mappers
+26. feat(android)(game): add model-to-update draft request mapper
+27. feat(android)(game): add websocket event dto-to-model mapper
 
 ---
 
 ## 4. Network / REST foundation
 
-31. feat(frontend)(game)(network): add game api service interface
-32. feat(frontend)(game)(network): add get game endpoint call
-33. feat(frontend)(game)(network): add update draft endpoint call
-34. feat(frontend)(game)(network): add end turn endpoint call
-35. feat(frontend)(game)(network): add draw tile endpoint call
-36. feat(frontend)(game)(network): add reset draft endpoint call
-37. feat(frontend)(game)(network): add base url configuration for game api
-38. feat(frontend)(game)(network): add serialization setup for game dto models
-39. feat(frontend)(game)(network): add error response parsing for game api
+31. feat(android)(game)(network): add game api service interface
+32. feat(android)(game)(network): add get game endpoint call
+33. feat(android)(game)(network): add update draft endpoint call
+34. feat(android)(game)(network): add end turn endpoint call
+35. feat(android)(game)(network): add draw tile endpoint call
+36. feat(android)(game)(network): add reset draft endpoint call
+37. feat(android)(game)(network): add base url configuration for game api
+38. feat(android)(game)(network): add serialization setup for game dto models
+39. feat(android)(game)(network): add error response parsing for game api
 
 ---
 
 ## 5. WebSocket foundation
 
-40. feat(frontend)(game)(websocket): add websocket library dependencies
-41. feat(frontend)(game)(websocket): add websocket service base structure
-42. feat(frontend)(game)(websocket): add websocket connect logic
-43. feat(frontend)(game)(websocket): add websocket disconnect logic
-44. feat(frontend)(game)(websocket): add game topic subscription logic
-45. feat(frontend)(game)(websocket): add websocket lifecycle logging
-46. feat(frontend)(game)(websocket): add websocket connection state tracking
-47. feat(frontend)(game)(websocket): add websocket event parsing for game.draft.updated
-48. feat(frontend)(game)(websocket): add websocket event parsing for game.updated
-49. feat(frontend)(game)(websocket): add websocket event parsing for turn.changed
-50. feat(frontend)(game)(websocket): add websocket event parsing for turn.timed_out
-51. feat(frontend)(game)(websocket): add websocket event parsing for game.ended
-52. feat(frontend)(game)(websocket): add unknown websocket event fallback handling
+40. feat(android)(game)(websocket): add websocket library dependencies
+41. feat(android)(game)(websocket): add websocket service base structure
+42. feat(android)(game)(websocket): add websocket connect and disconnect logic
+43. feat(android)(game)(websocket): add game topic subscription logic
+44. feat(android)(game)(websocket): add websocket lifecycle logging and connection state tracking
+45. feat(android)(game)(websocket): add websocket event parsing for draft, game, turn change, timeout, and game end events
+46. feat(android)(game)(websocket): add unknown websocket event fallback handling
 
 ---
 
-## 6. Repository layer
+## 6. Current player identity handling
 
-52. feat(frontend)(game): add game repository interface
-53. feat(frontend)(game): add game repository implementation
-54. feat(frontend)(game): add confirmed game fetch to repository
-55. feat(frontend)(game): add update draft command to repository
-56. feat(frontend)(game): add end turn command to repository
-57. feat(frontend)(game): add draw tile command to repository
-58. feat(frontend)(game): add reset draft command to repository
-59. feat(frontend)(game): add websocket subscription handling to repository
-60. feat(frontend)(game): add repository callback/flow for live game draft updates
-61. feat(frontend)(game): add repository callback/flow for confirmed game updates
-62. feat(frontend)(game): add repository callback/flow for turn changes
-63. feat(frontend)(game): add repository callback/flow for game ended events
-64. feat(frontend)(game): add repository callback/flow for turn timeout events
-65. feat(frontend)(game): keep local board-set layout separate from authoritative draft state
-66. feat(frontend)(game): keep local hand-tile layout separate from authoritative draft state
+194. feat(android)(game): add local current user identity source
+195. feat(android)(game): compare current user with turn owner
+196. feat(android)(game): derive isActivePlayer state in viewmodel
+197. feat(android)(game): derive isSpectatingCurrentTurn state in viewmodel
 
 ---
 
 ## 7. ViewModel foundation
 
-64. feat(frontend)(game): add game viewmodel base structure
-65. feat(frontend)(game): add confirmed game load logic to viewmodel
-66. feat(frontend)(game): add websocket connect logic to viewmodel
-67. feat(frontend)(game): add websocket disconnect logic to viewmodel
-68. feat(frontend)(game): add confirmed game state handling in viewmodel
-69. feat(frontend)(game): add live draft state handling in viewmodel
-70. feat(frontend)(game): add turn changed state handling in viewmodel
-71. feat(frontend)(game): add game ended state handling in viewmodel
-72. feat(frontend)(game): add loading state handling in viewmodel
-73. feat(frontend)(game): add error state handling in viewmodel
-74. feat(frontend)(game): add connection state handling in viewmodel
-75. feat(frontend)(game): add turn timer handling in viewmodel
-76. feat(frontend)(game): add timeout event handling in viewmodel
-77. feat(frontend)(game): add automatic draft reset handling after timeout in viewmodel
+64. feat(android)(game): add game viewmodel base structure
+65. feat(android)(game): add confirmed game load logic to viewmodel
+66. feat(android)(game): add websocket connect and disconnect logic to viewmodel
+67. feat(android)(game): add confirmed game, live draft, turn changed, and game ended state handling in viewmodel
+68. feat(android)(game): add loading, error, and connection state handling in viewmodel
+69. feat(android)(game): add turn timer and timeout handling in viewmodel
+70. feat(android)(game): add automatic draft reset handling after timeout in viewmodel
 
 ---
 
-## 8. Game screen UI foundation
+## 8. Shared live draft behavior
 
-75. feat(frontend)(game)(ui): add game screen composable skeleton
-76. feat(frontend)(game)(ui): add game screen header section
-77. feat(frontend)(game)(ui): add current turn indicator
-78. feat(frontend)(game)(ui): add player info row section
-79. feat(frontend)(game)(ui): add game board container
-80. feat(frontend)(game)(ui): add player hand container
-81. feat(frontend)(game)(ui): add game action bar container
-82. feat(frontend)(game)(ui): add loading state for game screen
-83. feat(frontend)(game)(ui): add error state for game screen
-84. feat(frontend)(game)(ui): add empty state fallback for missing game data
-85. feat(frontend)(game)(ui): add turn timer display
-86. feat(frontend)(game)(ui): add timeout feedback message
+129. feat(android)(game): render shared live draft for all players
+130. feat(android)(game): restrict draft editing to active player only
+131. feat(android)(game): allow inactive players to observe live draft changes
+132. feat(android)(game): update live draft state from websocket game.draft.updated
+133. feat(android)(game): replace outdated local draft with incoming shared draft
+134. feat(android)(game): clear live draft when confirmed game update arrives
+135. feat(android)(game): show active draft owner in ui
 
 ---
 
-## 9. Tile UI components
+## 9. Draft update sending
 
-85. feat(frontend)(game)(ui): add reusable tile composable
-86. feat(frontend)(game)(ui): add joker tile composable variant
-87. feat(frontend)(game)(ui): add tile selection visual state
-88. feat(frontend)(game)(ui): add tile dragging visual state
-89. feat(frontend)(game)(ui): add tile disabled visual state
-90. feat(frontend)(game)(ui): add tile color styling
-91. feat(frontend)(game)(ui): add tile number styling
-92. feat(frontend)(game)(ui): add tile previews
-
----
-
-## 10. Board set UI components
-
-93. feat(frontend)(game)(ui): add board set composable
-94. feat(frontend)(game)(ui): add run set visual layout
-95. feat(frontend)(game)(ui): add group set visual layout
-96. feat(frontend)(game)(ui): add board set spacing and arrangement
-97. feat(frontend)(game)(ui): add board set previews
-98. feat(frontend)(game)(ui): add local board-set arrangement behavior
-99. feat(frontend)(game)(ui): allow per-client board-set ordering without changing authoritative state
+136. feat(android)(game): add debounce/throttle strategy for draft updates
+137. feat(android)(game): send draft update after tile rearrangement
+138. feat(android)(game): send full draft board in update request
+139. feat(android)(game): send full draft hand in update request
+140. feat(android)(game): include draft version in update request
+141. feat(android)(game): prevent draft update sending for inactive players
+142. feat(android)(game): add draft update failure handling
 
 ---
 
-## 11. Board UI and rendering
+## 10. Turn change handling
 
-98. feat(frontend)(game)(ui): add confirmed board rendering
-99. feat(frontend)(game)(ui): add live draft board rendering
-100.    feat(frontend)(game)(ui): add fallback to confirmed board when no draft exists
-101.    feat(frontend)(game)(ui): add board scroll support
-102.    feat(frontend)(game)(ui): add board set list rendering
-103.    feat(frontend)(game)(ui): add board update animation placeholder
-104.    feat(frontend)(game)(ui): add visual highlight for active draft changes
-
----
-
-## 12. Hand UI and rendering
-
-105. feat(frontend)(game)(ui): add player hand rendering
-106. feat(frontend)(game)(ui): add active player hand update from live draft
-107. feat(frontend)(game)(ui): add inactive player hand hidden/limited rendering
-108. feat(frontend)(game)(ui): add hand tile spacing layout
-109. feat(frontend)(game)(ui): add hand scroll support
-110. feat(frontend)(game)(ui): add selected tile highlight in hand
-111. feat(frontend)(game)(ui): add local hand-tile arrangement behavior
-112. feat(frontend)(game)(ui): allow per-client hand ordering without changing authoritative state
+159. feat(android)(game): update current turn player from websocket turn.changed
+160. feat(android)(game): show turn changed indicator in ui
+161. feat(android)(game): reset local interaction state on turn change
+162. feat(android)(game): enable editing only when current player matches local user
+163. feat(android)(game): disable editing immediately after turn change
+164. feat(android)(game): refresh displayed live draft after turn change
+165. feat(android)(game): reset turn timer display on turn change
+166. feat(android)(game): handle automatic draft reset after timeout
 
 ---
 
-## 13. Drag and drop / interaction basics
+## 11. End-turn flow
 
-111. feat(frontend)(game): add local tile selection logic
-112. feat(frontend)(game): add drag start handling for hand tiles
-113. feat(frontend)(game): add drag start handling for board tiles
-114. feat(frontend)(game): add drag target tracking
-115. feat(frontend)(game): add tile drop handling onto board
-116. feat(frontend)(game): add tile drop handling within existing board set
-117. feat(frontend)(game): add tile removal from board set back to hand
-118. feat(frontend)(game): add local drag state reset after drop
-119. feat(frontend)(game): add invalid drop visual handling
-120. feat(frontend)(game): add drag interaction cleanup on cancel
+143. feat(android)(game): add end turn button
+144. feat(android)(game): enable end turn only for active player
+145. feat(android)(game): disable end turn while submitting
+146. feat(android)(game): add end turn action in viewmodel
+147. feat(android)(game): call end turn endpoint
+148. feat(android)(game): show validation error after failed end turn
+149. feat(android)(game): clear temporary submission state after success
+150. feat(android)(game): clear temporary submission state after failure
 
 ---
 
-## 14. Local draft editing helpers
+## 12. Draw and reset flow
 
-121. feat(frontend)(game): add local draft board mutation helper
-122. feat(frontend)(game): add local draft hand mutation helper
-123. feat(frontend)(game): add create new board set from dragged tile helper
-124. feat(frontend)(game): add append tile to existing board set helper
-125. feat(frontend)(game): add remove tile from board set helper
-126. feat(frontend)(game): add empty board set cleanup helper
-127. feat(frontend)(game): add reorder tiles within set helper
-128. feat(frontend)(game): add reorder sets on board helper
-129. feat(frontend)(game): add local-only board-set reorder helper
-130. feat(frontend)(game): add local-only hand tile reorder helper
+151. feat(android)(game): add draw tile button
+152. feat(android)(game): enable draw tile only for active player
+153. feat(android)(game): add draw tile action in viewmodel
+154. feat(android)(game): call draw tile endpoint
+155. feat(android)(game): add reset draft button
+156. feat(android)(game): enable reset draft only for active player
+157. feat(android)(game): add reset draft action in viewmodel
+158. feat(android)(game): call reset draft endpoint
 
 ---
 
-## 15. Shared live draft behavior
+## 13. Game ended handling
 
-129. feat(frontend)(game): render shared live draft for all players
-130. feat(frontend)(game): restrict draft editing to active player only
-131. feat(frontend)(game): allow inactive players to observe live draft changes
-132. feat(frontend)(game): update live draft state from websocket game.draft.updated
-133. feat(frontend)(game): replace outdated local draft with incoming shared draft
-134. feat(frontend)(game): clear live draft when confirmed game update arrives
-135. feat(frontend)(game): show active draft owner in ui
-
----
-
-## 16. Draft update sending
-
-136. feat(frontend)(game): add debounce/throttle strategy for draft updates
-137. feat(frontend)(game): send draft update after tile rearrangement
-138. feat(frontend)(game): send full draft board in update request
-139. feat(frontend)(game): send full draft hand in update request
-140. feat(frontend)(game): include draft version in update request
-141. feat(frontend)(game): prevent draft update sending for inactive players
-142. feat(frontend)(game): add draft update failure handling
+165. feat(android)(game): handle websocket game ended event in viewmodel
+166. feat(android)(game): add game result navigation trigger
+167. feat(android)(game): add winner display state
+168. feat(android)(result): add result screen ui skeleton
+169. feat(android)(result): render winner information
+170. feat(android)(result): render player scores
+171. feat(android)(result): add leave result screen action
 
 ---
 
-## 17. End-turn flow
+## 14. Error handling
 
-143. feat(frontend)(game): add end turn button
-144. feat(frontend)(game): enable end turn only for active player
-145. feat(frontend)(game): disable end turn while submitting
-146. feat(frontend)(game): add end turn action in viewmodel
-147. feat(frontend)(game): call end turn endpoint from repository
-148. feat(frontend)(game): show validation error after failed end turn
-149. feat(frontend)(game): clear temporary submission state after success
-150. feat(frontend)(game): clear temporary submission state after failure
-
----
-
-## 18. Draw and reset flow
-
-151. feat(frontend)(game): add draw tile button
-152. feat(frontend)(game): enable draw tile only for active player
-153. feat(frontend)(game): add draw tile action in viewmodel
-154. feat(frontend)(game): call draw tile endpoint from repository
-155. feat(frontend)(game): add reset draft button
-156. feat(frontend)(game): enable reset draft only for active player
-157. feat(frontend)(game): add reset draft action in viewmodel
-158. feat(frontend)(game): call reset draft endpoint from repository
+187. feat(android)(game): add game error mapper
+188. feat(android)(game): map backend validation errors to user-friendly messages
+189. feat(android)(game): map websocket errors to connection status
+190. feat(android)(game): show invalid move error banner
+191. feat(android)(game): show network failure error banner
+192. feat(android)(game): show reconnecting state banner
+193. feat(android)(game): add generic fallback error state
+194. feat(android)(game): show turn timeout feedback state
 
 ---
 
-## 19. Turn change handling
+## 15. Connection and reconnect handling
 
-159. feat(frontend)(game): update current turn player from websocket turn.changed
-160. feat(frontend)(game): show turn changed indicator in ui
-161. feat(frontend)(game): reset local interaction state on turn change
-162. feat(frontend)(game): enable editing only when current player matches local user
-163. feat(frontend)(game): disable editing immediately after turn change
-164. feat(frontend)(game): refresh displayed live draft after turn change
-165. feat(frontend)(game): reset turn timer display on turn change
-166. feat(frontend)(game): handle automatic draft reset after timeout
+178. feat(android)(game)(websocket): expose websocket connection state and disconnect detection
+179. feat(android)(game)(ui): show websocket connection status in game screen
+180. feat(android)(game)(websocket): add automatic reconnect, re-subscribe, and duplicate-subscription protection
+181. feat(android)(game): reload confirmed game and current draft after reconnect
+182. feat(android)(game): resync turn timer and discard stale local timer after reconnect
+183. feat(android)(game): clean up websocket connection on game screen exit
 
 ---
 
-## 20. Game ended handling
+## 16. Navigation
 
-165. feat(frontend)(game): handle websocket game ended event in viewmodel
-166. feat(frontend)(game): add game result navigation trigger
-167. feat(frontend)(game): add winner display state
-168. feat(frontend)(result): add result screen ui skeleton
-169. feat(frontend)(result): render winner information
-170. feat(frontend)(result): render player scores
-171. feat(frontend)(result): add leave result screen action
-
----
-
-## 21. Navigation
-
-172. feat(frontend)(game): add game screen route
-173. feat(frontend)(result): add result screen route
-174. feat(frontend)(game): navigate to game screen with gameId argument
-175. feat(frontend)(game): read gameId argument from nav host
-176. feat(frontend)(game): navigate to result screen on game end
-177. feat(frontend)(game): handle invalid or missing gameId navigation case
+172. feat(android)(game): add game screen route
+173. feat(android)(result): add result screen route
+174. feat(android)(game): navigate to game screen with gameId argument
+175. feat(android)(game): read gameId argument from nav host
+176. feat(android)(game): navigate to result screen on game end
+177. feat(android)(game): handle invalid or missing gameId navigation case
 
 ---
 
-## 22. Connection and reconnect handling
+## 17. Game screen UI foundation
 
-178. feat(frontend)(game)(websocket): detect websocket disconnect state
-179. feat(frontend)(game)(websocket): expose websocket connection state to viewmodel
-180. feat(frontend)(game)(ui): show websocket connection status in game screen
-181. feat(frontend)(game)(websocket): add automatic websocket reconnect
-182. feat(frontend)(game)(websocket): re-subscribe to game topic after reconnect
-183. feat(frontend)(game): reload confirmed game after reconnect
-184. feat(frontend)(game): reload current draft after reconnect
-185. feat(frontend)(game)(websocket): avoid duplicate subscriptions after reconnect
-186. feat(frontend)(game): clean up websocket connection on game screen exit
-187. feat(frontend)(game): resync turn timer after reconnect
-188. feat(frontend)(game): discard stale local timer after reconnect
-
----
-
-## 23. Error handling
-
-187. feat(frontend)(game): add game error mapper
-188. feat(frontend)(game): map backend validation errors to user-friendly messages
-189. feat(frontend)(game): map websocket errors to connection status
-190. feat(frontend)(game): show invalid move error banner
-191. feat(frontend)(game): show network failure error banner
-192. feat(frontend)(game): show reconnecting state banner
-193. feat(frontend)(game): add generic fallback error state
-194. feat(frontend)(game): show turn timeout feedback state
+75. feat(android)(game)(ui): add game screen composable skeleton
+76. feat(android)(game)(ui): add game screen header section
+77. feat(android)(game)(ui): add current turn indicator
+78. feat(android)(game)(ui): add player info row section
+79. feat(android)(game)(ui): add game board container
+80. feat(android)(game)(ui): add player hand container
+81. feat(android)(game)(ui): add game action bar container
+82. feat(android)(game)(ui): add loading state for game screen
+83. feat(android)(game)(ui): add error state for game screen
+84. feat(android)(game)(ui): add empty state fallback for missing game data
+85. feat(android)(game)(ui): add turn timer display
+86. feat(android)(game)(ui): add timeout feedback message
 
 ---
 
-## 24. Current player identity handling
+## 18. Shared UI utilities
 
-194. feat(frontend)(game): add local current user identity source
-195. feat(frontend)(game): compare current user with turn owner
-196. feat(frontend)(game): derive isActivePlayer state in viewmodel
-197. feat(frontend)(game): derive isSpectatingCurrentTurn state in viewmodel
-
----
-
-## 25. Shared UI utilities
-
-198. feat(frontend)(game)(ui): add reusable turn badge component
-199. feat(frontend)(game)(ui): add reusable connection status indicator
-200. feat(frontend)(game)(ui): add reusable validation error banner
-201. feat(frontend)(game)(ui): add reusable loading overlay
-202. feat(frontend)(game)(ui): add reusable action button row
-203. feat(frontend)(game)(ui): add reusable player summary component
-204. feat(frontend)(game)(ui): add reusable turn timer component
+198. feat(android)(game)(ui): add reusable turn badge component
+199. feat(android)(game)(ui): add reusable connection status indicator
+200. feat(android)(game)(ui): add reusable validation error banner
+201. feat(android)(game)(ui): add reusable loading overlay
+202. feat(android)(game)(ui): add reusable action button row
+203. feat(android)(game)(ui): add reusable player summary component
+204. feat(android)(game)(ui): add reusable turn timer component
 
 ---
 
-## 26. Repository / ViewModel flows
+## 19. Tile and board set UI components
 
-204. feat(frontend)(game): expose confirmed game as state flow
-205. feat(frontend)(game): expose live draft as state flow
-206. feat(frontend)(game): expose turn changed events as state flow
-207. feat(frontend)(game): expose game ended events as state flow
-208. feat(frontend)(game): expose command loading state as state flow
-209. feat(frontend)(game): expose websocket connection state as state flow
-210. feat(frontend)(game): expose turn timer state as state flow
-
----
-
-## 27. Optimistic / local UX handling
-
-210. feat(frontend)(game): keep local drag responsiveness before backend confirmation
-211. feat(frontend)(game): reconcile local drag state with incoming shared draft
-212. feat(frontend)(game): reset stale drag state after server draft overwrite
-213. feat(frontend)(game): preserve selection where possible after draft update
-214. feat(frontend)(game): ignore own echoed draft update if identical
-215. feat(frontend)(game): handle out-of-order draft version updates
+85. feat(android)(game)(ui): add reusable tile composable with joker variant
+86. feat(android)(game)(ui): add tile selection, dragging, and disabled visual states
+87. feat(android)(game)(ui): add tile color and number styling
+88. feat(android)(game)(ui): add board set composable
+89. feat(android)(game)(ui): add run and group set visual layouts
+90. feat(android)(game)(ui): add board set spacing, arrangement, and local ordering behavior
+91. feat(android)(game)(ui): add tile and board set previews
 
 ---
 
-## 28. Previews and UI development helpers
+## 20. Board UI and rendering
 
-216. feat(frontend)(game)(ui): add game screen preview with sample data
-217. feat(frontend)(game)(ui): add tile component previews
-218. feat(frontend)(game)(ui): add board set component previews
-219. feat(frontend)(game)(ui): add hand rendering previews
-220. feat(frontend)(result)(ui): add result screen preview
-221. feat(frontend)(game)(ui): add turn timer previews
-
----
-
-## 29. Testing fixtures and helpers
-
-221. test(frontend)(game): add tile fixture helpers
-222. test(frontend)(game): add board set fixture helpers
-223. test(frontend)(game): add confirmed game fixture helpers
-224. test(frontend)(game): add live draft fixture helpers
-225. test(frontend)(game): add websocket event fixture helpers
-226. test(frontend)(game): add request dto fixture helpers
+98. feat(android)(game)(ui): add confirmed board rendering
+99. feat(android)(game)(ui): add live draft board rendering
+100.    feat(android)(game)(ui): add fallback to confirmed board when no draft exists
+101.    feat(android)(game)(ui): add board scroll support
+102.    feat(android)(game)(ui): add board set list rendering
+103.    feat(android)(game)(ui): add board update animation placeholder
+104.    feat(android)(game)(ui): add visual highlight for active draft changes
 
 ---
 
-## 30. Mapper tests
+## 21. Hand UI and rendering
 
-227. test(frontend)(game): add tile mapper tests
-228. test(frontend)(game): add board set mapper tests
-229. test(frontend)(game): add game player mapper tests
-230. test(frontend)(game): add confirmed game mapper tests
-231. test(frontend)(game): add turn draft mapper tests
-232. test(frontend)(game): add websocket event mapper tests
-
----
-
-## 31. Repository tests
-
-233. test(frontend)(game): add repository confirmed game fetch tests
-234. test(frontend)(game): add repository update draft command tests
-235. test(frontend)(game): add repository end turn command tests
-236. test(frontend)(game): add repository draw tile command tests
-237. test(frontend)(game): add repository reset draft command tests
-238. test(frontend)(game): add repository websocket event handling tests
+105. feat(android)(game)(ui): add player hand rendering
+106. feat(android)(game)(ui): add active player hand update from live draft
+107. feat(android)(game)(ui): add inactive player hand hidden/limited rendering
+108. feat(android)(game)(ui): add hand tile spacing layout
+109. feat(android)(game)(ui): add hand scroll support
+110. feat(android)(game)(ui): add selected tile highlight in hand
+111. feat(android)(game)(ui): add local hand-tile arrangement behavior
+112. feat(android)(game)(ui): allow per-client hand ordering without changing authoritative state
 
 ---
 
-## 32. ViewModel tests
+## 22. Drag and drop / interaction basics
 
-239. test(frontend)(game): add initial game load viewmodel tests
-240. test(frontend)(game): add live draft update viewmodel tests
-241. test(frontend)(game): add turn changed viewmodel tests
-242. test(frontend)(game): add game ended viewmodel tests
-243. test(frontend)(game): add websocket connection state viewmodel tests
-244. test(frontend)(game): add end turn action viewmodel tests
-245. test(frontend)(game): add draw tile action viewmodel tests
-246. test(frontend)(game): add reset draft action viewmodel tests
-247. test(frontend)(game): add turn timer viewmodel tests
-248. test(frontend)(game): add timeout event handling viewmodel tests
+111. feat(android)(game): add local tile selection logic
+112. feat(android)(game): add drag start handling for hand and board tiles
+113. feat(android)(game): add drag target tracking
+114. feat(android)(game): add tile drop handling onto board and within existing board sets
+115. feat(android)(game): add tile removal from board set back to hand
+116. feat(android)(game): add local drag state reset and cleanup after drop or cancel
+117. feat(android)(game): add invalid drop visual handling
 
 ---
 
-## 33. UI tests
+## 23. Optimistic / local UX handling
 
-247. test(frontend)(game)(ui): add game screen rendering tests
-248. test(frontend)(game)(ui): add turn indicator ui tests
-249. test(frontend)(game)(ui): add player hand rendering tests
-250. test(frontend)(game)(ui): add board rendering tests
-251. test(frontend)(game)(ui): add end turn button state tests
-252. test(frontend)(game)(ui): add connection status ui tests
-253. test(frontend)(result)(ui): add result screen rendering tests
-254. test(frontend)(game)(ui): add turn timer rendering tests
+210. feat(android)(game): keep local drag responsiveness before backend confirmation
+211. feat(android)(game): reconcile local drag state with incoming shared draft
+212. feat(android)(game): reset stale drag state after server draft overwrite
+213. feat(android)(game): preserve selection where possible after draft update
+214. feat(android)(game): ignore own echoed draft update if identical
+215. feat(android)(game): handle out-of-order draft version updates
 
 ---
 
-## 34. WebSocket service tests
+## 24. ViewModel tests
 
-254. test(frontend)(game)(websocket): add websocket connect tests
-255. test(frontend)(game)(websocket): add websocket disconnect tests
-256. test(frontend)(game)(websocket): add topic subscription tests
-257. test(frontend)(game)(websocket): add game.draft.updated parsing tests
-258. test(frontend)(game)(websocket): add game.updated parsing tests
-259. test(frontend)(game)(websocket): add turn.changed parsing tests
-260. test(frontend)(game)(websocket): add game.ended parsing tests
-261. test(frontend)(game)(websocket): add reconnect behavior tests
-262. test(frontend)(game)(websocket): add turn.timed_out parsing tests
-
----
-
-## 35. Documentation issues
-
-262. docs(frontend)(game): add frontend game architecture overview
-263. docs(frontend)(game): document confirmed game vs live draft state
-264. docs(frontend)(game): document websocket integration flow
-265. docs(frontend)(game): document drag-and-drop interaction flow
-266. docs(frontend)(game): document viewmodel and repository responsibilities
-267. docs(frontend)(game): document realtime shared draft behavior
-268. docs(frontend)(game): document reconnect and resync strategy
-269. docs(frontend)(game): document ui state model
-270. docs(frontend)(game): document local board and hand arrangement behavior
-271. docs(frontend)(game): document backend-managed turn timer behavior
+239. test(android)(game): add initial game load viewmodel tests
+240. test(android)(game): add live draft update viewmodel tests
+241. test(android)(game): add turn changed viewmodel tests
+242. test(android)(game): add game ended viewmodel tests
+243. test(android)(game): add websocket connection state viewmodel tests
+244. test(android)(game): add end turn action viewmodel tests
+245. test(android)(game): add draw tile action viewmodel tests
+246. test(android)(game): add reset draft action viewmodel tests
+247. test(android)(game): add turn timer viewmodel tests
+248. test(android)(game): add timeout event handling viewmodel tests
 
 ---
 
-## 36. Nice optional extras
+## 25. UI tests
 
-270. chore(frontend)(game): add game route constants
-271. chore(frontend)(game): add websocket topic helper
-272. chore(frontend)(game): add logging for draft update submissions
-273. chore(frontend)(game): add logging for websocket event handling
-274. chore(frontend)(game): add base game error messages
-275. chore(frontend)(game): add reusable drag interaction utilities
-276. chore(frontend)(game): add local layout helper utilities for board and hand arrangement
+247. test(android)(game)(ui): add game screen rendering tests
+248. test(android)(game)(ui): add turn indicator ui tests
+249. test(android)(game)(ui): add player hand rendering tests
+250. test(android)(game)(ui): add board rendering tests
+251. test(android)(game)(ui): add end turn button state tests
+252. test(android)(game)(ui): add connection status ui tests
+253. test(android)(result)(ui): add result screen rendering tests
+254. test(android)(game)(ui): add turn timer rendering tests
+
+---
+
+## 26. WebSocket service tests
+
+254. test(android)(game)(websocket): add websocket connect tests
+255. test(android)(game)(websocket): add websocket disconnect tests
+256. test(android)(game)(websocket): add topic subscription tests
+257. test(android)(game)(websocket): add game.draft.updated parsing tests
+258. test(android)(game)(websocket): add game.updated parsing tests
+259. test(android)(game)(websocket): add turn.changed parsing tests
+260. test(android)(game)(websocket): add game.ended parsing tests
+261. test(android)(game)(websocket): add reconnect behavior tests
+262. test(android)(game)(websocket): add turn.timed_out parsing tests
+
+---
+
+## 27. Nice optional extras
+
+270. chore(android)(game): add game route constants
+271. chore(android)(game): add websocket topic helper
+272. chore(android)(game): add logging for draft update submissions
+273. chore(android)(game): add logging for websocket event handling
+274. chore(android)(game): add base game error messages
+275. chore(android)(game): add reusable drag interaction utilities
+276. chore(android)(game): add local layout helper utilities for board and hand arrangement
 
 ---
 
@@ -1035,15 +892,13 @@ Then implement:
 
 Why here:
 
-- the frontend must be able to talk to the backend before repository and screen logic can be built properly
+- the frontend must be able to talk to the backend before state and screen logic can be built properly
 
 ### 3. State and orchestration layers
 
 Then implement:
 
-- Repository layer
 - ViewModel foundation
-- Repository / ViewModel flows
 - Current player identity handling
 
 Why here:
@@ -1056,7 +911,6 @@ Then implement:
 
 - Game screen UI foundation
 - Shared UI utilities
-- Previews and UI development helpers
 
 Why here:
 
@@ -1066,12 +920,10 @@ Why here:
 
 Then implement:
 
-- Tile UI components
-- Board set UI components
+- Tile and board set UI components
 - Board UI and rendering
 - Hand UI and rendering
 - Drag and drop / interaction basics
-- Local draft editing helpers
 
 Why here:
 
@@ -1109,13 +961,9 @@ Why here:
 
 Finish with:
 
-- Testing fixtures and helpers
-- Mapper tests
-- Repository tests
 - ViewModel tests
 - UI tests
 - WebSocket service tests
-- Documentation issues
 - Nice optional extras
 
 Why last:
@@ -1245,98 +1093,98 @@ Why here:
 
 ### State synchronization and consistency
 
-49. feat(frontend)(game): ignore stale websocket draft updates by version
-50. feat(frontend)(game): ignore stale websocket confirmed game updates by version
-51. feat(frontend)(game): handle out-of-order websocket events
-52. feat(frontend)(game): deduplicate repeated websocket events
-53. feat(frontend)(game): reconcile local draft with server draft after version conflict
+49. feat(android)(game): ignore stale websocket draft updates by version
+50. feat(android)(game): ignore stale websocket confirmed game updates by version
+51. feat(android)(game): handle out-of-order websocket events
+52. feat(android)(game): deduplicate repeated websocket events
+53. feat(android)(game): reconcile local draft with server draft after version conflict
 
 ---
 
 ### Recovery / reconnect / app lifecycle
 
-54. feat(frontend)(game): restore game screen state after app process recreation
-55. feat(frontend)(game): reload confirmed game after app returns from background
-56. feat(frontend)(game): reload draft after app returns from background
-57. feat(frontend)(game): handle reconnect while active player is editing
-58. feat(frontend)(game): handle reconnect while spectating another player's draft
-59. feat(frontend)(game): add full resync after websocket reconnect
+54. feat(android)(game): restore game screen state after app process recreation
+55. feat(android)(game): reload confirmed game after app returns from background
+56. feat(android)(game): reload draft after app returns from background
+57. feat(android)(game): handle reconnect while active player is editing
+58. feat(android)(game): handle reconnect while spectating another player's draft
+59. feat(android)(game): add full resync after websocket reconnect
 
 ---
 
 ### UX and interaction polish
 
-60. feat(frontend)(game)(ui): add clearer invalid set indicators
-61. feat(frontend)(game)(ui): add turn ownership badge
-62. feat(frontend)(game)(ui): add “waiting for other player” state
-63. feat(frontend)(game)(ui): add “syncing move” indicator
-64. feat(frontend)(game)(ui): add “move rejected” feedback
-65. feat(frontend)(game)(ui): add “reconnected and resynced” feedback
-66. feat(frontend)(game)(ui): add visual distinction between confirmed board and live draft
-67. feat(frontend)(game)(ui): add visual highlight for tiles changed in current draft
+60. feat(android)(game)(ui): add clearer invalid set indicators
+61. feat(android)(game)(ui): add turn ownership badge
+62. feat(android)(game)(ui): add “waiting for other player” state
+63. feat(android)(game)(ui): add “syncing move” indicator
+64. feat(android)(game)(ui): add “move rejected” feedback
+65. feat(android)(game)(ui): add “reconnected and resynced” feedback
+66. feat(android)(game)(ui): add visual distinction between confirmed board and live draft
+67. feat(android)(game)(ui): add visual highlight for tiles changed in current draft
 
 ---
 
 ### Drag/drop edge cases
 
-68. feat(frontend)(game): handle drag cancellation safely
-69. feat(frontend)(game): handle invalid drop target safely
-70. feat(frontend)(game): prevent duplicate tile rendering during drag
-71. feat(frontend)(game): prevent tile loss during drag interruption
-72. feat(frontend)(game): preserve board consistency during rapid drag actions
-73. feat(frontend)(game): support moving tile between two existing sets cleanly
-74. feat(frontend)(game): support splitting an existing set into two draft sets
-75. feat(frontend)(game): support merging tiles into an existing set cleanly
+68. feat(android)(game): handle drag cancellation safely
+69. feat(android)(game): handle invalid drop target safely
+70. feat(android)(game): prevent duplicate tile rendering during drag
+71. feat(android)(game): prevent tile loss during drag interruption
+72. feat(android)(game): preserve board consistency during rapid drag actions
+73. feat(android)(game): support moving tile between two existing sets cleanly
+74. feat(android)(game): support splitting an existing set into two draft sets
+75. feat(android)(game): support merging tiles into an existing set cleanly
 
 ---
 
 ### Performance and rendering
 
-76. chore(frontend)(game): optimize board recomposition during websocket draft updates
-77. chore(frontend)(game): optimize hand recomposition during websocket draft updates
-78. chore(frontend)(game): reduce unnecessary UI updates for unchanged draft events
-79. chore(frontend)(game): review payload size impact of full-draft updates
-80. chore(frontend)(game): add throttling strategy for frequent draft updates
+76. chore(android)(game): optimize board recomposition during websocket draft updates
+77. chore(android)(game): optimize hand recomposition during websocket draft updates
+78. chore(android)(game): reduce unnecessary UI updates for unchanged draft events
+79. chore(android)(game): review payload size impact of full-draft updates
+80. chore(android)(game): add throttling strategy for frequent draft updates
 
 ---
 
 ### Identity and permissions
 
-81. feat(frontend)(game): derive active-player permissions consistently in viewmodel
-82. feat(frontend)(game): block drag/edit actions for non-active players
-83. feat(frontend)(game): block end turn action for non-active players consistently
-84. feat(frontend)(game): block draw/reset actions for non-active players consistently
+81. feat(android)(game): derive active-player permissions consistently in viewmodel
+82. feat(android)(game): block drag/edit actions for non-active players
+83. feat(android)(game): block end turn action for non-active players consistently
+84. feat(android)(game): block draw/reset actions for non-active players consistently
 
 ---
 
 ### Error handling and resilience
 
-85. feat(frontend)(game): show version conflict error message
-86. feat(frontend)(game): recover gracefully after rejected draft update
-87. feat(frontend)(game): recover gracefully after rejected end turn
-88. feat(frontend)(game): add fallback resync after repeated websocket failures
-89. feat(frontend)(game): add fallback resync after repeated command failures
+85. feat(android)(game): show version conflict error message
+86. feat(android)(game): recover gracefully after rejected draft update
+87. feat(android)(game): recover gracefully after rejected end turn
+88. feat(android)(game): add fallback resync after repeated websocket failures
+89. feat(android)(game): add fallback resync after repeated command failures
 
 ---
 
 ### Accessibility and usability
 
-90. feat(frontend)(game)(ui): improve tile accessibility labels
-91. feat(frontend)(game)(ui): improve board accessibility labels
-92. feat(frontend)(game)(ui): add content descriptions for action buttons
-93. feat(frontend)(game)(ui): improve readability of tile colors and numbers
+90. feat(android)(game)(ui): improve tile accessibility labels
+91. feat(android)(game)(ui): improve board accessibility labels
+92. feat(android)(game)(ui): add content descriptions for action buttons
+93. feat(android)(game)(ui): improve readability of tile colors and numbers
 
 ---
 
 ### More frontend testing
 
-94. test(frontend)(game): add stale draft event handling tests
-95. test(frontend)(game): add out-of-order websocket event tests
-96. test(frontend)(game): add reconnect resync tests
-97. test(frontend)(game): add process recreation state restore tests
-98. test(frontend)(game)(ui): add invalid set indicator UI tests
-99. test(frontend)(game)(ui): add active vs inactive player UI permission tests
-100.    test(frontend)(game): add local/server draft reconciliation tests
+94. test(android)(game): add stale draft event handling tests
+95. test(android)(game): add out-of-order websocket event tests
+96. test(android)(game): add reconnect resync tests
+97. test(android)(game): add process recreation state restore tests
+98. test(android)(game)(ui): add invalid set indicator UI tests
+99. test(android)(game)(ui): add active vs inactive player UI permission tests
+100.    test(android)(game): add local/server draft reconciliation tests
 
 ---
 
