@@ -28,17 +28,26 @@ import at.aau.serg.android.ui.theme.ThemeState
 
 @Composable
 fun GameScreen(
-    viewModel: GameViewModel = viewModel(),
-    onBack: () -> Unit = {},
-    onSettings: () -> Unit = {}
+    viewModel: GameViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    GameScreenContent(
+        uiState = uiState,
+        onEvent = viewModel::onUIEvent
+    )
+}
+
+@Composable
+fun GameScreenContent(
+    uiState: GameUiState,
+    onEvent: (GameUIEvent) -> Unit
 ) {
     val dark = ThemeState.isDarkMode.value
 
     val boardBorder = if (dark) Color.White.copy(alpha = 0.2f) else Color(0xFF86EFAC)
     val iconBtnBg = if (dark) Color(0xFF334155) else Color(0xFFE2E8F0)
     val iconBtnTint = if (dark) Color.White else Color(0xFF475569)
-
-    val uiState by viewModel.uiState.collectAsState()
 
     Box(
         Modifier
@@ -56,7 +65,7 @@ fun GameScreen(
                     .padding(12.dp)
                     .testTag(GameTestTags.HEADER)
             ) {
-                BackButton(onBack = onBack)
+                BackButton(onBack = { onEvent(GameUIEvent.OnBack) })
 
                 Column(Modifier.align(Alignment.Center)) {
                     Text("Game #4821", fontWeight = FontWeight.Bold)
@@ -65,7 +74,7 @@ fun GameScreen(
 
                 Row(Modifier.align(Alignment.CenterEnd)) {
                     Text("3:45")
-                    IconButton(onClick = onSettings) {
+                    IconButton(onClick = { onEvent(GameUIEvent.OnSettings) }) {
                         Icon(Icons.Default.Settings, null)
                     }
                 }
@@ -78,9 +87,7 @@ fun GameScreen(
                     .weight(1f)
                     .background(Color.White)
             ) {
-
                 Column(Modifier.fillMaxSize()) {
-
                     // BOARD
                     LazyColumn(
                         modifier = Modifier
@@ -95,19 +102,13 @@ fun GameScreen(
                     ) {
                         items(uiState.boardSets) { boardSet ->
                             TileRow(
-                                viewModel = viewModel,
+                                onEvent,
                                 tiles = boardSet.tiles,
                                 tileSize = 60,
                                 borderColor = boardBorder,
                                 selectedTiles = uiState.selectedTiles,
                                 selectedRow = uiState.activeSelectionRow,
                                 rowId = boardSet.boardSetId,
-                                onSelectionChange = { tile, selected, rowId ->
-                                    viewModel.onTileSelected(tile, selected, rowId)
-                                },
-                                onRowClick = { clickedRowId ->
-                                    viewModel.moveTiles(boardSetId = clickedRowId)
-                                }
                             )
                         }
 
@@ -115,7 +116,7 @@ fun GameScreen(
                             item {
                                 TileRowPlaceholder(
                                     tileSize = 60,
-                                    onClick = { viewModel.addRow() }
+                                    onClick = { onEvent(GameUIEvent.AddRow) }
                                 )
                             }
                         }
@@ -136,22 +137,13 @@ fun GameScreen(
                             Spacer(Modifier.height(12.dp))
 
                             TileRow(
-                                viewModel = viewModel,
+                                onEvent,
                                 tiles = uiState.rackTiles,
                                 tileSize = 44,
                                 borderColor = boardBorder,
                                 selectedTiles = uiState.selectedTiles,
                                 selectedRow = uiState.activeSelectionRow,
-                                rowId = null,
-                                onSelectionChange = { tile, selected, rowId ->
-                                    viewModel.onTileSelected(
-                                        tile = tile,
-                                        selected = selected
-                                    )
-                                },
-                                onRowClick = { clickedRowId ->
-                                    viewModel.moveTiles(boardSetId = clickedRowId)
-                                }
+                                rowId = null
                             )
 
                             Spacer(Modifier.height(14.dp))
@@ -164,8 +156,9 @@ fun GameScreen(
 
                                 Button(
                                     onClick = {
-                                        viewModel.endTurn()
+                                        onEvent(GameUIEvent.EndTurn)
                                     },
+                                    enabled = uiState.isActivePlayer,
                                     modifier = Modifier
                                         .weight(1f)
                                         .height(52.dp)
@@ -180,8 +173,9 @@ fun GameScreen(
 
                                 IconButton(
                                     onClick = {
-                                        viewModel.drawTile()
+                                        onEvent(GameUIEvent.DrawTile)
                                     },
+                                    enabled = uiState.isActivePlayer,
                                     modifier = Modifier
                                         .size(52.dp)
                                         .clip(RoundedCornerShape(14.dp))
@@ -193,8 +187,9 @@ fun GameScreen(
 
                                 IconButton(
                                     onClick = {
-                                        viewModel.resetSelection()
+                                        onEvent(GameUIEvent.ResetSelection)
                                     },
+                                    enabled = uiState.isActivePlayer,
                                     modifier = Modifier
                                         .size(52.dp)
                                         .clip(RoundedCornerShape(14.dp))
