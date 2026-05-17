@@ -1,5 +1,6 @@
 package at.aau.serg.android.ui.screens.game
 
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import at.aau.serg.android.core.datastore.ProtoStore
@@ -17,7 +18,6 @@ import at.aau.serg.android.ui.state.LoadState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import shared.models.game.domain.BoardSet
@@ -45,17 +45,20 @@ class GameViewModel(
         viewModelScope.launch {
             userStore.data.collect { user ->
                 _uiState.update { it.copy(user = user) }
-                loadGame()
-                startSocket(user.gameId)
             }
         }
+        loadGame()
     }
 
     private fun startSocket(gameId: String) {
         socketJob?.cancel()
 
         socketJob = viewModelScope.launch {
-            socket.subscribe(gameId).collect { handleGameSocketEvent(it) }
+            try {
+                socket.subscribe(gameId).collect { handleGameSocketEvent(it) }
+            } catch (_: Throwable) {
+                // Connection failed silently — socket is best-effort
+            }
         }
     }
 
@@ -82,7 +85,7 @@ class GameViewModel(
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
-            val user = userStore.data.first()
+            val user = _uiState.value.user ?: return@launch
 
             try {
                 val gameState = gameService.loadGame(user.gameId).toDomain()
@@ -90,6 +93,7 @@ class GameViewModel(
                 _uiState.update {
                     it.copy(loadState = LoadState.Success)
                 }
+                startSocket(user.gameId)
             } catch (e: Throwable) {
                 val appError = NetworkErrorMapper.map(e)
 
@@ -221,7 +225,6 @@ class GameViewModel(
                 activeSelectionRow = null
             )
         }
-        println("RESET clicked")
     }
 
     fun drawTile() {
@@ -229,7 +232,7 @@ class GameViewModel(
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
-            val user = userStore.data.first()
+            val user = _uiState.value.user ?: return@launch
 
             try {
                 val gameState = gameService.drawTile(user.gameId, user.uid).toDomain()
@@ -255,14 +258,12 @@ class GameViewModel(
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
-            val user = userStore.data.first()
+            val user = _uiState.value.user ?: return@launch
 
             try {
                 val gameState = gameService.endTurn(
                     user.gameId,
-                    user.uid,
-
-                    ).toDomain()
+                    user.uid).toDomain()
                 applyGameState(gameState)
                 _uiState.update {
                     it.copy(
@@ -283,7 +284,7 @@ class GameViewModel(
 
     fun sendTurnDraft() {
         viewModelScope.launch {
-            val user = userStore.data.first()
+            val user = _uiState.value.user ?: return@launch
 
             try {
                 val request = UpdateDraftRequest(
@@ -294,6 +295,7 @@ class GameViewModel(
                     gameId = user.gameId,
                     request = request
                 )
+                _uiState.update { it.copy(loadState = LoadState.Success) }
             } catch (e: Throwable) {
                 val appError = NetworkErrorMapper.map(e)
 
@@ -307,17 +309,22 @@ class GameViewModel(
     internal fun handleGameSocketEvent(event: GameEvent) {
         when (event) {
             is GameEvent.DraftUpdated -> {
-                viewModelScope.launch {
-                    val user = userStore.data.first()
-                    if (user.uid == event.payload.playerId) return@launch
+                val user = _uiState.value.user ?: return
+                if (user.uid == event.payload.playerId) return
 
-                    _uiState.update {
-                        it.copy(boardSets = event.payload.draft.draftBoard.map { it.toDomain() })
-                    }
+                val boardSets = try {
+                    event.payload.draft.draftBoard.map { it.toDomain() }
+                } catch (_: Throwable) {
+                    return
                 }
+                _uiState.update { it.copy(boardSets = boardSets) }
             }
 
-            is GameEvent.Ended -> TODO()
+            is GameEvent.Ended -> {
+                _uiState.update {
+                    it.copy(winnerUserId = event.payload.winnerUserId)
+                }
+            }
 
             is GameEvent.TurnChanged -> {
                 _uiState.update { state ->
@@ -330,27 +337,28 @@ class GameViewModel(
             }
 
             is GameEvent.TurnTimedOut -> {
-                viewModelScope.launch {
-                    val user = userStore.data.first()
-
-                    if (user.uid == event.payload.previousTurnPlayerId) {
-                        _uiState.update {
-                            it.copy(loadState = LoadState.Error(AppError.Game.TurnTimedOut))
-                        }
+                val user = _uiState.value.user ?: return
+                if (user.uid == event.payload.previousTurnPlayerId) {
+                    _uiState.update {
+                        it.copy(loadState = LoadState.Error(AppError.Game.TurnTimedOut))
                     }
                 }
             }
 
             is GameEvent.Updated -> {
-                _uiState.update {
-                    it.copy(gameState = event.payload.game.toDomain())
+                val gameState = try {
+                    event.payload.game.toDomain()
+                } catch (_: Throwable) {
+                    return
                 }
+                _uiState.update { it.copy(gameState = gameState) }
             }
 
             else -> {}
         }
     }
 
+    @VisibleForTesting
     fun setUiStateForTest(state: GameUiState) {
         _uiState.value = state
     }
