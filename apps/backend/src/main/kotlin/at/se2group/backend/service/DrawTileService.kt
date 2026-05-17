@@ -40,6 +40,7 @@ class DrawTileService(
         const val NOT_ACTIVE_PLAYER = "User is not the active player"
         const val DRAFT_NOT_FOUND = "Draft not found"
         const val NOT_DRAFT_OWNER = "Draft belongs to a different user"
+        const val TILE_ALREADY_DRAWN = "Player has already drawn a tile this turn"
         const val DRAW_PILE_EMPTY = "Draw pile is empty"
     }
 
@@ -60,10 +61,11 @@ class DrawTileService(
 
         check(draftEntity.playerUserId == playerId) { NOT_DRAFT_OWNER }
 
+        val draft = draftEntity.toDraftDomain()
+        check(draft.drawnTile == null) { TILE_ALREADY_DRAWN }
         check(game.drawPile.isNotEmpty()) { DRAW_PILE_EMPTY }
 
         val drawnTile = game.drawPile.first()
-        val draft = draftEntity.toDraftDomain()
 
         val updatedPlayers = game.players.map { player ->
             if (player.userId == playerId) {
@@ -82,6 +84,7 @@ class DrawTileService(
         val updatedDraft = turnDraftRepository.save(
             draft.copy(
                 rackTiles = draft.rackTiles + drawnTile,
+                drawnTile = drawnTile,
                 version = draftEntity.version + 1
             ).toEntity(draftEntity)
         ).toDraftDomain()

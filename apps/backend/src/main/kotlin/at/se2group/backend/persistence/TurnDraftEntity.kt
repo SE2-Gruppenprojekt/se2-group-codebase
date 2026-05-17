@@ -12,6 +12,9 @@ class TurnDraftEntity(
 
     var version: Long = 0,
 
+    @Embedded
+    var drawnTile: TileEmbeddable? = null,
+
     @ElementCollection
     var rackTiles: MutableList<TileEmbeddable> = mutableListOf(),
 

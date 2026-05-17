@@ -22,6 +22,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.never
+import org.mockito.ArgumentCaptor
 import java.util.Optional
 import java.time.Instant
 
@@ -101,11 +102,13 @@ class DrawTileServiceTest {
         gameId: String = "game-1",
         playerUserId: String = "user-1",
         version: Long = 0,
+        drawnTile: TileEmbeddable? = null,
         rackTiles: MutableList<TileEmbeddable> = mutableListOf(),
     ) = TurnDraftEntity(
         gameId = gameId,
         playerUserId = playerUserId,
         version = version,
+        drawnTile = drawnTile,
         rackTiles = rackTiles
     )
 
@@ -203,6 +206,23 @@ class DrawTileServiceTest {
         }
 
         assertEquals("Draw pile is empty", exception.message)
+    }
+
+    @Test
+    fun `rejects draw when player already drew a tile this turn`() {
+        val entity = gameEntity(drawPile = mutableListOf(tileEmbeddable("tile-2")))
+        `when`(gameRepository.findById("game-1"))
+            .thenReturn(Optional.of(entity))
+        `when`(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(draftEntity(drawnTile = tileEmbeddable("tile-1")))
+
+        val exception = assertThrows<IllegalStateException> {
+            drawTileService.drawTile("game-1", "user-1")
+        }
+
+        assertEquals("Player has already drawn a tile this turn", exception.message)
+        verify(gameRepository, never()).save(any())
+        verify(turnDraftRepository, never()).save(any())
     }
 
     @Test
@@ -305,6 +325,27 @@ class DrawTileServiceTest {
         drawTileService.drawTile("game-1", "user-1")
 
         verify(turnDraftRepository).save(any())
+    }
+
+    @Test
+    fun `persists drawn tile marker on current draft after successful draw`() {
+        val tile = tileEmbeddable("tile-1")
+        val entity = gameEntity(drawPile = mutableListOf(tile))
+        val currentDraft = draftEntity(version = 3)
+        `when`(gameRepository.findById("game-1"))
+            .thenReturn(Optional.of(entity))
+        `when`(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(currentDraft)
+        `when`(gameRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+        `when`(turnDraftRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+
+        drawTileService.drawTile("game-1", "user-1")
+
+        val captor = ArgumentCaptor.forClass(TurnDraftEntity::class.java)
+        verify(turnDraftRepository).save(captor.capture())
+        assertEquals("tile-1", captor.value.drawnTile?.tileId)
     }
 
     @Test

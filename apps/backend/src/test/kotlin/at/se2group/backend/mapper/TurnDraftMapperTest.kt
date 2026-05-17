@@ -147,6 +147,7 @@ class TurnDraftMapperTest {
                     )
                 )
             ),
+            drawnTile = numbered("tile-drawn", TileColor.BLUE, 6),
             rackTiles = listOf(joker("tile-3", TileColor.RED)),
             version = 5
         )
@@ -155,6 +156,7 @@ class TurnDraftMapperTest {
 
         assertSame(existing, mapped)
         assertEquals(5, mapped.version)
+        assertEquals("tile-drawn", mapped.drawnTile?.tileId)
         assertEquals(1, mapped.boardSets.size)
         assertEquals("new-set", mapped.boardSets.single().boardSetId)
         assertEquals(BoardSetType.GROUP, mapped.boardSets.single().type)
@@ -167,7 +169,8 @@ class TurnDraftMapperTest {
         val entity = TurnDraftEntity(
             gameId = "game-1",
             playerUserId = "user-1",
-            version = 11
+            version = 11,
+            drawnTile = TileEmbeddable("tile-drawn", TileColor.ORANGE, null, true)
         )
         entity.boardSets.add(
             TurnDraftBoardSetEntity(
@@ -189,6 +192,7 @@ class TurnDraftMapperTest {
         assertEquals("game-1", draft.gameId)
         assertEquals("user-1", draft.playerUserId)
         assertEquals(11, draft.version)
+        assertEquals(joker("tile-drawn", TileColor.ORANGE), draft.drawnTile)
         assertEquals("set-1", draft.boardSets.single().boardSetId)
         assertEquals(BoardSetType.GROUP, draft.boardSets.single().type)
         assertEquals(numbered("tile-1", TileColor.RED, 10), draft.boardSets.single().tiles[0])
