@@ -15,4 +15,7 @@ data class GameUiState(
     val selectedTiles: Set<Tile> = emptySet(),
     val activeSelectionRow: String? = null,
     val gameState: ConfirmedGame? = null
-)
+) {
+    val isActivePlayer: Boolean
+        get() = user != null && gameState?.currentPlayerUserId == user.uid
+}
