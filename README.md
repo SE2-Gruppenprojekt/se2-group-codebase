@@ -4,21 +4,14 @@
 
 ## Status
 
-### CI
+Current CI and quality-gate status across the monorepo:
 
-[![Backend CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/backend.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/backend.yml)
-
-[![Frontend CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/android.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/android.yml)
-
-[![Shared CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/shared.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/shared.yml)
-
-### SonarCloud
-
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=SE2-Gruppenprojekt_se2-group-codebase&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=SE2-Gruppenprojekt_se2-group-codebase)
-
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=se2-gruppenprojekt_se2-group-codebase_frontend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=se2-gruppenprojekt_se2-group-codebase_frontend)
-
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=se2-gruppenprojekt_se2-group-codebase_backend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=se2-gruppenprojekt_se2-group-codebase_backend)
+| Area | GitHub Actions | SonarCloud |
+| --- | --- | --- |
+| Monorepo | — | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=SE2-Gruppenprojekt_se2-group-codebase&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=SE2-Gruppenprojekt_se2-group-codebase) |
+| Backend | [![Backend CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/backend.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/backend.yml) | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=se2-gruppenprojekt_se2-group-codebase_backend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=se2-gruppenprojekt_se2-group-codebase_backend) |
+| Android Frontend | [![Frontend CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/android.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/android.yml) | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=se2-gruppenprojekt_se2-group-codebase_frontend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=se2-gruppenprojekt_se2-group-codebase_frontend) |
+| Shared | [![Shared CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/shared.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/shared.yml) | — |
 
 ## Project Status
 
