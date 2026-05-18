@@ -1,5 +1,6 @@
 package at.se2group.backend.api
 
+import at.se2group.backend.service.InvalidTurnSubmissionException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -64,6 +65,20 @@ class GlobalExceptionHandler {
                 ApiErrorResponse(
                     errorCode = "FORBIDDEN",
                     errorMessage = ex.message ?: "Access denied"
+                )
+            )
+    }
+
+    @ExceptionHandler(InvalidTurnSubmissionException::class)
+    fun handleInvalidTurnSubmission(
+        ex: InvalidTurnSubmissionException
+    ): ResponseEntity<ApiErrorResponse> {
+        return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(
+                ApiErrorResponse(
+                    errorCode = "INVALID_TURN_SUBMISSION",
+                    errorMessage = ex.message ?: "Submitted draft is invalid"
                 )
             )
     }
