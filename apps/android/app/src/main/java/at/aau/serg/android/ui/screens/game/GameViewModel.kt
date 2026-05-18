@@ -55,11 +55,7 @@ class GameViewModel(
         socketJob?.cancel()
 
         socketJob = viewModelScope.launch {
-            try {
-                socket.subscribe(gameId).collect { handleGameSocketEvent(it) }
-            } catch (_: Throwable) {
-                // Connection failed silently — socket is best-effort
-            }
+            socket.subscribe(gameId).collect { handleGameSocketEvent(it) }
         }
     }
 
@@ -86,10 +82,9 @@ class GameViewModel(
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
-            val user = _uiState.value.user
-                ?: throw IllegalStateException("User must not be null when loadGame is called.")
-
             try {
+                val user = _uiState.value.user
+                    ?: throw IllegalStateException("User must not be null when loadGame is called.")
                 val gameState = gameService.loadGame(user.gameId).toDomain()
                 applyGameState(gameState)
                 _uiState.update {
@@ -234,10 +229,9 @@ class GameViewModel(
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
-            val user = _uiState.value.user
-                ?: throw IllegalStateException("User must not be null when drawTile is called.")
-
             try {
+                val user = _uiState.value.user
+                    ?: throw IllegalStateException("User must not be null when drawTile is called.")
                 val gameState = gameService.drawTile(user.gameId, user.uid).toDomain()
                 applyGameState(gameState)
                 _uiState.update {
@@ -261,10 +255,9 @@ class GameViewModel(
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
-            val user = _uiState.value.user
-                ?: throw IllegalStateException("User must not be null when endTurn is called.")
-
             try {
+                val user = _uiState.value.user
+                    ?: throw IllegalStateException("User must not be null when endTurn is called.")
                 val gameState = gameService.endTurn(
                     user.gameId,
                     user.uid).toDomain()
@@ -288,10 +281,9 @@ class GameViewModel(
 
     fun sendTurnDraft() {
         viewModelScope.launch {
-            val user = _uiState.value.user
-                ?: throw IllegalStateException("User must not be null when sendTurnDraft is called.")
-
             try {
+                val user = _uiState.value.user
+                    ?: throw IllegalStateException("User must not be null when sendTurnDraft is called.")
                 val request = UpdateDraftRequest(
                     boardSets = uiState.value.boardSets.map { it.toRequest() },
                     rackTiles = uiState.value.rackTiles.map { it.toRequest() }
