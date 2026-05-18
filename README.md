@@ -18,6 +18,10 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=se2-gruppenprojekt_se2-group-codebase_frontend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=se2-gruppenprojekt_se2-group-codebase_frontend)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=se2-gruppenprojekt_se2-group-codebase_backend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=se2-gruppenprojekt_se2-group-codebase_backend)
 
+![Pull Requests](https://img.shields.io/github/issues-pr/SE2-Gruppenprojekt/se2-group-codebase)
+![Issues](https://img.shields.io/github/issues/SE2-Gruppenprojekt/se2-group-codebase)
+![Milestones](https://img.shields.io/github/milestones/all/SE2-Gruppenprojekt/se2-group-codebase)
+
 [![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=se2-gruppenprojekt_se2-group-codebase_backend)
 
 ## Overview
