@@ -105,11 +105,14 @@ class TurnDraftService(
 
         val proposedDraft = request.toDraftDomain(gameId, userId)
 
-        tileConservationService.validate(
+        val conservationResult = tileConservationService.validate(
             confirmedGame = game,
             activePlayerUserId = userId,
             candidateDraft = proposedDraft
         )
+        require(conservationResult.isValid) {
+            conservationResult.violations.first().message
+        }
         val updatedDraft = turnDraftRepository.save(
             proposedDraft.copy(
                 version = draftEntity.version + 1,
