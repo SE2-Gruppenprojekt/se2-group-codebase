@@ -8,6 +8,8 @@ import shared.models.game.domain.TileColor
 import at.se2group.backend.service.GameService
 import at.se2group.backend.service.TurnDraftService
 import at.se2group.backend.service.DrawTileService
+import at.se2group.backend.service.EndTurnService
+import at.se2group.backend.service.InvalidTurnSubmissionException
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,6 +42,9 @@ class GameControllerTest {
 
     @MockitoBean
     lateinit var drawTileService: DrawTileService
+
+    @MockitoBean
+    lateinit var endTurnService: EndTurnService
 
     @Test
     fun `getGame returns game response`() {
@@ -216,5 +221,114 @@ class GameControllerTest {
             }
     }
 
+    @Test
+    fun `endTurn returns 200 with game response`() {
+        val requestJson = """
+            {
+                "boardSets": [
+                    {
+                        "boardSetId": "set-1",
+                        "type": "RUN",
+                        "tiles": [
+                            { "tileId": "tile-1", "color": "RED", "number": 3, "isJoker": false },
+                            { "tileId": "tile-2", "color": "RED", "number": 4, "isJoker": false },
+                            { "tileId": "tile-3", "color": "RED", "number": 5, "isJoker": false }
+                        ]
+                    }
+                ],
+                "rackTiles": [
+                    { "tileId": "tile-4", "color": "BLACK", "number": 9, "isJoker": false }
+                ]
+            }
+        """.trimIndent()
+
+        val game = confirmedGame()
+
+        `when`(
+            endTurnService.endTurn(
+                eq("game-1"),
+                eq("user-1"),
+                any()
+            )
+        ).thenReturn(game)
+
+        mockMvc.post("/api/games/game-1/end-turn") {
+            header("X-User-Id", "user-1")
+            contentType = MediaType.APPLICATION_JSON
+            content = requestJson
+        }
+            .andExpect {
+                status { isOk() }
+                jsonPath("$.gameId") { value("game-1") }
+                jsonPath("$.currentPlayerUserId") { value("user-1") }
+                jsonPath("$.status") { value("ACTIVE") }
+            }
+    }
+
+    @Test
+    fun `endTurn returns 404 when game or draft does not exist`() {
+        `when`(endTurnService.endTurn(any(), any(), any()))
+            .thenThrow(NoSuchElementException("Game not found"))
+
+        mockMvc.post("/api/games/missing-game/end-turn") {
+            header("X-User-Id", "user-1")
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+                {
+                    "boardSets": [],
+                    "rackTiles": []
+                }
+            """.trimIndent()
+        }
+            .andExpect {
+                status { isNotFound() }
+                jsonPath("$.errorCode") { value("NOT_FOUND") }
+                jsonPath("$.errorMessage") { value("Game not found") }
+            }
+    }
+
+    @Test
+    fun `endTurn returns 409 when game rule is violated`() {
+        `when`(endTurnService.endTurn(any(), any(), any()))
+            .thenThrow(IllegalStateException("Game is not active"))
+
+        mockMvc.post("/api/games/game-1/end-turn") {
+            header("X-User-Id", "user-1")
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+                {
+                    "boardSets": [],
+                    "rackTiles": []
+                }
+            """.trimIndent()
+        }
+            .andExpect {
+                status { isConflict() }
+                jsonPath("$.errorCode") { value("CONFLICT") }
+                jsonPath("$.errorMessage") { value("Game is not active") }
+            }
+    }
+
+    @Test
+    fun `endTurn returns 409 when submitted draft is invalid`() {
+        `when`(endTurnService.endTurn(any(), any(), any()))
+            .thenThrow(InvalidTurnSubmissionException(emptyList()))
+
+        mockMvc.post("/api/games/game-1/end-turn") {
+            header("X-User-Id", "user-1")
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+                {
+                    "boardSets": [],
+                    "rackTiles": []
+                }
+            """.trimIndent()
+        }
+            .andExpect {
+                status { isConflict() }
+                jsonPath("$.errorCode") { value("INVALID_TURN_SUBMISSION") }
+                jsonPath("$.errorMessage") { value("Submitted draft is invalid") }
+            }
+    }
 
 }
