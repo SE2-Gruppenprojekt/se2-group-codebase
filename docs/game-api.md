@@ -59,9 +59,9 @@ Typical flow:
 1. frontend loads the game via REST
 2. frontend subscribes to the game websocket topic
 3. active player updates the draft through REST
-4. backend broadcasts draft and game updates over websocket
-5. active player submits the turn through REST
-6. backend validates, commits, and broadcasts the new state
+4. backend stores live draft updates and broadcasts them over websocket
+5. the active player can currently load game state, update the draft, and draw a tile
+6. later turn-submission flows can build on the same REST and websocket contract
 
 ---
 
@@ -237,31 +237,42 @@ This is the confirmed authoritative game state.
             ]
         }
     ],
+    "lobbyId": "lobby-456",
+    "drawPile": [],
     "drawPileCount": 54,
+    "currentPlayerUserId": "player-1",
     "currentTurnPlayerId": "player-1",
-    "turnDeadline": "2026-04-21T12:30:00Z",
-    "remainingTurnSeconds": 42,
+    "turnDeadline": null,
+    "remainingTurnSeconds": null,
     "status": "ACTIVE",
-    "winnerUserId": null
+    "createdAt": "2026-04-21T12:00:00Z",
+    "startedAt": null,
+    "finishedAt": null
 }
 ```
 
 Fields:
 
 - `gameId: String`
+- `lobbyId: String`
 - `players: List<GamePlayerResponse>`
 - `board: List<BoardSetResponse>`
+- `drawPile: List<TileResponse>`
 - `drawPileCount: Int`
+- `currentPlayerUserId: String`
 - `currentTurnPlayerId: String`
 - `turnDeadline: String | null` (ISO-8601 timestamp)
 - `remainingTurnSeconds: Int | null`
 - `status: "WAITING" | "ACTIVE" | "FINISHED" | "CANCELLED"`
-- `winnerUserId: String | null`
+- `createdAt: String` (ISO-8601 timestamp)
+- `startedAt: String | null` (ISO-8601 timestamp)
+- `finishedAt: String | null` (ISO-8601 timestamp)
 
 Notes:
 
-- using `drawPileCount` instead of returning the full pile is usually enough for the frontend
-- `remainingTurnSeconds` is optional but useful for reconnect recovery and timer display
+- the current backend returns both `drawPile` and `drawPileCount`
+- `currentTurnPlayerId` currently mirrors `currentPlayerUserId`
+- `turnDeadline` and `remainingTurnSeconds` are currently returned as `null`
 
 - possible status values currently mirror the backend `GameStatus` enum: `WAITING`, `ACTIVE`, `FINISHED`, and `CANCELLED`
 - `WAITING` is mainly relevant before active gameplay begins
@@ -408,13 +419,18 @@ Used for:
             "joinedAt": "2026-04-21T12:00:05Z"
         }
     ],
+    "lobbyId": "lobby-456",
     "board": [],
+    "drawPile": [],
     "drawPileCount": 42,
+    "currentPlayerUserId": "player-1",
     "currentTurnPlayerId": "player-1",
-    "turnDeadline": "2026-04-21T12:30:00Z",
-    "remainingTurnSeconds": 50,
+    "turnDeadline": null,
+    "remainingTurnSeconds": null,
     "status": "ACTIVE",
-    "winnerUserId": null
+    "createdAt": "2026-04-21T12:00:00Z",
+    "startedAt": null,
+    "finishedAt": null
 }
 ```
 
@@ -465,10 +481,12 @@ Used while the active player is rearranging tiles during their turn.
 
 ### Example request
 
+The current backend identifies the player through the `X-User-Id` header and
+expects this request body:
+
 ```json
 {
-    "playerId": "player-1",
-    "draftBoard": [
+    "boardSets": [
         {
             "boardSetId": "set-temp-1",
             "type": "UNRESOLVED",
@@ -482,30 +500,39 @@ Used while the active player is rearranging tiles during their turn.
             ]
         }
     ],
-    "draftHand": [
+    "rackTiles": [
         {
             "tileId": "tile-010",
             "color": "ORANGE",
             "number": 5,
             "isJoker": false
         }
-    ],
-    "version": 2
+    ]
 }
 ```
 
 Fields:
 
-- `playerId: String`
-- `draftBoard: List<BoardSetResponse>`
-- `draftHand: List<TileResponse>`
-- `version: Long`
+- `boardSets: List<BoardSetRequest>`
+- `rackTiles: List<TileRequest>`
+
+`BoardSetRequest` fields:
+
+- `boardSetId: String`
+- `type: "GROUP" | "RUN" | "UNRESOLVED"`
+- `tiles: List<TileRequest>`
+
+`TileRequest` fields:
+
+- `tileId: String`
+- `color: String`
+- `number: Int | null`
+- `isJoker: Boolean`
 
 ### Response type
 
 - `200 OK` → `TurnDraftResponse`
 - `400 Bad Request` → `ApiErrorResponse`
-- `403 Forbidden` → `ApiErrorResponse`
 - `404 Not Found` → `ApiErrorResponse`
 - `409 Conflict` → `ApiErrorResponse`
 
@@ -675,27 +702,25 @@ Lets the active player draw a tile from the draw pile.
 
 ### Purpose
 
-Used when the player cannot or chooses not to play tiles.
+Used when the active player wants to draw the next tile from the confirmed draw
+pile.
 
-### Request type
+### Request contract
 
-`DrawTileRequest`
+The current backend controller does **not** consume a request body for this
+endpoint. The acting player is identified only through the `X-User-Id` header:
 
-```json
-{
-    "playerId": "player-1"
-}
+```http
+POST /api/games/{gameId}/draw
+X-User-Id: player-1
 ```
 
-Fields:
-
-- `playerId: String`
+The shared module currently contains `DrawTileRequest`, but the controller does
+not use it yet.
 
 ### Response type
 
 - `200 OK` → `GameResponse`
-- `400 Bad Request` → `ApiErrorResponse`
-- `403 Forbidden` → `ApiErrorResponse`
 - `404 Not Found` → `ApiErrorResponse`
 - `409 Conflict` → `ApiErrorResponse`
 
@@ -722,15 +747,39 @@ Fields:
             "joinedAt": "2026-04-21T12:00:00Z"
         }
     ],
+    "lobbyId": "lobby-456",
     "board": [],
-    "drawPileCount": 40,
+    "drawPile": [
+        {
+            "tileId": "tile-1000",
+            "color": "BLUE",
+            "number": 11,
+            "isJoker": false
+        }
+    ],
+    "drawPileCount": 1,
+    "currentPlayerUserId": "player-2",
     "currentTurnPlayerId": "player-2",
-    "turnDeadline": "2026-04-21T12:31:30Z",
-    "remainingTurnSeconds": 60,
+    "turnDeadline": null,
+    "remainingTurnSeconds": null,
     "status": "ACTIVE",
-    "winnerUserId": null
+    "createdAt": "2026-04-21T12:00:00Z",
+    "startedAt": null,
+    "finishedAt": null
 }
 ```
+
+Current backend draw behavior:
+
+- verifies that the game exists and is `ACTIVE`
+- verifies that the requesting user is part of the game
+- verifies that the requesting user is the active player
+- removes the first tile from the confirmed draw pile
+- adds it to the acting player's confirmed rack
+- advances `currentPlayerUserId` to the next player
+- returns the updated confirmed `GameResponse`
+
+The current draw implementation does **not** broadcast websocket game events yet.
 
 ---
 
@@ -821,7 +870,12 @@ This makes frontend parsing simpler and helps with reconnect and stale-event han
 
 ## 5.2 `game.draft.updated`
 
-Sent whenever the active player updates the draft.
+Sent whenever the current live turn draft is stored and broadcast by the backend.
+
+Current backend call sites:
+
+- initial game start from `LobbyService.startLobby(...)`
+- live draft updates from `TurnDraftService.updateDraft(...)`
 
 ### Event type
 
@@ -875,13 +929,13 @@ Fields:
 
 ## 5.3 `game.updated`
 
-Sent whenever the confirmed authoritative game state changes.
+Sent whenever the confirmed authoritative game state is broadcast by the backend.
 
-Typical causes:
+Current backend call sites:
 
-- valid turn commit
-- draw action if confirmed state changes
-- finished game state
+- initial game start from `LobbyService.startLobby(...)`
+
+Later game flows may use the same event for additional confirmed-state updates.
 
 ### Event type
 
@@ -895,14 +949,19 @@ Typical causes:
     "gameId": "game-123",
     "game": {
         "gameId": "game-123",
+        "lobbyId": "lobby-456",
         "players": [],
         "board": [],
+        "drawPile": [],
         "drawPileCount": 40,
+        "currentPlayerUserId": "player-2",
         "currentTurnPlayerId": "player-2",
-        "turnDeadline": "2026-04-21T12:31:30Z",
-        "remainingTurnSeconds": 60,
+        "turnDeadline": null,
+        "remainingTurnSeconds": null,
         "status": "ACTIVE",
-        "winnerUserId": null
+        "createdAt": "2026-04-21T12:00:00Z",
+        "startedAt": null,
+        "finishedAt": null
     }
 }
 ```
@@ -1011,6 +1070,12 @@ Fields:
 - active player sends `PUT /api/games/{gameId}/draft`
 - all clients receive `game.draft.updated`
 
+### On draw
+
+- active player sends `POST /api/games/{gameId}/draw`
+- current backend returns the updated confirmed game state in the REST response
+- current backend draw flow does not yet emit websocket follow-up events
+
 ### On end turn
 
 - active player sends `POST /api/games/{gameId}/end-turn`
@@ -1056,6 +1121,17 @@ Main websocket events:
 - `turn.changed`
 - `turn.timed_out` (optional)
 - `game.ended`
+
+Currently implemented REST endpoints in the backend controller:
+
+- `GET /api/games/{gameId}`
+- `PUT /api/games/{gameId}/draft`
+- `POST /api/games/{gameId}/draw`
+
+Currently emitted websocket events in backend service flow:
+
+- `game.updated`
+- `game.draft.updated`
 
 The backend remains authoritative for:
 
