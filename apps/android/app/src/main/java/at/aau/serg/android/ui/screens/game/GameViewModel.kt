@@ -323,12 +323,14 @@ class GameViewModel(
                 }
 
                 is GameEvent.TurnChanged -> {
+                    val newPlayerId = event.payload.currentTurnPlayerId
                     _uiState.update { state ->
-                        state.copy(
-                            gameState = state.gameState?.copy(
-                                currentPlayerUserId = event.payload.currentTurnPlayerId
-                            )
-                        )
+                        val updatedGameState = state.gameState?.let { game ->
+                            if (game.players.any { it.userId == newPlayerId }) {
+                                game.copy(currentPlayerUserId = newPlayerId)
+                            } else game
+                        }
+                        state.copy(gameState = updatedGameState)
                     }
                 }
 
