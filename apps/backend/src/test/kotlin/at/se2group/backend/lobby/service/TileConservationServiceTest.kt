@@ -2,10 +2,7 @@ package at.se2group.backend.lobby.service
 
 import shared.models.game.domain.*
 import at.se2group.backend.service.TileConservationService
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.Instant
 
 class TileConservationServiceTest {
@@ -37,7 +34,7 @@ class TileConservationServiceTest {
     @Test
     fun `passes when rack tiles are conserved`() {
         val tiles = listOf(n("tile-1", TileColor.RED, 1), n("tile-2", TileColor.BLUE, 2))
-        assertDoesNotThrow { tileConservationService.validate(game(rackTiles = tiles), "user-1", draft(rackTiles = tiles)) }
+        assert(tileConservationService.validate(game(rackTiles = tiles), "user-1", draft(rackTiles = tiles)).isValid)
     }
 
     @Test
@@ -46,7 +43,7 @@ class TileConservationServiceTest {
         val extra = listOf(n("tile-4", TileColor.BLUE, 3), n("tile-5", TileColor.ORANGE, 4))
         val confirmedGame = game(rackTiles = listOf(tile)+ extra)
         val candidateDraft = draft(boardTiles = listOf(tile) + extra)
-        assertDoesNotThrow { tileConservationService.validate(confirmedGame, "user-1", candidateDraft) }
+        assert(tileConservationService.validate(confirmedGame, "user-1", candidateDraft).isValid)
     }
 
     @Test
@@ -55,7 +52,7 @@ class TileConservationServiceTest {
         val extra = listOf(n("tile-7", TileColor.BLUE, 1), n("tile-8", TileColor.RED, 3))
         val confirmedGame = game(boardTiles = listOf(tile) + extra)
         val candidateDraft = draft(rackTiles = listOf(tile) + extra)
-        assertDoesNotThrow { tileConservationService.validate(confirmedGame, "user-1", candidateDraft) }
+        assert(tileConservationService.validate(confirmedGame, "user-1", candidateDraft).isValid)
     }
 
     @Test
@@ -63,9 +60,10 @@ class TileConservationServiceTest {
        val tiles = listOf(n("tile-9", TileColor.RED, 1), n("tile-10", TileColor.BLUE, 2))
         val confirmedGame = game(rackTiles = tiles)
         val candidateDraft = draft(rackTiles = listOf(n("tile-11", TileColor.RED, 2)))
-        val exception = org.junit.jupiter.api.assertThrows<IllegalArgumentException> { tileConservationService.validate(confirmedGame, "user-1", candidateDraft) }
+        val result = tileConservationService.validate(confirmedGame, "user-1", candidateDraft)
 
-        assert(exception.message!!.contains("missing"))
+        assert(!result.isValid)
+        assert(result.violations.single().message.contains("missing"))
     }
 
     @Test
@@ -74,8 +72,9 @@ class TileConservationServiceTest {
         val rackTile = n("tile-13", TileColor.BLACK, 7)
         val confirmedGame = game(boardTiles = listOf(boardTile), rackTiles = listOf(rackTile))
         val candidateDraft = draft(boardTiles = listOf(boardTile))
-        val exception = org.junit.jupiter.api.assertThrows<IllegalArgumentException> { tileConservationService.validate(confirmedGame, "user-1", candidateDraft) }
-        assert(exception.message!!.contains("missing"))
+        val result = tileConservationService.validate(confirmedGame, "user-1", candidateDraft)
+        assert(!result.isValid)
+        assert(result.violations.single().message.contains("missing"))
     }
 
     @Test
@@ -83,9 +82,10 @@ class TileConservationServiceTest {
         val tile = n("tile-14", TileColor.RED, 5)
         val confirmedGame = game(rackTiles = listOf(tile))
         val candidateDraft = draft(rackTiles = listOf(tile,tile))
-        val exception = org.junit.jupiter.api.assertThrows<IllegalArgumentException> { tileConservationService.validate(confirmedGame, "user-1", candidateDraft) }
+        val result = tileConservationService.validate(confirmedGame, "user-1", candidateDraft)
 
-        assert(exception.message!!.contains("extra"))
+        assert(!result.isValid)
+        assert(result.violations.single().message.contains("extra"))
     }
 
     @Test
@@ -93,9 +93,10 @@ class TileConservationServiceTest {
         val tile = n("tile-15", TileColor.ORANGE, 4)
         val confirmedGame = game(rackTiles = listOf(tile))
         val candidateDraft = draft(boardTiles = listOf(tile),rackTiles = listOf(tile))
-        val exception = org.junit.jupiter.api.assertThrows<IllegalArgumentException> { tileConservationService.validate(confirmedGame, "user-1", candidateDraft) }
+        val result = tileConservationService.validate(confirmedGame, "user-1", candidateDraft)
 
-        assert(exception.message!!.contains("extra"))
+        assert(!result.isValid)
+        assert(result.violations.single().message.contains("extra"))
 
     }
 
@@ -104,18 +105,20 @@ class TileConservationServiceTest {
     fun `rejects when draft contains a tile that is not allowed in the game`() {
         val confirmedGame = game(rackTiles = listOf(n("tile-16", TileColor.BLACK, 5)))
         val candidateDraft = draft(rackTiles = listOf(n("tile-17", TileColor.RED, 13)))
-        val exception = org.junit.jupiter.api.assertThrows<IllegalArgumentException> { tileConservationService.validate(confirmedGame, "user-1", candidateDraft) }
+        val result = tileConservationService.validate(confirmedGame, "user-1", candidateDraft)
 
-        assert(exception.message!!.contains("extra"))
+        assert(!result.isValid)
+        assert(result.violations.single().message.contains("extra"))
     }
 
     @Test
     fun `rejects when joker is invented in the draft`() {
         val confirmedGame = game(rackTiles = listOf(n("tile-18", TileColor.BLACK, 5)))
         val candidateDraft = draft(rackTiles = listOf(j("tile-19", TileColor.BLUE)))
-        val exception = org.junit.jupiter.api.assertThrows<IllegalArgumentException> { tileConservationService.validate(confirmedGame, "user-1", candidateDraft) }
+        val result = tileConservationService.validate(confirmedGame, "user-1", candidateDraft)
 
-        assert(exception.message!!.contains("extra"))
+        assert(!result.isValid)
+        assert(result.violations.single().message.contains("extra"))
     }
 
     private fun n(tileId: String, color: TileColor, number: Int) =
