@@ -9,12 +9,13 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.kotlin.any
-import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import shared.models.game.domain.*
 import shared.models.game.validation.RuleViolation
 import shared.models.game.validation.ValidationResult
+import shared.models.game.validation.invalid
+import shared.models.game.validation.valid
 import java.time.Instant
 
 
@@ -56,7 +57,8 @@ class RummikubRuleServiceTest {
 
     @Test
     fun `returns valid when both tile conservation and board validation pass`() {
-        whenever(boardValidationService.validate(any())).thenReturn(ValidationResult())
+        whenever(tileConservationService.validate(any(), any(), any())).thenReturn(valid())
+        whenever(boardValidationService.validate(any())).thenReturn(valid())
 
         val result = ruleService.validateSubmittedDraft(
             confirmedGame = confirmedGame,
@@ -70,7 +72,8 @@ class RummikubRuleServiceTest {
 
     @Test
     fun `invokes tile conservation service`() {
-        whenever(boardValidationService.validate(any())).thenReturn(ValidationResult())
+        whenever(tileConservationService.validate(any(), any(), any())).thenReturn(valid())
+        whenever(boardValidationService.validate(any())).thenReturn(valid())
 
         ruleService.validateSubmittedDraft(
             confirmedGame = confirmedGame,
@@ -83,7 +86,8 @@ class RummikubRuleServiceTest {
 
     @Test
     fun `invokes board validation service`() {
-        whenever(boardValidationService.validate(any())).thenReturn(ValidationResult())
+        whenever(tileConservationService.validate(any(), any(), any())).thenReturn(valid())
+        whenever(boardValidationService.validate(any())).thenReturn(valid())
 
         ruleService.validateSubmittedDraft(
             confirmedGame = confirmedGame,
@@ -96,8 +100,9 @@ class RummikubRuleServiceTest {
 
     @Test
     fun `returns invalid when tile conservation fails`() {
-        whenever(boardValidationService.validate(any())).thenReturn(ValidationResult())
-        doThrow(IllegalArgumentException("tile mismatch")).whenever(tileConservationService).validate(any(), any(), any())
+        whenever(tileConservationService.validate(any(), any(), any()))
+            .thenReturn(invalid("TILE_CONSERVATION_VIOLATION", "tile mismatch"))
+        whenever(boardValidationService.validate(any())).thenReturn(valid())
 
         val result = ruleService.validateSubmittedDraft(
             confirmedGame = confirmedGame,
@@ -112,6 +117,7 @@ class RummikubRuleServiceTest {
 
     @Test
     fun `returns invalid when board validation fails`() {
+        whenever(tileConservationService.validate(any(), any(), any())).thenReturn(valid())
         val boardViolation = RuleViolation(
             code = "RUN_MIN_SIZE",
             message = "Run must have at least 3 tiles",
@@ -133,14 +139,14 @@ class RummikubRuleServiceTest {
 
     @Test
     fun `returns invalid when both tile conservation and board validation fail`() {
+        whenever(tileConservationService.validate(any(), any(), any()))
+            .thenReturn(invalid("TILE_CONSERVATION_VIOLATION", "tile mismatch"))
         val boardViolation = RuleViolation(
             code = "RUN_MIN_SIZE",
             message = "Run must have at least 3 tiles",
         )
         whenever(boardValidationService.validate(any()))
             .thenReturn(ValidationResult(violations = listOf(boardViolation)))
-        doThrow(IllegalArgumentException("tile mismatch"))
-            .whenever(tileConservationService).validate(any(), any(), any())
 
 
         val result = ruleService.validateSubmittedDraft(

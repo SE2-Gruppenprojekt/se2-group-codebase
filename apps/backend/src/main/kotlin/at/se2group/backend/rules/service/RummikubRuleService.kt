@@ -69,15 +69,9 @@ class RummikubRuleService(
     ): ValidationResult {
         val violations = mutableListOf<RuleViolation>()
 
-        try {
-            tileConservationService.validate(confirmedGame, actingPlayerUserId, submittedDraft)
-
-        } catch (e: IllegalArgumentException) {
-            violations += RuleViolation(
-                code = "TILE_CONSERVATION_VIOLATION",
-                message = e.message ?: "Tile conservation check failed"
-            )
-        }
+        violations += tileConservationService
+            .validate(confirmedGame, actingPlayerUserId, submittedDraft)
+            .violations
 
         violations += boardValidationService
             .validate(submittedDraft.boardSets)
