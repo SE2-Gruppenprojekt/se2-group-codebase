@@ -111,7 +111,10 @@ class TurnDraftService(
             candidateDraft = proposedDraft
         )
         val updatedDraft = turnDraftRepository.save(
-            proposedDraft.copy(version = draftEntity.version + 1).toEntity(draftEntity)
+            proposedDraft.copy(
+                version = draftEntity.version + 1,
+                drawnTile = draftEntity.drawnTile?.toDomain()
+            ).toEntity(draftEntity)
         ).toDomain()
 
         afterCommitExecutor.execute {
