@@ -2,17 +2,6 @@
 
 > Monorepo for our SE2 group project: a Rummikub-inspired multiplayer game with an **Android frontend** and a **Spring Boot backend**, both written in **Kotlin**.
 
-## Status
-
-Current CI and quality-gate status across the monorepo:
-
-| Area | GitHub Actions | SonarCloud |
-| --- | --- | --- |
-| Monorepo | — | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=SE2-Gruppenprojekt_se2-group-codebase&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=SE2-Gruppenprojekt_se2-group-codebase) |
-| Backend | [![Backend CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/backend.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/backend.yml) | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=se2-gruppenprojekt_se2-group-codebase_backend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=se2-gruppenprojekt_se2-group-codebase_backend) |
-| Android Frontend | [![Frontend CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/android.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/android.yml) | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=se2-gruppenprojekt_se2-group-codebase_frontend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=se2-gruppenprojekt_se2-group-codebase_frontend) |
-| Shared | [![Shared CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/shared.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/shared.yml) | — |
-
 ## Project Status
 
 ![Platform](https://img.shields.io/badge/platform-Android-brightgreen)
@@ -20,6 +9,15 @@ Current CI and quality-gate status across the monorepo:
 ![Language](https://img.shields.io/badge/language-Kotlin-7F52FF)
 ![Build](https://img.shields.io/badge/build-Gradle-02303A)
 ![Project Type](https://img.shields.io/badge/project-SE2-blue)
+
+[![Backend CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/backend.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/backend.yml)
+[![Frontend CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/android.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/android.yml)
+[![Shared CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/shared.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/shared.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=SE2-Gruppenprojekt_se2-group-codebase&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=SE2-Gruppenprojekt_se2-group-codebase)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=se2-gruppenprojekt_se2-group-codebase_frontend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=se2-gruppenprojekt_se2-group-codebase_frontend)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=se2-gruppenprojekt_se2-group-codebase_backend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=se2-gruppenprojekt_se2-group-codebase_backend)
+
+[![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=se2-gruppenprojekt_se2-group-codebase_backend)
 
 ## Overview
 
