@@ -243,6 +243,49 @@ class EndTurnServiceTest {
         verify(gameBroadcastService, never()).broadcastDraftUpdated(any())
     }
 
+    @Test
+    fun `finishes game and skips next draft when acting player rack becomes empty`() {
+        whenever(gameRepository.findById("game-1"))
+            .thenReturn(
+                Optional.of(
+                    gameEntity(
+                        user1Rack = mutableListOf(tile("old-user-1-rack")),
+                        user2Rack = mutableListOf(tile("user-2-rack"))
+                    )
+                )
+            )
+
+        whenever(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(draftEntity())
+
+        whenever(rummikubRuleService.validateSubmittedDraft(any(), any(), any()))
+            .thenReturn(valid())
+
+        whenever(gameRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+
+        val result = endTurnService.endTurn(
+            gameId = "game-1",
+            userId = "user-1",
+            request = request(rackTiles = emptyList())
+        )
+
+        assertEquals(GameStatus.FINISHED, result.status)
+        assertTrue(result.finishedAt != null)
+        assertEquals("user-1", result.currentPlayerUserId)
+        assertEquals(emptyList<String>(), result.players.first { it.userId == "user-1" }.rackTiles.map { it.tileId })
+        assertEquals(listOf("user-2-rack"), result.players.first { it.userId == "user-2" }.rackTiles.map { it.tileId })
+
+        verify(gameRepository).save(any())
+        verify(turnDraftRepository).deleteById("game-1")
+        verify(turnDraftRepository, never()).save(any())
+
+        verify(gameBroadcastService).broadcastGameUpdated(result)
+        verify(gameBroadcastService).broadcastGameEnded("game-1", "user-1")
+        verify(gameBroadcastService, never()).broadcastTurnChanged(any(), any())
+        verify(gameBroadcastService, never()).broadcastDraftUpdated(any())
+    }
+
     private fun request(
         rackTiles: List<TileRequest> = listOf(TileRequest("new-rack-tile", "BLACK", 9, false))
     ) = EndTurnRequest(
