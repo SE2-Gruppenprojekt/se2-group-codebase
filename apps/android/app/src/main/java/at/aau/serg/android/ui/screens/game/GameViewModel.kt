@@ -19,6 +19,7 @@ import at.aau.serg.android.ui.state.LoadState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import shared.models.game.domain.BoardSet
@@ -55,7 +56,12 @@ class GameViewModel(
         socketJob?.cancel()
 
         socketJob = viewModelScope.launch {
-            socket.subscribe(gameId).collect { handleGameSocketEvent(it) }
+            socket.subscribe(gameId)
+                .catch { e ->
+                    val appError = ErrorUiMapper.map(e)
+                    _uiState.update { it.copy(loadState = LoadState.Error(appError)) }
+                }
+                .collect { handleGameSocketEvent(it) }
         }
     }
 
@@ -82,9 +88,9 @@ class GameViewModel(
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
+            val user = _uiState.value.user
+                ?: throw IllegalStateException("User must not be null when loadGame is called.")
             try {
-                val user = _uiState.value.user
-                    ?: throw IllegalStateException("User must not be null when loadGame is called.")
                 val gameState = gameService.loadGame(user.gameId).toDomain()
                 applyGameState(gameState)
                 _uiState.update {
@@ -229,9 +235,9 @@ class GameViewModel(
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
+            val user = _uiState.value.user
+                ?: throw IllegalStateException("User must not be null when drawTile is called.")
             try {
-                val user = _uiState.value.user
-                    ?: throw IllegalStateException("User must not be null when drawTile is called.")
                 val gameState = gameService.drawTile(user.gameId, user.uid).toDomain()
                 applyGameState(gameState)
                 _uiState.update {
@@ -255,9 +261,9 @@ class GameViewModel(
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
+            val user = _uiState.value.user
+                ?: throw IllegalStateException("User must not be null when endTurn is called.")
             try {
-                val user = _uiState.value.user
-                    ?: throw IllegalStateException("User must not be null when endTurn is called.")
                 val gameState = gameService.endTurn(
                     user.gameId,
                     user.uid).toDomain()
@@ -281,9 +287,9 @@ class GameViewModel(
 
     fun sendTurnDraft() {
         viewModelScope.launch {
+            val user = _uiState.value.user
+                ?: throw IllegalStateException("User must not be null when sendTurnDraft is called.")
             try {
-                val user = _uiState.value.user
-                    ?: throw IllegalStateException("User must not be null when sendTurnDraft is called.")
                 val request = UpdateDraftRequest(
                     boardSets = uiState.value.boardSets.map { it.toRequest() },
                     rackTiles = uiState.value.rackTiles.map { it.toRequest() }
