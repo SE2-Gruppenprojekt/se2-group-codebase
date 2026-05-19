@@ -78,7 +78,8 @@ class GlobalExceptionHandler {
             .body(
                 ApiErrorResponse(
                     errorCode = "INVALID_TURN_SUBMISSION",
-                    errorMessage = ex.message ?: "Submitted draft is invalid"
+                    errorMessage = ex.message ?: "Submitted draft is invalid",
+                    violations = ex.violations
                 )
             )
     }

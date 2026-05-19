@@ -39,5 +39,6 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.CONFLICT, response.statusCode)
         assertEquals("INVALID_TURN_SUBMISSION", response.body?.errorCode)
         assertEquals("Submitted draft is invalid", response.body?.errorMessage)
+        assertEquals(ex.violations, response.body?.violations)
     }
 }
