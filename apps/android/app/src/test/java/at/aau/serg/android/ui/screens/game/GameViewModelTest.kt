@@ -674,4 +674,96 @@ class GameViewModelTest {
         advanceUntilIdle()
         assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
     }
+
+    @Test
+    fun applyGameState_withNullUser_setsEmptyRack() {
+        viewmodel.setUiStateForTest(GameUiState(user = null))
+        viewmodel.applyGameState(fakeGameResponse.toDomain())
+        assertTrue(viewmodel.uiState.value.rackTiles.isEmpty())
+    }
+
+    @Test
+    fun addRow_removesEmptyBoardSet_whenAllTilesFromSetSelected() = runTest {
+        setTestGameState()
+        val firstSet = viewmodel.uiState.value.boardSets.first()
+        val allTiles = firstSet.tiles.toSet()
+
+        viewmodel.setUiStateForTest(
+            viewmodel.uiState.value.copy(
+                selectedTiles = allTiles,
+                activeSelectionRow = firstSet.boardSetId
+            )
+        )
+
+        viewmodel.addRow()
+
+        assertFalse(viewmodel.uiState.value.boardSets.any { it.boardSetId == firstSet.boardSetId })
+        assertTrue(viewmodel.uiState.value.boardSets.any { set -> set.tiles.containsAll(allTiles) })
+    }
+
+    @Test
+    fun moveTiles_removesEmptyBoardSet_whenAllTilesFromSetSelected() = runTest {
+        setTestGameState()
+        val firstSet = viewmodel.uiState.value.boardSets.first()
+        val allTiles = firstSet.tiles.toSet()
+
+        viewmodel.setUiStateForTest(
+            viewmodel.uiState.value.copy(
+                selectedTiles = allTiles,
+                activeSelectionRow = firstSet.boardSetId
+            )
+        )
+
+        viewmodel.moveTiles()
+
+        assertFalse(viewmodel.uiState.value.boardSets.any { it.boardSetId == firstSet.boardSetId })
+        assertTrue(viewmodel.uiState.value.rackTiles.containsAll(allTiles))
+    }
+
+    @Test
+    fun moveInSameRow_boardRow_outOfBounds_doesNothing() = runTest {
+        setTestGameState()
+        val rowId = viewmodel.uiState.value.boardSets.first().boardSetId
+        val before = viewmodel.uiState.value
+
+        viewmodel.moveInSameRow(rowId, 0, 999)
+
+        assertEquals(before, viewmodel.uiState.value)
+    }
+
+    @Test
+    fun resetSelection_withNullGameState_onlyClearsSelection() {
+        viewmodel.setUiStateForTest(
+            GameUiState(gameState = null, selectedTiles = setOf(fakeRack[0]))
+        )
+
+        viewmodel.resetSelection()
+
+        assertTrue(viewmodel.uiState.value.selectedTiles.isEmpty())
+        assertNull(viewmodel.uiState.value.activeSelectionRow)
+    }
+
+
+@Test
+    fun handleGameSocketEvent_turnChanged_playerNotInList_keepsGameState() {
+        setTestGameState()
+        val originalGameState = viewmodel.uiState.value.gameState
+
+        viewmodel.handleGameSocketEvent(
+            GameEvent.TurnChanged(TurnChangedEvent(gameId = "Game123", currentTurnPlayerId = "NonExistentPlayer"))
+        )
+
+        assertEquals(originalGameState, viewmodel.uiState.value.gameState)
+    }
+
+    @Test
+    fun handleGameSocketEvent_turnChanged_nullGameState_doesNothing() {
+        viewmodel.setUiStateForTest(GameUiState(gameState = null))
+
+        viewmodel.handleGameSocketEvent(
+            GameEvent.TurnChanged(TurnChangedEvent(gameId = "Game123", currentTurnPlayerId = "SomePlayer"))
+        )
+
+        assertNull(viewmodel.uiState.value.gameState)
+    }
 }

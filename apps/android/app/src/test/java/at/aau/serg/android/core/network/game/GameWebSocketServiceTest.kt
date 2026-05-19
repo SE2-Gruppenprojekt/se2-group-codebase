@@ -183,4 +183,22 @@ class GameWebSocketServiceTest {
 
         io.mockk.coVerify { manager.subscribe(WebConfig.Topics.match("match42")) }
     }
+
+    @Test
+    fun dispatch_returns_null_for_malformed_json() {
+        val result = service.dispatch("not valid json {{{")
+        assertNull(result)
+    }
+
+    @Test
+    fun dispatch_returns_null_when_message_is_json_null() {
+        val result = service.dispatch("null")
+        assertNull(result)
+    }
+
+    @Test
+    fun dispatch_returns_null_when_type_is_not_a_string() {
+        val result = service.dispatch("""{"type": 123}""")
+        assertNull(result)
+    }
 }
