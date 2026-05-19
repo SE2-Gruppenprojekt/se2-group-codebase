@@ -34,6 +34,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## 3. Persistence model
 
+This group covers the durable storage layer for confirmed games and live turn drafts. It establishes the entities, repositories, and mapper boundaries the rest of the backend feature depends on.
+
 18. feat(backend)(game): add confirmed game persistence entity
 19. feat(backend)(game): add turn draft persistence entity
 20. feat(backend)(game): add confirmed game repository
@@ -45,6 +47,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 ---
 
 ## 4. Tile pool and game initialization
+
+These issues build the initial match state from a validated lobby. They cover tile generation, shuffling, hand distribution, draw-pile creation, first-player selection, and the first persisted draft.
 
 25. feat(backend)(game): add tile pool generation service
 26. feat(backend)(game): add joker tile generation logic
@@ -60,6 +64,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## 5. Match service foundation
 
+This group defines the basic backend service surface for confirmed games and live drafts. The goal is to establish the service boundaries and core load/save responsibilities before more complex gameplay logic is added.
+
 34. feat(backend)(game): add game service base structure
 35. feat(backend)(game): add turn draft service base structure
 36. feat(backend)(game): add score service base structure
@@ -71,6 +77,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 ---
 
 ## 6. Turn draft logic
+
+These issues focus on the temporary in-progress turn state that players edit during a turn. They cover draft ownership, updates, status, recreation, and timer-related draft lifecycle behavior.
 
 41. feat(backend)(game): add current turn ownership validation for draft updates
 42. feat(backend)(game): add draft update service method
@@ -90,6 +98,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## 7. Turn progression logic
 
+This group covers the non-rule mechanics of moving from one active player to the next. It includes next-player calculation, turn setup, and the state transitions needed after a completed move.
+
 54. feat(backend)(game): add next player calculation logic
 55. feat(backend)(game): add previous player helper logic if needed
 56. feat(backend)(game): add turn start setup logic
@@ -103,6 +113,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## 8. Draw and reset actions
 
+These issues cover the auxiliary turn actions outside normal tile placement. They define how drawing from the pile and resetting a draft affect confirmed game state and live draft state.
+
 56. feat(backend)(game): add draw tile service method
 57. feat(backend)(game): add draw pile empty-state handling
 58. feat(backend)(game): add player hand update after draw
@@ -114,6 +126,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## 9. Rule architecture foundation
 
+This is the base layer for the backend rule engine. It introduces the shared validation result model, reusable helpers, and the top-level rule-service boundary that later validators compose behind.
+
 62. feat(backend)(rules): add validation result model
 63. feat(backend)(rules): add rule violation model
 64. feat(backend)(rules): add base rule helper methods
@@ -122,6 +136,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 ---
 
 ## 10. Group validation
+
+These issues implement validation for group sets in Rummikub. The focus is on number equality, color uniqueness, size limits, and the first joker-specific edge cases.
 
 66. feat(backend)(rules): add group validation service
 67. feat(backend)(rules): validate group minimum size
@@ -134,6 +150,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 ---
 
 ## 11. Run validation
+
+This group implements validation for run sets. It covers ordering, color consistency, duplicate and gap detection, and joker handling for incomplete sequences.
 
 73. feat(backend)(rules): add run validation service
 74. feat(backend)(rules): validate run minimum size
@@ -148,6 +166,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## 12. Set and board validation
 
+These issues sit above group and run validation and decide how a full board is checked. They cover unresolved-set routing, board-wide aggregation, and rejection of illegal final board states.
+
 81. feat(backend)(rules): add set validation router
 82. feat(backend)(rules): resolve unresolved set type before validation
 83. feat(backend)(rules): route resolved group and run sets to the correct validator
@@ -161,6 +181,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## 13. Tile conservation and move integrity
 
+This group protects the core integrity rule of turn editing: players may rearrange allowed tiles, but must not invent, lose, or duplicate them. It compares confirmed server state against the submitted or updated draft.
+
 89. feat(backend)(rules): add tile conservation validation service
 90. feat(backend)(rules): compare confirmed board and draft board tile ids
 91. feat(backend)(rules): compare active hand and draft hand tile ids
@@ -172,6 +194,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## 14. First move rules
 
+These issues cover the special rules for a player's first valid meld. They are intentionally separated from generic set validation because they depend on player progression state and first-move-specific score rules.
+
 95. feat(backend)(rules): add first move validation service
 96. feat(backend)(rules): skip first move validation for players who already completed initial meld
 97. feat(backend)(rules): add initial meld minimum points validation
@@ -180,6 +204,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 ---
 
 ## 15. Top-level rule orchestration
+
+This group connects the lower-level validators into one backend-facing validation flow. The goal is to create one orchestration service that later end-turn logic can call without knowing the internal validator structure.
 
 99. feat(backend)(rules): add submitted draft validation flow
 100. feat(backend)(rules): call tile conservation validation from top-level rule service
@@ -190,6 +216,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 ---
 
 ## 16. Submit / end-turn commit flow
+
+These issues implement the strict submission path that turns a validated draft into the next confirmed game state. They cover loading the submitted draft, validation before commit, state persistence, and next-draft creation.
 
 104. feat(backend)(game): add submitted draft load in end-turn flow
 105. feat(backend)(game): validate submitted draft before commit
@@ -204,6 +232,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## 17. Game end and scoring
 
+This group covers terminal match state and result calculation. It defines how winners are detected, how final status is persisted, and how score-related data becomes part of the confirmed game state.
+
 112. feat(backend)(game): add winner detection logic
 113. feat(backend)(game): detect empty-hand win condition
 114. feat(backend)(game): add game status transition to finished
@@ -216,6 +246,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## 18. WebSocket infrastructure
 
+These issues establish the underlying realtime transport layer for the game feature. They cover dependencies, configuration, topic conventions, and the `/ws` endpoint itself.
+
 119. feat(backend)(game)(websocket): add websocket dependency
 120. feat(backend)(game)(websocket): add websocket configuration
 121. feat(backend)(game)(websocket): add websocket endpoint /ws
@@ -225,6 +257,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 ---
 
 ## 19. WebSocket event payloads
+
+This group defines the transport models sent over the game websocket topic. The goal is to make each game event explicit and stable before wiring them into service flows.
 
 124. feat(backend)(game)(websocket): add game draft updated event dto
 125. feat(backend)(game)(websocket): add game updated event dto
@@ -236,6 +270,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## 20. Game broadcast service
 
+These issues add the backend service responsible for emitting websocket events. It should encapsulate topic naming and message payload creation so application services do not build websocket messages directly.
+
 128. feat(backend)(game)(websocket): add game broadcast service
 129. feat(backend)(game)(websocket): add draft updated broadcast method
 130. feat(backend)(game)(websocket): add game updated broadcast method
@@ -246,6 +282,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 ---
 
 ## 21. WebSocket emissions from service flow
+
+This group wires websocket broadcasting into actual gameplay services. It documents when draft, game, turn-change, timeout, and end-game events should be emitted after backend state changes.
 
 133. feat(backend)(game)(websocket): emit game.draft.updated after draft update
 134. feat(backend)(game)(websocket): emit game.updated after valid turn commit
@@ -259,6 +297,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## 22. REST API foundation
 
+These issues establish the HTTP controller layer for the match feature. They define which game endpoints exist and create the basic REST surface over the internal backend services.
+
 139. feat(backend)(game)(rest-api): add game controller
 140. feat(backend)(game)(rest-api): add get confirmed game endpoint
 141. feat(backend)(game)(rest-api): add update draft endpoint
@@ -269,6 +309,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 ---
 
 ## 23. REST request / response mapping
+
+This group maps transport DTOs to domain input and domain state back to API responses. It is the translation layer that keeps HTTP payload shapes separate from internal backend models.
 
 145. feat(backend)(game)(rest-api): add game response mapper
 146. feat(backend)(game)(rest-api): add turn draft response mapper
@@ -282,6 +324,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## 24. Error handling
 
+These issues make the match API fail consistently and predictably. They define the error payload shape and map common backend exceptions to stable HTTP status codes.
+
 151. feat(backend)(game): add match api error response dto
 152. feat(backend)(game): add global exception handler for match api
 153. feat(backend)(game): map invalid input exceptions to bad request
@@ -293,6 +337,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## 25. Security and ownership checks
 
+This group covers authorization and command ownership inside the game feature. The focus is on ensuring that only the correct active player can mutate the current match or draft state.
+
 157. feat(backend)(game): validate active player ownership for draft update
 158. feat(backend)(game): validate active player ownership for end turn
 159. feat(backend)(game): validate active player ownership for draw tile
@@ -302,6 +348,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 ---
 
 ## 26. Reconnect and recovery support
+
+These issues make the backend reconnect-safe for clients that temporarily disconnect. They cover loading confirmed game state, recovering the latest draft, and exposing enough metadata for recovery and conflict handling.
 
 162. feat(backend)(game): support loading confirmed game for reconnect
 163. feat(backend)(game): support loading current draft for reconnect
@@ -314,6 +362,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## 27. Testing fixtures and utilities
 
+This group provides shared test data builders and helpers for the match feature. Good fixtures reduce duplication and make later unit and integration tests much easier to read and maintain.
+
 167. test(backend)(game): add shared tile test fixtures
 168. test(backend)(game): add shared board set test fixtures
 169. test(backend)(game): add shared game test fixtures
@@ -323,6 +373,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 ---
 
 ## 28. Rule unit tests
+
+These issues cover isolated testing of the backend rule engine. They should verify group, run, set, board, tile-conservation, and top-level orchestration behavior without involving transport or persistence layers.
 
 172. test(backend)(rules): add group validation tests
 173. test(backend)(rules): add run validation tests
@@ -336,6 +388,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 ---
 
 ## 29. Service unit tests
+
+This group focuses on backend application-service behavior outside the controller layer. It covers initialization, draft updates, draw actions, turn progression, game finishing, and timer-related logic.
 
 179. test(backend)(game): add game initialization service tests
 180. test(backend)(game): add turn draft service tests
@@ -352,6 +406,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## 30. Controller and error handling tests
 
+These issues test the REST surface and the exception mapping around it. The goal is to verify endpoint behavior, status codes, and error payloads from the outside in.
+
 187. test(backend)(game)(rest-api): add game controller tests
 188. test(backend)(game)(rest-api): add update draft endpoint tests
 189. test(backend)(game)(rest-api): add end turn endpoint tests
@@ -362,6 +418,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 ---
 
 ## 31. WebSocket tests
+
+This group verifies websocket configuration and emitted event payloads. It should ensure that the transport layer matches the documented topic names and DTO shapes.
 
 193. test(backend)(game)(websocket): add broadcast service tests
 194. test(backend)(game)(websocket): test game.draft.updated topic and payload
@@ -375,12 +433,16 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## 32. Smoke / integration basics
 
+These are lightweight end-to-end wiring checks for the backend match module. They are useful for catching obvious configuration or dependency breakage early, even before deeper integration coverage exists.
+
 199. test(backend): add backend context smoke test for match module
 200. test(backend): add simple match module wiring smoke test
 
 ---
 
 ## 33. Documentation issues
+
+This group tracks the documentation work needed to explain the backend game feature clearly. It covers architecture, models, lifecycle flows, validation, realtime communication, and API behavior.
 
 201. docs(backend)(game): add backend game architecture overview
 202. docs(backend)(game): document confirmed game state model
@@ -397,6 +459,8 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## 34. Nice optional extras
 
+These issues are useful cleanup and maintainability improvements that are not critical for the first working version. They mainly improve readability, reuse, logging, and long-term operability.
+
 209. chore(backend)(game): add game topic helper constant
 210. chore(backend)(game): add draft version conflict handling helper
 211. chore(backend)(game): add common game exception classes
@@ -409,9 +473,13 @@ The backend should consume these DTO classes from `apps/shared` instead of keepi
 
 ## Suggested implementation order plan for the backend parent issue groupings
 
+This section groups the backend issue families into a practical implementation sequence. It is meant to reduce coordination overhead and help the team build dependencies in a stable order.
+
 A good implementation order for the backend parent issue groups is:
 
 ### 1. Shared monorepo model and transport layer
+
+This phase establishes the shared source of truth for game models and DTOs before backend or frontend implementation diverges.
 
 Start with:
 
@@ -423,6 +491,8 @@ Why first:
 
 ### 2. Persistence and initialization
 
+This phase makes the backend capable of creating and storing a real match. It provides the first durable game state that later services can operate on.
+
 Then implement:
 
 - Persistence model
@@ -433,6 +503,8 @@ Why here:
 - the backend needs to be able to create, save, and load a real match before turn logic can work
 
 ### 3. Service foundations
+
+This phase builds the non-rule service backbone for games and drafts. It creates the operational match flow that later validation and API layers plug into.
 
 Then implement:
 
@@ -446,6 +518,8 @@ Why here:
 - this creates the core backend match flow before adding full validation and realtime behavior
 
 ### 4. Rule engine
+
+This phase implements the backend validation stack from the bottom up. It should end with one top-level rule service that can validate submitted turns coherently.
 
 Then implement:
 
@@ -463,6 +537,8 @@ Why here:
 
 ### 5. Commit flow and game lifecycle
 
+This phase completes the actual gameplay loop by turning validated drafts into committed game state and handling match completion.
+
 Then implement:
 
 - Submit / end-turn commit flow
@@ -473,6 +549,8 @@ Why here:
 - this completes the full gameplay loop from editing a draft to committing turns and finishing the match
 
 ### 6. Realtime communication
+
+This phase adds live synchronization once the underlying game flow already exists. Doing it here keeps websocket work anchored to real backend behavior.
 
 Then implement:
 
@@ -487,6 +565,8 @@ Why here:
 
 ### 7. REST and API mapping
 
+This phase exposes the internal backend match logic through the external HTTP API. It also finalizes response mapping, error handling, and ownership checks.
+
 Then implement:
 
 - REST API foundation
@@ -500,6 +580,8 @@ Why here:
 - once the internal services are stable, expose them cleanly through the API
 
 ### 8. Testing and documentation
+
+This phase adds coverage, support fixtures, and formal documentation around the now-stable architecture. It is easier to complete once the main flow is already defined.
 
 Finish with:
 
@@ -517,6 +599,8 @@ Why last:
 - these are easiest to complete once the architecture is already in place and stable
 
 ### 9. Backend polish / missing issue groupings
+
+This phase is for robustness work after the main feature exists. It focuses on consistency, edge cases, resilience, observability, and maintainability improvements.
 
 After the main backend parent issue groups are in place, continue with the backend polish issue groups from the polish section:
 
@@ -539,6 +623,8 @@ Why here:
 
 ## 1. Core frontend-only model layer
 
+This group contains UI-local state that should not live in shared transport or domain models. It covers drag state, layout state, connection state, and other client-only concerns.
+
 The shared game domain models and transport DTOs now belong in the shared monorepo subsection above. The frontend-only model layer should contain only local UI state and interaction state that should not be shared with the backend.
 
 1. feat(android)(game): add game ui state model
@@ -560,6 +646,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 
 ## 3. Mapper layer
 
+These issues define the translation layer between shared DTOs, websocket payloads, and frontend-local state models. The goal is to keep network shapes separate from UI-facing state.
+
 24. feat(android)(game): add tile and board set dto-to-model mappers
 25. feat(android)(game): add game player, confirmed game, and turn draft dto-to-model mappers
 26. feat(android)(game): add model-to-update draft request mapper
@@ -568,6 +656,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 ---
 
 ## 4. Network / REST foundation
+
+This group adds the Android-side HTTP integration for the game feature. It includes the Retrofit-style service surface, base configuration, serialization, and API error parsing.
 
 31. feat(android)(game)(network): add game api service interface
 32. feat(android)(game)(network): add get game endpoint call
@@ -583,6 +673,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 
 ## 5. WebSocket foundation
 
+These issues establish the Android realtime client for game updates. They cover connection lifecycle, topic subscription, event parsing, and safe handling of unknown payloads.
+
 40. feat(android)(game)(websocket): add websocket library dependencies
 41. feat(android)(game)(websocket): add websocket service base structure
 42. feat(android)(game)(websocket): add websocket connect and disconnect logic
@@ -595,6 +687,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 
 ## 6. Current player identity handling
 
+This group gives the frontend a consistent way to know whether the local user owns the active turn. That state then drives editing permissions and UI affordances.
+
 194. feat(android)(game): add local current user identity source
 195. feat(android)(game): compare current user with turn owner
 196. feat(android)(game): derive isActivePlayer state in viewmodel
@@ -603,6 +697,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 ---
 
 ## 7. ViewModel foundation
+
+These issues define the main orchestration layer between backend data, websocket events, and screen state. They should produce the stable state model that the UI renders from.
 
 64. feat(android)(game): add game viewmodel base structure
 65. feat(android)(game): add confirmed game load logic to viewmodel
@@ -616,6 +712,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 
 ## 8. Shared live draft behavior
 
+This group defines how the frontend treats the live draft as a shared multiplayer state. It covers observing another player's draft, replacing stale local state, and showing the current draft owner.
+
 129. feat(android)(game): render shared live draft for all players
 130. feat(android)(game): restrict draft editing to active player only
 131. feat(android)(game): allow inactive players to observe live draft changes
@@ -628,6 +726,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 
 ## 9. Draft update sending
 
+These issues cover how the active player sends draft updates back to the backend. They include payload composition, send timing, and rules for when updates should or should not be sent.
+
 136. feat(android)(game): add debounce/throttle strategy for draft updates
 137. feat(android)(game): send draft update after tile rearrangement
 138. feat(android)(game): send full draft board in update request
@@ -639,6 +739,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 ---
 
 ## 10. Turn change handling
+
+This group handles the transition from one active player to the next on the Android side. It includes UI resets, timer resets, and permission changes after a turn switch.
 
 159. feat(android)(game): update current turn player from websocket turn.changed
 160. feat(android)(game): show turn changed indicator in ui
@@ -653,6 +755,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 
 ## 11. End-turn flow
 
+These issues implement the submission path from the Android client. They cover the button, ViewModel orchestration, network call, and the temporary UI state around submission and rejection.
+
 143. feat(android)(game): add end turn button
 144. feat(android)(game): enable end turn only for active player
 145. feat(android)(game): disable end turn while submitting
@@ -665,6 +769,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 ---
 
 ## 12. Draw and reset flow
+
+This group covers the non-placement turn actions available in the game screen. It includes draw and reset commands, their UI affordances, and their ViewModel orchestration.
 
 151. feat(android)(game): add draw tile button
 152. feat(android)(game): enable draw tile only for active player
@@ -679,6 +785,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 
 ## 13. Game ended handling
 
+These issues define how the Android client reacts once a match is finished. They include winner state, navigation into the result screen, and initial result-screen rendering.
+
 165. feat(android)(game): handle websocket game ended event in viewmodel
 166. feat(android)(game): add game result navigation trigger
 167. feat(android)(game): add winner display state
@@ -690,6 +798,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 ---
 
 ## 14. Error handling
+
+This group turns backend and websocket failures into usable frontend states. It should provide both technical recovery behavior and clear player-facing feedback.
 
 187. feat(android)(game): add game error mapper
 188. feat(android)(game): map backend validation errors to user-friendly messages
@@ -704,6 +814,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 
 ## 15. Connection and reconnect handling
 
+These issues make the Android client resilient to disconnects and reconnects. They cover connection status UI, reconnect logic, re-subscription, and state reload after reconnect.
+
 178. feat(android)(game)(websocket): expose websocket connection state and disconnect detection
 179. feat(android)(game)(ui): show websocket connection status in game screen
 180. feat(android)(game)(websocket): add automatic reconnect, re-subscribe, and duplicate-subscription protection
@@ -715,6 +827,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 
 ## 16. Navigation
 
+This group defines how the Android app enters and leaves the game flow. It includes routing, argument handling, and navigation into the result screen.
+
 172. feat(android)(game): add game screen route
 173. feat(android)(result): add result screen route
 174. feat(android)(game): navigate to game screen with gameId argument
@@ -725,6 +839,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 ---
 
 ## 17. Game screen UI foundation
+
+These issues build the main static structure of the game screen before detailed interaction logic is added. The focus is on layout, containers, loading states, and the broad visual regions of the screen.
 
 75. feat(android)(game)(ui): add game screen composable skeleton
 76. feat(android)(game)(ui): add game screen header section
@@ -743,6 +859,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 
 ## 18. Shared UI utilities
 
+This group collects reusable UI pieces that multiple game-screen states can share. It helps keep the larger screen implementation smaller and more consistent.
+
 198. feat(android)(game)(ui): add reusable turn badge component
 199. feat(android)(game)(ui): add reusable connection status indicator
 200. feat(android)(game)(ui): add reusable validation error banner
@@ -754,6 +872,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 ---
 
 ## 19. Tile and board set UI components
+
+These issues define the reusable composables that represent tiles and sets visually. They should cover the core visual language needed by both the hand and the board.
 
 85. feat(android)(game)(ui): add reusable tile composable with joker variant
 86. feat(android)(game)(ui): add tile selection, dragging, and disabled visual states
@@ -767,6 +887,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 
 ## 20. Board UI and rendering
 
+This group covers rendering the board in both confirmed and live-draft form. It also includes scroll behavior, list rendering, and visual treatment of board changes.
+
 98. feat(android)(game)(ui): add confirmed board rendering
 99. feat(android)(game)(ui): add live draft board rendering
 100.    feat(android)(game)(ui): add fallback to confirmed board when no draft exists
@@ -778,6 +900,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 ---
 
 ## 21. Hand UI and rendering
+
+These issues define how the player's hand is shown and updated locally. They also cover the distinction between active-player hand rendering and limited rendering for other players.
 
 105. feat(android)(game)(ui): add player hand rendering
 106. feat(android)(game)(ui): add active player hand update from live draft
@@ -792,6 +916,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 
 ## 22. Drag and drop / interaction basics
 
+This group covers the core input mechanics for moving tiles around locally. It includes selection, drag lifecycle, drop handling, and cleanup after valid or invalid interactions.
+
 111. feat(android)(game): add local tile selection logic
 112. feat(android)(game): add drag start handling for hand and board tiles
 113. feat(android)(game): add drag target tracking
@@ -804,6 +930,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 
 ## 23. Optimistic / local UX handling
 
+These issues improve the feel of local editing before backend confirmation arrives. They focus on reconciling local interaction state with incoming authoritative draft updates.
+
 210. feat(android)(game): keep local drag responsiveness before backend confirmation
 211. feat(android)(game): reconcile local drag state with incoming shared draft
 212. feat(android)(game): reset stale drag state after server draft overwrite
@@ -814,6 +942,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 ---
 
 ## 24. ViewModel tests
+
+This group covers the Android ViewModel layer in isolation. It should verify loading, websocket reactions, command handling, and timer-related state changes.
 
 239. test(android)(game): add initial game load viewmodel tests
 240. test(android)(game): add live draft update viewmodel tests
@@ -830,6 +960,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 
 ## 25. UI tests
 
+These issues verify the visible behavior of the Android game UI. They focus on rendering, button state, and key screen-level interactions rather than business logic internals.
+
 247. test(android)(game)(ui): add game screen rendering tests
 248. test(android)(game)(ui): add turn indicator ui tests
 249. test(android)(game)(ui): add player hand rendering tests
@@ -842,6 +974,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 ---
 
 ## 26. WebSocket service tests
+
+This group tests the Android websocket client layer directly. It should verify connection lifecycle, topic subscription, event parsing, and reconnect behavior.
 
 254. test(android)(game)(websocket): add websocket connect tests
 255. test(android)(game)(websocket): add websocket disconnect tests
@@ -857,6 +991,8 @@ The frontend should consume these DTO and event payload classes from `apps/share
 
 ## 27. Nice optional extras
 
+These are useful Android cleanup and maintainability tasks that are not critical for the first complete game flow. They mostly improve structure, reuse, and developer ergonomics.
+
 270. chore(android)(game): add game route constants
 271. chore(android)(game): add websocket topic helper
 272. chore(android)(game): add logging for draft update submissions
@@ -869,9 +1005,13 @@ The frontend should consume these DTO and event payload classes from `apps/share
 
 ## Suggested implementation order plan for the frontend parent issue groupings
 
+This section groups the Android issue families into a practical implementation sequence. It is intended to help the team build the feature in layers instead of mixing UI, network, and realtime work too early.
+
 A good implementation order for the frontend parent issue groups is:
 
 ### 1. Shared models, frontend-only state, and mappers
+
+This phase establishes the frontend data model boundaries first: shared transport types where possible, local UI state where necessary, and the mapping between them.
 
 Start with:
 
@@ -885,6 +1025,8 @@ Why first:
 
 ### 2. Communication foundations
 
+This phase gives the Android client the ability to talk to the backend through both REST and websocket channels before higher-level screen logic is built on top.
+
 Then implement:
 
 - Network / REST foundation
@@ -895,6 +1037,8 @@ Why here:
 - the frontend must be able to talk to the backend before state and screen logic can be built properly
 
 ### 3. State and orchestration layers
+
+This phase builds the ViewModel and user-identity logic that coordinate data loading, live updates, and command ownership.
 
 Then implement:
 
@@ -907,6 +1051,8 @@ Why here:
 
 ### 4. Base game screen and shared UI
 
+This phase creates the reusable UI skeleton for the game screen before detailed board and hand interactions are layered in.
+
 Then implement:
 
 - Game screen UI foundation
@@ -917,6 +1063,8 @@ Why here:
 - this gives the team a visible screen structure early and makes it easier to plug in the real data later
 
 ### 5. Board, hand, and interaction layer
+
+This phase implements the core visible gameplay surface: tiles, sets, board rendering, hand rendering, and local drag/drop behavior.
 
 Then implement:
 
@@ -930,6 +1078,8 @@ Why here:
 - these are the main gameplay interaction pieces needed for editing the live draft
 
 ### 6. Shared draft and turn flow
+
+This phase connects the live gameplay loop: draft updates, draw/reset actions, end-turn handling, and turn-change/game-end reactions.
 
 Then implement:
 
@@ -946,6 +1096,8 @@ Why here:
 
 ### 7. Navigation, reconnect, and resilience
 
+This phase hardens the client for real use by covering navigation, recovery, reconnect handling, and user-facing error behavior.
+
 Then implement:
 
 - Navigation
@@ -959,6 +1111,8 @@ Why here:
 
 ### 8. Testing, docs, and optional cleanup
 
+This phase adds verification and cleanup once the main feature already works. It is the right time to invest in tests and smaller ergonomic improvements.
+
 Finish with:
 
 - ViewModel tests
@@ -971,6 +1125,8 @@ Why last:
 - these are best completed once the main feature flow already exists and is stable enough to verify properly
 
 ### 9. Frontend polish / missing issue groupings
+
+This phase covers the larger second-pass polish work: synchronization safety, lifecycle recovery, UX refinement, accessibility, and longer-term cleanup.
 
 After the main frontend parent issue groups are in place, continue with the frontend polish issue groups from the polish section:
 
@@ -996,7 +1152,11 @@ Why here:
 
 ## Backend
 
+This section collects backend polish issues that were not part of the main grouped issue stack. These are mostly robustness, edge-case, and long-term maintenance concerns.
+
 ### State consistency and concurrency
+
+These issues focus on keeping the backend authoritative under conflicting or stale draft operations. They matter most once the basic draft and end-turn flows already work.
 
 1. feat(backend)(game): add draft version conflict handling
 2. feat(backend)(game): reject stale draft updates by version
@@ -1008,6 +1168,8 @@ Why here:
 
 ### Recovery and lifecycle
 
+This group covers backend recovery behavior around reconnects, cleanup, and restart scenarios. It aims to make match state safer over longer-running sessions.
+
 6. feat(backend)(game): add reconnect-safe game state recovery flow
 7. feat(backend)(game): add reconnect-safe draft state recovery flow
 8. feat(backend)(game): add stale draft cleanup logic
@@ -1017,6 +1179,8 @@ Why here:
 ---
 
 ### More rule edge cases
+
+These are additional validation issues beyond the first complete rule engine. They focus especially on joker handling, rearrangement edge cases, and invalid no-op submissions.
 
 11. feat(backend)(rules): add advanced joker validation edge cases
 12. feat(backend)(rules): validate joker placement inside runs more strictly
@@ -1031,6 +1195,8 @@ Why here:
 
 ### Match progression and game rules
 
+This group captures further gameplay-rule details that can be layered on after the first playable loop exists. They are useful for making the implementation closer to the full rule set.
+
 19. feat(backend)(game): add pass turn logic if needed
 20. feat(backend)(game): add draw-and-end-turn flow handling
 21. feat(backend)(game): add no-move available handling
@@ -1040,6 +1206,8 @@ Why here:
 ---
 
 ### Security / authorization / identity
+
+These issues tighten authorization and participant validation around match commands and game event production. They harden the backend against invalid callers and states.
 
 24. feat(backend)(game): validate player belongs to game before processing commands
 25. feat(backend)(game): validate websocket events are only produced for valid match participants
@@ -1051,6 +1219,8 @@ Why here:
 
 ### WebSocket robustness
 
+This group improves the quality of the realtime contract itself. It focuses on sequencing, timestamps, event versioning, and reconnect-safe websocket semantics.
+
 29. feat(backend)(game)(websocket): add event sequencing metadata
 30. feat(backend)(game)(websocket): add server timestamp to websocket events
 31. feat(backend)(game)(websocket): add event version to game draft updates
@@ -1061,6 +1231,8 @@ Why here:
 
 ### Logging and observability
 
+These issues make the backend easier to operate and debug. They are mainly about structured logging around gameplay, validation failures, and emitted realtime events.
+
 34. chore(backend)(game): add structured logging for draft updates
 35. chore(backend)(game): add structured logging for invalid move submissions
 36. chore(backend)(game): add structured logging for turn transitions
@@ -1070,6 +1242,8 @@ Why here:
 
 ### Persistence improvements
 
+This group covers long-term storage concerns that usually matter after the initial schema has stabilized. It includes migrations, indexing, archival, and schema evolution strategy.
+
 38. chore(backend)(game): add migration strategy for game json state schema
 39. chore(backend)(game): add migration strategy for draft json state schema
 40. chore(backend)(game): add index strategy for game and draft lookup
@@ -1078,6 +1252,8 @@ Why here:
 ---
 
 ### More backend testing
+
+These are the higher-value backend tests that become useful after the main implementation and first polish pass are already in place. They focus on concurrency, reconnects, and integrated behavior.
 
 42. test(backend)(game): add concurrent draft update tests
 43. test(backend)(game): add draft version conflict tests
@@ -1091,7 +1267,11 @@ Why here:
 
 ## Frontend
 
+This section collects Android polish issues that sit beyond the main grouped implementation plan. They mostly improve synchronization, resilience, UX quality, and advanced testing depth.
+
 ### State synchronization and consistency
+
+These issues help the Android client stay aligned with authoritative backend state under repeated, stale, or out-of-order websocket updates.
 
 49. feat(android)(game): ignore stale websocket draft updates by version
 50. feat(android)(game): ignore stale websocket confirmed game updates by version
@@ -1103,6 +1283,8 @@ Why here:
 
 ### Recovery / reconnect / app lifecycle
 
+This group hardens the Android experience around reconnects and app lifecycle interruptions. It focuses on restoring the game state safely after the app leaves and re-enters the active session.
+
 54. feat(android)(game): restore game screen state after app process recreation
 55. feat(android)(game): reload confirmed game after app returns from background
 56. feat(android)(game): reload draft after app returns from background
@@ -1113,6 +1295,8 @@ Why here:
 ---
 
 ### UX and interaction polish
+
+These issues improve how the game feels once the base functionality exists. They focus on clearer feedback, better turn visibility, and a stronger distinction between confirmed and live state.
 
 60. feat(android)(game)(ui): add clearer invalid set indicators
 61. feat(android)(game)(ui): add turn ownership badge
@@ -1127,6 +1311,8 @@ Why here:
 
 ### Drag/drop edge cases
 
+This group handles the less common but important interaction failures around local tile movement. It aims to keep the draft visually and logically consistent even under interrupted gestures.
+
 68. feat(android)(game): handle drag cancellation safely
 69. feat(android)(game): handle invalid drop target safely
 70. feat(android)(game): prevent duplicate tile rendering during drag
@@ -1140,6 +1326,8 @@ Why here:
 
 ### Performance and rendering
 
+These issues address recomposition, payload size, and other performance concerns that become more visible once live draft updates are flowing frequently.
+
 76. chore(android)(game): optimize board recomposition during websocket draft updates
 77. chore(android)(game): optimize hand recomposition during websocket draft updates
 78. chore(android)(game): reduce unnecessary UI updates for unchanged draft events
@@ -1150,6 +1338,8 @@ Why here:
 
 ### Identity and permissions
 
+This group makes sure the Android UI consistently reflects what the local user is actually allowed to do. It keeps active-player and inactive-player behavior aligned with backend rules.
+
 81. feat(android)(game): derive active-player permissions consistently in viewmodel
 82. feat(android)(game): block drag/edit actions for non-active players
 83. feat(android)(game): block end turn action for non-active players consistently
@@ -1158,6 +1348,8 @@ Why here:
 ---
 
 ### Error handling and resilience
+
+These issues improve the Android client’s ability to recover from command failures, websocket instability, and version conflicts without leaving the player stuck.
 
 85. feat(android)(game): show version conflict error message
 86. feat(android)(game): recover gracefully after rejected draft update
@@ -1169,6 +1361,8 @@ Why here:
 
 ### Accessibility and usability
 
+This group improves readability and accessibility of the game UI. It is especially useful once the main board and hand rendering have stabilized visually.
+
 90. feat(android)(game)(ui): improve tile accessibility labels
 91. feat(android)(game)(ui): improve board accessibility labels
 92. feat(android)(game)(ui): add content descriptions for action buttons
@@ -1177,6 +1371,8 @@ Why here:
 ---
 
 ### More frontend testing
+
+These are the additional Android tests that become valuable once reconnect, synchronization, and reconciliation behavior are implemented and worth verifying in detail.
 
 94. test(android)(game): add stale draft event handling tests
 95. test(android)(game): add out-of-order websocket event tests
@@ -1190,6 +1386,8 @@ Why here:
 
 ### Cross-cutting / shared polish issues
 
+This group captures documentation and shared clarification work that helps both backend and frontend teams align on behavior after the main implementation is in place.
+
 101. docs(game): document draft versioning and conflict handling
 102. docs(game): document reconnect and resync flow
 103. docs(game): document confirmed state vs live draft state clearly
@@ -1199,6 +1397,8 @@ Why here:
 ---
 
 ## Best “missing issues” to prioritize first
+
+This subsection highlights the highest-value polish issues if the team does not want to add every missing issue immediately. It is intended as a practical shortlist, not a replacement for the full backlog.
 
 If you do not want to create all of them immediately, the most useful missing ones are:
 
@@ -1215,9 +1415,13 @@ If you do not want to create all of them immediately, the most useful missing on
 
 ## Suggested implementation order plan for the polish issue groupings
 
+This final ordering section groups the polish issues into a practical second-pass sequence. The intent is to stabilize consistency and reconnect behavior first, then deepen rules, resilience, UX, and testing.
+
 A good implementation order for the polish issue groups is:
 
 ### 1. State consistency and reconnect safety
+
+This phase protects the architecture from stale state and recovery bugs before the team spends time on lower-impact polish work.
 
 Start with:
 
@@ -1232,6 +1436,8 @@ Why first:
 
 ### 2. Validation and gameplay edge cases
 
+This phase tightens the correctness of both backend rule handling and frontend tile interaction once the primary gameplay loop already works.
+
 Then implement:
 
 - backend rule edge cases
@@ -1243,6 +1449,8 @@ Why here:
 - after the base feature works, these issues improve correctness for unusual but important gameplay cases
 
 ### 3. Authorization, robustness, and resilience
+
+This phase hardens both sides of the system against invalid users, invalid states, and degraded realtime/network conditions.
 
 Then implement:
 
@@ -1257,6 +1465,8 @@ Why here:
 
 ### 4. UX and performance polish
 
+This phase improves how the feature feels and performs once correctness is already in a good place. It covers usability, rendering cost, and developer visibility.
+
 Then implement:
 
 - frontend UX and interaction polish issues
@@ -1270,6 +1480,8 @@ Why here:
 
 ### 5. Persistence and long-term maintenance
 
+This phase addresses storage, schema, and documentation concerns that matter more once the core design is already stable enough to preserve.
+
 Then implement:
 
 - backend persistence improvements
@@ -1280,6 +1492,8 @@ Why here:
 - these issues matter more once the architecture has stabilized and the team knows which long-term concerns are worth keeping
 
 ### 6. Advanced testing
+
+This final phase expands the automated safety net around the already-polished feature. It is most useful once the behavior being tested has largely settled.
 
 Finish with:
 
