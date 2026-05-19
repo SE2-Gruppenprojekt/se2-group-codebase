@@ -4,6 +4,9 @@ import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.TurnDraft
 import org.springframework.stereotype.Service
 import shared.models.game.domain.Tile
+import shared.models.game.validation.ValidationResult
+import shared.models.game.validation.invalid
+import shared.models.game.validation.valid
 
 /**
  * Service responsible for validating that a candidate turn draft conserves the
@@ -34,22 +37,26 @@ class TileConservationService {
      * @param confirmedGame - current game state used to derive the allowed tile multiset
      * @param activePlayerUserId - the unique identifier of the player whose rack tiles are used to create the allowed multiset
      * @param candidateDraft - the proposed turn draft that should be validated
-     * @throws IllegalArgumentException if the proposed turn draft violates the tile conservation rules
      */
 
     fun validate(
         confirmedGame: ConfirmedGame,
         activePlayerUserId: String,
         candidateDraft: TurnDraft
-    ) {
+    ): ValidationResult {
         val allowed = allowedTiles(confirmedGame, activePlayerUserId)
         val candidate = proposedTiles(candidateDraft)
 
         if (allowed != candidate){
             val missingTiles = (allowed - candidate).entries.joinToString { "${it.key} (${it.value})" }
             val extraTiles = (candidate - allowed).entries.joinToString { "${it.key} (${it.value})" }
-            throw IllegalArgumentException("The proposed turn draft violated - missing: [$missingTiles] and extra: [$extraTiles] tile conservation rules!")
+            return invalid(
+                code = "TILE_CONSERVATION_VIOLATION",
+                message = "The proposed turn draft violated - missing: [$missingTiles] and extra: [$extraTiles] tile conservation rules!"
+            )
         }
+
+        return valid()
     }
 
     /**

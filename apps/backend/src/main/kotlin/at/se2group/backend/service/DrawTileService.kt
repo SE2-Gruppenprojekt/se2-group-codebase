@@ -1,8 +1,10 @@
 package at.se2group.backend.service
 
+import at.se2group.backend.mapper.toDomain as toDraftDomain
 import at.se2group.backend.mapper.toDomain
 import at.se2group.backend.mapper.toEntity
 import at.se2group.backend.persistence.GameRepository
+import at.se2group.backend.persistence.TurnDraftRepository
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.stereotype.Service
 import shared.models.game.domain.ConfirmedGame
@@ -26,7 +28,9 @@ import shared.models.game.domain.GameStatus
 @Service
 class DrawTileService(
     private val gameRepository: GameRepository,
-    private val gameService: GameService
+    private val turnDraftRepository: TurnDraftRepository,
+    private val gameBroadcastService: GameBroadcastService,
+    private val afterCommitExecutor: AfterCommitExecutor
 ) {
 
     private companion object {
@@ -34,6 +38,9 @@ class DrawTileService(
         const val GAME_NOT_ACTIVE = "Game is not active"
         const val PLAYER_NOT_IN_GAME = "Player is not in the game"
         const val NOT_ACTIVE_PLAYER = "User is not the active player"
+        const val DRAFT_NOT_FOUND = "Draft not found"
+        const val NOT_DRAFT_OWNER = "Draft belongs to a different user"
+        const val TILE_ALREADY_DRAWN = "Player has already drawn a tile this turn"
         const val DRAW_PILE_EMPTY = "Draw pile is empty"
     }
 
@@ -49,6 +56,13 @@ class DrawTileService(
 
         check(game.currentPlayerUserId == playerId) { NOT_ACTIVE_PLAYER }
 
+        val draftEntity = turnDraftRepository.findByGameId(gameId)
+            ?: throw NoSuchElementException(DRAFT_NOT_FOUND)
+
+        check(draftEntity.playerUserId == playerId) { NOT_DRAFT_OWNER }
+
+        val draft = draftEntity.toDraftDomain()
+        check(draft.drawnTile == null) { TILE_ALREADY_DRAWN }
         check(game.drawPile.isNotEmpty()) { DRAW_PILE_EMPTY }
 
         val drawnTile = game.drawPile.first()
@@ -60,11 +74,26 @@ class DrawTileService(
                 player
             }
         }
-            val updatedGame = game.copy(
-                players = updatedPlayers,
-                drawPile = game.drawPile.drop(1),
-                currentPlayerUserId = gameService.nextPlayerId(game)
-            )
-            return gameRepository.save(updatedGame.toEntity()).toDomain()
+
+        val updatedGame = game.copy(
+            players = updatedPlayers,
+            drawPile = game.drawPile.drop(1)
+        )
+
+        val savedGame = gameRepository.save(updatedGame.toEntity()).toDomain()
+        val updatedDraft = turnDraftRepository.save(
+            draft.copy(
+                rackTiles = draft.rackTiles + drawnTile,
+                drawnTile = drawnTile,
+                version = draftEntity.version + 1
+            ).toEntity(draftEntity)
+        ).toDraftDomain()
+
+        afterCommitExecutor.execute {
+            gameBroadcastService.broadcastGameUpdated(savedGame)
+            gameBroadcastService.broadcastDraftUpdated(updatedDraft)
+        }
+
+        return savedGame
     }
 }
