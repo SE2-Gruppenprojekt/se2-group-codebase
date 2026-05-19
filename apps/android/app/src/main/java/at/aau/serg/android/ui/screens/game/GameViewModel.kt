@@ -52,13 +52,14 @@ class GameViewModel(
         loadGame()
     }
 
-    private fun startSocket(gameId: String) {
+    @VisibleForTesting
+    internal fun startSocket(gameId: String) {
         socketJob?.cancel()
 
         socketJob = viewModelScope.launch {
             socket.subscribe(gameId)
                 .catch { e ->
-                    val appError = ErrorUiMapper.map(e)
+                    val appError = NetworkErrorMapper.map(e)
                     _uiState.update { it.copy(loadState = LoadState.Error(appError)) }
                 }
                 .collect { handleGameSocketEvent(it) }

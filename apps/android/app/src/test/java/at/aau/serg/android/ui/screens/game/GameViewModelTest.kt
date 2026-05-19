@@ -3,12 +3,14 @@ package at.aau.serg.android.ui.screens.game
 import at.aau.serg.android.MainDispatcherRule
 import at.aau.serg.android.core.datastore.InMemoryProtoStore
 import at.aau.serg.android.core.network.game.GameService
+import at.aau.serg.android.core.network.game.GameWebSocketService
 import at.aau.serg.android.core.network.mapper.toDomain
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateViewModel
 import at.aau.serg.android.ui.state.LoadState
 import io.mockk.coEvery
 import io.mockk.mockk
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -48,6 +50,7 @@ class GameViewModelTest {
 
     private lateinit var store: InMemoryProtoStore<User>
     private lateinit var service: GameService
+    private lateinit var socketService: GameWebSocketService
     private lateinit var viewmodel: GameViewModel
 
     val fakeRack = listOf(
@@ -138,12 +141,14 @@ class GameViewModelTest {
     fun setup() = runTest {
         store = InMemoryProtoStore(User.getDefaultInstance())
         service = mockk()
+        socketService = mockk()
 
         coEvery { service.loadGame(any()) } returns fakeGameResponse
         coEvery { service.endTurn(any(), any()) } returns fakeGameResponse
         coEvery { service.drawTile(any(), any()) } returns fakeGameResponse
+        coEvery { socketService.subscribe(any()) } returns flow { }
 
-        viewmodel = GameViewModel(store, service)
+        viewmodel = GameViewModel(store, service, socketService)
 
         advanceUntilIdle()
     }
@@ -657,5 +662,16 @@ class GameViewModelTest {
         )
 
         assertEquals(originalGameState, viewmodel.uiState.value.gameState)
+    }
+
+    @Test
+    fun startSocket_catches_NetworkException_and_updates_loadState() = runTest {
+        coEvery { socketService.subscribe("g1") } returns flow {
+            throw RuntimeException("Connection lost")
+        }
+
+        viewmodel.startSocket("g1")
+        advanceUntilIdle()
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
     }
 }
