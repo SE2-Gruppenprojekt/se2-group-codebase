@@ -60,11 +60,11 @@ class EndTurnService(
             throw InvalidTurnSubmissionException(validation.violations)
         }
 
-        val committedGame = commitDraftToConfirmedGame(game, submittedDraft)
-        val finishedGame = finishIfWinnerExists(committedGame, userId)
+        val resolvedGame = commitDraftToConfirmedGame(game, submittedDraft)
+            .finishIfWinnerExists(userId)
 
-        if (finishedGame.status == GameStatus.FINISHED) {
-            val savedGame = gameRepository.save(finishedGame.toEntity()).toDomain()
+        if (resolvedGame.status == GameStatus.FINISHED) {
+            val savedGame = gameRepository.save(resolvedGame.toEntity()).toDomain()
 
             turnDraftRepository.deleteById(gameId)
 
@@ -76,8 +76,8 @@ class EndTurnService(
             return savedGame
         }
 
-        val nextPlayerId = gameService.nextPlayerId(finishedGame)
-        val advancedGame = finishedGame.copy(currentPlayerUserId = nextPlayerId)
+        val nextPlayerId = gameService.nextPlayerId(resolvedGame)
+        val advancedGame = resolvedGame.copy(currentPlayerUserId = nextPlayerId)
         val savedGame = gameRepository.save(advancedGame.toEntity()).toDomain()
 
         val nextDraft = createNextDraft(savedGame)
@@ -112,20 +112,25 @@ class EndTurnService(
         )
     }
 
-    private fun finishIfWinnerExists(
-        game: ConfirmedGame,
-        actingPlayerUserId: String
+    private fun ConfirmedGame.finishIfWinnerExists(
+        actingPlayerUserId: String,
+        finishedAt: Instant = Instant.now()
     ): ConfirmedGame {
-        val actingPlayer = game.players.first { it.userId == actingPlayerUserId }
-
-        return if (actingPlayer.rackTiles.isEmpty()) {
-            game.copy(
+        return if (hasEmptyRack(actingPlayerUserId)) {
+            copy(
                 status = GameStatus.FINISHED,
-                finishedAt = Instant.now()
+                finishedAt = finishedAt
             )
         } else {
-            game
+            this
         }
+    }
+
+    private fun ConfirmedGame.hasEmptyRack(actingPlayerUserId: String): Boolean {
+        return players
+            .first { it.userId == actingPlayerUserId }
+            .rackTiles
+            .isEmpty()
     }
 
     private fun createNextDraft(game: ConfirmedGame): TurnDraft {
