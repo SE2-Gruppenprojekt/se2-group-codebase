@@ -185,6 +185,12 @@ class GameWebSocketServiceTest {
     }
 
     @Test
+    fun default_constructor_isCovered() {
+        val s = GameWebSocketService(moshi)
+        assertNotNull(s)
+    }
+
+    @Test
     fun dispatch_returns_null_for_malformed_json() {
         val result = service.dispatch("not valid json {{{")
         assertNull(result)

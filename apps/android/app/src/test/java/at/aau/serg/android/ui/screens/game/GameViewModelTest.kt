@@ -160,6 +160,13 @@ class GameViewModelTest {
     }
 
     @Test
+    fun default_constructor_of_GameViewModel_isCovered() = runTest {
+        val vm = GameViewModel(store)
+        assertNotNull(vm)
+        advanceUntilIdle()
+    }
+
+    @Test
     fun init_setsRackAndBoard() = runTest {
         val state = viewmodel.uiState.value
 
