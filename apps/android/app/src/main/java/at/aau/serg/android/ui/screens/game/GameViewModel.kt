@@ -140,7 +140,7 @@ class GameViewModel(
         }
     }
 
-    private fun onTileSelected(tile: Tile, selected: Boolean, rowId: String? = null) {
+    private fun onTileSelected(tile: Tile, selected: Boolean, rowId: String?) {
         _uiState.update { state ->
             val currentRow = state.activeSelectionRow
             val selectedTiles = state.selectedTiles.toMutableSet()
@@ -189,7 +189,7 @@ class GameViewModel(
         sendTurnDraft()
     }
 
-    private fun moveTiles(boardSetId: String? = null) {
+    private fun moveTiles(boardSetId: String?) {
         _uiState.update { state ->
             val selected = state.selectedTiles
             if (selected.isEmpty()) return@update state

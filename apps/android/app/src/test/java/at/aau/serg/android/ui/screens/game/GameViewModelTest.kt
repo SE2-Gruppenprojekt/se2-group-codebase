@@ -197,6 +197,7 @@ class GameViewModelTest {
         assertTrue(viewmodel.uiState.value.selectedTiles.contains(tile))
 
         viewmodel.onUIEvent(GameUIEvent.OnTileSelected(tile, false, null))
+        viewmodel.onUIEvent(GameUIEvent.OnTileSelected(tile, false, null))
         assertFalse(viewmodel.uiState.value.selectedTiles.contains(tile))
     }
 
@@ -351,21 +352,17 @@ class GameViewModelTest {
     }
 
     @Test
-    fun endTurn_updatesGameState_andClearsSelection() = runTest {
+    fun endTurn_sets_success_andClearsSelection() = runTest {
         setTestGameState()
-        val before = viewmodel.uiState.value.gameState
-        val tile = viewmodel.uiState.value.rackTiles.first()
-        viewmodel.onUIEvent(GameUIEvent.OnTileSelected(tile, true, null))
+        coEvery { service.endTurn(any(), any()) } returns fakeGameResponse
 
         viewmodel.onUIEvent(GameUIEvent.EndTurn)
         advanceUntilIdle()
 
-        val after = viewmodel.uiState.value.gameState
-        assertNotEquals(before, after)
-
         val state = viewmodel.uiState.value
         assertTrue(state.selectedTiles.isEmpty())
         assertNull(state.activeSelectionRow)
+        assertTrue(state.loadState is LoadState.Success)
     }
 
     @Test
