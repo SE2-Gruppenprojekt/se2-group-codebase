@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.junit.jupiter.api.Assertions.assertEquals
 import shared.models.game.validation.RuleViolation
+import shared.models.game.validation.ValidationResult
 
 class GlobalExceptionHandlerTest {
 
@@ -23,7 +24,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     fun `handleInvalidTurnSubmission should return 409`() {
-        val ex = InvalidTurnSubmissionException(
+        val validationResult = ValidationResult(
             violations = listOf(
                 RuleViolation(
                     code = "INVALID_SET",
@@ -34,11 +35,13 @@ class GlobalExceptionHandlerTest {
             )
         )
 
+        val ex = InvalidTurnSubmissionException(validationResult)
+
         val response = handler.handleInvalidTurnSubmission(ex)
 
         assertEquals(HttpStatus.CONFLICT, response.statusCode)
         assertEquals("INVALID_TURN_SUBMISSION", response.body?.errorCode)
         assertEquals("Submitted draft is invalid", response.body?.errorMessage)
-        assertEquals(ex.violations, response.body?.violations)
+        assertEquals(validationResult.violations, response.body?.violations)
     }
 }

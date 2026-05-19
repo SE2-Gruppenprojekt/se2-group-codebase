@@ -57,7 +57,7 @@ class EndTurnService(
         )
 
         if (!validation.isValid) {
-            throw InvalidTurnSubmissionException(validation.violations)
+            throw InvalidTurnSubmissionException(validation)
         }
 
         val resolvedGame = commitDraftToConfirmedGame(game, submittedDraft)

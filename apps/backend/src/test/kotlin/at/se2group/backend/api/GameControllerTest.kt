@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.post
 import org.springframework.http.MediaType
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
+import shared.models.game.validation.ValidationResult
 
 
 @WebMvcTest(GameController::class)
@@ -312,7 +313,7 @@ class GameControllerTest {
     @Test
     fun `endTurn returns 409 when submitted draft is invalid`() {
         `when`(endTurnService.endTurn(any(), any(), any()))
-            .thenThrow(InvalidTurnSubmissionException(emptyList()))
+            .thenThrow(InvalidTurnSubmissionException(ValidationResult()))
 
         mockMvc.post("/api/games/game-1/end-turn") {
             header("X-User-Id", "user-1")
