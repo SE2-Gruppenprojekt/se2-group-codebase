@@ -27,6 +27,7 @@ import shared.models.game.domain.BoardSetType
 import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.Tile
 import shared.models.game.event.GameEvent
+import shared.models.game.request.EndTurnRequest
 import shared.models.game.request.UpdateDraftRequest
 import java.util.UUID
 
@@ -47,9 +48,9 @@ class GameViewModel(
         viewModelScope.launch {
             userStore.data.collect { user ->
                 _uiState.update { it.copy(user = user) }
+                loadGame()
             }
         }
-        loadGame()
     }
 
     @VisibleForTesting
@@ -258,12 +259,24 @@ class GameViewModel(
     }
 
     fun endTurn() {
+        val user = _uiState.value.user
+            ?: throw IllegalStateException("User must not be null when drawTile is called.")
+
         viewModelScope.launch {
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
             try {
-                    _uiState.update {
+                val request = EndTurnRequest(
+                    boardSets = uiState.value.boardSets.map { it.toRequest() },
+                    rackTiles = uiState.value.rackTiles.map { it.toRequest() }
+                )
+                gameService.endTurn(
+                    gameId = user.gameId,
+                    playerId = user.uid,
+                    request = request
+                )
+                _uiState.update {
                     it.copy(
                         selectedTiles = emptySet(),
                         activeSelectionRow = null,
