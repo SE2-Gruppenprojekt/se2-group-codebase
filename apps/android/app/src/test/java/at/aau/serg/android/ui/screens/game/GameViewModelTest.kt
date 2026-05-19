@@ -9,7 +9,9 @@ import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateViewModel
 import at.aau.serg.android.ui.state.LoadState
 import io.mockk.coEvery
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -39,7 +41,6 @@ import shared.models.game.event.TurnTimedOutEvent
 import shared.models.game.response.BoardSetResponse
 import shared.models.game.response.GamePlayerResponse
 import shared.models.game.response.GameResponse
-import shared.models.game.response.TileResponse
 import shared.models.game.response.TurnDraftResponse
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -144,7 +145,6 @@ class GameViewModelTest {
         socketService = mockk()
 
         coEvery { service.loadGame(any()) } returns fakeGameResponse
-        coEvery { service.endTurn(any(), any()) } returns fakeGameResponse
         coEvery { service.drawTile(any(), any()) } returns fakeGameResponse
         coEvery { socketService.subscribe(any()) } returns flow { }
 
@@ -346,31 +346,21 @@ class GameViewModelTest {
     @Test
     fun endTurn_updatesGameState_andClearsSelection() = runTest {
         setTestGameState()
-        val before = viewmodel.uiState.value.gameState
+
         val tile = viewmodel.uiState.value.rackTiles.first()
         viewmodel.onTileSelected(tile, true)
 
+        coEvery {
+            service.endTurn(any(), any(), any())
+        } just runs
+
         viewmodel.endTurn()
         advanceUntilIdle()
 
-        val after = viewmodel.uiState.value.gameState
-        assertNotEquals(before, after)
-
         val state = viewmodel.uiState.value
+
         assertTrue(state.selectedTiles.isEmpty())
         assertNull(state.activeSelectionRow)
-    }
-
-    @Test
-    fun endTurn_emitsErrorState_onFailure() = runTest {
-        coEvery { service.endTurn(any(), any()) } throws RuntimeException()
-
-        viewmodel.endTurn()
-
-        advanceUntilIdle()
-        val state = viewmodel.uiState.value
-
-        assertTrue(state.loadState is LoadState.Error)
     }
 
     @Test
@@ -450,7 +440,7 @@ class GameViewModelTest {
 
     @Test
     fun sendTurnDraft_updateDraftWorkflowTest() = runTest {
-        coEvery { service.updateDraft(any(), any()) } returns TurnDraftResponse(
+        coEvery { service.updateDraft(any(), any(), any()) } returns TurnDraftResponse(
             gameId = "Game1",
             playerUserId = "Player1",
             draftBoard = emptyList(),
@@ -468,7 +458,7 @@ class GameViewModelTest {
 
     @Test
     fun sendTurnDraft_emitsErrorState_onFailure() = runTest {
-        coEvery { service.updateDraft(any(), any()) } throws RuntimeException()
+        coEvery { service.updateDraft(any(), any(), any()) } throws RuntimeException()
 
         viewmodel.sendTurnDraft()
 

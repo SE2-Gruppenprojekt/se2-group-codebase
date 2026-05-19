@@ -5,7 +5,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import shared.models.game.request.DrawTileRequest
 import shared.models.game.request.EndTurnRequest
 import shared.models.game.request.UpdateDraftRequest
 import shared.models.game.response.GameResponse
@@ -43,9 +42,15 @@ class GameServiceTest {
         val request = mockk<UpdateDraftRequest>()
         val expected = mockk<TurnDraftResponse>()
 
-        coEvery { api.updateDraft("game123", request) } returns expected
+        coEvery {
+            api.updateDraft(
+                "game123", "player1", request
+            )
+        } returns expected
 
-        val result = service.updateDraft("game123", request)
+        val result = service.updateDraft(
+            "game123", "player1", request
+        )
 
         assertEquals(expected, result)
     }
@@ -55,24 +60,37 @@ class GameServiceTest {
         val expected = mockk<GameResponse>()
 
         coEvery {
-            api.drawTile("game123", DrawTileRequest("player1"))
+            api.drawTile(
+                "game123", "player1"
+            )
         } returns expected
 
-        val result = service.drawTile("game123", "player1")
+        val result = service.drawTile(
+            "game123", "player1"
+        )
 
         assertEquals(expected, result)
     }
 
     @Test
-    fun endTurn_returnsFromApi() = runBlocking {
-        val expected = mockk<GameResponse>()
+    fun endTurn_callsApi() = runBlocking {
+        val request = mockk<EndTurnRequest>()
 
         coEvery {
-            api.endTurn("game123", EndTurnRequest("player1"))
-        } returns expected
+            api.endTurn(
+                "game123",
+                "player1",
+                request
+            )
+        } returns Unit
 
-        val result = service.endTurn("game123", "player1")
-
-        assertEquals(expected, result)
+        service.endTurn(
+            "game123",
+            "player1",
+            request
+        )
     }
+
+
 }
+

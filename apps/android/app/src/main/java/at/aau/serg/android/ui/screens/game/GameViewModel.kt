@@ -262,14 +262,8 @@ class GameViewModel(
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
-            val user = _uiState.value.user
-                ?: throw IllegalStateException("User must not be null when endTurn is called.")
             try {
-                val gameState = gameService.endTurn(
-                    user.gameId,
-                    user.uid).toDomain()
-                applyGameState(gameState)
-                _uiState.update {
+                    _uiState.update {
                     it.copy(
                         selectedTiles = emptySet(),
                         activeSelectionRow = null,
@@ -297,6 +291,7 @@ class GameViewModel(
                 )
                 gameService.updateDraft(
                     gameId = user.gameId,
+                    playerId = user.uid,
                     request = request
                 )
                 _uiState.update { it.copy(loadState = LoadState.Success) }
@@ -357,7 +352,6 @@ class GameViewModel(
                     }
                 }
 
-                else -> {}
             }
         } catch (e: Exception) {
             val appError = ErrorUiMapper.map(e)
