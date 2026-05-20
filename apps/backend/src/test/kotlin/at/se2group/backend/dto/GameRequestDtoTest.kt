@@ -1,6 +1,7 @@
 package at.se2group.backend.dto
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import shared.models.game.domain.BoardSetType
 import shared.models.game.request.BoardSetRequest
@@ -34,9 +35,13 @@ class GameRequestDtoTest {
 
     @Test
     fun `creates end turn request`() {
-        val request = EndTurnRequest(playerId = "player-1")
+        val request = EndTurnRequest(
+            boardSets = emptyList(),
+            rackTiles = emptyList()
+        )
 
-        assertEquals("player-1", request.playerId)
+        assertTrue(request.boardSets.isEmpty())
+        assertTrue(request.rackTiles.isEmpty())
     }
 
     @Test
