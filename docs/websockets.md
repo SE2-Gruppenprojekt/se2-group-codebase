@@ -1,5 +1,10 @@
 # WebSocket Integration
 
+[![Backend CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/backend.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/backend.yml)
+[![Frontend CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/android.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/android.yml)
+[![Shared CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/shared.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/shared.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=SE2-Gruppenprojekt_se2-group-codebase&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=SE2-Gruppenprojekt_se2-group-codebase)
+
 ## Event Types
 
 The backend can broadcast the following event types.

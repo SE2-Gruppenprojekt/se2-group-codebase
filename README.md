@@ -10,6 +10,20 @@
 ![Build](https://img.shields.io/badge/build-Gradle-02303A)
 ![Project Type](https://img.shields.io/badge/project-SE2-blue)
 
+[![Backend CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/backend.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/backend.yml)
+[![Frontend CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/android.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/android.yml)
+[![Shared CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/shared.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/shared.yml)
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=SE2-Gruppenprojekt_se2-group-codebase&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=SE2-Gruppenprojekt_se2-group-codebase)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=se2-gruppenprojekt_se2-group-codebase_frontend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=se2-gruppenprojekt_se2-group-codebase_frontend)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=se2-gruppenprojekt_se2-group-codebase_backend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=se2-gruppenprojekt_se2-group-codebase_backend)
+
+![Pull Requests](https://img.shields.io/github/issues-pr/SE2-Gruppenprojekt/se2-group-codebase)
+![Issues](https://img.shields.io/github/issues/SE2-Gruppenprojekt/se2-group-codebase)
+![Milestones](https://img.shields.io/github/milestones/all/SE2-Gruppenprojekt/se2-group-codebase)
+
+[![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=se2-gruppenprojekt_se2-group-codebase_backend)
+
 ## Overview
 
 The goal of this project is to design and implement a digital game inspired by Rummikub as part of the SE2 group project. The application is being developed as a shared monorepo so the Android frontend, Spring Boot backend, and all project documentation can evolve together in one repository with consistent structure, tooling, and workflow.
