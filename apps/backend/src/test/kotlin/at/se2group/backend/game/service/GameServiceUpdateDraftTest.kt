@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import java.time.Instant
 import java.util.Optional
+import shared.models.game.validation.invalid
+import shared.models.game.validation.valid
 
 class TurnDraftServiceTest {
 
@@ -73,6 +75,8 @@ class TurnDraftServiceTest {
         whenever(turnDraftRepository.findByGameId("game-1"))
             .thenReturn(draft)
 
+        whenever(tileConservationService.validate(any(), any(), any()))
+            .thenReturn(valid())
         whenever(turnDraftRepository.save(any()))
             .thenReturn(draft)
 
@@ -151,7 +155,8 @@ class TurnDraftServiceTest {
     fun `updateDraft does not persist when tile conservation fails`(){
         whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(gameEntity()))
         whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(TurnDraftEntity(gameId = "game-1", playerUserId = "user-1"))
-        whenever(tileConservationService.validate(any(), any(), any())).thenThrow(IllegalArgumentException("Tile conservation failed!"))
+        whenever(tileConservationService.validate(any(), any(), any()))
+            .thenReturn(invalid("TILE_CONSERVATION_VIOLATION", "Tile conservation failed!"))
 
         runCatching {
             turnDraftService.updateDraft("game-1", "user-1", UpdateDraftRequest(emptyList(), emptyList()))

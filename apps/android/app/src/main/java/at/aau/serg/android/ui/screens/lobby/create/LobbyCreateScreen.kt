@@ -59,6 +59,7 @@ import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.theme.AccentGreen
 import at.aau.serg.android.ui.theme.AccentPurple
 import at.aau.serg.android.ui.theme.appColors
+import at.aau.serg.android.ui.util.ErrorUiMapper
 
 @Composable
 fun LobbyCreateScreen(
@@ -355,6 +356,17 @@ fun LobbyCreateScreenContent(
         )
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        if (uiState.loadState is LoadState.Error) {
+            Text(
+                text = ErrorUiMapper.toMessage((uiState.loadState as LoadState.Error).error),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+            )
+        }
 
         Button(
             onClick = {

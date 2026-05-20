@@ -9,6 +9,7 @@ import shared.models.game.request.TileRequest
 import shared.models.game.request.UpdateDraftRequest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import shared.models.game.request.EndTurnRequest
 
 class TurnDraftMapperTest {
 
@@ -228,6 +229,44 @@ class TurnDraftMapperTest {
         assertEquals("tile-1", response.draftBoard.single().tiles.single().tileId)
         assertEquals("tile-2", response.draftHand.single().tileId)
         assertTrue(response.draftHand.single().isJoker)
+    }
+
+    @Test
+    fun `should map EndTurnRequest to TurnDraft`() {
+        val request = EndTurnRequest(
+            boardSets = listOf(
+                BoardSetRequest(
+                    boardSetId = "set-1",
+                    type = BoardSetType.RUN,
+                    tiles = listOf(
+                        TileRequest("tile-1", "RED", 3, false),
+                        TileRequest("tile-2", "RED", 4, false),
+                        TileRequest("tile-3", "RED", 5, false)
+                    )
+                )
+            ),
+            rackTiles = listOf(
+                TileRequest("tile-4", "BLACK", null, true)
+            )
+        )
+
+        val result = request.toDomain(
+            gameId = "game-1",
+            userId = "user-1"
+        )
+
+        assertEquals("game-1", result.gameId)
+        assertEquals("user-1", result.playerUserId)
+        assertEquals(0, result.version)
+
+        assertEquals(1, result.boardSets.size)
+        assertEquals("set-1", result.boardSets.single().boardSetId)
+        assertEquals(BoardSetType.RUN, result.boardSets.single().type)
+        assertEquals(3, result.boardSets.single().tiles.size)
+        assertEquals(numbered("tile-1", TileColor.RED, 3), result.boardSets.single().tiles[0])
+
+        assertEquals(1, result.rackTiles.size)
+        assertEquals(joker("tile-4", TileColor.BLACK), result.rackTiles.single())
     }
 
     private fun numbered(tileId: String, color: TileColor, number: Int) =

@@ -3,15 +3,21 @@ package at.aau.serg.android.ui.screens.game
 import at.aau.serg.android.MainDispatcherRule
 import at.aau.serg.android.core.datastore.InMemoryProtoStore
 import at.aau.serg.android.core.network.game.GameService
+import at.aau.serg.android.core.network.game.GameWebSocketService
 import at.aau.serg.android.core.network.mapper.toDomain
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateViewModel
 import at.aau.serg.android.ui.state.LoadState
+import io.mockk.Runs
 import io.mockk.coEvery
+import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -29,6 +35,13 @@ import shared.models.game.domain.GamePlayer
 import shared.models.game.domain.GameStatus
 import shared.models.game.domain.NumberedTile
 import shared.models.game.domain.TileColor
+import shared.models.game.event.GameDraftUpdatedEvent
+import shared.models.game.event.GameEndedEvent
+import shared.models.game.event.GameEvent
+import shared.models.game.event.GameUpdatedEvent
+import shared.models.game.event.TurnChangedEvent
+import shared.models.game.event.TurnTimedOutEvent
+import shared.models.game.response.BoardSetResponse
 import shared.models.game.response.GamePlayerResponse
 import shared.models.game.response.GameResponse
 import shared.models.game.response.TurnDraftResponse
@@ -41,6 +54,7 @@ class GameViewModelTest {
 
     private lateinit var store: InMemoryProtoStore<User>
     private lateinit var service: GameService
+    private lateinit var socketService: GameWebSocketService
     private lateinit var viewmodel: GameViewModel
 
     val fakeRack = listOf(
@@ -142,12 +156,13 @@ class GameViewModelTest {
     fun setup() = runTest {
         store = InMemoryProtoStore(User.getDefaultInstance())
         service = mockk()
+        socketService = mockk()
 
         coEvery { service.loadGame(any()) } returns fakeGameResponse
-        coEvery { service.endTurn(any(), any()) } returns fakeGameResponse
         coEvery { service.drawTile(any(), any()) } returns fakeGameResponse
+        coEvery { socketService.subscribe(any()) } returns flow { }
 
-        viewmodel = GameViewModel(store, service)
+        viewmodel = GameViewModel(store, service, socketService)
 
         advanceUntilIdle()
     }
@@ -156,6 +171,13 @@ class GameViewModelTest {
     fun default_constructor_path_isCovered() = runTest {
         val vm = LobbyCreateViewModel(store)
         assertNotNull(vm)
+    }
+
+    @Test
+    fun default_constructor_of_GameViewModel_isCovered() = runTest {
+        val vm = GameViewModel(store)
+        assertNotNull(vm)
+        advanceUntilIdle()
     }
 
     @Test
@@ -354,12 +376,13 @@ class GameViewModelTest {
     @Test
     fun endTurn_sets_success_andClearsSelection() = runTest {
         setTestGameState()
-        coEvery { service.endTurn(any(), any()) } returns fakeGameResponse
+        coEvery { service.endTurn(any(), any(),any()) } just Runs
 
         viewmodel.onUIEvent(GameUIEvent.EndTurn)
         advanceUntilIdle()
 
         val state = viewmodel.uiState.value
+
         assertTrue(state.selectedTiles.isEmpty())
         assertNull(state.activeSelectionRow)
         assertTrue(state.loadState is LoadState.Success)
@@ -368,7 +391,7 @@ class GameViewModelTest {
     @Test
     fun endTurn_emitsErrorState_onFailure() = runTest {
         setTestGameState()
-        coEvery { service.endTurn(any(), any()) } throws RuntimeException()
+        coEvery { service.endTurn(any(), any(),any()) } throws RuntimeException()
 
         viewmodel.onUIEvent(GameUIEvent.EndTurn)
 
@@ -469,6 +492,19 @@ class GameViewModelTest {
     }
 
     @Test
+    fun loadGame_emitsErrorState_if_user_null() = runTest {
+        viewmodel.setUiStateForTest(GameUiState(
+            user = null
+        ))
+        viewmodel.onUIEvent(GameUIEvent.OnLoadGame("g1"))
+
+        advanceUntilIdle()
+        val state = viewmodel.uiState.value
+
+        assertTrue(state.loadState is LoadState.Error)
+    }
+
+    @Test
     fun loadGame_emitsErrorState_onFailure() = runTest {
         coEvery { service.loadGame(any()) } throws RuntimeException()
 
@@ -483,7 +519,7 @@ class GameViewModelTest {
 
     @Test
     fun sendTurnDraft_updateDraftWorkflowTest() = runTest {
-        coEvery { service.updateDraft(any(), any()) } returns TurnDraftResponse(
+        coEvery { service.updateDraft(any(), any(), any()) } returns TurnDraftResponse(
             gameId = "Game1",
             playerUserId = "Player1",
             draftBoard = emptyList(),
@@ -501,7 +537,7 @@ class GameViewModelTest {
 
     @Test
     fun sendTurnDraft_emitsErrorState_onFailure() = runTest {
-        coEvery { service.updateDraft(any(), any()) } throws RuntimeException()
+        coEvery { service.updateDraft(any(), any(), any()) } throws RuntimeException()
 
         viewmodel.sendTurnDraft()
 
@@ -516,7 +552,7 @@ class GameViewModelTest {
         viewmodel.setUiStateForTest(GameUiState(
             user = null
         ))
-        coEvery { service.updateDraft(any(), any()) }
+        coEvery { service.updateDraft(any(), any(),any()) }
 
         viewmodel.sendTurnDraft()
         advanceUntilIdle()
@@ -526,6 +562,23 @@ class GameViewModelTest {
     fun addRow_sets_loadState_error_if_not_players_turn() = runTest {
         setPlayerTurnInactive()
         viewmodel.onUIEvent(GameUIEvent.AddRow)
+
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun handleGameSocketEvent_draftUpdated_nullUser_setsErrorState() {
+        viewmodel.setUiStateForTest(GameUiState(user = null))
+
+        viewmodel.handleGameSocketEvent(
+            GameEvent.DraftUpdated(
+                GameDraftUpdatedEvent(
+                    gameId = "Game123",
+                    playerId = "OtherPlayer",
+                    draft = TurnDraftResponse("Game123", "OtherPlayer", emptyList(), emptyList(), 0)
+                )
+            )
+        )
         assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
     }
 
@@ -533,6 +586,17 @@ class GameViewModelTest {
     fun drawTile_sets_loadState_error_if_not_players_turn() = runTest {
         setPlayerTurnInactive()
         viewmodel.onUIEvent(GameUIEvent.DrawTile)
+
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun handleGameSocketEvent_turnTimedOut_nullUser_setsErrorState() {
+        viewmodel.setUiStateForTest(GameUiState(user = null))
+
+        viewmodel.handleGameSocketEvent(
+            GameEvent.TurnTimedOut(TurnTimedOutEvent(gameId = "Game123", previousTurnPlayerId = "User123"))
+        )
         assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
     }
 
@@ -580,6 +644,135 @@ class GameViewModelTest {
         val tile = viewmodel.uiState.value.rackTiles.first()
 
         viewmodel.onUIEvent(GameUIEvent.OnTileSelected(tile, true, null))
+
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun handleGameSocketEvent_draftUpdated_updatesBoardSets_forOtherPlayer() {
+        setTestGameState()
+
+        val event = GameEvent.DraftUpdated(
+            GameDraftUpdatedEvent(
+                gameId = "Game123",
+                playerId = "OtherPlayer",
+                draft = TurnDraftResponse(
+                    gameId = "Game123",
+                    playerUserId = "OtherPlayer",
+                    draftBoard = emptyList(),
+                    draftHand = emptyList(),
+                    version = 0
+                )
+            )
+        )
+
+        viewmodel.handleGameSocketEvent(event)
+
+        assertTrue(viewmodel.uiState.value.boardSets.isEmpty())
+    }
+
+    @Test
+    fun handleGameSocketEvent_draftUpdated_ignoresOwnDraft() {
+        setTestGameState()
+        val originalBoardSets = viewmodel.uiState.value.boardSets
+
+        val event = GameEvent.DraftUpdated(
+            GameDraftUpdatedEvent(
+                gameId = "Game123",
+                playerId = "User123",
+                draft = TurnDraftResponse(
+                    gameId = "Game123",
+                    playerUserId = "User123",
+                    draftBoard = emptyList(),
+                    draftHand = emptyList(),
+                    version = 0
+                )
+            )
+        )
+
+        viewmodel.handleGameSocketEvent(event)
+
+        assertEquals(originalBoardSets, viewmodel.uiState.value.boardSets)
+    }
+
+    @Test
+    fun handleGameSocketEvent_draftUpdated_invalidBoard_doesNotUpdateState() {
+        setTestGameState()
+        val originalBoardSets = viewmodel.uiState.value.boardSets
+
+        val event = GameEvent.DraftUpdated(
+            GameDraftUpdatedEvent(
+                gameId = "Game123",
+                playerId = "OtherPlayer",
+                draft = TurnDraftResponse(
+                    gameId = "Game123",
+                    playerUserId = "OtherPlayer",
+                    draftBoard = listOf(
+                        BoardSetResponse(boardSetId = "b1", type = "RUN", tiles = emptyList())
+                    ),
+                    draftHand = emptyList(),
+                    version = 0
+                )
+            )
+        )
+
+        viewmodel.handleGameSocketEvent(event)
+
+        assertEquals(originalBoardSets, viewmodel.uiState.value.boardSets)
+    }
+
+    @Test
+    fun handleGameSocketEvent_ended_setsWinnerId() {
+        setTestGameState()
+
+        viewmodel.handleGameSocketEvent(
+            GameEvent.Ended(GameEndedEvent(gameId = "Game123", winnerUserId = "User123"))
+        )
+
+        assertEquals("User123", viewmodel.uiState.value.winnerUserId)
+    }
+
+    @Test
+    fun handleGameSocketEvent_turnChanged_updatesCurrentPlayer() {
+        val initialUser = User.newBuilder()
+            .setUid("User123")
+            .setDisplayName("Alice")
+            .setGameId("Game123")
+            .build()
+
+        viewmodel.setUiStateForTest(
+            GameUiState(
+                user = initialUser,
+                rackTiles = fakeRack,
+                boardSets = fakeBoard,
+                gameState = ConfirmedGame(
+                    players = listOf(
+                        GamePlayer(userId = "User123", displayName = "Alice", turnOrder = 0, rackTiles = fakeRack),
+                        GamePlayer(userId = "OtherPlayer", displayName = "Bob", turnOrder = 1, rackTiles = emptyList())
+                    ),
+                    boardSets = fakeBoard,
+                    gameId = "Game123",
+                    lobbyId = "Lobby123",
+                    currentPlayerUserId = "User123"
+                )
+            )
+        )
+
+        viewmodel.handleGameSocketEvent(
+            GameEvent.TurnChanged(TurnChangedEvent(gameId = "Game123", currentTurnPlayerId = "OtherPlayer"))
+        )
+
+        assertEquals("OtherPlayer", viewmodel.uiState.value.gameState?.currentPlayerUserId)
+    }
+
+    @Test
+    fun handleGameSocketEvent_turnTimedOut_setsError_forCurrentUser() {
+        setTestGameState()
+
+        viewmodel.handleGameSocketEvent(
+            GameEvent.TurnTimedOut(TurnTimedOutEvent(gameId = "Game123", previousTurnPlayerId = "User123"))
+        )
+
         assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
     }
 
@@ -587,6 +780,54 @@ class GameViewModelTest {
     fun resetSelection_sets_loadState_error_if_not_players_turn() = runTest {
         setPlayerTurnInactive()
         viewmodel.onUIEvent(GameUIEvent.ResetSelection)
+        advanceUntilIdle()
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun handleGameSocketEvent_turnTimedOut_ignoresOtherPlayer() {
+        setTestGameState()
+        val beforeLoadState = viewmodel.uiState.value.loadState
+
+        viewmodel.handleGameSocketEvent(
+            GameEvent.TurnTimedOut(TurnTimedOutEvent(gameId = "Game123", previousTurnPlayerId = "OtherPlayer"))
+        )
+
+        assertEquals(beforeLoadState, viewmodel.uiState.value.loadState)
+    }
+
+    @Test
+    fun handleGameSocketEvent_updated_updatesGameState() {
+        setTestGameState()
+
+        viewmodel.handleGameSocketEvent(
+            GameEvent.Updated(GameUpdatedEvent(gameId = "Game123", game = fakeGameResponse))
+        )
+
+        assertEquals(fakeGameResponse.toDomain(), viewmodel.uiState.value.gameState)
+    }
+
+    @Test
+    fun handleGameSocketEvent_updated_invalidGame_doesNotUpdateState() {
+        setTestGameState()
+        val originalGameState = viewmodel.uiState.value.gameState
+
+        val invalidResponse = fakeGameResponse.copy(players = emptyList())
+
+        viewmodel.handleGameSocketEvent(
+            GameEvent.Updated(GameUpdatedEvent(gameId = "Game123", game = invalidResponse))
+        )
+
+        assertEquals(originalGameState, viewmodel.uiState.value.gameState)
+    }
+
+    @Test
+    fun startSocket_catches_NetworkException_and_updates_loadState() = runTest {
+        coEvery { socketService.subscribe("g1") } returns flow {
+            throw RuntimeException("Connection lost")
+        }
+
+        viewmodel.startSocket("g1")
         advanceUntilIdle()
         assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
     }
@@ -635,5 +876,117 @@ class GameViewModelTest {
             user = null
         ))
         viewmodel.applyGameState(fakeGameResponse.toDomain())
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun applyGameState_withNullUser_throws_IllegalStateException() {
+        viewmodel.setUiStateForTest(GameUiState(user = null))
+        viewmodel.applyGameState(fakeGameResponse.toDomain())
+    }
+
+    @Test
+    fun addRow_removesEmptyBoardSet_whenAllTilesFromSetSelected() = runTest {
+        setTestGameState()
+        val firstSet = viewmodel.uiState.value.boardSets.first()
+        val allTiles = firstSet.tiles.toSet()
+
+        viewmodel.setUiStateForTest(
+            viewmodel.uiState.value.copy(
+                selectedTiles = allTiles,
+                activeSelectionRow = firstSet.boardSetId
+            )
+        )
+
+        viewmodel.onUIEvent(GameUIEvent.AddRow)
+
+        assertFalse(viewmodel.uiState.value.boardSets.any { it.boardSetId == firstSet.boardSetId })
+        assertTrue(viewmodel.uiState.value.boardSets.any { set -> set.tiles.containsAll(allTiles) })
+    }
+
+    @Test
+    fun moveTiles_removesEmptyBoardSet_whenAllTilesFromSetSelected() = runTest {
+        setTestGameState()
+        val firstSet = viewmodel.uiState.value.boardSets.first()
+        val allTiles = firstSet.tiles.toSet()
+
+        viewmodel.setUiStateForTest(
+            viewmodel.uiState.value.copy(
+                selectedTiles = allTiles,
+                activeSelectionRow = firstSet.boardSetId
+            )
+        )
+
+        viewmodel.onUIEvent(GameUIEvent.MoveTiles(null))
+
+        assertFalse(viewmodel.uiState.value.boardSets.any { it.boardSetId == firstSet.boardSetId })
+        assertTrue(viewmodel.uiState.value.rackTiles.containsAll(allTiles))
+    }
+
+    @Test
+    fun moveInSameRow_boardRow_outOfBounds_doesNothing() = runTest {
+        setTestGameState()
+        val rowId = viewmodel.uiState.value.boardSets.first().boardSetId
+        val before = viewmodel.uiState.value
+
+        viewmodel.onUIEvent(GameUIEvent.MoveInSameRow(rowId, 0, 999))
+
+        assertEquals(before, viewmodel.uiState.value)
+    }
+
+    @Test
+    fun resetSelection_withNullGameState_sets_loadState_error() {
+        viewmodel.setUiStateForTest(
+            GameUiState(gameState = null, selectedTiles = setOf(fakeRack[0]))
+        )
+        viewmodel.onUIEvent(GameUIEvent.ResetSelection)
+
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
+    }
+
+
+    @Test
+    fun handleGameSocketEvent_turnChanged_playerNotInList_keepsGameState() {
+        setTestGameState()
+        val originalGameState = viewmodel.uiState.value.gameState
+
+        viewmodel.handleGameSocketEvent(
+            GameEvent.TurnChanged(TurnChangedEvent(gameId = "Game123", currentTurnPlayerId = "NonExistentPlayer"))
+        )
+
+        assertEquals(originalGameState, viewmodel.uiState.value.gameState)
+    }
+
+    @Test
+    fun handleGameSocketEvent_turnChanged_nullGameState_doesNothing() {
+        viewmodel.setUiStateForTest(GameUiState(gameState = null))
+
+        viewmodel.handleGameSocketEvent(
+            GameEvent.TurnChanged(TurnChangedEvent(gameId = "Game123", currentTurnPlayerId = "SomePlayer"))
+        )
+
+        assertNull(viewmodel.uiState.value.gameState)
+    }
+
+    @Test
+    fun startSocket_cancels_existing_job_on_lobby_change() = runTest {
+        viewmodel.startSocket("g1")
+        viewmodel.startSocket("g2")
+    }
+
+    @Test
+    fun startSocket_collects_events_on_success() = runTest {
+        val testFlow = MutableSharedFlow<GameEvent>()
+        coEvery { socketService.subscribe("g1") } returns testFlow
+
+        viewmodel.startSocket("g1")
+        runCurrent()
+        val payload = GameEndedEvent(
+            gameId = "g1",
+            winnerUserId = "lobby-1",
+        )
+        val mockEvent = GameEvent.Ended(payload)
+
+        testFlow.emit(mockEvent)
+        runCurrent()
     }
 }
