@@ -1,25 +1,33 @@
 package at.aau.serg.android.ui.screens.game
 
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import at.aau.serg.android.core.datastore.ProtoStore
+import at.aau.serg.android.core.errors.AppError
 import at.aau.serg.android.core.network.RetrofitProvider
+import at.aau.serg.android.core.network.ServiceLocator
 import at.aau.serg.android.core.network.game.GameAPI
 import at.aau.serg.android.core.network.game.GameService
+import at.aau.serg.android.core.network.game.GameWebSocketService
 import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
+import at.aau.serg.android.ui.util.ErrorUiMapper
 import at.aau.serg.android.core.network.mapper.toDomain
 import at.aau.serg.android.core.network.mapper.toRequest
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.state.LoadState
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import shared.models.game.domain.BoardSet
 import shared.models.game.domain.BoardSetType
 import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.Tile
+import shared.models.game.event.GameEvent
+import shared.models.game.request.EndTurnRequest
 import shared.models.game.request.UpdateDraftRequest
 import java.util.UUID
 
@@ -29,7 +37,10 @@ class GameViewModel(
     private val gameService: GameService = GameService(
         RetrofitProvider.retrofit.create(GameAPI::class.java)
     ),
+    private val socket: GameWebSocketService = ServiceLocator.gameWebSocketService
 ) : ViewModel() {
+
+    private var socketJob: Job? = null
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState
 
@@ -39,6 +50,20 @@ class GameViewModel(
                 _uiState.update { it.copy(user = user) }
                 loadGame()
             }
+        }
+    }
+
+    @VisibleForTesting
+    internal fun startSocket(gameId: String) {
+        socketJob?.cancel()
+
+        socketJob = viewModelScope.launch {
+            socket.subscribe(gameId)
+                .catch { e ->
+                    val appError = NetworkErrorMapper.map(e)
+                    _uiState.update { it.copy(loadState = LoadState.Error(appError)) }
+                }
+                .collect { handleGameSocketEvent(it) }
         }
     }
 
@@ -65,14 +90,15 @@ class GameViewModel(
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
-            val user = userStore.data.first()
-
+            val user = _uiState.value.user
+                ?: throw IllegalStateException("User must not be null when loadGame is called.")
             try {
                 val gameState = gameService.loadGame(user.gameId).toDomain()
                 applyGameState(gameState)
                 _uiState.update {
                     it.copy(loadState = LoadState.Success)
                 }
+                startSocket(user.gameId)
             } catch (e: Throwable) {
                 val appError = NetworkErrorMapper.map(e)
 
@@ -204,7 +230,6 @@ class GameViewModel(
                 activeSelectionRow = null
             )
         }
-        println("RESET clicked")
     }
 
     fun drawTile() {
@@ -212,8 +237,8 @@ class GameViewModel(
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
-            val user = userStore.data.first()
-
+            val user = _uiState.value.user
+                ?: throw IllegalStateException("User must not be null when drawTile is called.")
             try {
                 val gameState = gameService.drawTile(user.gameId, user.uid).toDomain()
                 applyGameState(gameState)
@@ -234,19 +259,23 @@ class GameViewModel(
     }
 
     fun endTurn() {
+        val user = _uiState.value.user
+            ?: throw IllegalStateException("User must not be null when drawTile is called.")
+
         viewModelScope.launch {
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
-            val user = userStore.data.first()
-
             try {
-                val gameState = gameService.endTurn(
-                    user.gameId,
-                    user.uid,
-
-                    ).toDomain()
-                applyGameState(gameState)
+                val request = EndTurnRequest(
+                    boardSets = uiState.value.boardSets.map { it.toRequest() },
+                    rackTiles = uiState.value.rackTiles.map { it.toRequest() }
+                )
+                gameService.endTurn(
+                    gameId = user.gameId,
+                    playerId = user.uid,
+                    request = request
+                )
                 _uiState.update {
                     it.copy(
                         selectedTiles = emptySet(),
@@ -266,13 +295,8 @@ class GameViewModel(
 
     fun sendTurnDraft() {
         viewModelScope.launch {
-            val user = userStore.data.first()
-
-            _uiState.update {
-                it.copy(loadState = LoadState.Success
-                )
-            }
-
+            val user = _uiState.value.user
+                ?: throw IllegalStateException("User must not be null when sendTurnDraft is called.")
             try {
                 val request = UpdateDraftRequest(
                     boardSets = uiState.value.boardSets.map { it.toRequest() },
@@ -280,8 +304,10 @@ class GameViewModel(
                 )
                 gameService.updateDraft(
                     gameId = user.gameId,
+                    playerId = user.uid,
                     request = request
                 )
+                _uiState.update { it.copy(loadState = LoadState.Success) }
             } catch (e: Throwable) {
                 val appError = NetworkErrorMapper.map(e)
 
@@ -292,6 +318,61 @@ class GameViewModel(
         }
     }
 
+    internal fun handleGameSocketEvent(event: GameEvent) {
+        try {
+            when (event) {
+                is GameEvent.DraftUpdated -> {
+                    val user = _uiState.value.user
+                        ?: throw IllegalStateException("User must not be null when DraftUpdated received.")
+                    if (user.uid == event.payload.playerId) return
+
+                    _uiState.update {
+                        it.copy(boardSets = event.payload.draft.draftBoard.map { it.toDomain() })
+                    }
+                }
+
+                is GameEvent.Ended -> {
+                    _uiState.update {
+                        it.copy(winnerUserId = event.payload.winnerUserId)
+                    }
+                }
+
+                is GameEvent.TurnChanged -> {
+                    val newPlayerId = event.payload.currentTurnPlayerId
+                    _uiState.update { state ->
+                        val updatedGameState = state.gameState?.let { game ->
+                            if (game.players.any { it.userId == newPlayerId }) {
+                                game.copy(currentPlayerUserId = newPlayerId)
+                            } else game
+                        }
+                        state.copy(gameState = updatedGameState)
+                    }
+                }
+
+                is GameEvent.TurnTimedOut -> {
+                    val user = _uiState.value.user
+                        ?: throw IllegalStateException("User must not be null when TurnTimedOut received.")
+                    if (user.uid == event.payload.previousTurnPlayerId) {
+                        _uiState.update {
+                            it.copy(loadState = LoadState.Error(AppError.Game.TurnTimedOut))
+                        }
+                    }
+                }
+
+                is GameEvent.Updated -> {
+                    _uiState.update {
+                        it.copy(gameState = event.payload.game.toDomain())
+                    }
+                }
+
+            }
+        } catch (e: Exception) {
+            val appError = ErrorUiMapper.map(e)
+            _uiState.update { it.copy(loadState = LoadState.Error(appError)) }
+        }
+    }
+
+    @VisibleForTesting
     fun setUiStateForTest(state: GameUiState) {
         _uiState.value = state
     }

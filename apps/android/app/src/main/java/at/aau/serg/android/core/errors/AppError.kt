@@ -31,6 +31,7 @@ sealed class AppError {
 
     companion object {
         fun allStaticErrors(): List<AppError> = listOf(
+            Game.TurnTimedOut,
             Rest.Network,
             Rest.Server,
             Rest.BadRequest,
@@ -40,7 +41,6 @@ sealed class AppError {
             WebSocket.Disconnected,
             WebSocket.SubscriptionFailed,
             WebSocket.ProtocolError,
-            Game.TurnTimedOut,
         )
     }
 }
