@@ -998,15 +998,11 @@ They become especially valuable once the screen has to react to many different m
 
 Direct testing of the Android websocket client layer belongs here. It should verify connection lifecycle, topic subscription, event parsing, and reconnect behavior.
 
-254. test(android)(game)(websocket): add websocket connect tests
-255. test(android)(game)(websocket): add websocket disconnect tests
-256. test(android)(game)(websocket): add topic subscription tests
-257. test(android)(game)(websocket): add game.draft.updated parsing tests
-258. test(android)(game)(websocket): add game.updated parsing tests
-259. test(android)(game)(websocket): add turn.changed parsing tests
-260. test(android)(game)(websocket): add game.ended parsing tests
-261. test(android)(game)(websocket): add reconnect behavior tests
-262. test(android)(game)(websocket): add turn.timed_out parsing tests
+254. test(android)(game)(websocket): add websocket connection lifecycle tests
+255. test(android)(game)(websocket): add topic subscription tests
+256. test(android)(game)(websocket): add websocket event parsing tests for draft, game, and turn-change events
+257. test(android)(game)(websocket): add websocket event parsing tests for timeout and game-end events
+258. test(android)(game)(websocket): add reconnect behavior tests
 
 ---
 
