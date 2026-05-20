@@ -5,6 +5,7 @@ import at.se2group.backend.mapper.toResponse
 import at.se2group.backend.service.GameService
 import at.se2group.backend.service.TurnDraftService
 import at.se2group.backend.service.DrawTileService
+import at.se2group.backend.service.EndTurnService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import shared.models.game.response.TurnDraftResponse
-import shared.models.game.request.DrawTileRequest
+import shared.models.game.request.EndTurnRequest
 import jakarta.validation.Valid
 
 @RestController
@@ -23,7 +24,8 @@ import jakarta.validation.Valid
 class GameController(
     private val gameService: GameService,
     private val turnDraftService: TurnDraftService,
-    private val drawTileService: DrawTileService
+    private val drawTileService: DrawTileService,
+    private val endTurnService: EndTurnService
 ) {
     @GetMapping("/{gameId}")
     fun getGame(@PathVariable gameId: String): GameResponse {
@@ -46,5 +48,14 @@ class GameController(
         @RequestHeader("X-User-Id") userId: String
     ): GameResponse {
         return drawTileService.drawTile(gameId, userId).toResponse()
+    }
+
+    @PostMapping("/{gameId}/end-turn")
+    fun endTurn(
+        @PathVariable gameId: String,
+        @RequestHeader("X-User-Id") userId: String,
+        @Valid @RequestBody request: EndTurnRequest
+    ): GameResponse {
+        return endTurnService.endTurn(gameId, userId, request).toResponse()
     }
 }

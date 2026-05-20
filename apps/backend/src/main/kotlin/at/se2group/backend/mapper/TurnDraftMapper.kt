@@ -7,6 +7,7 @@ import shared.models.game.request.UpdateDraftRequest
 import shared.models.game.response.TurnDraftResponse
 import at.se2group.backend.persistence.TurnDraftEntity
 import at.se2group.backend.persistence.TurnDraftBoardSetEntity
+import shared.models.game.request.EndTurnRequest
 
 fun UpdateDraftRequest.toDomain(gameId: String, userId: String): TurnDraft {
     return TurnDraft(
@@ -83,5 +84,14 @@ fun TurnDraft.toResponse(): TurnDraftResponse {
         draftBoard = boardSets.map { it.toResponse() },
         draftHand = rackTiles.map { it.toResponse() },
         version = version
+    )
+}
+
+fun EndTurnRequest.toDomain(gameId: String, userId: String): TurnDraft {
+    return TurnDraft(
+        gameId = gameId,
+        playerUserId = userId,
+        boardSets = boardSets.map { it.toBoardSetDomain() },
+        rackTiles = rackTiles.map { it.toTileDomain() },
     )
 }
