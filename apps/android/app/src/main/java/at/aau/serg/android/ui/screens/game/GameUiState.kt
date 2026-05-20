@@ -14,5 +14,6 @@ data class GameUiState(
     val boardSets: List<BoardSet> = emptyList(),
     val selectedTiles: Set<Tile> = emptySet(),
     val activeSelectionRow: String? = null,
-    val gameState: ConfirmedGame? = null
+    val gameState: ConfirmedGame? = null,
+    val winnerUserId: String? = null
 )

@@ -141,8 +141,8 @@ class GameNetworkMapperTest {
             board = listOf(
                 BoardSetResponse(
                     boardSetId = "b1",
-                    type = BoardSetType.UNRESOLVED.toString(),
-                    tiles = emptyList()
+                    type = BoardSetType.RUN.toString(),
+                    tiles = listOf(TileResponse("t1", "RED", 5, false))
                 )
             ),
             drawPileCount = 0,
@@ -157,6 +157,8 @@ class GameNetworkMapperTest {
         assertEquals(GameStatus.ACTIVE, domain.status)
         assertEquals(Instant.parse(now), domain.startedAt)
         assertNull(domain.finishedAt)
+        assertEquals(1, domain.boardSets.size)
+        assertEquals("b1", domain.boardSets[0].boardSetId)
     }
 
     @Test
