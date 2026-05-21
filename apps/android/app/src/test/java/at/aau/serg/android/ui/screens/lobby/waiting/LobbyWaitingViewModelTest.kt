@@ -451,22 +451,13 @@ class LobbyWaitingViewModelTest {
 
     @Test
     fun startSocket_catches_NetworkException_and_updates_loadState() = runTest {
-        // Force the flow to instantly throw a network exception upon collection
-        val networkException = RuntimeException("Connection lost")
         coEvery { service.subscribe("lobby_123") } returns flow {
-            throw networkException
+            throw RuntimeException("Connection lost")
         }
 
-        viewModel.uiState.test {
-            val initialState = awaitItem()
-
-            viewModel.startSocket("lobby_123")
-
-            val errorState = awaitItem()
-            assertTrue(errorState.loadState is LoadState.Error)
-
-            cancelAndIgnoreRemainingEvents()
-        }
+        viewModel.startSocket("lobby_123")
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
     }
 
     @Test
