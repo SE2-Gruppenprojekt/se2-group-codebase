@@ -44,6 +44,7 @@ import shared.models.game.event.TurnTimedOutEvent
 import shared.models.game.response.BoardSetResponse
 import shared.models.game.response.GamePlayerResponse
 import shared.models.game.response.GameResponse
+import shared.models.game.response.TileResponse
 import shared.models.game.response.TurnDraftResponse
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -412,14 +413,64 @@ class GameViewModelTest {
 
     @Test
     fun drawTile_addsNew_updatesGameState() = runTest {
-        setTestGameState()
-        val before = viewmodel.uiState.value.gameState
+        val user = User.newBuilder()
+            .setUid("FakeUser1")
+            .setDisplayName("Bob")
+            .setGameId("FakeGame1")
+            .build()
 
+        viewmodel.setUiStateForTest(GameUiState(
+            user = user,
+            rackTiles = viewmodel.uiState.value.rackTiles,
+            gameState = fakeGameResponse.toDomain()
+        ))
+
+        val before = viewmodel.uiState.value.gameState
+        val modifiedGameResponse = fakeGameResponse.copy(
+            players = fakeGameResponse.players.map { p ->
+                if (p.userId == viewmodel.uiState.value.user?.uid) {
+                    p.copy(
+                        rackTiles = listOf(
+                            TileResponse(
+                                tileId = "t1",
+                                color = TileColor.BLACK.toString(),
+                                number = 1,
+                                isJoker = false
+                            )
+                        )
+                    )
+                } else p
+            }
+        )
+        coEvery { service.drawTile(any(), any()) } returns modifiedGameResponse
         viewmodel.onUIEvent(GameUIEvent.DrawTile)
         advanceUntilIdle()
 
         val after = viewmodel.uiState.value.gameState
         assertNotEquals(before, after)
+    }
+
+    @Test
+    fun drawTile_does_not_add_with_empty_rack_updatesGameState() = runTest {
+        val user = User.newBuilder()
+            .setUid("FakeUser1")
+            .setDisplayName("Bob")
+            .setGameId("FakeGame1")
+            .build()
+
+        viewmodel.setUiStateForTest(GameUiState(
+            user = user,
+            rackTiles = emptyList(),
+            gameState = fakeGameResponse.toDomain()
+        ))
+        val before = viewmodel.uiState.value.gameState
+
+        coEvery { service.drawTile(any(), any()) } returns fakeGameResponse
+        viewmodel.onUIEvent(GameUIEvent.DrawTile)
+        advanceUntilIdle()
+
+        val after = viewmodel.uiState.value.gameState
+        assertEquals(before, after)
     }
 
     @Test
@@ -797,8 +848,26 @@ class GameViewModelTest {
     }
 
     @Test
-    fun handleGameSocketEvent_updated_updatesGameState() {
+    fun handleGameSocketEvent_does_not_updateGameState_if_not_active() {
         setTestGameState()
+
+        viewmodel.handleGameSocketEvent(
+            GameEvent.Updated(GameUpdatedEvent(gameId = "Game123", game = fakeGameResponse))
+        )
+
+        assertNotEquals(fakeGameResponse.toDomain(), viewmodel.uiState.value.gameState)
+    }
+
+    @Test
+    fun handleGameSocketEvent_does_updateGameState_if_active() = runTest {
+        val user = User.newBuilder()
+            .setUid("1")
+            .setDisplayName("Bob")
+            .setGameId("g1")
+            .build()
+
+        store.save(user)
+        advanceUntilIdle()
 
         viewmodel.handleGameSocketEvent(
             GameEvent.Updated(GameUpdatedEvent(gameId = "Game123", game = fakeGameResponse))

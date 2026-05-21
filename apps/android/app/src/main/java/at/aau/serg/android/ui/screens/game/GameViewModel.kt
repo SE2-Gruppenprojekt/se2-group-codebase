@@ -115,8 +115,8 @@ class GameViewModel(
     internal fun onUIEvent(event: GameUIEvent) {
         val state = _uiState.value
         try {
-            if (event.requiresActivePlayer && !state.isActivePlayer) {
-                throw IllegalStateException("You can only perform this action during your turn.")
+            check(!(event.requiresActivePlayer && !state.isActivePlayer)) {
+                "You can only perform this action during your turn."
             }
             when (event) {
                 GameUIEvent.AddRow ->
@@ -323,11 +323,14 @@ class GameViewModel(
             }
             try {
                 val gameState = gameService.drawTile(user.gameId, user.uid).toDomain()
-                applyGameState(gameState)
-                _uiState.update {
-                    it.copy(
+                val player = gameState.players.firstOrNull { it.userId == user.uid }
+                val newTile = player?.rackTiles?.lastOrNull()
+
+                _uiState.update { currentState ->
+                    currentState.copy(
                         loadState = LoadState.Success,
                         gameState = gameState,
+                        rackTiles = if (newTile != null) currentState.rackTiles + newTile else currentState.rackTiles
                     )
                 }
             } catch (e: Throwable) {
@@ -446,7 +449,8 @@ class GameViewModel(
                 }
 
                 is GameEvent.Updated -> {
-                    applyGameState(event.payload.game.toDomain())
+                    if (!_uiState.value.isActivePlayer)
+                        applyGameState(event.payload.game.toDomain())
                 }
 
             }
