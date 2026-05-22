@@ -1,6 +1,7 @@
 package at.se2group.backend.api
 
 import at.se2group.backend.service.InvalidTurnSubmissionException
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -9,8 +10,11 @@ import shared.models.api.ApiErrorResponse
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     @ExceptionHandler(Exception::class)
     fun handleGeneric(ex: Exception): ResponseEntity<ApiErrorResponse> {
+        logger.error("Unhandled backend exception", ex)
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(
@@ -23,6 +27,7 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleIllegalArgument(ex: IllegalArgumentException): ResponseEntity<ApiErrorResponse> {
+        logger.warn("Bad request: {}", ex.message)
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
             .body(
@@ -35,6 +40,7 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(NoSuchElementException::class)
     fun handleNoSuchElement(ex: NoSuchElementException): ResponseEntity<ApiErrorResponse> {
+        logger.warn("Resource not found: {}", ex.message)
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
             .body(
@@ -47,6 +53,7 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalStateException::class)
     fun handleIllegalState(ex: IllegalStateException): ResponseEntity<ApiErrorResponse> {
+        logger.warn("Conflict while processing request: {}", ex.message)
         return ResponseEntity
             .status(HttpStatus.CONFLICT)
             .body(
@@ -59,6 +66,7 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(SecurityException::class)
     fun handleSecurity(ex: SecurityException): ResponseEntity<ApiErrorResponse> {
+        logger.warn("Forbidden request: {}", ex.message)
         return ResponseEntity
             .status(HttpStatus.FORBIDDEN)
             .body(
@@ -73,6 +81,11 @@ class GlobalExceptionHandler {
     fun handleInvalidTurnSubmission(
         ex: InvalidTurnSubmissionException
     ): ResponseEntity<ApiErrorResponse> {
+        logger.warn(
+            "Invalid turn submission with {} rule violation(s): {}",
+            ex.validationResult.violations.size,
+            ex.message
+        )
         return ResponseEntity
             .status(HttpStatus.CONFLICT)
             .body(
