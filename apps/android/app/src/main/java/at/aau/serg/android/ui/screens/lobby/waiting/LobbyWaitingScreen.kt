@@ -54,61 +54,64 @@ fun LobbyWaitingScreenContent(
         modifier = Modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(c.screen.bgTop, c.screen.bgBottom)))
-            .verticalScroll(scrollState)
-            .padding(16.dp)
             .testTag(LobbyWaitingTestTags.SCREEN)
     ) {
 
-        TopBar(
-            subtitle = lobbyName.value,
-            onBack = { onEvent(LobbyWaitingEvent.OnBack) },
-            onSettings = { onEvent(LobbyWaitingEvent.OnSettings) }
-        )
+        // scrollable content
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(scrollState)
+                .padding(16.dp)
+        ) {
+            TopBar(
+                subtitle = lobbyName.value,
+                onBack = { onEvent(LobbyWaitingEvent.OnBack) },
+                onSettings = { onEvent(LobbyWaitingEvent.OnSettings) }
+            )
 
-        Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
 
-        WaitingScreenRoomCard(
-            roomCode = roomCode,
-            joinedCount = joinedCount,
-            maxPlayers = maxPlayers,
-            context = context,
-            primaryTextColor = c.screen.primaryText,
-            secondaryTextColor = c.screen.secondaryText,
-            cardColor = c.screen.card
-        )
+            WaitingScreenRoomCard(
+                roomCode = roomCode,
+                joinedCount = joinedCount,
+                maxPlayers = maxPlayers,
+                context = context,
+                primaryTextColor = c.screen.primaryText,
+                secondaryTextColor = c.screen.secondaryText,
+                cardColor = c.screen.card
+            )
 
-        Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
 
-        WaitingScreenPlayerSection(
-            onEvent = onEvent,
-            localId = uiState.user?.uid ?: "",
-            isLoading = uiState.loadState == LoadState.Loading,
-            players = players,
-            fetchedLobby = uiState.lobby,
-            maxPlayers = maxPlayers,
-            joinedCount = joinedCount,
-            primaryTextColor = c.screen.primaryText,
-            secondaryTextColor = c.screen.secondaryText,
-            darkMode = ThemeState.isDarkMode.value,
-        )
+            WaitingScreenPlayerSection(
+                onEvent = onEvent,
+                localId = uiState.user?.uid ?: "",
+                isLoading = uiState.loadState == LoadState.Loading,
+                players = players,
+                fetchedLobby = uiState.lobby,
+                maxPlayers = maxPlayers,
+                joinedCount = joinedCount,
+                primaryTextColor = c.screen.primaryText,
+                secondaryTextColor = c.screen.secondaryText,
+            )
 
-        Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(18.dp))
 
-        WaitingScreenSettingsSection(
-            turnTimer = uiState.turnTimer,
-            startingCards = uiState.startingCards,
-            stackEnabled = uiState.stackEnabled,
-            onTurnTimerMinus = { onEvent(LobbyWaitingEvent.OnTurnTimerDecrease) },
-            onTurnTimerPlus = { onEvent(LobbyWaitingEvent.OnTurnTimerIncrease) },
-            onStartingCardsMinus = { onEvent(LobbyWaitingEvent.OnStartingCardsDecrease) },
-            onStartingCardsPlus = { onEvent(LobbyWaitingEvent.OnStartingCardsIncrease) },
-            onStackToggle = { onEvent(LobbyWaitingEvent.OnStackToggle(it)) },
-            cardColor = c.screen.card,
-            primaryTextColor = c.screen.primaryText,
-            buttonColor = c.screen.actionButton
-        )
-
-        Spacer(Modifier.height(24.dp))
+            WaitingScreenSettingsSection(
+                turnTimer = uiState.turnTimer,
+                startingCards = uiState.startingCards,
+                stackEnabled = uiState.stackEnabled,
+                onTurnTimerMinus = { onEvent(LobbyWaitingEvent.OnTurnTimerDecrease) },
+                onTurnTimerPlus = { onEvent(LobbyWaitingEvent.OnTurnTimerIncrease) },
+                onStartingCardsMinus = { onEvent(LobbyWaitingEvent.OnStartingCardsDecrease) },
+                onStartingCardsPlus = { onEvent(LobbyWaitingEvent.OnStartingCardsIncrease) },
+                onStackToggle = { onEvent(LobbyWaitingEvent.OnStackToggle(it)) },
+                cardColor = c.screen.card,
+                primaryTextColor = c.screen.primaryText,
+                buttonColor = c.screen.actionButton
+            )
+        }
 
         // --- start button (just for host) ---
         if (uiState.lobby?.hostUserId == uiState.user?.uid) {
@@ -116,6 +119,7 @@ fun LobbyWaitingScreenContent(
                 onClick = { onEvent(LobbyWaitingEvent.onMatchStart) },
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp)
                     .height(58.dp)
                     .testTag(LobbyWaitingTestTags.START_BUTTON),
                 shape = RoundedCornerShape(18.dp),

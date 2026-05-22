@@ -78,131 +78,132 @@ fun LobbyBrowseScreenContent(
             .testTag(LobbyBrowseTestTags.SCREEN)
             .fillMaxSize()
             .background(backgroundGradient)
-            .padding(16.dp)
+            .padding(horizontal = 16.dp)
     ) {
-        TopBar(
-            subtitle = "Available Lobbies",
-            onBack = { onEvent(LobbyBrowseEvent.OnBack) },
-            onSettings = { onEvent(LobbyBrowseEvent.OnSettings) },
-            backButtonModifier = Modifier.testTag(LobbyBrowseTestTags.BACK_BUTTON),
-            titleModifier = Modifier.testTag(LobbyBrowseTestTags.TITLE),
-            subtitleModifier = Modifier.testTag(LobbyBrowseTestTags.SUBTITLE),
-            settingsButtonModifier = Modifier.testTag(LobbyBrowseTestTags.SETTINGS_BUTTON)
-        )
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        // direct join row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = uiState.lobbyIdInput,
-                onValueChange = { onEvent(LobbyBrowseEvent.OnLobbyIdChanged(it)) },
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag(LobbyBrowseTestTags.LOBBY_ID_INPUT),
-                singleLine = true,
-                label = { Text("Lobby ID", color = c.screen.secondaryText) },
-                placeholder = { Text("Enter lobby ID to join...", color = c.screen.secondaryText) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Tag,
-                        contentDescription = null,
-                        tint = c.screen.secondaryText
-                    )
-                },
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    capitalization = KeyboardCapitalization.Characters,
-                    imeAction = ImeAction.Done
-                ),
-                shape = RoundedCornerShape(18.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = c.screen.primaryText,
-                    unfocusedTextColor = c.screen.primaryText,
-                    focusedContainerColor = c.screen.card,
-                    unfocusedContainerColor = c.screen.card,
-                    focusedBorderColor = c.screen.cardBorder,
-                    unfocusedBorderColor = c.screen.cardBorder
-                )
-            )
-
-            Button(
-                onClick = { onEvent(LobbyBrowseEvent.OnJoinLobby(enteredLobbyId)) },
-                enabled = enteredLobbyId.isNotEmpty(),
-                shape = RoundedCornerShape(16.dp),
-                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = c.screen.actionButton,
-                    contentColor = Color.White
-                ),
-                modifier = Modifier.testTag(LobbyBrowseTestTags.JOIN_BUTTON)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.PersonAdd,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Join", fontWeight = FontWeight.Bold)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        // list header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "Open Games",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.88f)
-            )
-            Text(
-                text = "${uiState.lobbies.size} available",
-                style = MaterialTheme.typography.labelMedium,
-                color = c.screen.secondaryText
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        if (uiState.loadState == LoadState.Loading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = AccentPurple)
-            }
-        }
-
-        when (val state = uiState.loadState) {
-            is LoadState.Error -> {
-                Text(
-                    text = ErrorUiMapper.toMessage(state.error),
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-            }
-
-            else -> Unit
-        }
-
         // lobby list
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
                 .testTag(LobbyBrowseTestTags.LOBBY_LIST),
+            contentPadding = PaddingValues(vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            item {
+                TopBar(
+                    subtitle = "Available Lobbies",
+                    onBack = { onEvent(LobbyBrowseEvent.OnBack) },
+                    onSettings = { onEvent(LobbyBrowseEvent.OnSettings) },
+                    backButtonModifier = Modifier.testTag(LobbyBrowseTestTags.BACK_BUTTON),
+                    titleModifier = Modifier.testTag(LobbyBrowseTestTags.TITLE),
+                    subtitleModifier = Modifier.testTag(LobbyBrowseTestTags.SUBTITLE),
+                    settingsButtonModifier = Modifier.testTag(LobbyBrowseTestTags.SETTINGS_BUTTON)
+                )
+            }
+
+            // direct join row
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = uiState.lobbyIdInput,
+                        onValueChange = { onEvent(LobbyBrowseEvent.OnLobbyIdChanged(it)) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag(LobbyBrowseTestTags.LOBBY_ID_INPUT),
+                        singleLine = true,
+                        label = { Text("Lobby ID", color = c.screen.secondaryText) },
+                        placeholder = { Text("Enter lobby ID to join...", color = c.screen.secondaryText) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Filled.Tag,
+                                contentDescription = null,
+                                tint = c.screen.secondaryText
+                            )
+                        },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            capitalization = KeyboardCapitalization.Characters,
+                            imeAction = ImeAction.Done
+                        ),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = c.screen.primaryText,
+                            unfocusedTextColor = c.screen.primaryText,
+                            focusedContainerColor = c.screen.card,
+                            unfocusedContainerColor = c.screen.card,
+                            focusedBorderColor = c.screen.cardBorder,
+                            unfocusedBorderColor = c.screen.cardBorder
+                        )
+                    )
+
+                    Button(
+                        onClick = { onEvent(LobbyBrowseEvent.OnJoinLobby(enteredLobbyId)) },
+                        enabled = enteredLobbyId.isNotEmpty(),
+                        shape = RoundedCornerShape(16.dp),
+                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = c.screen.actionButton,
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier.testTag(LobbyBrowseTestTags.JOIN_BUTTON)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.PersonAdd,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Join", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+
+            // list header
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Open Games",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.88f)
+                    )
+                    Text(
+                        text = "${uiState.lobbies.size} available",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = c.screen.secondaryText
+                    )
+                }
+            }
+
+            if (uiState.loadState == LoadState.Loading) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = AccentPurple)
+                    }
+                }
+            }
+
+            if (uiState.loadState is LoadState.Error) {
+                item {
+                    Text(
+                        text = ErrorUiMapper.toMessage((uiState.loadState as LoadState.Error).error),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                }
+            }
+
             items(uiState.lobbies) { lobby ->
                 LobbyBrowseCard(
                     lobby = lobby,
@@ -212,13 +213,7 @@ fun LobbyBrowseScreenContent(
                     onJoinLobby = { onEvent(LobbyBrowseEvent.OnJoinLobby(it)) }
                 )
             }
-
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-            }
         }
-
-        Spacer(modifier = Modifier.height(14.dp))
 
         // create button
         Button(
@@ -226,6 +221,7 @@ fun LobbyBrowseScreenContent(
             modifier = Modifier
                 .testTag(LobbyBrowseTestTags.CREATE_BUTTON)
                 .fillMaxWidth()
+                .padding(vertical = 14.dp)
                 .height(58.dp),
             shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(
