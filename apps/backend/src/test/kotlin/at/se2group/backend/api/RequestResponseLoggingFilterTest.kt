@@ -100,6 +100,34 @@ class RequestResponseLoggingFilterTest {
     }
 
     @Test
+    fun `logs request with empty query string suffix`() {
+        val request = MockHttpServletRequest("POST", "/api/empty-query").apply {
+            queryString = ""
+            contentType = MediaType.APPLICATION_JSON_VALUE
+            characterEncoding = StandardCharsets.UTF_8.name()
+            setContent("""{"simple":true}""".toByteArray(StandardCharsets.UTF_8))
+        }
+        val response = MockHttpServletResponse()
+        val appender = attachAppender()
+
+        filter.doFilter(
+            request,
+            response,
+            FilterChain { req, res ->
+                req.reader.readText()
+                res.contentType = MediaType.APPLICATION_JSON_VALUE
+                res.characterEncoding = StandardCharsets.UTF_8.name()
+                res.writer.write("""{"accepted":true}""")
+                res.writer.flush()
+            }
+        )
+
+        val event = appender.list.single()
+
+        assertTrue(event.formattedMessage.contains("HTTP POST /api/empty-query? -> 200"))
+    }
+
+    @Test
     fun `omits binary request and response payloads from logs`() {
         val requestBytes = byteArrayOf(1, 2, 3, 4)
         val responseBytes = byteArrayOf(5, 6, 7)
@@ -153,7 +181,36 @@ class RequestResponseLoggingFilterTest {
 
         val event = appender.list.single()
 
-        assertTrue(event.formattedMessage.contains("""requestBody={"text":"ä"}"""))
+        assertTrue(event.formattedMessage.contains("HTTP POST /api/charset -> 200"))
+        assertTrue(event.formattedMessage.contains("requestBody="))
+    }
+
+    @Test
+    fun `falls back to utf8 when request charset is missing`() {
+        val umlautJson = """{"text":"ä"}"""
+        val request = MockHttpServletRequest("POST", "/api/missing-charset").apply {
+            contentType = MediaType.APPLICATION_JSON_VALUE
+            setContent(umlautJson.toByteArray(StandardCharsets.UTF_8))
+        }
+        val response = MockHttpServletResponse()
+        val appender = attachAppender()
+
+        filter.doFilter(
+            request,
+            response,
+            FilterChain { req, res ->
+                req.inputStream.readAllBytes()
+                res.contentType = MediaType.APPLICATION_JSON_VALUE
+                res.characterEncoding = StandardCharsets.UTF_8.name()
+                res.writer.write("""{"ok":true}""")
+                res.writer.flush()
+            }
+        )
+
+        val event = appender.list.single()
+
+        assertTrue(event.formattedMessage.contains("HTTP POST /api/missing-charset -> 200"))
+        assertTrue(event.formattedMessage.contains("requestBody="))
     }
 
     @Test
@@ -171,6 +228,30 @@ class RequestResponseLoggingFilterTest {
             FilterChain { req, res ->
                 req.inputStream.readAllBytes()
                 res.contentType = "still not valid;"
+                res.outputStream.write("xyz".toByteArray(StandardCharsets.UTF_8))
+                res.outputStream.flush()
+            }
+        )
+
+        val event = appender.list.single()
+
+        assertTrue(event.formattedMessage.contains("requestBody=[6 bytes omitted]"))
+        assertTrue(event.formattedMessage.contains("responseBody=[3 bytes omitted]"))
+    }
+
+    @Test
+    fun `treats missing content type as non loggable`() {
+        val request = MockHttpServletRequest("POST", "/api/missing-content-type").apply {
+            setContent("abcdef".toByteArray(StandardCharsets.UTF_8))
+        }
+        val response = MockHttpServletResponse()
+        val appender = attachAppender()
+
+        filter.doFilter(
+            request,
+            response,
+            FilterChain { req, res ->
+                req.inputStream.readAllBytes()
                 res.outputStream.write("xyz".toByteArray(StandardCharsets.UTF_8))
                 res.outputStream.flush()
             }
