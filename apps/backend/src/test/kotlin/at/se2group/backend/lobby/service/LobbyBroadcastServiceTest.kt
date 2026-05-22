@@ -8,7 +8,12 @@ import at.se2group.backend.dto.LobbyDeletedEvent
 import at.se2group.backend.dto.LobbyStartedEvent
 import at.se2group.backend.dto.LobbyUpdatedEvent
 import at.se2group.backend.service.LobbyBroadcastService
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.read.ListAppender
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
@@ -17,6 +22,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.junit.jupiter.MockitoExtension
+import org.slf4j.LoggerFactory
 import org.springframework.messaging.simp.SimpMessagingTemplate
 
 @ExtendWith(MockitoExtension::class)
@@ -110,5 +116,27 @@ class LobbyBroadcastServiceTest {
         assertEquals("match-1", event.matchId)
 
         verifyNoMoreInteractions(messagingTemplate)
+    }
+
+    @Test
+    fun `broadcastLobbyStarted logs info message`() {
+        val appender = attachAppender()
+
+        lobbyBroadcastService.broadcastLobbyStarted("lobby-1", "match-1")
+
+        val event = appender.list.single()
+
+        assertEquals(Level.INFO, event.level)
+        assertTrue(event.formattedMessage.contains("Broadcasting lobby.started"))
+        assertTrue(event.formattedMessage.contains("lobbyId=lobby-1"))
+        assertTrue(event.formattedMessage.contains("matchId=match-1"))
+    }
+
+    private fun attachAppender(): ListAppender<ILoggingEvent> {
+        val logger = LoggerFactory.getLogger(LobbyBroadcastService::class.java) as Logger
+        return ListAppender<ILoggingEvent>().also {
+            it.start()
+            logger.addAppender(it)
+        }
     }
 }
