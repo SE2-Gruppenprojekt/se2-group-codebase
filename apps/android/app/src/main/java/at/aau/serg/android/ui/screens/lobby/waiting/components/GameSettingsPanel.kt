@@ -8,9 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import at.aau.serg.android.ui.theme.ActionButtonDark
-import at.aau.serg.android.ui.theme.ActionButtonLight
-import at.aau.serg.android.ui.theme.ThemeState
+import at.aau.serg.android.ui.theme.appColors
 
 @Composable
 fun GameSettingsPanel(
@@ -56,7 +54,7 @@ fun SettingRow(
     onMinus: () -> Unit,
     onPlus: () -> Unit
 ) {
-    val buttonColor = if (ThemeState.isDarkMode.value) ActionButtonDark else ActionButtonLight
+    val buttonColor = appColors().screen.actionButton
 
     Row(
         modifier = Modifier

@@ -24,7 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import at.aau.serg.android.ui.components.BackButton
 import at.aau.serg.android.ui.screens.game.components.TileRow
 import at.aau.serg.android.ui.screens.game.components.TileRowPlaceholder
-import at.aau.serg.android.ui.theme.ThemeState
+import at.aau.serg.android.ui.theme.appColors
 
 @Composable
 fun GameScreen(
@@ -43,16 +43,12 @@ fun GameScreenContent(
     uiState: GameUiState,
     onEvent: (GameUIEvent) -> Unit
 ) {
-    val dark = ThemeState.isDarkMode.value
-
-    val boardBorder = if (dark) Color.White.copy(alpha = 0.2f) else Color(0xFF86EFAC)
-    val iconBtnBg = if (dark) Color(0xFF334155) else Color(0xFFE2E8F0)
-    val iconBtnTint = if (dark) Color.White else Color(0xFF475569)
+    val c = appColors()
 
     Box(
         Modifier
             .fillMaxSize()
-            .background(if (dark) Color(0xFF0F172A) else Color(0xFFF1F5F9))
+            .background(c.game.background)
             .testTag(GameTestTags.SCREEN)
     ) {
         Column(Modifier.fillMaxSize()) {
@@ -61,7 +57,7 @@ fun GameScreenContent(
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .background(if (dark) Color(0xFF1E293B) else Color.White)
+                    .background(c.game.surface)
                     .padding(12.dp)
                     .testTag(GameTestTags.HEADER)
             ) {
@@ -85,7 +81,7 @@ fun GameScreenContent(
                 Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .background(Color.White)
+                    .background(c.game.background)
             ) {
                 Column(Modifier.fillMaxSize()) {
                     // BOARD
@@ -95,7 +91,7 @@ fun GameScreenContent(
                             .weight(1f)
                             .padding(12.dp)
                             .clip(RoundedCornerShape(16.dp))
-                            .background(if (dark) Color(0xFF1E293B) else Color.White)
+                            .background(c.game.surface)
                             .padding(12.dp)
                             .testTag(GameTestTags.BOARD),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -105,7 +101,7 @@ fun GameScreenContent(
                                 onEvent,
                                 tiles = boardSet.tiles,
                                 tileSize = 60,
-                                borderColor = boardBorder,
+                                borderColor = c.game.boardBorder,
                                 selectedTiles = uiState.selectedTiles,
                                 selectedRow = uiState.activeSelectionRow,
                                 rowId = boardSet.boardSetId,
@@ -126,7 +122,7 @@ fun GameScreenContent(
                     Box(
                         Modifier
                             .fillMaxWidth()
-                            .background(if (dark) Color(0xFF1E293B) else Color.White)
+                            .background(c.game.surface)
                             .padding(16.dp)
                             .testTag(GameTestTags.RACK)
                     ) {
@@ -140,7 +136,7 @@ fun GameScreenContent(
                                 onEvent,
                                 tiles = uiState.rackTiles,
                                 tileSize = 44,
-                                borderColor = boardBorder,
+                                borderColor = c.game.boardBorder,
                                 selectedTiles = uiState.selectedTiles,
                                 selectedRow = uiState.activeSelectionRow,
                                 rowId = null
@@ -164,7 +160,7 @@ fun GameScreenContent(
                                         .height(52.dp)
                                         .testTag(GameTestTags.ACTION_END_TURN),
                                     shape = RoundedCornerShape(14.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9D3CFF))
+                                    colors = ButtonDefaults.buttonColors(containerColor = c.game.endTurnButton)
                                 ) {
                                     Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White)
                                     Spacer(Modifier.width(6.dp))
@@ -179,10 +175,10 @@ fun GameScreenContent(
                                     modifier = Modifier
                                         .size(52.dp)
                                         .clip(RoundedCornerShape(14.dp))
-                                        .background(iconBtnBg)
+                                        .background(c.game.iconBtnBg)
                                         .testTag(GameTestTags.ACTION_ADD)
                                 ) {
-                                    Icon(Icons.Filled.Add, contentDescription = "Add", tint = iconBtnTint)
+                                    Icon(Icons.Filled.Add, contentDescription = "Add", tint = c.game.iconBtnTint)
                                 }
 
                                 IconButton(
@@ -193,10 +189,10 @@ fun GameScreenContent(
                                     modifier = Modifier
                                         .size(52.dp)
                                         .clip(RoundedCornerShape(14.dp))
-                                        .background(iconBtnBg)
+                                        .background(c.game.iconBtnBg)
                                         .testTag(GameTestTags.ACTION_RESET)
                                 ) {
-                                    Icon(Icons.Filled.Refresh, contentDescription = "Reset", tint = iconBtnTint)
+                                    Icon(Icons.Filled.Refresh, contentDescription = "Reset", tint = c.game.iconBtnTint)
                                 }
                             }
                         }

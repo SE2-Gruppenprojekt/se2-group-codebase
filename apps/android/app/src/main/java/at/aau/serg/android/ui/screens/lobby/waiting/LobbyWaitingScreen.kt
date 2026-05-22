@@ -22,7 +22,6 @@ import at.aau.serg.android.ui.screens.lobby.waiting.components.WaitingScreenRoom
 import at.aau.serg.android.ui.screens.lobby.waiting.components.WaitingScreenSettingsSection
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.theme.AccentPurple
-import at.aau.serg.android.ui.theme.ThemeState
 import at.aau.serg.android.ui.theme.appColors
 
 @Composable
