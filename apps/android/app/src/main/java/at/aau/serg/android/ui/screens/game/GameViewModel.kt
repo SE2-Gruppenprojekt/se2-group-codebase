@@ -54,7 +54,6 @@ class GameViewModel(
         viewModelScope.launch {
             userStore.data.collect { user ->
                 _uiState.update { it.copy(user = user) }
-                loadGame(user.gameId)
             }
         }
     }
@@ -74,7 +73,7 @@ class GameViewModel(
     }
 
     @VisibleForTesting
-    internal fun applyGameState(game: ConfirmedGame) {
+    internal fun applyGameState(game: ConfirmedGame, refreshView: Boolean) {
         val user = _uiState.value.user
             ?: throw IllegalStateException("User must not be null when applyGameState is called.")
 
@@ -88,8 +87,9 @@ class GameViewModel(
         _uiState.update { old ->
             old.copy(
                 gameState = game,
-                rackTiles = mergedRack,
-                boardSets = game.boardSets
+                rackTiles = if (refreshView) mergedRack else old.rackTiles,
+                boardSets = if (refreshView) game.boardSets else old.boardSets,
+                isActivePlayer = game.currentPlayerUserId == user.uid
             )
         }
     }
@@ -165,19 +165,17 @@ class GameViewModel(
     }
 
     private fun loadGame(gameId: String) {
-        val user = _uiState.value.user
-            ?: throw IllegalStateException("User must not be null when loadGame is called.")
         viewModelScope.launch {
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
             try {
                 val gameState = gameService.loadGame(gameId).toDomain()
-                applyGameState(gameState)
+                applyGameState(gameState, true)
                 _uiState.update {
                     it.copy(loadState = LoadState.Success)
                 }
-                startSocket(user.gameId)
+                startSocket(gameId)
             } catch (e: Throwable) {
                 val appError = NetworkErrorMapper.map(e)
 
@@ -304,7 +302,7 @@ class GameViewModel(
     @VisibleForTesting
     internal fun resetSelection() {
         val gameState = _uiState.value.gameState ?: throw IllegalStateException("GameState must not be null resetBoard is attempted.")
-        applyGameState(gameState)
+        applyGameState(gameState, true)
         _uiState.update { state ->
             state.copy(
                 selectedTiles = emptySet(),
@@ -325,11 +323,10 @@ class GameViewModel(
                 val gameState = gameService.drawTile(user.gameId, user.uid).toDomain()
                 val player = gameState.players.firstOrNull { it.userId == user.uid }
                 val newTile = player?.rackTiles?.lastOrNull()
-
+                applyGameState(gameState, false)
                 _uiState.update { currentState ->
                     currentState.copy(
                         loadState = LoadState.Success,
-                        gameState = gameState,
                         rackTiles = if (newTile != null) currentState.rackTiles + newTile else currentState.rackTiles
                     )
                 }
@@ -427,15 +424,13 @@ class GameViewModel(
                 }
 
                 is GameEvent.TurnChanged -> {
-                    val newPlayerId = event.payload.currentTurnPlayerId
-                    _uiState.update { state ->
-                        val updatedGameState = state.gameState?.let { game ->
-                            if (game.players.any { it.userId == newPlayerId }) {
-                                game.copy(currentPlayerUserId = newPlayerId)
-                            } else game
+                    _uiState.value.gameState?.let { game ->
+                        if (game.players.any { it.userId == event.payload.currentTurnPlayerId }) {
+                            val updated = game.copy(currentPlayerUserId = event.payload.currentTurnPlayerId)
+                            applyGameState(updated, false)
                         }
-                        state.copy(gameState = updatedGameState)
                     }
+                    _uiState.value
                 }
 
                 is GameEvent.TurnTimedOut -> {
@@ -450,7 +445,7 @@ class GameViewModel(
 
                 is GameEvent.Updated -> {
                     if (!_uiState.value.isActivePlayer)
-                        applyGameState(event.payload.game.toDomain())
+                        applyGameState(event.payload.game.toDomain(), true)
                 }
 
             }

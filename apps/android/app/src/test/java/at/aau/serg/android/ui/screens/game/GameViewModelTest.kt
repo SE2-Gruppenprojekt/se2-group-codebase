@@ -137,7 +137,8 @@ class GameViewModelTest {
                     gameId = initialUser.gameId,
                     lobbyId = "Lobby123",
                     currentPlayerUserId = initialUser.uid
-                )
+                ),
+                isActivePlayer = true
             )
         )
     }
@@ -422,7 +423,8 @@ class GameViewModelTest {
         viewmodel.setUiStateForTest(GameUiState(
             user = user,
             rackTiles = viewmodel.uiState.value.rackTiles,
-            gameState = fakeGameResponse.toDomain()
+            gameState = fakeGameResponse.toDomain(),
+            isActivePlayer = true
         ))
 
         val before = viewmodel.uiState.value.gameState
@@ -536,6 +538,7 @@ class GameViewModelTest {
         setTestGameState()
         val state = viewmodel.uiState.value
 
+        coEvery { service.loadGame(any()) } returns fakeGameResponse
         viewmodel.onUIEvent(GameUIEvent.OnLoadGame("g1"))
         advanceUntilIdle()
 
@@ -944,13 +947,13 @@ class GameViewModelTest {
         viewmodel.setUiStateForTest(GameUiState(
             user = null
         ))
-        viewmodel.applyGameState(fakeGameResponse.toDomain())
+        viewmodel.applyGameState(fakeGameResponse.toDomain(), false)
     }
 
     @Test(expected = IllegalStateException::class)
     fun applyGameState_withNullUser_throws_IllegalStateException() {
         viewmodel.setUiStateForTest(GameUiState(user = null))
-        viewmodel.applyGameState(fakeGameResponse.toDomain())
+        viewmodel.applyGameState(fakeGameResponse.toDomain(), true)
     }
 
     @Test
