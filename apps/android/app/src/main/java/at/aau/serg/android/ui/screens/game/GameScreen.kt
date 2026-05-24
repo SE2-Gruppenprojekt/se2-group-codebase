@@ -3,6 +3,7 @@ package at.aau.serg.android.ui.screens.game
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -22,19 +23,28 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import at.aau.serg.android.ui.components.BackButton
+import at.aau.serg.android.ui.screens.game.components.PlayerChip
 import at.aau.serg.android.ui.screens.game.components.TileRow
 import at.aau.serg.android.ui.screens.game.components.TileRowPlaceholder
 import at.aau.serg.android.ui.theme.appColors
 
 @Composable
 fun GameScreen(
-    viewModel: GameViewModel = viewModel()
+    viewModel: GameViewModel = viewModel(),
+    onBack: (() -> Unit)? = null,
+    onSettings: (() -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     GameScreenContent(
         uiState = uiState,
-        onEvent = viewModel::onUIEvent
+        onEvent = { event ->
+            when (event) {
+                GameUIEvent.OnBack -> onBack?.invoke() ?: viewModel.onUIEvent(event)
+                GameUIEvent.OnSettings -> onSettings?.invoke() ?: viewModel.onUIEvent(event)
+                else -> viewModel.onUIEvent(event)
+            }
+        }
     )
 }
 
@@ -54,25 +64,51 @@ fun GameScreenContent(
         Column(Modifier.fillMaxSize()) {
 
             // HEADER
-            Box(
+            Column(
                 Modifier
                     .fillMaxWidth()
                     .background(c.game.surface)
-                    .padding(12.dp)
+                    .padding(horizontal = 12.dp)
+                    .padding(top = 12.dp)
                     .testTag(GameTestTags.HEADER)
             ) {
-                BackButton(onBack = { onEvent(GameUIEvent.OnBack) })
+                Box(Modifier.fillMaxWidth()) {
+                    BackButton(onBack = { onEvent(GameUIEvent.OnBack) })
 
-                Column(Modifier.align(Alignment.Center)) {
-                    Text("Game #4821", fontWeight = FontWeight.Bold)
-                    Text("Round 2 of 3", fontSize = 12.sp)
+                    Column(Modifier.align(Alignment.Center)) {
+                        Text("Game #4821", fontWeight = FontWeight.Bold)
+                        Text("Round 2 of 3", fontSize = 12.sp)
+                    }
+
+                    Row(Modifier.align(Alignment.CenterEnd)) {
+                        Text("3:45")
+                        IconButton(onClick = { onEvent(GameUIEvent.OnSettings) }) {
+                            Icon(Icons.Default.Settings, null)
+                        }
+                    }
                 }
 
-                Row(Modifier.align(Alignment.CenterEnd)) {
-                    Text("3:45")
-                    IconButton(onClick = { onEvent(GameUIEvent.OnSettings) }) {
-                        Icon(Icons.Default.Settings, null)
+                // player bar — sorted by turn order, active player highlighted
+                val players = uiState.gameState?.players.orEmpty()
+                    .sortedBy { it.turnOrder }
+                val currentPlayerId = uiState.gameState?.currentPlayerUserId
+
+                if (players.isNotEmpty()) {
+                    LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(players) { player ->
+                            PlayerChip(
+                                player = player,
+                                isActive = player.userId == currentPlayerId
+                            )
+                        }
                     }
+                } else {
+                    Spacer(Modifier.height(12.dp))
                 }
             }
 
