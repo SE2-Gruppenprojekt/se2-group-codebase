@@ -97,7 +97,8 @@ fun GameScreenContent(
                     LazyRow(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 10.dp),
+                            .padding(vertical = 10.dp)
+                            .testTag(GameTestTags.PLAYER_BAR),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(players) { player ->
