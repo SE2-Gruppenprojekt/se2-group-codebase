@@ -5,7 +5,9 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import at.aau.serg.android.core.errors.AppError
 import at.aau.serg.android.ui.state.LoadState
 import org.junit.Assert.*
 import org.junit.Rule
@@ -191,5 +193,21 @@ class LobbyCreateScreenTest {
         composeRule
             .onNodeWithTag(LobbyCreateTestTags.CREATE_BUTTON)
             .assertIsEnabled()
+    }
+
+    @Test
+    fun errorState_displaysErrorMessage() {
+        composeRule.setContent {
+            LobbyCreateScreenContent(
+                uiState = LobbyCreateUiState(
+                    loadState = LoadState.Error(AppError.Rest.Network)
+                ),
+                onEvent = {}
+            )
+        }
+
+        composeRule
+            .onNodeWithText("Network error")
+            .assertIsDisplayed()
     }
 }
