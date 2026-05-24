@@ -22,6 +22,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import shared.models.game.domain.BoardSet
+import shared.models.game.domain.ConfirmedGame
+import shared.models.game.domain.GamePlayer
 import shared.models.game.domain.NumberedTile
 import shared.models.game.domain.TileColor
 
@@ -268,5 +270,106 @@ class GameScreenTest {
         composeRule
             .onNodeWithText("3 Your Tiles")
             .assertExists()
+    }
+
+    // --- player bar ---
+
+    @Test
+    fun gameScreen_showsPlayerBar_whenGameStateHasPlayers() {
+
+        val p1 = GamePlayer(userId = "u1", displayName = "Alice", turnOrder = 0)
+        val p2 = GamePlayer(userId = "u2", displayName = "Bob", turnOrder = 1)
+
+        stateFlow.value = stateFlow.value.copy(
+            gameState = ConfirmedGame(
+                gameId = "g1",
+                lobbyId = "l1",
+                players = listOf(p1, p2),
+                currentPlayerUserId = "u1"
+            )
+        )
+
+        composeRule.setContent {
+            GameScreen(viewModel = viewModel)
+        }
+
+        composeRule.onNodeWithTag(GameTestTags.PLAYER_BAR).assertExists()
+        composeRule.onNodeWithText("Alice").assertExists()
+        composeRule.onNodeWithText("Bob").assertExists()
+    }
+
+    @Test
+    fun gameScreen_noPlayerBar_whenGameStateIsNull() {
+
+        stateFlow.value = stateFlow.value.copy(gameState = null)
+
+        composeRule.setContent {
+            GameScreen(viewModel = viewModel)
+        }
+
+        composeRule.onNodeWithTag(GameTestTags.HEADER).assertExists()
+        assert(
+            composeRule
+                .onAllNodes(hasTestTag(GameTestTags.PLAYER_BAR))
+                .fetchSemanticsNodes()
+                .isEmpty()
+        )
+    }
+
+    @Test
+    fun gameScreen_activePlayerIsInPlayerBar() {
+
+        val active = GamePlayer(userId = "u1", displayName = "Charlie", turnOrder = 0)
+        val other  = GamePlayer(userId = "u2", displayName = "Dana",    turnOrder = 1)
+
+        stateFlow.value = stateFlow.value.copy(
+            gameState = ConfirmedGame(
+                gameId = "g1",
+                lobbyId = "l1",
+                players = listOf(active, other),
+                currentPlayerUserId = "u1"
+            )
+        )
+
+        composeRule.setContent {
+            GameScreen(viewModel = viewModel)
+        }
+
+        composeRule.onNodeWithText("Charlie").assertExists()
+        composeRule.onNodeWithText("Dana").assertExists()
+    }
+
+    // --- ViewModel fallback when callbacks are null ---
+
+    @Test
+    fun gameScreen_callsViewModelOnBack_whenNoCallback() {
+
+        composeRule.setContent {
+            GameScreen(viewModel = viewModel)
+        }
+
+        composeRule
+            .onAllNodes(hasClickAction())
+            .onFirst()
+            .performClick()
+
+        verify { viewModel.onUIEvent(GameUIEvent.OnBack) }
+    }
+
+    @Test
+    fun gameScreen_callsViewModelOnSettings_whenNoCallback() {
+
+        composeRule.setContent {
+            GameScreen(viewModel = viewModel)
+        }
+
+        composeRule
+            .onNode(hasClickAction() and hasAnyAncestor(hasTestTag(GameTestTags.HEADER)))
+            .onChildren()
+            .filter(hasClickAction())
+            .onLast()
+            .performClick()
+
+        verify { viewModel.onUIEvent(GameUIEvent.OnSettings) }
     }
 }
