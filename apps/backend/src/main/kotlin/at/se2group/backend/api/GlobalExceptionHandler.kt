@@ -8,12 +8,35 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import shared.models.api.ApiErrorResponse
 
+/**
+ * Centralized HTTP exception mapping for backend REST endpoints.
+ *
+ * This advice translates common backend exceptions into stable API responses so
+ * that controllers can remain thin and service code can signal failures through
+ * exceptions instead of hand-building response entities. The handler is also a
+ * logging boundary: expected client-caused failures are logged at `WARN`, while
+ * unexpected backend failures are logged at `ERROR`.
+ *
+ * Current mapping policy:
+ *
+ * - [IllegalArgumentException] -> `400 BAD_REQUEST`
+ * - [NoSuchElementException] -> `404 NOT_FOUND`
+ * - [IllegalStateException] -> `409 CONFLICT`
+ * - [SecurityException] -> `403 FORBIDDEN`
+ * - [InvalidTurnSubmissionException] -> `409 INVALID_TURN_SUBMISSION`
+ * - all other [Exception] types -> `500 INTERNAL_SERVER_ERROR`
+ *
+ * The rule-validation path is handled explicitly through
+ * [InvalidTurnSubmissionException], which preserves structured
+ * `RuleViolation` data for clients that need detailed move rejection reasons.
+ */
 @RestControllerAdvice
 class GlobalExceptionHandler {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @ExceptionHandler(Exception::class)
     fun handleGeneric(ex: Exception): ResponseEntity<ApiErrorResponse> {
+        // Unexpected exceptions indicate a backend failure rather than a normal client mistake.
         logger.error("Unhandled backend exception", ex)
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -27,6 +50,7 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleIllegalArgument(ex: IllegalArgumentException): ResponseEntity<ApiErrorResponse> {
+        // Invalid input is expected to happen at the API boundary and should stay visible but non-fatal.
         logger.warn("Bad request: {}", ex.message)
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
@@ -81,6 +105,7 @@ class GlobalExceptionHandler {
     fun handleInvalidTurnSubmission(
         ex: InvalidTurnSubmissionException
     ): ResponseEntity<ApiErrorResponse> {
+        // Keep rule-validation failures structured so clients can show precise move feedback.
         logger.warn(
             "Invalid turn submission with {} rule violation(s): {}",
             ex.validationResult.violations.size,

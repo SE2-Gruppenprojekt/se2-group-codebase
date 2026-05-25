@@ -9,6 +9,24 @@ import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Service
 import shared.models.lobby.domain.Lobby
 
+/**
+ * Emits backend lobby websocket events to lobby-specific topics.
+ *
+ * The service keeps websocket topic construction and event payload creation out
+ * of the main lobby service layer. That keeps the lobby application logic
+ * focused on state transitions while this class owns the realtime transport
+ * contract and its logging.
+ *
+ * Emitted event families:
+ *
+ * - lobby state updates
+ * - lobby deletion notifications
+ * - lobby start notifications with the created match id
+ *
+ * Each emission is logged with the event type and its routing identifiers so
+ * that lobby lifecycle problems can be traced without inspecting the full
+ * payload bodies.
+ */
 @Service
 class LobbyBroadcastService(
     private val messagingTemplate: SimpMessagingTemplate
@@ -16,6 +34,7 @@ class LobbyBroadcastService(
     private val logger = LoggerFactory.getLogger(javaClass)
 
     fun broadcastLobbyUpdated(lobby: Lobby) {
+        // Log before emission so lobby lifecycle transitions remain visible even if delivery is investigated later.
         logger.info(
             "Broadcasting lobby.updated to topic=/topic/lobbies/{} for lobbyId={} status={}",
             lobby.lobbyId,

@@ -12,6 +12,26 @@ import shared.models.game.event.GameUpdatedEvent
 import shared.models.game.event.TurnChangedEvent
 import shared.models.game.event.TurnTimedOutEvent
 
+/**
+ * Emits backend game websocket events to the shared game topic namespace.
+ *
+ * This service centralizes topic naming and payload construction for the game
+ * realtime channel so that application services do not talk to
+ * [SimpMessagingTemplate] directly. It also logs every emitted event with the
+ * key routing identifiers needed to reconstruct match flow in logs.
+ *
+ * The service currently covers:
+ *
+ * - live draft updates
+ * - confirmed game state updates
+ * - turn ownership changes
+ * - turn timeout notifications
+ * - game end notifications
+ *
+ * Logging at this boundary is intentionally concise: it records event type,
+ * topic, and key identifiers, but does not dump full domain objects into the
+ * log stream.
+ */
 @Service
 class GameBroadcastService(
     private val messagingTemplate: SimpMessagingTemplate
@@ -25,6 +45,7 @@ class GameBroadcastService(
     private fun gameTopic(gameId: String) = "$GAME_TOPIC_PREFIX/$gameId"
 
     fun broadcastDraftUpdated(draft: TurnDraft) {
+        // Log before emission so failed or interrupted send paths still leave a trace in the backend logs.
         logger.info(
             "Broadcasting game.draft.updated to topic={} for gameId={} playerUserId={}",
             gameTopic(draft.gameId),
