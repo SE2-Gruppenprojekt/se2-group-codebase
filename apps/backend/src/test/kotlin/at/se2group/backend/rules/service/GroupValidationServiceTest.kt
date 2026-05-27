@@ -107,6 +107,26 @@ class GroupValidationServiceTest {
     }
 
     @Test
+    fun `rejects group with more than 4 tiles including jokers`() {
+        val set = set(
+            tile("tile-1", TileColor.RED, 7),
+            tile("tile-2", TileColor.BLUE, 7),
+            tile("tile-3", TileColor.BLACK, 7),
+            joker("tile-4", TileColor.RED),
+            joker("tile-5", TileColor.BLACK)
+        )
+
+        val result = service.validate(set)
+
+        val violation = result.violations.single()
+        assertFalse(result.isValid)
+        assertEquals("GROUP_MAX_SIZE", violation.code)
+        assertEquals("Group must contain at most 4 tiles", violation.message)
+        assertEquals("set-1", violation.boardSetId)
+        assertEquals(set.tiles.map { it.tileId }, violation.tileIds)
+    }
+
+    @Test
     fun `rejects group with mixed tile numbers`() {
         val set = set(
             tile("tile-1", TileColor.RED, 7),
