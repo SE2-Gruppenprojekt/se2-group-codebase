@@ -50,6 +50,17 @@ tasks.test {
 
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
+    classDirectories.setFrom(
+        files(
+            classDirectories.files.map { classesDir ->
+                fileTree(classesDir) {
+                    // Ignore stale duplicate class artifacts such as "Foo 2.class" that can
+                    // appear in local incremental output and break JaCoCo bundle creation.
+                    exclude("**/* 2.class")
+                }
+            }
+        )
+    )
     reports {
         xml.required.set(true)
         html.required.set(true)
