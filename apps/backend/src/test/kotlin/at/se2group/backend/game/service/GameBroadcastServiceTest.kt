@@ -1,7 +1,12 @@
 package at.se2group.backend.game.service
 
 import at.se2group.backend.service.GameBroadcastService
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.read.ListAppender
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
@@ -9,6 +14,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.junit.jupiter.MockitoExtension
+import org.slf4j.LoggerFactory
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.GamePlayer
@@ -195,5 +201,45 @@ class GameBroadcastServiceTest {
         assertEquals("user-1", event.winnerUserId)
 
         verifyNoMoreInteractions(messagingTemplate)
+    }
+
+    @Test
+    fun `broadcastGameUpdated logs info message`() {
+        val service = GameBroadcastService(messagingTemplate)
+        val createdAt = Instant.parse("2026-05-08T12:00:00Z")
+        val appender = attachAppender()
+
+        service.broadcastGameUpdated(
+            ConfirmedGame(
+                gameId = "game-1",
+                lobbyId = "lobby-1",
+                players = listOf(
+                    GamePlayer(
+                        userId = "user-1",
+                        displayName = "Alice",
+                        turnOrder = 0,
+                        joinedAt = createdAt
+                    )
+                ),
+                currentPlayerUserId = "user-1",
+                status = GameStatus.ACTIVE,
+                createdAt = createdAt
+            )
+        )
+
+        val event = appender.list.single()
+
+        assertEquals(Level.INFO, event.level)
+        assertTrue(event.formattedMessage.contains("Broadcasting game.updated"))
+        assertTrue(event.formattedMessage.contains("gameId=game-1"))
+        assertTrue(event.formattedMessage.contains("status=ACTIVE"))
+    }
+
+    private fun attachAppender(): ListAppender<ILoggingEvent> {
+        val logger = LoggerFactory.getLogger(GameBroadcastService::class.java) as Logger
+        return ListAppender<ILoggingEvent>().also {
+            it.start()
+            logger.addAppender(it)
+        }
     }
 }

@@ -1,6 +1,7 @@
 package at.se2group.backend.service
 
 import at.se2group.backend.mapper.toResponse
+import org.slf4j.LoggerFactory
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Service
 import shared.models.game.domain.ConfirmedGame
@@ -11,10 +12,32 @@ import shared.models.game.event.GameUpdatedEvent
 import shared.models.game.event.TurnChangedEvent
 import shared.models.game.event.TurnTimedOutEvent
 
+/**
+ * Emits backend game websocket events to the shared game topic namespace.
+ *
+ * This service centralizes topic naming and payload construction for the game
+ * realtime channel so that application services do not talk to
+ * [SimpMessagingTemplate] directly. It also logs every emitted event with the
+ * key routing identifiers needed to reconstruct match flow in logs.
+ *
+ * The service currently covers:
+ *
+ * - live draft updates
+ * - confirmed game state updates
+ * - turn ownership changes
+ * - turn timeout notifications
+ * - game end notifications
+ *
+ * Logging at this boundary is intentionally concise: it records event type,
+ * topic, and key identifiers, but does not dump full domain objects into the
+ * log stream.
+ */
 @Service
 class GameBroadcastService(
     private val messagingTemplate: SimpMessagingTemplate
 ) {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     private companion object {
         const val GAME_TOPIC_PREFIX = "/topic/games"
     }
@@ -22,6 +45,13 @@ class GameBroadcastService(
     private fun gameTopic(gameId: String) = "$GAME_TOPIC_PREFIX/$gameId"
 
     fun broadcastDraftUpdated(draft: TurnDraft) {
+        // Log before emission so failed or interrupted send paths still leave a trace in the backend logs.
+        logger.info(
+            "Broadcasting game.draft.updated to topic={} for gameId={} playerUserId={}",
+            gameTopic(draft.gameId),
+            draft.gameId,
+            draft.playerUserId
+        )
         messagingTemplate.convertAndSend(
             gameTopic(draft.gameId),
             GameDraftUpdatedEvent(
@@ -33,6 +63,13 @@ class GameBroadcastService(
     }
 
     fun broadcastGameUpdated(game: ConfirmedGame) {
+        logger.info(
+            "Broadcasting game.updated to topic={} for gameId={} currentPlayerUserId={} status={}",
+            gameTopic(game.gameId),
+            game.gameId,
+            game.currentPlayerUserId,
+            game.status
+        )
         messagingTemplate.convertAndSend(
             gameTopic(game.gameId),
             GameUpdatedEvent(
@@ -43,6 +80,12 @@ class GameBroadcastService(
     }
 
     fun broadcastTurnChanged(gameId: String, currentTurnPlayerId: String) {
+        logger.info(
+            "Broadcasting turn.changed to topic={} for gameId={} currentTurnPlayerId={}",
+            gameTopic(gameId),
+            gameId,
+            currentTurnPlayerId
+        )
         messagingTemplate.convertAndSend(
             gameTopic(gameId),
             TurnChangedEvent(
@@ -53,6 +96,12 @@ class GameBroadcastService(
     }
 
     fun broadcastTurnTimedOut(gameId: String, previousTurnPlayerId: String) {
+        logger.info(
+            "Broadcasting turn.timed_out to topic={} for gameId={} previousTurnPlayerId={}",
+            gameTopic(gameId),
+            gameId,
+            previousTurnPlayerId
+        )
         messagingTemplate.convertAndSend(
             gameTopic(gameId),
             TurnTimedOutEvent(
@@ -63,6 +112,12 @@ class GameBroadcastService(
     }
 
     fun broadcastGameEnded(gameId: String, winnerUserId: String) {
+        logger.info(
+            "Broadcasting game.ended to topic={} for gameId={} winnerUserId={}",
+            gameTopic(gameId),
+            gameId,
+            winnerUserId
+        )
         messagingTemplate.convertAndSend(
             gameTopic(gameId),
             GameEndedEvent(
