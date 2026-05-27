@@ -143,10 +143,71 @@ class GroupValidationServiceTest {
     }
 
     @Test
-    fun `rejects group containing jokers`() {
+    fun `validates group with joker filling missing color`() {
+        val result = service.validate(
+            set(
+                tile("tile-1", TileColor.RED, 7),
+                tile("tile-2", TileColor.BLUE, 7),
+                joker("tile-3", TileColor.BLACK)
+            )
+        )
+
+        assertTrue(result.isValid)
+        assertTrue(result.violations.isEmpty())
+    }
+
+    @Test
+    fun `validates group with two jokers and one numbered anchor tile`() {
+        val result = service.validate(
+            set(
+                tile("tile-1", TileColor.RED, 10),
+                joker("tile-2", TileColor.BLACK),
+                joker("tile-3", TileColor.RED)
+            )
+        )
+
+        assertTrue(result.isValid)
+        assertTrue(result.violations.isEmpty())
+    }
+
+    @Test
+    fun `validates size four group with joker`() {
+        val result = service.validate(
+            set(
+                tile("tile-1", TileColor.RED, 5),
+                tile("tile-2", TileColor.BLUE, 5),
+                tile("tile-3", TileColor.BLACK, 5),
+                joker("tile-4", TileColor.RED)
+            )
+        )
+
+        assertTrue(result.isValid)
+        assertTrue(result.violations.isEmpty())
+    }
+
+    @Test
+    fun `rejects all joker group`() {
+        val set = set(
+            joker("tile-1", TileColor.RED),
+            joker("tile-2", TileColor.BLACK),
+            joker("tile-3", TileColor.RED)
+        )
+
+        val result = service.validate(set)
+
+        val violation = result.violations.single()
+        assertFalse(result.isValid)
+        assertEquals("GROUP_ALL_JOKERS_NOT_ALLOWED", violation.code)
+        assertEquals("All-joker groups are not allowed", violation.message)
+        assertEquals("set-1", violation.boardSetId)
+        assertEquals(set.tiles.map { it.tileId }, violation.tileIds)
+    }
+
+    @Test
+    fun `rejects joker group with duplicate non joker colors`() {
         val set = set(
             tile("tile-1", TileColor.RED, 7),
-            tile("tile-2", TileColor.BLUE, 7),
+            tile("tile-2", TileColor.RED, 7),
             joker("tile-3", TileColor.BLACK)
         )
 
@@ -154,12 +215,27 @@ class GroupValidationServiceTest {
 
         val violation = result.violations.single()
         assertFalse(result.isValid)
-        assertEquals("GROUP_JOKER_NOT_SUPPORTED", violation.code)
-        assertEquals("Joker support is not implemented yet", violation.message)
+        assertEquals("GROUP_DUPLICATE_COLOR", violation.code)
+        assertEquals("Group tiles must have unique colors", violation.message)
         assertEquals("set-1", violation.boardSetId)
-        assertEquals(
-            set.tiles.filterIsInstance<JokerTile>().map { it.tileId },
-            violation.tileIds
+        assertEquals(set.tiles.filterIsInstance<NumberedTile>().map { it.tileId }, violation.tileIds)
+    }
+
+    @Test
+    fun `rejects joker group with mismatching non joker numbers`() {
+        val set = set(
+            tile("tile-1", TileColor.RED, 7),
+            tile("tile-2", TileColor.BLUE, 8),
+            joker("tile-3", TileColor.BLACK)
         )
+
+        val result = service.validate(set)
+
+        val violation = result.violations.single()
+        assertFalse(result.isValid)
+        assertEquals("GROUP_NUMBER_MISMATCH", violation.code)
+        assertEquals("All group tiles must have the same number", violation.message)
+        assertEquals("set-1", violation.boardSetId)
+        assertEquals(set.tiles.filterIsInstance<NumberedTile>().map { it.tileId }, violation.tileIds)
     }
 }
