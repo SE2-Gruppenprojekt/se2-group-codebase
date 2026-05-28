@@ -53,64 +53,10 @@ import at.aau.serg.android.ui.components.BackButton
 import at.aau.serg.android.ui.screens.auth.components.SuggestionChip
 import at.aau.serg.android.ui.theme.AuthButtonGradientEnd
 import at.aau.serg.android.ui.theme.AuthButtonGradientStart
-import at.aau.serg.android.ui.theme.AuthColors
-import at.aau.serg.android.ui.theme.AuthDarkBackground
-import at.aau.serg.android.ui.theme.AuthDarkBorderBlue
-import at.aau.serg.android.ui.theme.AuthDarkBorderGreen
-import at.aau.serg.android.ui.theme.AuthDarkBorderPurple
-import at.aau.serg.android.ui.theme.AuthDarkCard
-import at.aau.serg.android.ui.theme.AuthDarkCardBlue
-import at.aau.serg.android.ui.theme.AuthDarkCardGreen
-import at.aau.serg.android.ui.theme.AuthDarkCardPurple
-import at.aau.serg.android.ui.theme.AuthDarkInput
-import at.aau.serg.android.ui.theme.AuthDarkPrimaryText
-import at.aau.serg.android.ui.theme.AuthDarkSecondaryText
 import at.aau.serg.android.ui.theme.AuthGradientEnd
 import at.aau.serg.android.ui.theme.AuthGradientStart
-import at.aau.serg.android.ui.theme.AuthLightBackground
-import at.aau.serg.android.ui.theme.AuthLightBorderBlue
-import at.aau.serg.android.ui.theme.AuthLightBorderGreen
-import at.aau.serg.android.ui.theme.AuthLightBorderPurple
-import at.aau.serg.android.ui.theme.AuthLightCard
-import at.aau.serg.android.ui.theme.AuthLightCardBlue
-import at.aau.serg.android.ui.theme.AuthLightCardGreen
-import at.aau.serg.android.ui.theme.AuthLightCardPurple
-import at.aau.serg.android.ui.theme.AuthLightInput
-import at.aau.serg.android.ui.theme.AuthLightPrimaryText
-import at.aau.serg.android.ui.theme.AuthLightSecondaryText
 import at.aau.serg.android.ui.theme.AccentYellow
-import at.aau.serg.android.ui.theme.ThemeState
-
-
-private fun authColors(darkMode: Boolean): AuthColors = if (darkMode) {
-    AuthColors(
-        background = AuthDarkBackground,
-        card = AuthDarkCard,
-        input = AuthDarkInput,
-        primaryText = AuthDarkPrimaryText,
-        secondaryText = AuthDarkSecondaryText,
-        cardBlue = AuthDarkCardBlue,
-        borderBlue = AuthDarkBorderBlue,
-        cardPurple = AuthDarkCardPurple,
-        borderPurple = AuthDarkBorderPurple,
-        cardGreen = AuthDarkCardGreen,
-        borderGreen = AuthDarkBorderGreen,
-    )
-} else {
-    AuthColors(
-        background = AuthLightBackground,
-        card = AuthLightCard,
-        input = AuthLightInput,
-        primaryText = AuthLightPrimaryText,
-        secondaryText = AuthLightSecondaryText,
-        cardBlue = AuthLightCardBlue,
-        borderBlue = AuthLightBorderBlue,
-        cardPurple = AuthLightCardPurple,
-        borderPurple = AuthLightBorderPurple,
-        cardGreen = AuthLightCardGreen,
-        borderGreen = AuthLightBorderGreen,
-    )
-}
+import at.aau.serg.android.ui.theme.appColors
 
 @Composable
 fun AuthScreen(
@@ -133,8 +79,7 @@ fun AuthScreenContent(
     val validation = uiState.validation
 
     val isValid = validation.isValid
-    val darkMode = ThemeState.isDarkMode.value
-    val colors = authColors(darkMode)
+    val colors = appColors().auth
 
     val titleGradient = Brush.horizontalGradient(listOf(AuthGradientStart, AuthGradientEnd))
     val buttonGradient = Brush.horizontalGradient(listOf(AuthButtonGradientStart, AuthButtonGradientEnd))

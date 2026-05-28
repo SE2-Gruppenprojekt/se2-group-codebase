@@ -3,6 +3,7 @@ package at.aau.serg.android.ui.screens.game
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -22,52 +23,93 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import at.aau.serg.android.ui.components.BackButton
+import at.aau.serg.android.ui.screens.game.components.PlayerChip
 import at.aau.serg.android.ui.screens.game.components.TileRow
 import at.aau.serg.android.ui.screens.game.components.TileRowPlaceholder
-import at.aau.serg.android.ui.theme.ThemeState
+import at.aau.serg.android.ui.theme.appColors
 
 @Composable
 fun GameScreen(
     viewModel: GameViewModel = viewModel(),
-    onBack: () -> Unit = {},
-    onSettings: () -> Unit = {}
+    onBack: (() -> Unit)? = null,
+    onSettings: (() -> Unit)? = null
 ) {
-    val dark = ThemeState.isDarkMode.value
-
-    val boardBorder = if (dark) Color.White.copy(alpha = 0.2f) else Color(0xFF86EFAC)
-    val iconBtnBg = if (dark) Color(0xFF334155) else Color(0xFFE2E8F0)
-    val iconBtnTint = if (dark) Color.White else Color(0xFF475569)
-
     val uiState by viewModel.uiState.collectAsState()
+
+    GameScreenContent(
+        uiState = uiState,
+        onEvent = { event ->
+            when (event) {
+                GameUIEvent.OnBack -> onBack?.invoke() ?: viewModel.onUIEvent(event)
+                GameUIEvent.OnSettings -> onSettings?.invoke() ?: viewModel.onUIEvent(event)
+                else -> viewModel.onUIEvent(event)
+            }
+        }
+    )
+}
+
+@Composable
+fun GameScreenContent(
+    uiState: GameUiState,
+    onEvent: (GameUIEvent) -> Unit
+) {
+    val c = appColors()
 
     Box(
         Modifier
             .fillMaxSize()
-            .background(if (dark) Color(0xFF0F172A) else Color(0xFFF1F5F9))
+            .background(c.game.background)
             .testTag(GameTestTags.SCREEN)
     ) {
         Column(Modifier.fillMaxSize()) {
 
             // HEADER
-            Box(
+            Column(
                 Modifier
                     .fillMaxWidth()
-                    .background(if (dark) Color(0xFF1E293B) else Color.White)
-                    .padding(12.dp)
+                    .background(c.game.surface)
+                    .padding(horizontal = 12.dp)
+                    .padding(top = 12.dp)
                     .testTag(GameTestTags.HEADER)
             ) {
-                BackButton(onBack = onBack)
+                Box(Modifier.fillMaxWidth()) {
+                    BackButton(onBack = { onEvent(GameUIEvent.OnBack) })
 
-                Column(Modifier.align(Alignment.Center)) {
-                    Text("Game #4821", fontWeight = FontWeight.Bold)
-                    Text("Round 2 of 3", fontSize = 12.sp)
+                    Column(Modifier.align(Alignment.Center)) {
+                        Text("Game #4821", fontWeight = FontWeight.Bold)
+                        Text("Round 2 of 3", fontSize = 12.sp)
+                    }
+
+                    Row(Modifier.align(Alignment.CenterEnd)) {
+                        Text("3:45")
+                        IconButton(onClick = { onEvent(GameUIEvent.OnSettings) }) {
+                            Icon(Icons.Default.Settings, null)
+                        }
+                    }
                 }
 
-                Row(Modifier.align(Alignment.CenterEnd)) {
-                    Text("3:45")
-                    IconButton(onClick = onSettings) {
-                        Icon(Icons.Default.Settings, null)
+                // player bar — sorted by turn order, active player highlighted
+                val players = uiState.gameState?.players.orEmpty()
+                    .sortedBy { it.turnOrder }
+                val currentPlayerId = uiState.gameState?.currentPlayerUserId
+
+                if (players.isNotEmpty()) {
+                    LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp)
+                            .testTag(GameTestTags.PLAYER_BAR),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(players) { player ->
+                            PlayerChip(
+                                player = player,
+                                isActive = player.userId == currentPlayerId
+                            )
+                        }
                     }
+                } else {
+                    Spacer(Modifier.height(12.dp))
                 }
             }
 
@@ -76,11 +118,9 @@ fun GameScreen(
                 Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .background(Color.White)
+                    .background(c.game.background)
             ) {
-
                 Column(Modifier.fillMaxSize()) {
-
                     // BOARD
                     LazyColumn(
                         modifier = Modifier
@@ -88,26 +128,20 @@ fun GameScreen(
                             .weight(1f)
                             .padding(12.dp)
                             .clip(RoundedCornerShape(16.dp))
-                            .background(if (dark) Color(0xFF1E293B) else Color.White)
+                            .background(c.game.surface)
                             .padding(12.dp)
                             .testTag(GameTestTags.BOARD),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         items(uiState.boardSets) { boardSet ->
                             TileRow(
-                                viewModel = viewModel,
+                                onEvent,
                                 tiles = boardSet.tiles,
                                 tileSize = 60,
-                                borderColor = boardBorder,
+                                borderColor = c.game.boardBorder,
                                 selectedTiles = uiState.selectedTiles,
                                 selectedRow = uiState.activeSelectionRow,
                                 rowId = boardSet.boardSetId,
-                                onSelectionChange = { tile, selected, rowId ->
-                                    viewModel.onTileSelected(tile, selected, rowId)
-                                },
-                                onRowClick = { clickedRowId ->
-                                    viewModel.moveTiles(boardSetId = clickedRowId)
-                                }
                             )
                         }
 
@@ -115,7 +149,7 @@ fun GameScreen(
                             item {
                                 TileRowPlaceholder(
                                     tileSize = 60,
-                                    onClick = { viewModel.addRow() }
+                                    onClick = { onEvent(GameUIEvent.AddRow) }
                                 )
                             }
                         }
@@ -125,7 +159,7 @@ fun GameScreen(
                     Box(
                         Modifier
                             .fillMaxWidth()
-                            .background(if (dark) Color(0xFF1E293B) else Color.White)
+                            .background(c.game.surface)
                             .padding(16.dp)
                             .testTag(GameTestTags.RACK)
                     ) {
@@ -136,22 +170,13 @@ fun GameScreen(
                             Spacer(Modifier.height(12.dp))
 
                             TileRow(
-                                viewModel = viewModel,
+                                onEvent,
                                 tiles = uiState.rackTiles,
                                 tileSize = 44,
-                                borderColor = boardBorder,
+                                borderColor = c.game.boardBorder,
                                 selectedTiles = uiState.selectedTiles,
                                 selectedRow = uiState.activeSelectionRow,
-                                rowId = null,
-                                onSelectionChange = { tile, selected, rowId ->
-                                    viewModel.onTileSelected(
-                                        tile = tile,
-                                        selected = selected
-                                    )
-                                },
-                                onRowClick = { clickedRowId ->
-                                    viewModel.moveTiles(boardSetId = clickedRowId)
-                                }
+                                rowId = null
                             )
 
                             Spacer(Modifier.height(14.dp))
@@ -164,14 +189,15 @@ fun GameScreen(
 
                                 Button(
                                     onClick = {
-                                        viewModel.endTurn()
+                                        onEvent(GameUIEvent.EndTurn)
                                     },
+                                    enabled = uiState.isActivePlayer,
                                     modifier = Modifier
                                         .weight(1f)
                                         .height(52.dp)
                                         .testTag(GameTestTags.ACTION_END_TURN),
                                     shape = RoundedCornerShape(14.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9D3CFF))
+                                    colors = ButtonDefaults.buttonColors(containerColor = c.game.endTurnButton)
                                 ) {
                                     Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White)
                                     Spacer(Modifier.width(6.dp))
@@ -180,28 +206,30 @@ fun GameScreen(
 
                                 IconButton(
                                     onClick = {
-                                        viewModel.drawTile()
+                                        onEvent(GameUIEvent.DrawTile)
                                     },
+                                    enabled = uiState.isActivePlayer,
                                     modifier = Modifier
                                         .size(52.dp)
                                         .clip(RoundedCornerShape(14.dp))
-                                        .background(iconBtnBg)
+                                        .background(c.game.iconBtnBg)
                                         .testTag(GameTestTags.ACTION_ADD)
                                 ) {
-                                    Icon(Icons.Filled.Add, contentDescription = "Add", tint = iconBtnTint)
+                                    Icon(Icons.Filled.Add, contentDescription = "Add", tint = c.game.iconBtnTint)
                                 }
 
                                 IconButton(
                                     onClick = {
-                                        viewModel.resetSelection()
+                                        onEvent(GameUIEvent.ResetSelection)
                                     },
+                                    enabled = uiState.isActivePlayer,
                                     modifier = Modifier
                                         .size(52.dp)
                                         .clip(RoundedCornerShape(14.dp))
-                                        .background(iconBtnBg)
+                                        .background(c.game.iconBtnBg)
                                         .testTag(GameTestTags.ACTION_RESET)
                                 ) {
-                                    Icon(Icons.Filled.Refresh, contentDescription = "Reset", tint = iconBtnTint)
+                                    Icon(Icons.Filled.Refresh, contentDescription = "Reset", tint = c.game.iconBtnTint)
                                 }
                             }
                         }

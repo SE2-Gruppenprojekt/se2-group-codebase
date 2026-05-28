@@ -109,6 +109,24 @@ val HomeCreateBrushStart = Color(0xE24B68FF)
 val HomeCreateBrushEnd = Color(0xD74B3FD4)
 val HomeIconGradientEnd = Color(0xFF9B42FF)
 
+// Game screen
+val GameDarkBackground = Color(0xFF0F172A)
+val GameLightBackground = Color(0xFFF1F5F9)
+val GameDarkSurface = Color(0xFF1E293B)
+val GameLightBoardBorder = Color(0xFF86EFAC)
+val GameDarkIconBtnBg = Color(0xFF334155)
+val GameLightIconBtnBg = Color(0xFFE2E8F0)
+val GameLightIconBtnTint = Color(0xFF475569)
+
+// Waiting screen — player section
+val WaitingBgDark = Color(0xFF1E1E1E)
+val WaitingPlaceholderBorderDark = Color(0xFF3A3F4B)
+val WaitingPlaceholderBorderLight = Color(0xFFD1D5DB)
+val WaitingPlaceholderPrimaryDark = Color(0xFF727887)
+val WaitingPlaceholderPrimaryLight = Color(0xFF9AA3B2)
+val WaitingPlaceholderSecondaryDark = Color(0xFF5E6573)
+val WaitingPlaceholderSecondaryLight = Color(0xFFB2BAC8)
+
 // Settings screen
 val SettingsDividerDark = Color(0xFF1E2A40)
 val SettingsDividerLight = Color(0xFFE5E7EB)

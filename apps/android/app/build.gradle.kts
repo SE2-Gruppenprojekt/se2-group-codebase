@@ -173,11 +173,19 @@ sonar {
     properties {
         property("sonar.projectKey", "se2-gruppenprojekt_se2-group-codebase_frontend")
         property("sonar.organization", "se2-gruppenprojekt")
+        property("sonar.projectName", "frontend")
+        property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.sources", "src/main/java")
         property("sonar.tests", "src/test/java, src/androidTest/java")
+        property("sonar.java.binaries", "build/tmp/kotlin-classes/debug")
+        property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/jacoco.xml")
+
         property(
-            "sonar.coverage.jacoco.xmlReportPaths",
-            "build/reports/jacoco/jacoco.xml"
+            "sonar.coverage.exclusions",
+            "**/*Screen*.kt," +
+            "**/components/**/*.kt," +
+            "**/navigation/**/*.kt," +
+            "**/theme/**/*.kt"
         )
     }
 }

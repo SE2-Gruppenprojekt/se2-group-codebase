@@ -3,6 +3,7 @@ package at.aau.serg.android.ui.screens.game
 object GameTestTags {
     const val SCREEN = "game_screen"
     const val HEADER = "game_header"
+    const val PLAYER_BAR = "game_player_bar"
     const val BOARD = "game_board"
     const val RACK = "game_rack"
     const val ACTION_ADD = "game_action_add"

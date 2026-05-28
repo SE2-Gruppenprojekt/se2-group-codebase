@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingEvent
 import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingTestTags
+import at.aau.serg.android.ui.theme.appColors
 import shared.models.lobby.domain.Lobby
 import shared.models.lobby.domain.LobbyPlayer
 
@@ -23,39 +24,9 @@ fun WaitingScreenPlayerSection(
     maxPlayers: Int,
     joinedCount: Int,
     primaryTextColor: Color,
-    secondaryTextColor: Color,
-    darkMode: Boolean
+    secondaryTextColor: Color
 ) {
-
-    val activePlayerBackground = if (darkMode) {
-        Color(0xFF1F356A)
-    } else {
-        Color(0xFFEAF1FF)
-    }
-
-    val activePlayerBorder = if (darkMode) {
-        Color(0xFF3E73E8)
-    } else {
-        Color(0xFF4C84FF)
-    }
-
-    val secondPlayerBackground = if (darkMode) {
-        Color(0xFF1E3A2D)
-    } else {
-        Color(0xFFEAFBF1)
-    }
-
-    val secondPlayerBorder = if (darkMode) {
-        Color(0xFF2BC46D)
-    } else {
-        Color(0xFF20C76F)
-    }
-
-    val waitingBackground = if (darkMode) {
-        Color(0xFF1E1E1E)
-    } else {
-        Color.White
-    }
+    val w = appColors().waiting
 
     if (fetchedLobby != null) {
         players.forEachIndexed { index, player ->
@@ -66,8 +37,8 @@ fun WaitingScreenPlayerSection(
                 isHost = player.userId == fetchedLobby.hostUserId,
                 isReady = player.isReady,
                 isPlaceholder = false,
-                borderColor = if (isSelf) secondPlayerBorder else activePlayerBorder,
-                backgroundColor = if (isSelf) secondPlayerBackground else activePlayerBackground,
+                borderColor = if (isSelf) w.selfPlayerBorder else w.activePlayerBorder,
+                backgroundColor = if (isSelf) w.selfPlayerBg else w.activePlayerBg,
                 primaryTextColor = primaryTextColor,
                 secondaryTextColor = secondaryTextColor,
                 onClick = if (isSelf) { { onEvent(LobbyWaitingEvent.ToggleReadyState(player.userId)) } } else null,
@@ -94,10 +65,10 @@ fun WaitingScreenPlayerSection(
             name = "Waiting for player...",
             subtitle = "",
             isPlaceholder = true,
-            borderColor = if (darkMode) Color(0xFF3A3F4B) else Color(0xFFD1D5DB),
-            backgroundColor = waitingBackground,
-            primaryTextColor = if (darkMode) Color(0xFF727887) else Color(0xFF9AA3B2),
-            secondaryTextColor = if (darkMode) Color(0xFF5E6573) else Color(0xFFB2BAC8)
+            borderColor = w.placeholderBorder,
+            backgroundColor = w.placeholderBg,
+            primaryTextColor = w.placeholderPrimaryText,
+            secondaryTextColor = w.placeholderSecondaryText
         )
     }
 
