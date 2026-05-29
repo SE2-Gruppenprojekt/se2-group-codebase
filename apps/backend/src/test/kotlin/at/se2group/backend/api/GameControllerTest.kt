@@ -30,9 +30,17 @@ import shared.models.game.validation.ValidationResult
 /**
  * Web-layer tests for [GameController].
  *
- * The error-handling additions in this class focus on verifying that game
- * endpoints surface the shared REST error contract when request-entry failures
- * or propagated service exceptions occur.
+ * This class exercises the controller through Spring MVC with mocked game
+ * services so that transport behavior can be verified independently from game
+ * rules or persistence. For the error-handling PR, the important responsibility
+ * here is proving that game endpoints surface the shared REST contract when:
+ *
+ * - request-entry failures happen before service code is reached
+ * - service-layer exceptions are propagated into the global advice
+ * - structured invalid-turn conflicts stay distinct from generic conflicts
+ *
+ * The tests in this class therefore serve as the game-specific confirmation
+ * that the global error-handling policy is actually visible at the public API.
  */
 @WebMvcTest(GameController::class)
 @Import(GlobalExceptionHandler::class)

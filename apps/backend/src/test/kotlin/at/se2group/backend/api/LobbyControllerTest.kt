@@ -23,10 +23,14 @@ import shared.models.lobby.domain.LobbyPlayer
 import org.springframework.test.web.servlet.patch
 
 /**
- * Integration-style MVC tests for [LobbyController].
+ * MVC tests for [LobbyController].
  *
- * For the error-handling PR, this class is the place where lobby DTO bean
- * validation is verified against the shared `ApiErrorResponse` contract.
+ * This class uses the real Spring Boot test slice for lobby endpoints and a
+ * mocked [LobbyService] so that request validation, controller wiring, and
+ * exception mapping can be verified together. For the error-handling PR, its
+ * main value is proving that lobby DTO bean validation is normalized into the
+ * shared `ApiErrorResponse` contract instead of leaking Spring's default error
+ * payload shape.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
