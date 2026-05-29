@@ -153,7 +153,7 @@ class RunValidationServiceTest {
 
     @Test
     fun `accepts run with joker filling one internal gap`() {
-        val result  = service.validate(
+        val result = service.validate(
             set(
                 tile("tile-1", TileColor.RED, 3),
                 tile("tile-2", TileColor.RED, 5),
