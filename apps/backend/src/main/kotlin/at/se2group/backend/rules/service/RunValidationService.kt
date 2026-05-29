@@ -55,9 +55,7 @@ class RunValidationService {
             )
         }
 
-        val requiredGapFillers = sortedNumbers
-            .zipWithNext()
-            .sumOf { (a, b) -> (b - a - 1).coerceAtLeast(0) }
+        val requiredGapFillers = countRequiredGapFillers(sortedNumbers)
 
         if (jokers.isEmpty() && requiredGapFillers > 0) {
             return invalid(
@@ -94,4 +92,9 @@ class RunValidationService {
 
         return valid()
     }
+
+    private fun countRequiredGapFillers(sortedNumbers: List<Int>): Int =
+        sortedNumbers
+            .zipWithNext()
+            .sumOf { (current, next) -> (next - current - 1).coerceAtLeast(0) }
 }
