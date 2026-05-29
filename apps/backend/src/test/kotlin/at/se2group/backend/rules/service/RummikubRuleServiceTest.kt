@@ -221,6 +221,7 @@ class RummikubRuleServiceTest {
             listOf("GROUP_ALL_JOKERS_NOT_ALLOWED", "RUN_ALL_JOKERS_NOT_ALLOWED"),
             result.violations.map { it.code }
         )
+        assertTrue(result.violations.all { it.boardSetId == "set-1" })
     }
 
 
