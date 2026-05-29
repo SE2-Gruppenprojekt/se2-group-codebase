@@ -4,8 +4,12 @@ import at.se2group.backend.service.InvalidTurnSubmissionException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.bind.MissingRequestHeaderException
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import shared.models.api.ApiErrorResponse
 
 /**
@@ -19,6 +23,10 @@ import shared.models.api.ApiErrorResponse
  *
  * Current mapping policy:
  *
+ * - [MethodArgumentNotValidException] -> `400 BAD_REQUEST`
+ * - [HttpMessageNotReadableException] -> `400 BAD_REQUEST`
+ * - [MissingRequestHeaderException] -> `400 BAD_REQUEST`
+ * - [MethodArgumentTypeMismatchException] -> `400 BAD_REQUEST`
  * - [IllegalArgumentException] -> `400 BAD_REQUEST`
  * - [NoSuchElementException] -> `404 NOT_FOUND`
  * - [IllegalStateException] -> `409 CONFLICT`
@@ -33,6 +41,66 @@ import shared.models.api.ApiErrorResponse
 @RestControllerAdvice
 class GlobalExceptionHandler {
     private val logger = LoggerFactory.getLogger(javaClass)
+
+    @ExceptionHandler(MethodArgumentNotValidException::class)
+    fun handleMethodArgumentNotValid(
+        ex: MethodArgumentNotValidException
+    ): ResponseEntity<ApiErrorResponse> {
+        logger.warn("Request validation failed: {}", ex.message)
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(
+                ApiErrorResponse(
+                    errorCode = "BAD_REQUEST",
+                    errorMessage = "Request validation failed"
+                )
+            )
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    fun handleUnreadableBody(
+        ex: HttpMessageNotReadableException
+    ): ResponseEntity<ApiErrorResponse> {
+        logger.warn("Malformed request body: {}", ex.message)
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(
+                ApiErrorResponse(
+                    errorCode = "BAD_REQUEST",
+                    errorMessage = "Malformed JSON request body"
+                )
+            )
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException::class)
+    fun handleMissingHeader(
+        ex: MissingRequestHeaderException
+    ): ResponseEntity<ApiErrorResponse> {
+        logger.warn("Missing required header: {}", ex.headerName)
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(
+                ApiErrorResponse(
+                    errorCode = "BAD_REQUEST",
+                    errorMessage = "Missing required header: ${ex.headerName}"
+                )
+            )
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException::class)
+    fun handleTypeMismatch(
+        ex: MethodArgumentTypeMismatchException
+    ): ResponseEntity<ApiErrorResponse> {
+        logger.warn("Request type mismatch for '{}': {}", ex.name, ex.message)
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(
+                ApiErrorResponse(
+                    errorCode = "BAD_REQUEST",
+                    errorMessage = "Request parameter type mismatch"
+                )
+            )
+    }
 
     @ExceptionHandler(Exception::class)
     fun handleGeneric(ex: Exception): ResponseEntity<ApiErrorResponse> {
