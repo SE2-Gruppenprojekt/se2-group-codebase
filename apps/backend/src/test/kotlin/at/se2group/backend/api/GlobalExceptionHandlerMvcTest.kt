@@ -19,11 +19,21 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * MVC-level tests for [GlobalExceptionHandler].
+ * MVC-level routing tests for [GlobalExceptionHandler].
  *
- * The dedicated probe controller below exists purely to trigger framework-level
- * failures such as type mismatch, missing headers, unreadable bodies, and bean
- * validation errors before normal service code would run.
+ * Unlike the direct handler tests, this class verifies that Spring MVC really
+ * routes request-entry failures through the global advice during real request
+ * processing. The dedicated probe controller below exists only to trigger
+ * framework-level failures that happen before service code is entered, such as:
+ *
+ * - path variable type mismatch
+ * - missing required headers
+ * - unreadable JSON bodies
+ * - bean-validation failures
+ * - uncaught generic exceptions
+ *
+ * This gives the backend one tested, end-to-end proof that the request-entry
+ * layer uses the same REST error contract as the application exception layer.
  */
 @WebMvcTest(ExceptionProbeController::class)
 @Import(GlobalExceptionHandler::class)
@@ -97,9 +107,11 @@ class GlobalExceptionHandlerMvcTest {
 }
 
 /**
- * Minimal probe endpoints that trigger Spring MVC request-entry failures on
- * demand so the global exception advice can be verified through the full web
- * stack.
+ * Minimal probe endpoints used only for exception-routing verification.
+ *
+ * Each endpoint is intentionally tiny and shaped around one failure category so
+ * the tests can prove exactly which framework exception is being mapped by the
+ * global advice without depending on unrelated controller behavior.
  */
 @RestController
 @RequestMapping("/api/exception-probe")
