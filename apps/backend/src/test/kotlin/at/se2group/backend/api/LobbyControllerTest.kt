@@ -88,7 +88,9 @@ class LobbyControllerTest {
             header("X-User-Id", "user1")
             content = invalidJson
         }.andExpect {
-            status { isInternalServerError() }
+            status { isBadRequest() }
+            jsonPath("$.errorCode") { value("BAD_REQUEST") }
+            jsonPath("$.errorMessage") { value("Request validation failed") }
         }
     }
 
