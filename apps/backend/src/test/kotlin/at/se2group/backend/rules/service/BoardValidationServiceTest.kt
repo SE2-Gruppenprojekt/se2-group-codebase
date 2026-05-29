@@ -9,7 +9,9 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import shared.models.game.domain.BoardSet
+import shared.models.game.domain.JokerTile
 import shared.models.game.domain.NumberedTile
+import shared.models.game.domain.Tile
 import shared.models.game.domain.TileColor
 import shared.models.game.validation.RuleViolation
 import shared.models.game.validation.invalid
@@ -19,6 +21,9 @@ class BoardValidationServiceTest {
 
     private val setValidationService = mock<SetValidationService>()
     private val service = BoardValidationService(setValidationService)
+    private val realService = BoardValidationService(
+        SetValidationService(GroupValidationService(), RunValidationService())
+    )
 
     @Test
     fun `returns valid when all board sets are valid`() {
@@ -115,6 +120,56 @@ class BoardValidationServiceTest {
         verify(setValidationService).validate(thirdSet)
     }
 
+    @Test
+    fun `returns valid for board with valid joker sets`() {
+        val result = realService.validate(
+            listOf(
+                BoardSet(
+                    boardSetId = "set-1",
+                    tiles = listOf(
+                        tile("tile-1", TileColor.RED, 7),
+                        tile("tile-2", TileColor.BLUE, 7),
+                        joker("tile-3", TileColor.BLACK)
+                    )
+                ),
+                BoardSet(
+                    boardSetId = "set-2",
+                    tiles = listOf(
+                        tile("tile-4", TileColor.RED, 3),
+                        joker("tile-5", TileColor.RED),
+                        tile("tile-6", TileColor.RED, 5)
+                    )
+                )
+            )
+        )
+
+        assertTrue(result.isValid)
+        assertTrue(result.violations.isEmpty())
+    }
+
+    @Test
+    fun `aggregates invalid joker set violations with board set id`() {
+        val result = realService.validate(
+            listOf(
+                BoardSet(
+                    boardSetId = "set-joker",
+                    tiles = listOf(
+                        joker("tile-1", TileColor.RED),
+                        joker("tile-2", TileColor.BLACK),
+                        joker("tile-3", TileColor.RED)
+                    )
+                )
+            )
+        )
+
+        assertFalse(result.isValid)
+        assertEquals(
+            listOf("GROUP_ALL_JOKERS_NOT_ALLOWED", "RUN_ALL_JOKERS_NOT_ALLOWED"),
+            result.violations.map { it.code }
+        )
+        assertTrue(result.violations.all { it.boardSetId == "set-joker" })
+    }
+
     private fun boardSet(boardSetId: String, firstNumber: Int): BoardSet =
         BoardSet(
             boardSetId = boardSetId,
@@ -132,4 +187,10 @@ class BoardValidationServiceTest {
             boardSetId = boardSetId,
             tileIds = listOf(tileId)
         )
+
+    private fun tile(id: String, color: TileColor, number: Int): Tile =
+        NumberedTile(id, color, number)
+
+    private fun joker(id: String, color: TileColor): Tile =
+        JokerTile(id, color)
 }

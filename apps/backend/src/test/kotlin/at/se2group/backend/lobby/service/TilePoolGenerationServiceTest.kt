@@ -12,7 +12,6 @@ class TilePoolGenerationServiceTest {
 
     private val service = TilePoolGenerationService()
 
-    /*
     @Test
     fun `createTilePool returns correct total number of tiles`() {
         val tiles = service.createTilePool()
@@ -26,7 +25,6 @@ class TilePoolGenerationServiceTest {
 
         assertEquals(expectedTotal, tiles.size)
     }
-    */
 
     @Test
     fun `createTilePool contains exactly two copies of every numbered tile`() {
@@ -45,7 +43,6 @@ class TilePoolGenerationServiceTest {
         }
     }
 
-    /*
     @Test
     fun `createTilePool contains exactly one joker for each configured joker color`() {
         val tiles = service.createTilePool()
@@ -58,7 +55,6 @@ class TilePoolGenerationServiceTest {
             assertEquals(1, count, "Expected exactly one joker with color $color")
         }
     }
-    */
 
     @Test
     fun `createTilePool contains only configured joker colors for jokers`() {

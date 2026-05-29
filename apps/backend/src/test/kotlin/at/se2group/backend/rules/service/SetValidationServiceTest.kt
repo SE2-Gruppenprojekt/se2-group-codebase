@@ -8,7 +8,9 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import shared.models.game.domain.BoardSet
+import shared.models.game.domain.JokerTile
 import shared.models.game.domain.NumberedTile
+import shared.models.game.domain.Tile
 import shared.models.game.domain.TileColor
 import shared.models.game.validation.RuleViolation
 import shared.models.game.validation.invalid
@@ -19,6 +21,7 @@ class SetValidationServiceTest {
     private val groupValidationService = mock<GroupValidationService>()
     private val runValidationService = mock<RunValidationService>()
     private val service = SetValidationService(groupValidationService, runValidationService)
+    private val realService = SetValidationService(GroupValidationService(), RunValidationService())
 
     private val boardSet = BoardSet(
         boardSetId = "set-1",
@@ -83,6 +86,60 @@ class SetValidationServiceTest {
         verify(runValidationService).validate(boardSet)
     }
 
+    @Test
+    fun `accepts joker set through valid group path`() {
+        val result = realService.validate(
+            BoardSet(
+                boardSetId = "set-1",
+                tiles = listOf(
+                    tile("tile-1", TileColor.RED, 7),
+                    tile("tile-2", TileColor.BLUE, 7),
+                    joker("tile-3", TileColor.BLACK)
+                )
+            )
+        )
+
+        assertTrue(result.isValid)
+        assertTrue(result.violations.isEmpty())
+    }
+
+    @Test
+    fun `accepts joker set through valid run path`() {
+        val result = realService.validate(
+            BoardSet(
+                boardSetId = "set-1",
+                tiles = listOf(
+                    tile("tile-1", TileColor.RED, 3),
+                    joker("tile-2", TileColor.BLACK),
+                    tile("tile-3", TileColor.RED, 5)
+                )
+            )
+        )
+
+        assertTrue(result.isValid)
+        assertTrue(result.violations.isEmpty())
+    }
+
+    @Test
+    fun `returns combined joker violations when group and run paths fail`() {
+        val result = realService.validate(
+            BoardSet(
+                boardSetId = "set-1",
+                tiles = listOf(
+                    joker("tile-1", TileColor.RED),
+                    joker("tile-2", TileColor.BLACK),
+                    joker("tile-3", TileColor.RED)
+                )
+            )
+        )
+
+        assertFalse(result.isValid)
+        assertEquals(
+            listOf("GROUP_ALL_JOKERS_NOT_ALLOWED", "RUN_ALL_JOKERS_NOT_ALLOWED"),
+            result.violations.map { it.code }
+        )
+    }
+
     private fun groupViolation(): RuleViolation =
         RuleViolation(
             code = "GROUP_INVALID",
@@ -98,4 +155,10 @@ class SetValidationServiceTest {
             boardSetId = "set-1",
             tileIds = listOf("tile-2")
         )
+
+    private fun tile(id: String, color: TileColor, number: Int): Tile =
+        NumberedTile(id, color, number)
+
+    private fun joker(id: String, color: TileColor): Tile =
+        JokerTile(id, color)
 }

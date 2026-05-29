@@ -30,17 +30,17 @@ class GroupValidationService {
             )
         }
 
-        if (set.tiles.any { it is JokerTile }) {
+        val jokers = set.tiles.filterIsInstance<JokerTile>()
+        val numberedTiles = set.tiles.filterIsInstance<NumberedTile>()
+
+        if (numberedTiles.isEmpty()) {
             return invalid(
-                code = "GROUP_JOKER_NOT_SUPPORTED",
-                message = "Joker support is not implemented yet",
+                code = "GROUP_ALL_JOKERS_NOT_ALLOWED",
+                message = "All-joker groups are not allowed",
                 boardSetId = set.boardSetId,
-                tileIds = set.tiles.filterIsInstance<JokerTile>().map { it.tileId }
+                tileIds = jokers.map { it.tileId }
             )
         }
-
-        // JokerTile is the only non-numbered tile type right now and is rejected above.
-        val numberedTiles = set.tiles.map { it as NumberedTile }
 
         val distinctNumbers = numberedTiles.map { it.number }.distinct()
         if (distinctNumbers.size != 1) {
