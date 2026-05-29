@@ -26,10 +26,18 @@ import java.beans.PropertyDescriptor
 /**
  * Direct unit tests for [GlobalExceptionHandler].
  *
- * These tests exercise the advice methods without going through Spring MVC so
- * that the response contract and logging policy can be verified in isolation.
+ * These tests call the advice methods directly without bootstrapping a full MVC
+ * stack. That makes them the most focused place to verify three things:
+ *
+ * - the HTTP status chosen for each exception family
+ * - the exact [shared.models.api.ApiErrorResponse] payload shape returned to
+ *   clients
+ * - the logging level split between expected client-caused failures and
+ *   unexpected backend faults
+ *
  * MVC routing coverage for the same handlers lives in
- * [GlobalExceptionHandlerMvcTest].
+ * [GlobalExceptionHandlerMvcTest]. This class exists to lock down the handler's
+ * contract in isolation from controller wiring.
  */
 class GlobalExceptionHandlerTest {
 
