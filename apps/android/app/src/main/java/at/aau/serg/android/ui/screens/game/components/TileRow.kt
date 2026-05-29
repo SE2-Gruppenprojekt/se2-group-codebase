@@ -14,7 +14,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import at.aau.serg.android.ui.screens.game.GameViewModel
+import at.aau.serg.android.ui.screens.game.GameUIEvent
 import shared.models.game.domain.Tile
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import sh.calvin.reorderable.*
@@ -22,19 +22,17 @@ import sh.calvin.reorderable.*
 
 @Composable
 fun TileRow(
-    viewModel: GameViewModel,
+    onEvent: (GameUIEvent) -> Unit,
     tiles: List<Tile>,
     tileSize: Int,
     selectedTiles: Set<Tile>,
     selectedRow: String? = null,
     borderColor: Color? = null,
-    rowId: String? = null,
-    onSelectionChange: (Tile, Boolean, String?) -> Unit,
-    onRowClick: (String?) -> Unit
+    rowId: String? = null
 ) {
     val lazyListState = rememberLazyListState()
     val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
-        viewModel.moveInSameRow(rowId, from.index, to.index)
+        onEvent(GameUIEvent.MoveInSameRow(rowId, from.index, to.index))
     }
     val shape = RoundedCornerShape(12.dp)
 
@@ -48,7 +46,7 @@ fun TileRow(
                 Modifier
             }
         )
-        .clickable { onRowClick(rowId) }
+        .clickable { onEvent(GameUIEvent.MoveTiles(rowId)) }
         .padding(8.dp)
 
     LazyRow(
@@ -70,10 +68,10 @@ fun TileRow(
                     selected = it in selectedTiles,
                     moveHack = selectedTiles.isNotEmpty() && rowId != selectedRow,
                     onSelectedChange = { selected ->
-                        onSelectionChange(it, selected, rowId)
+                        onEvent(GameUIEvent.OnTileSelected(it, selected, rowId))
                     },
                     onMoveRequest = {
-                        onRowClick(rowId)
+                        onEvent(GameUIEvent.MoveTiles(rowId))
                     },
                     modifier = Modifier
                         .longPressDraggableHandle()

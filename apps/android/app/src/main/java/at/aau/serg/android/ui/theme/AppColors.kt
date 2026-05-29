@@ -49,10 +49,33 @@ data class SettingsColors(
     val chevron: Color
 )
 
+data class GameColors(
+    val background: Color,
+    val surface: Color,
+    val boardBorder: Color,
+    val iconBtnBg: Color,
+    val iconBtnTint: Color,
+    val endTurnButton: Color
+)
+
+data class WaitingColors(
+    val activePlayerBg: Color,
+    val activePlayerBorder: Color,
+    val selfPlayerBg: Color,
+    val selfPlayerBorder: Color,
+    val placeholderBg: Color,
+    val placeholderBorder: Color,
+    val placeholderPrimaryText: Color,
+    val placeholderSecondaryText: Color
+)
+
 data class AppColors(
     val screen: ScreenColors,
     val home: HomeColors,
-    val settings: SettingsColors
+    val settings: SettingsColors,
+    val game: GameColors,
+    val auth: AuthColors,
+    val waiting: WaitingColors
 )
 
 @Composable
@@ -89,6 +112,14 @@ fun appColors(): AppColors {
             loadingIndicator = if (darkMode) Color.White else AccentPurple,
             buttonText = if (darkMode) Color.White else Color.Black
         ),
+        game = GameColors(
+            background = if (darkMode) GameDarkBackground else GameLightBackground,
+            surface = if (darkMode) GameDarkSurface else Color.White,
+            boardBorder = if (darkMode) Color.White.copy(alpha = 0.2f) else GameLightBoardBorder,
+            iconBtnBg = if (darkMode) GameDarkIconBtnBg else GameLightIconBtnBg,
+            iconBtnTint = if (darkMode) Color.White else GameLightIconBtnTint,
+            endTurnButton = AccentPurple
+        ),
         settings = SettingsColors(
             background = if (darkMode) AuthDarkBackground else AuthLightBackground,
             card = if (darkMode) AuthDarkCard else AuthLightCard,
@@ -100,6 +131,29 @@ fun appColors(): AppColors {
             iconPurpleBg = if (darkMode) AuthDarkCardPurple else AuthLightCardPurple,
             iconRedBg = if (darkMode) SettingsIconRedBgDark else SettingsIconRedBgLight,
             chevron = if (darkMode) SettingsChevronDark else SettingsChevronLight
+        ),
+        auth = AuthColors(
+            background = if (darkMode) AuthDarkBackground else AuthLightBackground,
+            card = if (darkMode) AuthDarkCard else AuthLightCard,
+            input = if (darkMode) AuthDarkInput else AuthLightInput,
+            primaryText = if (darkMode) AuthDarkPrimaryText else AuthLightPrimaryText,
+            secondaryText = if (darkMode) AuthDarkSecondaryText else AuthLightSecondaryText,
+            cardBlue = if (darkMode) AuthDarkCardBlue else AuthLightCardBlue,
+            borderBlue = if (darkMode) AuthDarkBorderBlue else AuthLightBorderBlue,
+            cardPurple = if (darkMode) AuthDarkCardPurple else AuthLightCardPurple,
+            borderPurple = if (darkMode) AuthDarkBorderPurple else AuthLightBorderPurple,
+            cardGreen = if (darkMode) AuthDarkCardGreen else AuthLightCardGreen,
+            borderGreen = if (darkMode) AuthDarkBorderGreen else AuthLightBorderGreen
+        ),
+        waiting = WaitingColors(
+            activePlayerBg = if (darkMode) WaitingActivePlayerBgDark else WaitingActivePlayerBgLight,
+            activePlayerBorder = if (darkMode) AuthDarkBorderBlue else WaitingActivePlayerBorderLight,
+            selfPlayerBg = if (darkMode) WaitingSecondPlayerBgDark else WaitingSecondPlayerBgLight,
+            selfPlayerBorder = if (darkMode) WaitingSecondPlayerBorderDark else WaitingSecondPlayerBorderLight,
+            placeholderBg = if (darkMode) WaitingBgDark else Color.White,
+            placeholderBorder = if (darkMode) WaitingPlaceholderBorderDark else WaitingPlaceholderBorderLight,
+            placeholderPrimaryText = if (darkMode) WaitingPlaceholderPrimaryDark else WaitingPlaceholderPrimaryLight,
+            placeholderSecondaryText = if (darkMode) WaitingPlaceholderSecondaryDark else WaitingPlaceholderSecondaryLight
         )
     )
 }

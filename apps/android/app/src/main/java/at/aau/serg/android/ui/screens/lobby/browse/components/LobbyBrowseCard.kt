@@ -34,9 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseItem
 import at.aau.serg.android.ui.screens.lobby.browse.LobbyBrowseTestTags
-import at.aau.serg.android.ui.theme.DisabledButtonDark
-import at.aau.serg.android.ui.theme.DisabledButtonLight
-import at.aau.serg.android.ui.theme.ThemeState
+import at.aau.serg.android.ui.theme.appColors
 
 @Composable
 fun LobbyBrowseCard(
@@ -48,7 +46,7 @@ fun LobbyBrowseCard(
 ) {
     val accentColor = lobby.accentColor
     val subtleCardColor = accentColor.copy(alpha = 0.14f).compositeOver(cardColor)
-    val disabledButtonColor = if (ThemeState.isDarkMode.value) DisabledButtonDark else DisabledButtonLight
+    val disabledButtonColor = appColors().screen.disabledButton
     val buttonColor = if (lobby.isOpen) accentColor else disabledButtonColor
     val buttonText = if (lobby.isOpen) "Join" else "Full"
     val metaColor = secondaryText.copy(alpha = 0.75f)

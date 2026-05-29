@@ -16,7 +16,9 @@ import at.aau.serg.android.ui.screens.auth.AuthEffect
 import at.aau.serg.android.ui.screens.auth.AuthMode
 import at.aau.serg.android.ui.screens.auth.AuthScreen
 import at.aau.serg.android.ui.screens.auth.AuthViewModel
+import at.aau.serg.android.ui.screens.game.GameEffect
 import at.aau.serg.android.ui.screens.game.GameScreen
+import at.aau.serg.android.ui.screens.game.GameUIEvent
 import at.aau.serg.android.ui.screens.game.GameViewModel
 import at.aau.serg.android.ui.screens.home.HomeEffect
 import at.aau.serg.android.ui.screens.home.HomeScreen
@@ -124,18 +126,31 @@ fun NavGraphBuilder.homeGraph(
             AuthScreen(viewModel = vm)
         }
 
-        composable("${Routes.GAME}/{matchId}") {
+        composable("${Routes.GAME}/{gameId}") {
+            val gameId = it.arguments?.getString("gameId")!!
             val userStore = remember { provider.getStore<User>() }
 
             val vm: GameViewModel = viewModel(
                 factory = GenericViewModelFactory { GameViewModel(userStore) }
             )
 
-            GameScreen(
-                viewModel = vm,
-                onBack = { navController.popBackStack() },
-                onSettings = { navController.navigate(Routes.SETTINGS) }
-            )
+            LaunchedEffect(gameId) {
+                vm.onUIEvent(GameUIEvent.OnLoadGame(gameId))
+            }
+
+            LaunchedEffect(Unit) {
+                vm.effects.collect { effect ->
+                    when (effect) {
+                        GameEffect.NavigateToSettings ->
+                            navController.navigate(Routes.SETTINGS)
+
+                        GameEffect.NavigateBack ->
+                            navController.popBackStack()
+                    }
+                }
+            }
+
+            GameScreen(viewModel = vm)
         }
 
         composable(Routes.CREATE_LOBBY_FANCY) {
