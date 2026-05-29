@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.springframework.core.MethodParameter
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.mock.http.MockHttpInputMessage
 import org.springframework.validation.BeanPropertyBindingResult
 import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -27,6 +28,28 @@ class GlobalExceptionHandlerTest {
     private val handler = GlobalExceptionHandler()
 
     @Test
+    fun `handleIllegalArgument should return 400`() {
+        val ex = IllegalArgumentException("bad request")
+
+        val response = handler.handleIllegalArgument(ex)
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        assertEquals("BAD_REQUEST", response.body?.errorCode)
+        assertEquals("bad request", response.body?.errorMessage)
+    }
+
+    @Test
+    fun `handleNoSuchElement should return 404`() {
+        val ex = NoSuchElementException("missing resource")
+
+        val response = handler.handleNoSuchElement(ex)
+
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        assertEquals("NOT_FOUND", response.body?.errorCode)
+        assertEquals("missing resource", response.body?.errorMessage)
+    }
+
+    @Test
     fun `handleIllegalState should return 409`() {
         val ex = IllegalStateException("test error")
 
@@ -35,6 +58,17 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.CONFLICT, response.statusCode)
         assertEquals("CONFLICT", response.body?.errorCode)
         assertEquals("test error", response.body?.errorMessage)
+    }
+
+    @Test
+    fun `handleSecurity should return 403`() {
+        val ex = SecurityException("forbidden")
+
+        val response = handler.handleSecurity(ex)
+
+        assertEquals(HttpStatus.FORBIDDEN, response.statusCode)
+        assertEquals("FORBIDDEN", response.body?.errorCode)
+        assertEquals("forbidden", response.body?.errorMessage)
     }
 
     @Test
@@ -77,7 +111,10 @@ class GlobalExceptionHandlerTest {
 
     @Test
     fun `handleUnreadableBody should return 400`() {
-        val ex = HttpMessageNotReadableException("Unreadable JSON body")
+        val ex = HttpMessageNotReadableException(
+            "Unreadable JSON body",
+            MockHttpInputMessage(ByteArray(0))
+        )
 
         val response = handler.handleUnreadableBody(ex)
 
