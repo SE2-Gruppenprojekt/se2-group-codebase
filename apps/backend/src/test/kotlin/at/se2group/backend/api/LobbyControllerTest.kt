@@ -22,6 +22,12 @@ import shared.models.lobby.domain.LobbyStatus
 import shared.models.lobby.domain.LobbyPlayer
 import org.springframework.test.web.servlet.patch
 
+/**
+ * Integration-style MVC tests for [LobbyController].
+ *
+ * For the error-handling PR, this class is the place where lobby DTO bean
+ * validation is verified against the shared `ApiErrorResponse` contract.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 class LobbyControllerTest {

@@ -27,7 +27,13 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import shared.models.game.validation.ValidationResult
 
-
+/**
+ * Web-layer tests for [GameController].
+ *
+ * The error-handling additions in this class focus on verifying that game
+ * endpoints surface the shared REST error contract when request-entry failures
+ * or propagated service exceptions occur.
+ */
 @WebMvcTest(GameController::class)
 @Import(GlobalExceptionHandler::class)
 class GameControllerTest {

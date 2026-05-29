@@ -23,6 +23,14 @@ import shared.models.game.validation.RuleViolation
 import shared.models.game.validation.ValidationResult
 import java.beans.PropertyDescriptor
 
+/**
+ * Direct unit tests for [GlobalExceptionHandler].
+ *
+ * These tests exercise the advice methods without going through Spring MVC so
+ * that the response contract and logging policy can be verified in isolation.
+ * MVC routing coverage for the same handlers lives in
+ * [GlobalExceptionHandlerMvcTest].
+ */
 class GlobalExceptionHandlerTest {
 
     private val handler = GlobalExceptionHandler()
@@ -219,6 +227,8 @@ class GlobalExceptionHandlerTest {
     }
 
     private fun nullableMethodParameter(): MethodParameter {
+        // Build a writable method parameter that Spring's exception types accept
+        // without requiring a real controller method from production code.
         val property = PropertyDescriptor("displayName", CreateLobbyRequestStub::class.java)
         val writeMethod = property.writeMethod
         assertNotNull(writeMethod)

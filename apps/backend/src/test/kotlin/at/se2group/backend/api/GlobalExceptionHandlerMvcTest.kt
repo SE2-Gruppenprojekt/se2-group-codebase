@@ -18,6 +18,13 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
+/**
+ * MVC-level tests for [GlobalExceptionHandler].
+ *
+ * The dedicated probe controller below exists purely to trigger framework-level
+ * failures such as type mismatch, missing headers, unreadable bodies, and bean
+ * validation errors before normal service code would run.
+ */
 @WebMvcTest(ExceptionProbeController::class)
 @Import(GlobalExceptionHandler::class)
 class GlobalExceptionHandlerMvcTest {
@@ -89,17 +96,26 @@ class GlobalExceptionHandlerMvcTest {
     }
 }
 
+/**
+ * Minimal probe endpoints that trigger Spring MVC request-entry failures on
+ * demand so the global exception advice can be verified through the full web
+ * stack.
+ */
 @RestController
 @RequestMapping("/api/exception-probe")
 private class ExceptionProbeController {
 
     @GetMapping("/type-mismatch/{turnNumber}")
+    // Int path conversion is intentional so a non-numeric segment triggers
+    // MethodArgumentTypeMismatchException before any application logic runs.
     fun typeMismatch(@PathVariable turnNumber: Int): Int = turnNumber
 
     @GetMapping("/missing-header")
     fun missingHeader(@RequestHeader("X-Probe-User") userId: String): String = userId
 
     @PostMapping("/unreadable")
+    // Binding against a real DTO lets Spring raise HttpMessageNotReadableException
+    // for malformed JSON or incompatible field types.
     fun unreadable(@RequestBody request: CreateLobbyRequest): String = request.displayName
 
     @PostMapping("/validation")
