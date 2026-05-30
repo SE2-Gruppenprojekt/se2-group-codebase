@@ -1,4 +1,4 @@
-package at.se2group.backend.web
+package at.se2group.backend.api
 
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
