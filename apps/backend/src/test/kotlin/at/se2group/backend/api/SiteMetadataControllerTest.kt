@@ -1,4 +1,4 @@
-package at.se2group.backend.web
+package at.se2group.backend.api
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
