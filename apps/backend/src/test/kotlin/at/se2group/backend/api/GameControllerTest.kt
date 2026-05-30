@@ -27,7 +27,21 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import shared.models.game.validation.ValidationResult
 
-
+/**
+ * Web-layer tests for [GameController].
+ *
+ * This class exercises the controller through Spring MVC with mocked game
+ * services so that transport behavior can be verified independently from game
+ * rules or persistence. For the error-handling PR, the important responsibility
+ * here is proving that game endpoints surface the shared REST contract when:
+ *
+ * - request-entry failures happen before service code is reached
+ * - service-layer exceptions are propagated into the global advice
+ * - structured invalid-turn conflicts stay distinct from generic conflicts
+ *
+ * The tests in this class therefore serve as the game-specific confirmation
+ * that the global error-handling policy is actually visible at the public API.
+ */
 @WebMvcTest(GameController::class)
 @Import(GlobalExceptionHandler::class)
 class GameControllerTest {
@@ -107,6 +121,7 @@ class GameControllerTest {
                 status { isNotFound() }
                 jsonPath("$.errorCode") { value("NOT_FOUND") }
                 jsonPath("$.errorMessage") { value("Game not found") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 
@@ -203,6 +218,7 @@ class GameControllerTest {
                 status { isNotFound() }
                 jsonPath("$.errorCode") { value("NOT_FOUND") }
                 jsonPath("$.errorMessage") { value("Game not found") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 
@@ -219,6 +235,18 @@ class GameControllerTest {
                 status { isConflict() }
                 jsonPath("$.errorCode") { value("CONFLICT") }
                 jsonPath("$.errorMessage") { value("Game is not active") }
+                jsonPath("$.violations.length()") { value(0) }
+            }
+    }
+
+    @Test
+    fun `drawTile returns 400 when required user header is missing`() {
+        mockMvc.post("/api/games/game-1/draw")
+            .andExpect {
+                status { isBadRequest() }
+                jsonPath("$.errorCode") { value("BAD_REQUEST") }
+                jsonPath("$.errorMessage") { value("Missing required header: X-User-Id") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 
@@ -285,6 +313,7 @@ class GameControllerTest {
                 status { isNotFound() }
                 jsonPath("$.errorCode") { value("NOT_FOUND") }
                 jsonPath("$.errorMessage") { value("Game not found") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 
@@ -307,6 +336,7 @@ class GameControllerTest {
                 status { isConflict() }
                 jsonPath("$.errorCode") { value("CONFLICT") }
                 jsonPath("$.errorMessage") { value("Game is not active") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 
@@ -329,6 +359,46 @@ class GameControllerTest {
                 status { isConflict() }
                 jsonPath("$.errorCode") { value("INVALID_TURN_SUBMISSION") }
                 jsonPath("$.errorMessage") { value("Submitted draft is invalid") }
+            }
+    }
+
+    @Test
+    fun `updateDraft returns 400 for malformed json body`() {
+        mockMvc.put("/api/games/game-1/draft") {
+            header("X-User-Id", "mock-user")
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+                {
+                    "boardSets": [
+                        {
+                            "boardSetId": "set-1",
+                            "type": "NOT_A_REAL_TYPE",
+                            "tiles": []
+                        }
+                    ],
+                    "rackTiles": []
+                }
+            """.trimIndent()
+        }
+            .andExpect {
+                status { isBadRequest() }
+                jsonPath("$.errorCode") { value("BAD_REQUEST") }
+                jsonPath("$.errorMessage") { value("Malformed JSON request body") }
+                jsonPath("$.violations.length()") { value(0) }
+            }
+    }
+
+    @Test
+    fun `getGame returns 500 for unexpected backend exception`() {
+        `when`(gameService.getGame("game-1"))
+            .thenThrow(RuntimeException("boom"))
+
+        mockMvc.get("/api/games/game-1")
+            .andExpect {
+                status { isInternalServerError() }
+                jsonPath("$.errorCode") { value("INTERNAL_SERVER_ERROR") }
+                jsonPath("$.errorMessage") { value("An unexpected error occurred") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 
