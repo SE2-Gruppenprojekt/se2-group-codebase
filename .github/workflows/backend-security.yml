@@ -5,14 +5,33 @@ on:
   pull_request:
     paths:
       - "apps/backend/**"
+      - "docs/security.md"
+      - ".github/workflows/backend-security.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/backend/**"
+      - "docs/security.md"
       - ".github/workflows/backend-security.yml"
   schedule:
     - cron: "0 6 * * 1"
+
+concurrency:
+  group: backend-security-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  BACKEND_BASE_URL: https://se2-group-codebase.onrender.com
+  HEALTH_URL: https://se2-group-codebase.onrender.com/actuator/health
 
 jobs:
   zap-baseline-scan:
     name: OWASP ZAP Baseline Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -21,7 +40,7 @@ jobs:
       - name: Wait for deployed backend
         run: |
           for i in {1..30}; do
-            if curl -f https://se2-group-codebase.onrender.com/actuator/health; then
+            if curl -fsS "$HEALTH_URL"; then
               echo "Backend is reachable"
               exit 0
             fi
@@ -36,14 +55,28 @@ jobs:
       - name: Run OWASP ZAP baseline scan
         uses: zaproxy/action-baseline@v0.14.0
         with:
-          target: "https://se2-group-codebase.onrender.com"
+          target: ${{ env.BACKEND_BASE_URL }}
           cmd_options: "-a -I"
+
+      - name: Publish ZAP summary
+        if: always()
+        run: |
+          {
+            echo "## OWASP ZAP Baseline Scan"
+            echo
+            if [ -f report_md.md ]; then
+              cat report_md.md
+            else
+              echo "No markdown report was generated."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload ZAP report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: zap-security-report
+          retention-days: 14
           path: |
             report_html.html
             report_md.md
