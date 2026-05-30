@@ -52,6 +52,7 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
         assertEquals("BAD_REQUEST", response.body?.errorCode)
         assertEquals("bad request", response.body?.errorMessage)
+        assertEquals(emptyList<RuleViolation>(), response.body?.violations)
     }
 
     @Test
@@ -63,6 +64,7 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
         assertEquals("NOT_FOUND", response.body?.errorCode)
         assertEquals("missing resource", response.body?.errorMessage)
+        assertEquals(emptyList<RuleViolation>(), response.body?.violations)
     }
 
     @Test
@@ -74,6 +76,7 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.CONFLICT, response.statusCode)
         assertEquals("CONFLICT", response.body?.errorCode)
         assertEquals("test error", response.body?.errorMessage)
+        assertEquals(emptyList<RuleViolation>(), response.body?.violations)
     }
 
     @Test
@@ -85,6 +88,7 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.FORBIDDEN, response.statusCode)
         assertEquals("FORBIDDEN", response.body?.errorCode)
         assertEquals("forbidden", response.body?.errorMessage)
+        assertEquals(emptyList<RuleViolation>(), response.body?.violations)
     }
 
     @Test
@@ -123,6 +127,7 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
         assertEquals("BAD_REQUEST", response.body?.errorCode)
         assertEquals("Request validation failed", response.body?.errorMessage)
+        assertEquals(emptyList<RuleViolation>(), response.body?.violations)
     }
 
     @Test
@@ -137,6 +142,7 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
         assertEquals("BAD_REQUEST", response.body?.errorCode)
         assertEquals("Malformed JSON request body", response.body?.errorMessage)
+        assertEquals(emptyList<RuleViolation>(), response.body?.violations)
     }
 
     @Test
@@ -151,6 +157,7 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
         assertEquals("BAD_REQUEST", response.body?.errorCode)
         assertEquals("Missing required header: X-User-Id", response.body?.errorMessage)
+        assertEquals(emptyList<RuleViolation>(), response.body?.violations)
     }
 
     @Test
@@ -168,6 +175,7 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
         assertEquals("BAD_REQUEST", response.body?.errorCode)
         assertEquals("Request parameter type mismatch", response.body?.errorMessage)
+        assertEquals(emptyList<RuleViolation>(), response.body?.violations)
     }
 
     @Test
