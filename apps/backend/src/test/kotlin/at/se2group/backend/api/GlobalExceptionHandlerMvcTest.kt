@@ -49,6 +49,7 @@ class GlobalExceptionHandlerMvcTest {
                 status { isBadRequest() }
                 jsonPath("$.errorCode") { value("BAD_REQUEST") }
                 jsonPath("$.errorMessage") { value("Request parameter type mismatch") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 
@@ -59,6 +60,7 @@ class GlobalExceptionHandlerMvcTest {
                 status { isBadRequest() }
                 jsonPath("$.errorCode") { value("BAD_REQUEST") }
                 jsonPath("$.errorMessage") { value("Missing required header: X-Probe-User") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 
@@ -72,6 +74,7 @@ class GlobalExceptionHandlerMvcTest {
                 status { isBadRequest() }
                 jsonPath("$.errorCode") { value("BAD_REQUEST") }
                 jsonPath("$.errorMessage") { value("Malformed JSON request body") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 
@@ -92,6 +95,7 @@ class GlobalExceptionHandlerMvcTest {
                 status { isBadRequest() }
                 jsonPath("$.errorCode") { value("BAD_REQUEST") }
                 jsonPath("$.errorMessage") { value("Request validation failed") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 
@@ -102,6 +106,7 @@ class GlobalExceptionHandlerMvcTest {
                 status { isInternalServerError() }
                 jsonPath("$.errorCode") { value("INTERNAL_SERVER_ERROR") }
                 jsonPath("$.errorMessage") { value("An unexpected error occurred") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 }

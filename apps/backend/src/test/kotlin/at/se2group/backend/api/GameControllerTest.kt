@@ -121,6 +121,7 @@ class GameControllerTest {
                 status { isNotFound() }
                 jsonPath("$.errorCode") { value("NOT_FOUND") }
                 jsonPath("$.errorMessage") { value("Game not found") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 
@@ -217,6 +218,7 @@ class GameControllerTest {
                 status { isNotFound() }
                 jsonPath("$.errorCode") { value("NOT_FOUND") }
                 jsonPath("$.errorMessage") { value("Game not found") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 
@@ -233,6 +235,7 @@ class GameControllerTest {
                 status { isConflict() }
                 jsonPath("$.errorCode") { value("CONFLICT") }
                 jsonPath("$.errorMessage") { value("Game is not active") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 
@@ -243,6 +246,7 @@ class GameControllerTest {
                 status { isBadRequest() }
                 jsonPath("$.errorCode") { value("BAD_REQUEST") }
                 jsonPath("$.errorMessage") { value("Missing required header: X-User-Id") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 
@@ -309,6 +313,7 @@ class GameControllerTest {
                 status { isNotFound() }
                 jsonPath("$.errorCode") { value("NOT_FOUND") }
                 jsonPath("$.errorMessage") { value("Game not found") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 
@@ -331,6 +336,7 @@ class GameControllerTest {
                 status { isConflict() }
                 jsonPath("$.errorCode") { value("CONFLICT") }
                 jsonPath("$.errorMessage") { value("Game is not active") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 
@@ -378,6 +384,7 @@ class GameControllerTest {
                 status { isBadRequest() }
                 jsonPath("$.errorCode") { value("BAD_REQUEST") }
                 jsonPath("$.errorMessage") { value("Malformed JSON request body") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 
@@ -391,6 +398,7 @@ class GameControllerTest {
                 status { isInternalServerError() }
                 jsonPath("$.errorCode") { value("INTERNAL_SERVER_ERROR") }
                 jsonPath("$.errorMessage") { value("An unexpected error occurred") }
+                jsonPath("$.violations.length()") { value(0) }
             }
     }
 

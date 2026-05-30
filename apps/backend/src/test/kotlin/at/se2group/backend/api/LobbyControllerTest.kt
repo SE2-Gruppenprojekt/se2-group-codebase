@@ -101,6 +101,7 @@ class LobbyControllerTest {
             status { isBadRequest() }
             jsonPath("$.errorCode") { value("BAD_REQUEST") }
             jsonPath("$.errorMessage") { value("Request validation failed") }
+            jsonPath("$.violations.length()") { value(0) }
         }
     }
 
