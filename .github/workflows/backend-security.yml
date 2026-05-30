@@ -57,6 +57,7 @@ jobs:
         with:
           target: ${{ env.BACKEND_BASE_URL }}
           cmd_options: "-a -I"
+          allow_issue_writing: false
 
       - name: Publish ZAP summary
         if: always()
