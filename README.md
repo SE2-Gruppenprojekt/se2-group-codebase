@@ -13,6 +13,7 @@
 [![Backend CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/backend.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/backend.yml)
 [![Frontend CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/android.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/android.yml)
 [![Shared CI](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/shared.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/shared.yml)
+[![Backend Security Scan](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/backend-security.yml/badge.svg?branch=main)](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/backend-security.yml)
 
 ![Pull Requests](https://img.shields.io/github/issues-pr/SE2-Gruppenprojekt/se2-group-codebase)
 ![Issues](https://img.shields.io/github/issues/SE2-Gruppenprojekt/se2-group-codebase)
@@ -123,6 +124,16 @@ The team currently uses:
 - **GitHub Repository:** `<https://github.com/SE2-Gruppenprojekt/se2-group-codebase>`
 - **GitHub Organization:** `<https://github.com/SE2-Gruppenprojekt>`
 - **Notion Workspace / Hub:** `<https://kingjulien1.notion.site/SE2-Project-Team-Gamma-Hub-33086e6823a4809eb050f4a8335b695d?source=copy_link>`
+
+### GitMore Integration
+
+The project also uses **GitMore** as an additional dashboard for GitHub repository activity and project workflow visibility.
+
+GitMore can be used to review repository activity such as commits, pull requests, issues, and workflow-related progress from one central dashboard.
+
+- **GitMore Integration Dashboard:** `<https://app.gitmore.io/dashboard/integration>`
+
+If the repository appears inactive in GitMore, run a GitHub Actions workflow manually or push a small repository change, then refresh the GitMore integration dashboard.
 
 ---
 
@@ -333,6 +344,76 @@ This resolved a project issue where the Android Gradle Plugin version was newer 
 
 ## Workflow
 
+### GitHub Actions Workflows
+
+The repository uses GitHub Actions to automatically check backend, frontend, shared code, and backend API security. These workflows run on pull requests, pushes to `main`, and selected manual or scheduled triggers depending on the workflow.
+
+#### Backend CI — `.github/workflows/backend.yml`
+
+Checks backend-related changes before they are merged. It detects whether backend files changed, runs backend tests with coverage, and sends backend analysis results to SonarQube.
+
+Jobs:
+
+- `changes` — detects whether backend-related files were changed
+- `backend-build-sonar` — runs backend tests, coverage, and SonarQube analysis
+- `backend-required` — final required status check for backend changes
+
+#### Frontend CI — `.github/workflows/android.yml`
+
+Checks Android frontend changes. It detects frontend-related changes, runs Android unit tests, creates coverage data, and performs frontend SonarQube analysis.
+
+Jobs:
+
+- `changes` — detects whether frontend-related files were changed
+- `frontend-build` — runs Android frontend tests, coverage, and SonarQube analysis
+- `frontend-required` — final required status check for frontend changes
+
+#### Shared CI — `.github/workflows/shared.yml`
+
+Checks the shared Kotlin module used between frontend and backend. It runs shared-module tests and SonarQube analysis when shared code or build files are affected.
+
+Jobs:
+
+- `changes` — detects whether shared-module files were changed
+- `shared-build` — runs shared-module tests and SonarQube analysis
+- `shared-required` — final required status check for shared-code changes
+
+#### Backend Security Scan — `.github/workflows/backend-security.yml`
+
+Runs an **OWASP ZAP baseline scan** against the deployed Render backend to check for common API and HTTP security issues. The workflow first verifies that the backend is reachable through the health endpoint, then runs the scan and uploads the generated reports.
+
+Jobs:
+
+- `zap-baseline-scan` — wakes the backend, runs the ZAP scan, publishes the summary, and uploads reports
+
+Scan target:
+
+```text
+https://se2-group-codebase.onrender.com
+```
+
+Health check:
+
+```text
+https://se2-group-codebase.onrender.com/actuator/health
+```
+
+Generated ZAP reports:
+
+```text
+report_html.html
+report_md.md
+report_json.json
+```
+
+The uploaded artifact is named:
+
+```text
+zap-security-report
+```
+
+More details are documented in [Backend Security Scan](docs/security.md).
+
 ### Branch Naming
 
 Use clear and concise branch names.
@@ -483,6 +564,7 @@ The `docs/` directory contains the main project documentation. These files shoul
 - [Architecture Overview](docs/architecture.md)
 - [API Overview](docs/api.md)
 - [Testing Guide](docs/testing.md)
+- [Backend Security Scan](docs/security.md)
 
 ### Supporting Documentation
 
@@ -506,6 +588,7 @@ The `docs/` directory contains the main project documentation. These files shoul
 
 - [GitHub Repository](https://github.com/SE2-Gruppenprojekt/se2-group-codebase)
 - [GitHub Organization](https://github.com/SE2-Gruppenprojekt)
+- [Backend Security Scan Workflow](https://github.com/SE2-Gruppenprojekt/se2-group-codebase/actions/workflows/backend-security.yml)
 - [Notion Workspace / Hub](https://kingjulien1.notion.site/SE2-Project-Team-Gamma-Hub-33086e6823a4809eb050f4a8335b695d?source=copy_link)
 
 ### External References
