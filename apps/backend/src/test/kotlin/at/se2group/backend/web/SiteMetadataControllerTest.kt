@@ -10,8 +10,21 @@ import org.springframework.test.web.servlet.get
 /**
  * MVC tests for [SiteMetadataController].
  *
- * The assertions cover both static metadata endpoints so the exact response
- * body and declared content type remain part of the public backend contract.
+ * This class covers the two static site metadata endpoints exposed by the
+ * backend: `robots.txt` and `sitemap.xml`.
+ *
+ * Even though both endpoints return static content, they are still public HTTP
+ * contracts and can be consumed by crawlers, infrastructure tooling, and
+ * external inspection tools. The tests therefore verify the response at the
+ * MVC layer rather than only calling controller methods directly.
+ *
+ * Coverage goals in this test:
+ *
+ * - both routes are mapped correctly
+ * - each route returns `200 OK`
+ * - the declared content type matches the intended file type
+ * - the body content stays stable and human-readable
+ * - the sitemap keeps pointing at the intended backend health location
  */
 @WebMvcTest(SiteMetadataController::class)
 class SiteMetadataControllerTest {
@@ -24,6 +37,8 @@ class SiteMetadataControllerTest {
         mockMvc.get("/robots.txt")
             .andExpect {
                 status { isOk() }
+                // The content type is part of the HTTP contract, not just the
+                // body string, because crawlers interpret the file by media type.
                 content { contentTypeCompatibleWith(MediaType.TEXT_PLAIN) }
                 content {
                     string(
@@ -41,6 +56,8 @@ class SiteMetadataControllerTest {
         mockMvc.get("/sitemap.xml")
             .andExpect {
                 status { isOk() }
+                // Keep the XML media type explicit so the endpoint behaves like
+                // a real sitemap resource instead of a generic text response.
                 content { contentTypeCompatibleWith(MediaType.APPLICATION_XML) }
                 content {
                     xml(

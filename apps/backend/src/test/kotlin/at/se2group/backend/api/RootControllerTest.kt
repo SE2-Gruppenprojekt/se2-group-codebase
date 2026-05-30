@@ -9,9 +9,21 @@ import org.springframework.test.web.servlet.get
 /**
  * MVC tests for [RootController].
  *
- * This test verifies the public root endpoint contract directly at the web
- * layer so the controller stays covered independently from unrelated backend
- * infrastructure.
+ * This class verifies the backend root endpoint at the HTTP layer with a narrow
+ * `@WebMvcTest` slice.
+ *
+ * The root endpoint is intentionally small, but it still represents a public
+ * contract: callers expect a stable JSON response that indicates which service
+ * they reached and whether it is up. Testing that contract directly at the MVC
+ * layer keeps the controller covered without pulling in unrelated backend
+ * infrastructure such as services, persistence, or websocket configuration.
+ *
+ * Coverage goals in this test:
+ *
+ * - the endpoint is mapped at `/`
+ * - the endpoint returns `200 OK`
+ * - the JSON payload contains the documented service metadata
+ * - the exact response shape remains stable for external callers
  */
 @WebMvcTest(RootController::class)
 class RootControllerTest {
@@ -24,6 +36,8 @@ class RootControllerTest {
         mockMvc.get("/")
             .andExpect {
                 status { isOk() }
+                // Lock down the exact public metadata fields so changes to the
+                // root response remain intentional.
                 jsonPath("$.service") { value("SE2 Rummikub Backend") }
                 jsonPath("$.status") { value("running") }
             }

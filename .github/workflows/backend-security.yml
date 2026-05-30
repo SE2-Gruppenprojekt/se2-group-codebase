@@ -22,6 +22,7 @@ concurrency:
 
 permissions:
   contents: read
+  issues: write
 
 env:
   BACKEND_BASE_URL: https://se2-group-codebase.onrender.com
@@ -57,7 +58,6 @@ jobs:
         with:
           target: ${{ env.BACKEND_BASE_URL }}
           cmd_options: "-a -I"
-          allow_issue_writing: false
 
       - name: Publish ZAP summary
         if: always()
