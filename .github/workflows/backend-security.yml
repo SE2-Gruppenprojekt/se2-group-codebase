@@ -24,8 +24,8 @@ concurrency:
   group: backend-security-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-# The workflow only reads repository contents; issue write is retained if ZAP
-# automation is later extended to create or update issue-based findings.
+# The workflow reads repository contents and allows OWASP ZAP to create or
+# update GitHub issues for detected security findings when needed.
 permissions:
   contents: read
   issues: write
