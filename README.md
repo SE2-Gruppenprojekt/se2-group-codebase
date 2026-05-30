@@ -124,6 +124,16 @@ The team currently uses:
 - **GitHub Organization:** `<https://github.com/SE2-Gruppenprojekt>`
 - **Notion Workspace / Hub:** `<https://kingjulien1.notion.site/SE2-Project-Team-Gamma-Hub-33086e6823a4809eb050f4a8335b695d?source=copy_link>`
 
+### GitMore Integration
+
+The project also uses **GitMore** as an additional dashboard for GitHub repository activity and project workflow visibility.
+
+GitMore can be used to review repository activity such as commits, pull requests, issues, and workflow-related progress from one central dashboard.
+
+- **GitMore Integration Dashboard:** `<https://app.gitmore.io/dashboard/integration>`
+
+If the repository appears inactive in GitMore, run a GitHub Actions workflow manually or push a small repository change, then refresh the GitMore integration dashboard.
+
 ---
 
 ## Team
