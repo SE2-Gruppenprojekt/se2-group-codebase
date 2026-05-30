@@ -298,7 +298,7 @@ permissions:
     issues: write
 ```
 
-The workflow needs repository read access to check out the project and run the scan configuration. It also grants issue write access so OWASP ZAP can create or update GitHub issues for detected security findings, making important scan results visible directly in GitHub.
+The workflow needs repository read access to check out the project and run the scan configuration. It also grants issue write access so OWASP ZAP can create or update GitHub issues for detected security findings, making important scan results visible directly in GitHub. This is intended.
 
 ---
 
