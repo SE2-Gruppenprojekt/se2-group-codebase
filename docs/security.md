@@ -180,6 +180,7 @@ concurrency:
 
 permissions:
     contents: read
+    issues: write
 
 env:
     BACKEND_BASE_URL: https://se2-group-codebase.onrender.com
@@ -294,9 +295,10 @@ This prevents multiple overlapping ZAP scans for the same branch or pull request
 ```yaml
 permissions:
     contents: read
+    issues: write
 ```
 
-The workflow only needs repository read access. Keeping permissions minimal is the correct default for a security-related CI job.
+The workflow needs repository read access to check out the project and run the scan configuration. It also grants issue write access so OWASP ZAP can create or update GitHub issues for detected security findings, making important scan results visible directly in GitHub.
 
 ---
 
