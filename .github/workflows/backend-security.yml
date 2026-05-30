@@ -1,0 +1,50 @@
+name: Backend Security Scan
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "apps/backend/**"
+      - ".github/workflows/backend-security.yml"
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  zap-baseline-scan:
+    name: OWASP ZAP Baseline Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Wait for deployed backend
+        run: |
+          for i in {1..30}; do
+            if curl -f https://se2-group-codebase.onrender.com/actuator/health; then
+              echo "Backend is reachable"
+              exit 0
+            fi
+
+            echo "Waiting for backend to wake up..."
+            sleep 10
+          done
+
+          echo "Backend was not reachable"
+          exit 1
+
+      - name: Run OWASP ZAP baseline scan
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: "https://se2-group-codebase.onrender.com"
+          cmd_options: "-a -I"
+
+      - name: Upload ZAP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-security-report
+          path: |
+            report_html.html
+            report_md.md
+            report_json.json
