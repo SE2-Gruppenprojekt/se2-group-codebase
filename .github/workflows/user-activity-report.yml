@@ -3,6 +3,10 @@ name: Organization User Activity Report
 on:
   # Manual trigger is the safest default for an organization-wide report.
   workflow_dispatch:
+  # Allow testing workflow changes from pull requests before merging to main.
+  pull_request:
+    paths:
+      - ".github/workflows/user-activity-report.yml"
   # Run automatically once a month so the report stays current.
   schedule:
     - cron: "0 7 1 * *"
