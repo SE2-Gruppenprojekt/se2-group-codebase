@@ -7,9 +7,10 @@ on:
   pull_request:
     paths:
       - ".github/workflows/user-activity-report.yml"
-  # Run automatically once a month so the report stays current.
+  # Run automatically every Thursday at 07:00 UTC. This matches schedules such
+  # as May 21, 2026; May 28, 2026; June 4, 2026; and every following Thursday.
   schedule:
-    - cron: "0 7 1 * *"
+    - cron: "0 7 * * 4"
 
 concurrency:
   group: org-activity-report-${{ github.workflow }}-${{ github.ref }}
@@ -43,7 +44,8 @@ jobs:
           # Use the current repository owner so the workflow stays portable
           # across repositories inside the same GitHub organization.
           organization: ${{ env.TARGET_ORGANIZATION }}
-          activity_days: 30
+          # Weekly Thursday report: include the last 7 days of activity.
+          activity_days: 7
           outputDir: reports
 
       - name: Publish report summary
@@ -53,7 +55,7 @@ jobs:
             echo "## Organization User Activity Report"
             echo
             echo "- Organization: $TARGET_ORGANIZATION"
-            echo "- Activity window: last 30 days"
+            echo "- Activity window: last 7 days"
             echo
             if [ -f "${{ steps.analyze_user_activity.outputs.report_csv }}" ]; then
               echo "CSV report generated successfully."
