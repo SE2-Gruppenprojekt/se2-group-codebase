@@ -1,0 +1,73 @@
+name: Organization User Activity Report
+
+on:
+  # Manual trigger is the safest default for an organization-wide report.
+  workflow_dispatch:
+  # Run automatically once a month so the report stays current.
+  schedule:
+    - cron: "0 7 1 * *"
+
+concurrency:
+  group: org-activity-report-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # This repository lives inside the target organization, so the repository
+  # owner is the correct organization name for the action input.
+  TARGET_ORGANIZATION: ${{ github.repository_owner }}
+
+jobs:
+  generate-activity-report:
+    name: Generate organization activity report
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Analyze organization user activity
+        id: analyze_user_activity
+        uses: peter-murray/inactive-users-action@v1
+        with:
+          # Personal access token stored as a GitHub secret. It must belong to a
+          # user who can read the organization and all repositories to analyze.
+          token: ${{ secrets.ORG_ACTIVITY_REPORT_TOKEN }}
+          # Use the current repository owner so the workflow stays portable
+          # across repositories inside the same GitHub organization.
+          organization: ${{ env.TARGET_ORGANIZATION }}
+          activity_days: 30
+          outputDir: reports
+
+      - name: Publish report summary
+        if: always()
+        run: |
+          {
+            echo "## Organization User Activity Report"
+            echo
+            echo "- Organization: $TARGET_ORGANIZATION"
+            echo "- Activity window: last 30 days"
+            echo
+            if [ -f "${{ steps.analyze_user_activity.outputs.report_csv }}" ]; then
+              echo "CSV report generated successfully."
+              echo
+              echo '```text'
+              head -n 20 "${{ steps.analyze_user_activity.outputs.report_csv }}"
+              echo '```'
+            else
+              echo "No CSV report was generated."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload activity reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: organization-user-activity-report
+          retention-days: 14
+          path: |
+            ${{ steps.analyze_user_activity.outputs.report_csv }}
+            ${{ steps.analyze_user_activity.outputs.report_json }}
