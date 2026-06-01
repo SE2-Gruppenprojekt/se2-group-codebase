@@ -46,6 +46,11 @@ jobs:
           organization: ${{ env.TARGET_ORGANIZATION }}
           # Weekly Thursday report: include the last 7 days of activity.
           activity_days: 7
+          # The marketplace action does not expose per-metric feature flags.
+          # It always generates its full built-in activity dataset, so the
+          # only meaningful reporting knobs are time window, output location,
+          # and API retry behavior.
+          octokit_max_retries: 15
           outputDir: reports
 
       - name: Publish report summary
@@ -56,6 +61,8 @@ jobs:
             echo
             echo "- Organization: $TARGET_ORGANIZATION"
             echo "- Activity window: last 7 days"
+            echo "- Action metrics: full built-in activity dataset"
+            echo "- Octokit max retries: 15"
             echo
             if [ -f "${{ steps.analyze_user_activity.outputs.report_csv }}" ]; then
               echo "CSV report generated successfully."
@@ -65,6 +72,12 @@ jobs:
               echo '```'
             else
               echo "No CSV report was generated."
+            fi
+            echo
+            if [ -f "${{ steps.analyze_user_activity.outputs.report_json }}" ]; then
+              echo "JSON report generated successfully."
+            else
+              echo "No JSON report was generated."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
