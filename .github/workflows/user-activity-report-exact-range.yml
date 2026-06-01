@@ -4,6 +4,10 @@ on:
   # One-off manual workflow for generating the exact report window required for
   # submission or retrospective work.
   workflow_dispatch:
+    # Allow testing workflow changes from pull requests before merging.
+  pull_request:
+    paths:
+      - ".github/workflows/user-activity-report-exact-range.yml"
 
 permissions:
   contents: read
