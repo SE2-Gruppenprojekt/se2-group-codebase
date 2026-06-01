@@ -137,6 +137,46 @@ Notes:
 
 ---
 
+### Joker substitution semantics
+
+Jokers are transported through the API as normal tiles:
+
+- `isJoker = true`
+- `number = null`
+- `color` is still set
+- `tileId` is still unique and stable
+
+Important backend contract:
+
+- the API does **not** send a separately persisted “joker resolves to X” field
+- the client may place a joker into a board set, but the backend decides at end-turn whether a legal substitution exists
+- substitution is therefore a **validation-time rule decision**, not a client-authored data field
+
+That means the frontend should treat a joker as:
+
+- a real tile in the rack and board
+- a tile that may participate in group/run validation
+- a tile whose exact interpreted value is owned by backend rule validation
+
+In practice:
+
+- draft payloads send joker tiles exactly like any other tile, just with `isJoker = true`
+- end-turn validation decides whether the joker can legally stand in for a missing number/color position
+- if no legal substitution exists, the backend rejects the turn with normal `RuleViolation` errors
+
+Example joker tile:
+
+```json
+{
+    "tileId": "tile-joker-001",
+    "color": "BLACK",
+    "number": null,
+    "isJoker": true
+}
+```
+
+---
+
 ### `GamePlayerResponse`
 
 ```json
