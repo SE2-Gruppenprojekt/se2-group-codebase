@@ -229,7 +229,8 @@ class GameViewModel(
                 rackTiles = newRack,
                 boardSets = updatedBoardSets,
                 selectedTiles = emptySet(),
-                activeSelectionRow = null
+                activeSelectionRow = null,
+                ruleValidation = RuleValidationUiState()
             )
         }
         sendTurnDraft()
@@ -267,7 +268,8 @@ class GameViewModel(
                 rackTiles = finalRack,
                 boardSets = updatedBoardSets,
                 selectedTiles = emptySet(),
-                activeSelectionRow = null
+                activeSelectionRow = null,
+                ruleValidation = RuleValidationUiState()
             )
         }
         sendTurnDraft()
@@ -289,11 +291,11 @@ class GameViewModel(
             list.add(to, item)
 
             if (boardIndex == null) {
-                state.copy(rackTiles = list)
+                state.copy(rackTiles = list, ruleValidation = RuleValidationUiState())
             } else {
                 val updatedSets = state.boardSets.toMutableList()
                 updatedSets[boardIndex] = updatedSets[boardIndex].copy(tiles = list)
-                state.copy(boardSets = updatedSets)
+                state.copy(boardSets = updatedSets, ruleValidation = RuleValidationUiState())
             }
         }
         sendTurnDraft()
@@ -306,7 +308,8 @@ class GameViewModel(
         _uiState.update { state ->
             state.copy(
                 selectedTiles = emptySet(),
-                activeSelectionRow = null
+                activeSelectionRow = null,
+                ruleValidation = RuleValidationUiState()
             )
         }
         sendTurnDraft()
