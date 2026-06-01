@@ -1,0 +1,332 @@
+name: Organization User Activity Report (Exact Range)
+
+on:
+  # One-off manual workflow for generating the exact report window required for
+  # submission or retrospective work.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  TARGET_ORGANIZATION: ${{ github.repository_owner }}
+  REPORT_SINCE: "2026-05-21T00:00:00Z"
+  REPORT_UNTIL: "2026-05-28T00:00:00Z"
+
+jobs:
+  generate-exact-range-report:
+    name: Generate exact-range activity report
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate exact-range organization activity report
+        env:
+          GH_TOKEN: ${{ secrets.ORG_ACTIVITY_REPORT_TOKEN }}
+        run: |
+          python <<'PY'
+          import csv
+          import json
+          import os
+          import urllib.parse
+          import urllib.request
+          from collections import defaultdict
+          from datetime import datetime, timezone
+
+          org = os.environ["TARGET_ORGANIZATION"]
+          since = os.environ["REPORT_SINCE"]
+          until = os.environ["REPORT_UNTIL"]
+          token = os.environ["GH_TOKEN"]
+
+          os.makedirs("reports", exist_ok=True)
+
+          def gh_get(url: str):
+              req = urllib.request.Request(
+                  url,
+                  headers={
+                      "Accept": "application/vnd.github+json",
+                      "Authorization": f"Bearer {token}",
+                      "X-GitHub-Api-Version": "2022-11-28",
+                      "User-Agent": "se2-group-codebase-activity-report",
+                  },
+              )
+              with urllib.request.urlopen(req) as response:
+                  return json.loads(response.read().decode("utf-8")), response.headers
+
+          def paginate(url: str):
+              items = []
+              next_url = url
+              while next_url:
+                  data, headers = gh_get(next_url)
+                  if isinstance(data, list):
+                      items.extend(data)
+                  else:
+                      raise RuntimeError(f"Expected list response for {next_url}")
+                  link = headers.get("Link", "")
+                  next_url = None
+                  for part in link.split(","):
+                      if 'rel="next"' in part:
+                          next_url = part[part.find("<") + 1:part.find(">")]
+                          break
+              return items
+
+          def in_window(iso_value: str) -> bool:
+              value = datetime.fromisoformat(iso_value.replace("Z", "+00:00"))
+              start = datetime.fromisoformat(since.replace("Z", "+00:00"))
+              end = datetime.fromisoformat(until.replace("Z", "+00:00"))
+              return start <= value < end
+
+          def actor_name(value):
+              if not value:
+                  return None
+              if isinstance(value, dict):
+                  return value.get("login")
+              return None
+
+          activity = defaultdict(lambda: {
+              "login": "",
+              "email": "",
+              "isActive": False,
+              "commits": 0,
+              "issues": 0,
+              "issueComments": 0,
+              "prComments": 0,
+          })
+
+          members = paginate(f"https://api.github.com/orgs/{org}/members?per_page=100")
+          for member in members:
+              login = member["login"]
+              activity[login]["login"] = login
+
+          repos = paginate(f"https://api.github.com/orgs/{org}/repos?per_page=100&type=all")
+
+          for repo in repos:
+              repo_name = repo["name"]
+              commits_url = (
+                  f"https://api.github.com/repos/{org}/{repo_name}/commits"
+                  f"?since={urllib.parse.quote(since)}&until={urllib.parse.quote(until)}&per_page=100"
+              )
+              commits = paginate(commits_url)
+              for commit in commits:
+                  login = actor_name(commit.get("author")) or actor_name(commit.get("committer"))
+                  if not login:
+                      continue
+                  activity[login]["login"] = login
+                  activity[login]["isActive"] = True
+                  activity[login]["commits"] += 1
+
+              issues_url = (
+                  f"https://api.github.com/repos/{org}/{repo_name}/issues"
+                  f"?state=all&since={urllib.parse.quote(since)}&per_page=100"
+              )
+              issues = paginate(issues_url)
+              for issue in issues:
+                  if "pull_request" in issue:
+                      continue
+                  created_at = issue.get("created_at")
+                  login = actor_name(issue.get("user"))
+                  if created_at and login and in_window(created_at):
+                      activity[login]["login"] = login
+                      activity[login]["isActive"] = True
+                      activity[login]["issues"] += 1
+
+              issue_comments_url = (
+                  f"https://api.github.com/repos/{org}/{repo_name}/issues/comments"
+                  f"?since={urllib.parse.quote(since)}&per_page=100"
+              )
+              issue_comments = paginate(issue_comments_url)
+              for comment in issue_comments:
+                  created_at = comment.get("created_at")
+                  login = actor_name(comment.get("user"))
+                  if created_at and login and in_window(created_at):
+                      activity[login]["login"] = login
+                      activity[login]["isActive"] = True
+                      activity[login]["issueComments"] += 1
+
+              pr_comments_url = (
+                  f"https://api.github.com/repos/{org}/{repo_name}/pulls/comments"
+                  f"?since={urllib.parse.quote(since)}&per_page=100"
+              )
+              pr_comments = paginate(pr_comments_url)
+              for comment in pr_comments:
+                  created_at = comment.get("created_at")
+                  login = actor_name(comment.get("user"))
+                  if created_at and login and in_window(created_at):
+                      activity[login]["login"] = login
+                      activity[login]["isActive"] = True
+                      activity[login]["prComments"] += 1
+
+          rows = sorted(activity.values(), key=lambda item: (
+              not item["isActive"],
+              -(item["commits"] + item["issues"] + item["issueComments"] + item["prComments"]),
+              item["login"].lower(),
+          ))
+
+          with open("reports/organization_user_activity.json", "w", encoding="utf-8") as fh:
+              json.dump(rows, fh, indent=2)
+
+          with open("reports/organization_user_activity.csv", "w", newline="", encoding="utf-8") as fh:
+              writer = csv.DictWriter(
+                  fh,
+                  fieldnames=["login", "email", "isActive", "commits", "issues", "issueComments", "prComments"],
+              )
+              writer.writeheader()
+              writer.writerows(rows)
+          PY
+
+      - name: Build markdown report
+        run: |
+          python <<'PY'
+          import json
+          import os
+
+          since = os.environ["REPORT_SINCE"][:10]
+          until = os.environ["REPORT_UNTIL"][:10]
+          org = os.environ["TARGET_ORGANIZATION"]
+
+          with open("reports/organization_user_activity.json", "r", encoding="utf-8") as fh:
+              rows = json.load(fh)
+
+          total_commits = sum(item["commits"] for item in rows)
+          total_issues = sum(item["issues"] for item in rows)
+          total_issue_comments = sum(item["issueComments"] for item in rows)
+          total_pr_comments = sum(item["prComments"] for item in rows)
+          active = [item for item in rows if item["isActive"]]
+          inactive = [item for item in rows if not item["isActive"]]
+
+          bot_names = {"github-actions[bot]", "sonarqubecloud[bot]", "Copilot"}
+          humans = [item for item in rows if item["login"] not in bot_names]
+          active_humans = [item for item in humans if item["isActive"]]
+          bots = [item for item in rows if item["login"] in bot_names]
+
+          def top_by(key):
+              candidates = [item for item in rows if item[key] > 0]
+              return max(candidates, key=lambda item: item[key]) if candidates else None
+
+          def yes_no(value):
+              return "Yes" if value else "No"
+
+          lines = []
+          lines.append("# Organization User Activity Report")
+          lines.append("")
+          lines.append("## Overview")
+          lines.append("")
+          lines.append(f"This report summarizes GitHub organization activity for **{org}** ")
+          lines.append(f"for the exact reporting period **{since} to {until}**.")
+          lines.append("")
+          lines.append("---")
+          lines.append("")
+          lines.append("## Report Metadata")
+          lines.append("")
+          lines.append("| Field | Value |")
+          lines.append("| --- | --- |")
+          lines.append(f"| Organization | `{org}` |")
+          lines.append("| Activity window | Exact fixed range |")
+          lines.append(f"| Date span | `{since}` to `{until}` |")
+          lines.append("| Source workflow | `Organization User Activity Report (Exact Range)` |")
+          lines.append("")
+          lines.append("---")
+          lines.append("")
+          lines.append("## Executive Summary")
+          lines.append("")
+          lines.append(f"- Active actors: **{len(active)}**")
+          lines.append(f"- Inactive listed actors: **{len(inactive)}**")
+          lines.append(f"- Active human contributors: **{len(active_humans)}**")
+          lines.append("")
+          lines.append("| Metric | Total |")
+          lines.append("| --- | ---: |")
+          lines.append(f"| Commits | {total_commits} |")
+          lines.append(f"| Issues | {total_issues} |")
+          lines.append(f"| Issue comments | {total_issue_comments} |")
+          lines.append(f"| Pull request comments | {total_pr_comments} |")
+          lines.append("")
+
+          top_commits = top_by("commits")
+          top_issues = top_by("issues")
+          top_issue_comments = top_by("issueComments")
+          top_pr_comments = top_by("prComments")
+          lines.append("### Highlights")
+          lines.append("")
+          if top_commits:
+              lines.append(f"- Most commits: `{top_commits['login']}` with **{top_commits['commits']}**")
+          if top_issues:
+              lines.append(f"- Most issues: `{top_issues['login']}` with **{top_issues['issues']}**")
+          if top_issue_comments:
+              lines.append(f"- Most issue comments: `{top_issue_comments['login']}` with **{top_issue_comments['issueComments']}**")
+          if top_pr_comments:
+              lines.append(f"- Most PR comments: `{top_pr_comments['login']}` with **{top_pr_comments['prComments']}**")
+          lines.append("")
+          lines.append("---")
+          lines.append("")
+          lines.append("## Full Activity Table")
+          lines.append("")
+          lines.append("| User / Actor | Active | Commits | Issues | Issue Comments | PR Comments |")
+          lines.append("| --- | :---: | ---: | ---: | ---: | ---: |")
+          for item in rows:
+              lines.append(
+                  f"| `{item['login']}` | {yes_no(item['isActive'])} | {item['commits']} | {item['issues']} | {item['issueComments']} | {item['prComments']} |"
+              )
+          lines.append("")
+          lines.append("---")
+          lines.append("")
+          lines.append("## Human Contributor Activity")
+          lines.append("")
+          lines.append("| User | Active | Commits | Issues | Issue Comments | PR Comments |")
+          lines.append("| --- | :---: | ---: | ---: | ---: | ---: |")
+          for item in humans:
+              lines.append(
+                  f"| `{item['login']}` | {yes_no(item['isActive'])} | {item['commits']} | {item['issues']} | {item['issueComments']} | {item['prComments']} |"
+              )
+          lines.append("")
+          lines.append("---")
+          lines.append("")
+          lines.append("## Automated / Tool Activity")
+          lines.append("")
+          lines.append("| Actor | Active | Commits | Issues | Issue Comments | PR Comments |")
+          lines.append("| --- | :---: | ---: | ---: | ---: | ---: |")
+          for item in bots:
+              lines.append(
+                  f"| `{item['login']}` | {yes_no(item['isActive'])} | {item['commits']} | {item['issues']} | {item['issueComments']} | {item['prComments']} |"
+              )
+          lines.append("")
+          lines.append("---")
+          lines.append("")
+          lines.append("## Raw JSON Output")
+          lines.append("")
+          lines.append("```json")
+          lines.append(json.dumps(rows, indent=2))
+          lines.append("```")
+
+          with open("reports/report_md.md", "w", encoding="utf-8") as fh:
+              fh.write("\n".join(lines) + "\n")
+          PY
+
+      - name: Publish report summary
+        if: always()
+        run: |
+          {
+            echo "## Exact Range Organization User Activity Report"
+            echo
+            echo "- Organization: $TARGET_ORGANIZATION"
+            echo "- Date span: ${REPORT_SINCE:0:10} to ${REPORT_UNTIL:0:10}"
+            echo
+            if [ -f reports/report_md.md ]; then
+              head -n 80 reports/report_md.md
+            else
+              echo "No markdown report was generated."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload exact-range activity reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: organization-user-activity-report-exact-range
+          retention-days: 14
+          path: |
+            reports/organization_user_activity.csv
+            reports/organization_user_activity.json
+            reports/report_md.md
