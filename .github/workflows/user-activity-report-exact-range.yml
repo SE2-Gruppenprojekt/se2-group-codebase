@@ -1,13 +1,10 @@
 name: Organization User Activity Report (Exact Range)
 
 on:
-  # One-off manual workflow for generating the exact report window required for
-  # submission or retrospective work.
-  workflow_dispatch:
-    # Allow testing workflow changes from pull requests before merging.
-  pull_request:
-    paths:
-      - ".github/workflows/user-activity-report-exact-range.yml"
+  # Keep this workflow file archived in the repository without exposing a
+  # manual or scheduled trigger. `workflow_call` is used only so the file stays
+  # syntactically valid as a workflow definition.
+  workflow_call:
 
 permissions:
   contents: read
@@ -19,6 +16,10 @@ env:
 
 jobs:
   generate-exact-range-report:
+    # This workflow is intentionally disabled for now. Remove this guard and add
+    # a real trigger again when another fixed historical reporting window is
+    # needed.
+    if: ${{ false }}
     name: Generate exact-range activity report
     runs-on: ubuntu-latest
     timeout-minutes: 45
