@@ -361,14 +361,31 @@ class GameViewModel(
                     it.copy(
                         selectedTiles = emptySet(),
                         activeSelectionRow = null,
-                        loadState = LoadState.Success
+                        loadState = LoadState.Success,
+                        ruleValidation = RuleValidationUiState()
                     )
                 }
             } catch (e: Throwable) {
-                val appError = NetworkErrorMapper.map(e)
-
-                _uiState.update {
-                    it.copy(loadState = LoadState.Error(appError))
+                when (val appError = NetworkErrorMapper.map(e)) {
+                    is AppError.Rest.RuleValidation -> {
+                        val setViolations = appError.violations.filter { it.boardSetId != null }
+                        val globalViolations = appError.violations.filter { it.boardSetId == null }
+                        _uiState.update {
+                            it.copy(
+                                loadState = LoadState.Success,
+                                ruleValidation = RuleValidationUiState(
+                                    violationsByBoardSetId = setViolations.groupBy { v -> v.boardSetId!! },
+                                    globalViolations = globalViolations,
+                                    summaryMessage = appError.message
+                                )
+                            )
+                        }
+                    }
+                    else -> {
+                        _uiState.update {
+                            it.copy(loadState = LoadState.Error(appError))
+                        }
+                    }
                 }
             }
         }
