@@ -41,6 +41,12 @@ class GameEntity(
     @Column(name = "finished_at")
     var finishedAt: Instant? = null,
 
+    @Column(name = "total_turns_completed", nullable = false)
+    var totalTurnsCompleted: Int = 0,
+
+    @Column(name = "winner_user_id")
+    var winnerUserId: String? = null,
+
     @OneToMany(mappedBy = "game", cascade = [CascadeType.ALL], orphanRemoval = true)
     @OrderColumn(name = "player_order")
     var players: MutableList<GamePlayerEntity> = mutableListOf(),
