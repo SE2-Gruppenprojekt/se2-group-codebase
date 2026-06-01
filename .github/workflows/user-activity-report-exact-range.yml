@@ -14,7 +14,7 @@ permissions:
 
 env:
   TARGET_ORGANIZATION: ${{ github.repository_owner }}
-  REPORT_SINCE: "2026-03-23T00:00:00Z"
+  REPORT_SINCE: "2026-04-23T00:00:00Z"
   REPORT_UNTIL: "2026-05-21T00:00:00Z"
 
 jobs:
