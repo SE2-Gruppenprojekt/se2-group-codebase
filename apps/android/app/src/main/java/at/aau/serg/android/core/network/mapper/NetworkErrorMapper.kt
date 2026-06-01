@@ -1,5 +1,6 @@
 package at.aau.serg.android.core.network.mapper
 
+import at.aau.serg.android.core.errors.ApiRuleViolation
 import at.aau.serg.android.core.errors.AppError
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -7,7 +8,9 @@ import retrofit2.HttpException
 import java.io.IOException
 
 data class ApiErrorResponse(
-    val errorMessage: String?
+    val errorCode: String? = null,
+    val errorMessage: String? = null,
+    val violations: List<ApiRuleViolation> = emptyList()
 )
 
 object NetworkErrorMapper {
@@ -27,7 +30,14 @@ object NetworkErrorMapper {
 
     private fun mapHttpError(e: HttpException): AppError {
         val body = e.response()?.errorBody()?.string()
-        val parsed = body?.let { adapter.fromJson(it) }
+        val parsed = body?.let { runCatching { adapter.fromJson(it) }.getOrNull() }
+
+        if (e.code() == 409 && parsed?.errorCode == "INVALID_TURN_SUBMISSION") {
+            return AppError.Rest.RuleValidation(
+                message = parsed.errorMessage ?: "Submitted draft is invalid",
+                violations = parsed.violations
+            )
+        }
 
         val message = parsed?.errorMessage?.takeIf { it.isNotBlank() }
         if (message != null) return AppError.Rest.Api(message)
