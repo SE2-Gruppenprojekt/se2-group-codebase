@@ -9,4 +9,5 @@ object GameTestTags {
     const val ACTION_ADD = "game_action_add"
     const val ACTION_RESET = "game_action_reset"
     const val ACTION_END_TURN = "game_action_end_turn"
+    const val GLOBAL_VALIDATION_BANNER = "game_global_validation_banner"
 }

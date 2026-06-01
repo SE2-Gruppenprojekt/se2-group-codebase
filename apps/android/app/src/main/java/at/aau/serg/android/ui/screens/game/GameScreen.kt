@@ -114,6 +114,33 @@ fun GameScreenContent(
                 }
             }
 
+            // GLOBAL VALIDATION BANNER
+            if (uiState.ruleValidation.globalViolations.isNotEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(NotReadyRed.copy(alpha = 0.12f))
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                        .testTag(GameTestTags.GLOBAL_VALIDATION_BANNER)
+                ) {
+                    Text(
+                        text = uiState.ruleValidation.summaryMessage ?: "Invalid move",
+                        fontWeight = FontWeight.Bold,
+                        color = NotReadyRed,
+                        fontSize = 13.sp
+                    )
+                    uiState.ruleValidation.globalViolations.forEach { violation ->
+                        Text(
+                            text = "• ${violation.message}",
+                            color = NotReadyRed,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            }
+
             // CONTENT
             Box(
                 Modifier
