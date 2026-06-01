@@ -1,4 +1,4 @@
-name: Organization User Activity Report
+name: Organization User Activity Report (Weekly)
 
 on:
   # Manual trigger is the safest default for an organization-wide report.
