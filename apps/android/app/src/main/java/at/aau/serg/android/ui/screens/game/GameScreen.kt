@@ -26,6 +26,7 @@ import at.aau.serg.android.ui.components.BackButton
 import at.aau.serg.android.ui.screens.game.components.PlayerChip
 import at.aau.serg.android.ui.screens.game.components.TileRow
 import at.aau.serg.android.ui.screens.game.components.TileRowPlaceholder
+import at.aau.serg.android.ui.theme.NotReadyRed
 import at.aau.serg.android.ui.theme.appColors
 
 @Composable
@@ -134,15 +135,31 @@ fun GameScreenContent(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         items(uiState.boardSets) { boardSet ->
-                            TileRow(
-                                onEvent,
-                                tiles = boardSet.tiles,
-                                tileSize = 60,
-                                borderColor = c.game.boardBorder,
-                                selectedTiles = uiState.selectedTiles,
-                                selectedRow = uiState.activeSelectionRow,
-                                rowId = boardSet.boardSetId,
-                            )
+                            val rowViolations = uiState.ruleValidation
+                                .violationsByBoardSetId[boardSet.boardSetId]
+                                .orEmpty()
+                            val isInvalid = rowViolations.isNotEmpty()
+
+                            Column {
+                                TileRow(
+                                    onEvent,
+                                    tiles = boardSet.tiles,
+                                    tileSize = 60,
+                                    borderColor = if (isInvalid) NotReadyRed else c.game.boardBorder,
+                                    selectedTiles = uiState.selectedTiles,
+                                    selectedRow = uiState.activeSelectionRow,
+                                    rowId = boardSet.boardSetId,
+                                )
+
+                                if (isInvalid) {
+                                    Text(
+                                        text = rowViolations.first().message,
+                                        color = NotReadyRed,
+                                        fontSize = 12.sp,
+                                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                                    )
+                                }
+                            }
                         }
 
                         if (uiState.selectedTiles.isNotEmpty()) {
