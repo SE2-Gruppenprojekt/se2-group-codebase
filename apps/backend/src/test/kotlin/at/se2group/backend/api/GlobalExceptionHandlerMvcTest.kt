@@ -61,6 +61,10 @@ class GlobalExceptionHandlerMvcTest {
                 jsonPath("$.errorCode") { value("BAD_REQUEST") }
                 jsonPath("$.errorMessage") { value("Missing required header: X-Probe-User") }
                 jsonPath("$.violations.length()") { value(0) }
+                header { string("X-Content-Type-Options", "nosniff") }
+                header { string("Cross-Origin-Resource-Policy", "same-origin") }
+                header { string("Strict-Transport-Security", "max-age=31536000; includeSubDomains") }
+                header { string("Cache-Control", "no-cache, no-store, must-revalidate, private") }
             }
     }
 
@@ -107,6 +111,10 @@ class GlobalExceptionHandlerMvcTest {
                 jsonPath("$.errorCode") { value("INTERNAL_SERVER_ERROR") }
                 jsonPath("$.errorMessage") { value("An unexpected error occurred") }
                 jsonPath("$.violations.length()") { value(0) }
+                header { string("X-Content-Type-Options", "nosniff") }
+                header { string("Cross-Origin-Resource-Policy", "same-origin") }
+                header { string("Strict-Transport-Security", "max-age=31536000; includeSubDomains") }
+                header { string("Cache-Control", "no-cache, no-store, must-revalidate, private") }
             }
     }
 }
