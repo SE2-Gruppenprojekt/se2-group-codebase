@@ -143,8 +143,38 @@ class TurnDraftService(
         check(game.currentPlayerUserId == userId) { NOT_CURRENT_PLAYER }
         check(draftEntity.playerUserId == userId) { NOT_DRAFT_OWNER }
 
-        TODO("Build complete reset draft next")
+        val resetDraft = createDraftFromConfirmedGame(
+            game = game,
+            playerUserId = userId,
+            version = (draftEntity.version + 1)
+        )
 
+        val savedDraft = turnDraftRepository.save(resetDraft.toEntity(draftEntity)).toDomain()
+
+        afterCommitExecutor.execute {
+            gameBroadcastService.broadcastDraftUpdated(savedDraft)
+
+        }
+
+       return savedDraft
+
+    }
+
+    private fun createDraftFromConfirmedGame(
+        game: ConfirmedGame,
+        playerUserId: String,
+        version: Long
+    ): TurnDraft {
+        val activePlayer = game.players.first { it.userId == playerUserId }
+
+        return TurnDraft(
+            gameId = game.gameId,
+            playerUserId = playerUserId,
+            boardSets = game.boardSets,
+            rackTiles = activePlayer.rackTiles,
+            drawnTile = null,
+            version = version
+        )
     }
 
 }
