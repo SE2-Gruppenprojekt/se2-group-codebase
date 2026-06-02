@@ -32,6 +32,10 @@ class RummikubRuleServiceTest {
     private val ruleService by lazy {
         RummikubRuleService(tileConservationService, boardValidationService)
     }
+    private val realRuleService = RummikubRuleService(
+        TileConservationService(),
+        BoardValidationService(SetValidationService(GroupValidationService(), RunValidationService()))
+    )
 
     private val player = GamePlayer(
         userId = "user-1",
@@ -160,6 +164,64 @@ class RummikubRuleServiceTest {
         assertEquals("TILE_CONSERVATION_VIOLATION", result.violations[0].code)
         assertEquals("RUN_MIN_SIZE", result.violations[1].code)
 
+    }
+
+    @Test
+    fun `accepts legal joker containing submitted draft`() {
+        val jokerRun = listOf(
+            NumberedTile("tile-1", TileColor.RED, 3),
+            JokerTile("tile-2", TileColor.BLACK),
+            NumberedTile("tile-3", TileColor.RED, 5)
+        )
+        val game = confirmedGame.copy(
+            players = listOf(player.copy(rackTiles = jokerRun))
+        )
+        val draft = TurnDraft(
+            gameId = "game-1",
+            playerUserId = "user-1",
+            boardSets = listOf(BoardSet(boardSetId = "set-1", tiles = jokerRun)),
+            rackTiles = emptyList()
+        )
+
+        val result = realRuleService.validateSubmittedDraft(
+            confirmedGame = game,
+            actingPlayerUserId = "user-1",
+            submittedDraft = draft
+        )
+
+        assertTrue(result.isValid)
+        assertTrue(result.violations.isEmpty())
+    }
+
+    @Test
+    fun `returns joker validation violations for illegal joker draft`() {
+        val allJokers = listOf(
+            JokerTile("tile-1", TileColor.RED),
+            JokerTile("tile-2", TileColor.BLACK),
+            JokerTile("tile-3", TileColor.RED)
+        )
+        val game = confirmedGame.copy(
+            players = listOf(player.copy(rackTiles = allJokers))
+        )
+        val draft = TurnDraft(
+            gameId = "game-1",
+            playerUserId = "user-1",
+            boardSets = listOf(BoardSet(boardSetId = "set-1", tiles = allJokers)),
+            rackTiles = emptyList()
+        )
+
+        val result = realRuleService.validateSubmittedDraft(
+            confirmedGame = game,
+            actingPlayerUserId = "user-1",
+            submittedDraft = draft
+        )
+
+        assertFalse(result.isValid)
+        assertEquals(
+            listOf("GROUP_ALL_JOKERS_NOT_ALLOWED", "RUN_ALL_JOKERS_NOT_ALLOWED"),
+            result.violations.map { it.code }
+        )
+        assertTrue(result.violations.all { it.boardSetId == "set-1" })
     }
 
 

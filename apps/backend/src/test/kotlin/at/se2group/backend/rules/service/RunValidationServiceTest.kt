@@ -152,24 +152,177 @@ class RunValidationServiceTest {
     }
 
     @Test
-    fun `rejects run containing joker`() {
-        val result  = service.validate(
+    fun `accepts run with joker filling one internal gap`() {
+        val result = service.validate(
             set(
                 tile("tile-1", TileColor.RED, 3),
-                tile("tile-2", TileColor.RED, 4),
+                tile("tile-2", TileColor.RED, 5),
                 joker("tile-3", TileColor.BLACK),
             )
         )
 
+        assertTrue(result.isValid)
+        assertTrue(result.violations.isEmpty())
+    }
+
+    @Test
+    fun `accepts run with multiple internal gaps filled by jokers`() {
+        val result = service.validate(
+            set(
+                tile("tile-1", TileColor.BLACK, 10),
+                joker("tile-2", TileColor.RED),
+                joker("tile-3", TileColor.BLACK),
+                tile("tile-4", TileColor.BLACK, 13)
+            )
+        )
+
+        assertTrue(result.isValid)
+        assertTrue(result.violations.isEmpty())
+    }
+
+    @Test
+    fun `accepts run with joker at start`() {
+        val result = service.validate(
+            set(
+                joker("tile-1", TileColor.RED),
+                tile("tile-2", TileColor.BLUE, 6),
+                tile("tile-3", TileColor.BLUE, 7)
+            )
+        )
+
+        assertTrue(result.isValid)
+        assertTrue(result.violations.isEmpty())
+    }
+
+    @Test
+    fun `accepts run with joker at end`() {
+        val result = service.validate(
+            set(
+                tile("tile-1", TileColor.RED, 11),
+                tile("tile-2", TileColor.RED, 12),
+                joker("tile-3", TileColor.BLACK)
+            )
+        )
+
+        assertTrue(result.isValid)
+        assertTrue(result.violations.isEmpty())
+    }
+
+    @Test
+    fun `accepts run with spare jokers extending both sides within bounds`() {
+        val result = service.validate(
+            set(
+                joker("tile-1", TileColor.RED),
+                tile("tile-2", TileColor.BLACK, 6),
+                tile("tile-3", TileColor.BLACK, 7),
+                joker("tile-4", TileColor.BLACK)
+            )
+        )
+
+        assertTrue(result.isValid)
+        assertTrue(result.violations.isEmpty())
+    }
+
+    @Test
+    fun `rejects all joker run`() {
+        val boardSet = set(
+            joker("tile-1", TileColor.RED),
+            joker("tile-2", TileColor.BLACK),
+            joker("tile-3", TileColor.RED)
+        )
+
+        val result = service.validate(boardSet)
 
         val violation = result.violations.single()
 
         assertFalse(result.isValid)
-        assertEquals("RUN_JOKER_NOT_SUPPORTED", violation.code)
-        assertEquals("Joker support is not implemented yet", violation.message)
+        assertEquals("RUN_ALL_JOKERS_NOT_ALLOWED", violation.code)
+        assertEquals("All-joker runs are not allowed", violation.message)
         assertEquals("set-1", violation.boardSetId)
-        assertEquals(listOf("tile-3"), violation.tileIds)
+        assertEquals(boardSet.tiles.map { it.tileId }, violation.tileIds)
+    }
 
+    @Test
+    fun `rejects joker run with mixed non joker colors`() {
+        val boardSet = set(
+            tile("tile-1", TileColor.RED, 3),
+            tile("tile-2", TileColor.BLUE, 4),
+            joker("tile-3", TileColor.BLACK)
+        )
+
+        val result = service.validate(boardSet)
+        val violation = result.violations.single()
+
+        assertFalse(result.isValid)
+        assertEquals("RUN_COLOR_MISMATCH", violation.code)
+        assertEquals("All run tiles must have the same color", violation.message)
+        assertEquals("set-1", violation.boardSetId)
+        assertEquals(boardSet.tiles.filterIsInstance<NumberedTile>().map { it.tileId }, violation.tileIds)
+    }
+
+    @Test
+    fun `rejects joker run with duplicate non joker numbers`() {
+        val boardSet = set(
+            tile("tile-1", TileColor.RED, 3),
+            tile("tile-2", TileColor.RED, 3),
+            joker("tile-3", TileColor.BLACK)
+        )
+
+        val result = service.validate(boardSet)
+        val violation = result.violations.single()
+
+        assertFalse(result.isValid)
+        assertEquals("RUN_DUPLICATE_NUMBER", violation.code)
+        assertEquals("Run tiles must not have duplicate numbers", violation.message)
+        assertEquals("set-1", violation.boardSetId)
+        assertEquals(boardSet.tiles.filterIsInstance<NumberedTile>().map { it.tileId }, violation.tileIds)
+    }
+
+    @Test
+    fun `rejects joker run when gap is too large`() {
+        val boardSet = set(
+            tile("tile-1", TileColor.RED, 3),
+            joker("tile-2", TileColor.BLACK),
+            tile("tile-3", TileColor.RED, 7)
+        )
+
+        val result = service.validate(boardSet)
+        val violation = result.violations.single()
+
+        assertFalse(result.isValid)
+        assertEquals("RUN_JOKER_GAP_TOO_LARGE", violation.code)
+        assertEquals("Available jokers are not enough to fill the run gaps", violation.message)
+        assertEquals("set-1", violation.boardSetId)
+        assertEquals(boardSet.tiles.map { it.tileId }, violation.tileIds)
+    }
+
+    @Test
+    fun `rejects joker run when spare joker would be out of range`() {
+        val boardSet = set(
+            tile("tile-1", TileColor.RED, 1),
+            tile("tile-2", TileColor.RED, 13),
+            joker("tile-3", TileColor.BLACK),
+            joker("tile-4", TileColor.RED),
+            joker("tile-5", TileColor.BLACK),
+            joker("tile-6", TileColor.RED),
+            joker("tile-7", TileColor.BLACK),
+            joker("tile-8", TileColor.RED),
+            joker("tile-9", TileColor.BLACK),
+            joker("tile-10", TileColor.RED),
+            joker("tile-11", TileColor.BLACK),
+            joker("tile-12", TileColor.RED),
+            joker("tile-13", TileColor.BLACK),
+            joker("tile-14", TileColor.RED)
+        )
+
+        val result = service.validate(boardSet)
+        val violation = result.violations.single()
+
+        assertFalse(result.isValid)
+        assertEquals("RUN_JOKER_OUT_OF_RANGE", violation.code)
+        assertEquals("Resolving the joker would force numbers outside the legal tile range", violation.message)
+        assertEquals("set-1", violation.boardSetId)
+        assertEquals(boardSet.tiles.filterIsInstance<JokerTile>().map { it.tileId }, violation.tileIds)
     }
 
     @Test

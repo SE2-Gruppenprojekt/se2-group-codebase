@@ -63,7 +63,7 @@ jobs:
         run: ./gradlew :apps:android:app:testDebugUnitTest jacocoTestReport
 
       - name: Run frontend Sonar analysis
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_ANDROID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

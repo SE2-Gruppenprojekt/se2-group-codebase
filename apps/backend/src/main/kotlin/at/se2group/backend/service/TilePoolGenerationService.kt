@@ -54,14 +54,13 @@ class TilePoolGenerationService {
                 }
             }
         }
-        /*
         tiles += TileRules.jokerColors.map { color ->
             JokerTile(
                 tileId = UUID.randomUUID().toString(),
                 color = color
             )
         }
-        */
+
         return tiles
     }
 }

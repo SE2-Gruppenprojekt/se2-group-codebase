@@ -22,6 +22,16 @@ import shared.models.lobby.domain.LobbyStatus
 import shared.models.lobby.domain.LobbyPlayer
 import org.springframework.test.web.servlet.patch
 
+/**
+ * MVC tests for [LobbyController].
+ *
+ * This class uses the real Spring Boot test slice for lobby endpoints and a
+ * mocked [LobbyService] so that request validation, controller wiring, and
+ * exception mapping can be verified together. For the error-handling PR, its
+ * main value is proving that lobby DTO bean validation is normalized into the
+ * shared `ApiErrorResponse` contract instead of leaking Spring's default error
+ * payload shape.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 class LobbyControllerTest {
@@ -88,7 +98,10 @@ class LobbyControllerTest {
             header("X-User-Id", "user1")
             content = invalidJson
         }.andExpect {
-            status { isInternalServerError() }
+            status { isBadRequest() }
+            jsonPath("$.errorCode") { value("BAD_REQUEST") }
+            jsonPath("$.errorMessage") { value("Request validation failed") }
+            jsonPath("$.violations.length()") { value(0) }
         }
     }
 

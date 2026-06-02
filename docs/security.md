@@ -1,0 +1,597 @@
+# Automated API Security Testing
+
+## Goal
+
+This document explains how the backend satisfies the requirement for automated API security testing:
+
+```text
+Implementierung eines automatisierten Penetration/Security Testing API endpoints (z.B. OWASP ZAP)
+```
+
+The concrete implementation is:
+
+- the deployed backend is scanned automatically in GitHub Actions
+- the scan is performed with **OWASP ZAP**
+- the result is visible in CI
+- the reports are stored as workflow artifacts for later review
+
+This is intentionally simple. The goal is not to build a full security platform, but to show a correct, automated, repeatable API security check that runs as part of the project workflow.
+
+---
+
+## What Is Implemented
+
+The project uses the workflow:
+
+```text
+.github/workflows/backend-security.yml
+```
+
+That workflow:
+
+1. waits until the deployed backend is reachable
+2. runs an **OWASP ZAP baseline scan** against the deployed API
+3. publishes the scan output into the GitHub Actions run summary
+4. uploads the full reports as CI artifacts
+
+This is enough to demonstrate that backend API security testing is:
+
+- automated
+- repeatable
+- visible in CI
+- integrated into the repository
+
+---
+
+## Scan Target
+
+The workflow scans the deployed backend on Render:
+
+```text
+https://se2-group-codebase.onrender.com
+```
+
+The health endpoint used for readiness is:
+
+```text
+https://se2-group-codebase.onrender.com/actuator/health
+```
+
+That endpoint is checked before the scan starts so ZAP does not run against a sleeping or unavailable deployment.
+
+Example:
+
+```bash
+curl -f https://se2-group-codebase.onrender.com/actuator/health
+```
+
+Expected response:
+
+```json
+{
+    "status": "UP"
+}
+```
+
+---
+
+## Why This Matters
+
+The Android app is not the only caller of the backend. Anyone can send requests directly to the API with tools like:
+
+```text
+curl
+Postman
+Insomnia
+custom scripts
+```
+
+That means backend endpoints must be checked independently from the frontend.
+
+An automated security scan helps catch common API and HTTP-layer weaknesses such as:
+
+```text
+missing security headers
+information leaks in responses
+unsafe default behavior
+unexpected reachable endpoints
+cache-related header problems
+content-type problems
+```
+
+This does not replace backend validation or authorization logic. It is an additional automated safety net.
+
+---
+
+## Why OWASP ZAP
+
+OWASP ZAP is a widely used web and API security testing tool. For this project it is a good fit because:
+
+- it is standard and recognizable
+- it runs well inside GitHub Actions
+- it can scan a deployed HTTP target automatically
+- it produces human-readable and machine-readable reports
+
+For this project, the **baseline scan** is the right choice.
+
+That matters because the baseline scan is:
+
+- safe to run against a deployed environment
+- passive by design
+- focused on detecting common web/API security weaknesses without attacking the target aggressively
+
+This is a much better fit for a student project deployment than a full active attack scan against production.
+
+---
+
+## Security Scan Strategy
+
+The implemented flow is:
+
+```text
+GitHub Actions
+    -> wake deployed backend
+    -> verify /actuator/health
+    -> run OWASP ZAP baseline scan
+    -> publish CI summary
+    -> upload reports as artifacts
+```
+
+This approach is deliberate:
+
+- the scan runs against the real deployed backend, not only a local mock
+- the scan result is directly visible in the CI run
+- the detailed reports remain downloadable afterwards
+
+---
+
+## Workflow File
+
+The workflow is implemented in:
+
+```text
+.github/workflows/backend-security.yml
+```
+
+Recommended structure:
+
+```yaml
+name: Backend Security Scan
+
+on:
+    workflow_dispatch:
+    pull_request:
+        paths:
+            - "apps/backend/**"
+            - "docs/security.md"
+            - ".github/workflows/backend-security.yml"
+    push:
+        branches: [main]
+        paths:
+            - "apps/backend/**"
+            - "docs/security.md"
+            - ".github/workflows/backend-security.yml"
+    schedule:
+        - cron: "0 6 * * 1"
+
+concurrency:
+    group: backend-security-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+    issues: write
+
+env:
+    BACKEND_BASE_URL: https://se2-group-codebase.onrender.com
+    HEALTH_URL: https://se2-group-codebase.onrender.com/actuator/health
+
+jobs:
+    zap-baseline-scan:
+        name: OWASP ZAP Baseline Scan
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Wait for deployed backend
+              run: |
+                  for i in {1..30}; do
+                    if curl -fsS "$HEALTH_URL"; then
+                      echo "Backend is reachable"
+                      exit 0
+                    fi
+
+                    echo "Waiting for backend to wake up..."
+                    sleep 10
+                  done
+
+                  echo "Backend was not reachable"
+                  exit 1
+
+            - name: Run OWASP ZAP baseline scan
+              uses: zaproxy/action-baseline@v0.14.0
+              with:
+                  target: ${{ env.BACKEND_BASE_URL }}
+                  cmd_options: "-a -I"
+
+            - name: Publish ZAP summary
+              if: always()
+              run: |
+                  {
+                    echo "## OWASP ZAP Baseline Scan"
+                    echo
+                    if [ -f report_md.md ]; then
+                      cat report_md.md
+                    else
+                      echo "No markdown report was generated."
+                    fi
+                  } >> "$GITHUB_STEP_SUMMARY"
+
+            - name: Upload ZAP report
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: zap-security-report
+                  retention-days: 14
+                  path: |
+                      report_html.html
+                      report_md.md
+                      report_json.json
+```
+
+---
+
+## Why The Workflow Is Structured This Way
+
+### `pull_request`
+
+```yaml
+pull_request:
+```
+
+This makes the scan visible in normal CI whenever backend-relevant code changes.
+
+That is the most important trigger for the professor’s requirement, because it proves the scan is part of the development workflow and not only a one-off manual action.
+
+### `push` on `main`
+
+```yaml
+push:
+    branches: [main]
+```
+
+This verifies the merged mainline state as well. It is useful because a green pull request alone does not prove the deployed branch remains clean after merge.
+
+### `workflow_dispatch`
+
+```yaml
+workflow_dispatch:
+```
+
+This allows manual reruns before demos, reviews, or submission.
+
+### `schedule`
+
+```yaml
+schedule:
+    - cron: "0 6 * * 1"
+```
+
+This keeps the check alive even when no pull request is open.
+
+### `concurrency`
+
+```yaml
+concurrency:
+```
+
+This prevents multiple overlapping ZAP scans for the same branch or pull request. Without that, CI can waste time scanning the same target several times in parallel.
+
+### `permissions`
+
+```yaml
+permissions:
+    contents: read
+    issues: write
+```
+
+The workflow needs repository read access to check out the project and run the scan configuration. It also grants issue write access so OWASP ZAP can create or update GitHub issues for detected security findings, making important scan results visible directly in GitHub. This is intended.
+
+---
+
+## Wake-Up Step
+
+Render deployments may sleep when idle, so the scan must not start immediately.
+
+The workflow first polls the health endpoint:
+
+```yaml
+- name: Wait for deployed backend
+  run: |
+      for i in {1..30}; do
+        if curl -fsS "$HEALTH_URL"; then
+          echo "Backend is reachable"
+          exit 0
+        fi
+
+        echo "Waiting for backend to wake up..."
+        sleep 10
+      done
+
+      echo "Backend was not reachable"
+      exit 1
+```
+
+This gives the deployment up to:
+
+```text
+30 attempts x 10 seconds = 300 seconds
+```
+
+That makes the workflow much more reliable than starting the scan immediately.
+
+---
+
+## OWASP ZAP Baseline Scan
+
+The main scan step is:
+
+```yaml
+- name: Run OWASP ZAP baseline scan
+  uses: zaproxy/action-baseline@v0.14.0
+  with:
+      target: ${{ env.BACKEND_BASE_URL }}
+      cmd_options: "-a -I"
+```
+
+Important options:
+
+### `-a`
+
+```text
+-a
+```
+
+Enables additional passive scan rules.
+
+This makes the scan more useful without turning it into an aggressive active attack.
+
+### `-I`
+
+```text
+-I
+```
+
+Prevents the workflow from failing only because ZAP produced warnings.
+
+That is a good default for this project because:
+
+- the scan should remain visible in CI
+- findings should be reviewable
+- low-level warnings should not automatically break every pull request
+
+If the team later wants stricter enforcement, this can be tightened with custom ZAP rules or by removing `-I`.
+
+---
+
+## Making The Result Visible In CI
+
+The professor’s requirement is not only about running the scan, but about making the result visible.
+
+The workflow now does that in two ways:
+
+### 1. GitHub Actions step summary
+
+```yaml
+- name: Publish ZAP summary
+```
+
+This writes the Markdown report into the Actions job summary, so reviewers can see the result directly inside CI without downloading artifacts first.
+
+### 2. Uploaded artifacts
+
+```yaml
+- name: Upload ZAP report
+```
+
+This preserves the full reports for later inspection.
+
+Together, that gives:
+
+- fast visibility in CI
+- persistent full reports for manual review
+
+---
+
+## Generated Reports
+
+The workflow uploads:
+
+```text
+report_html.html
+report_md.md
+report_json.json
+```
+
+### HTML
+
+```text
+report_html.html
+```
+
+Best for manual review in a browser.
+
+### Markdown
+
+```text
+report_md.md
+```
+
+Best for CI summaries, PR discussion, and issue creation.
+
+### JSON
+
+```text
+report_json.json
+```
+
+Best for machine processing or future automation.
+
+---
+
+## How To Use This In Practice
+
+### Manual run
+
+1. Open the repository in GitHub.
+2. Go to **Actions**.
+3. Select **Backend Security Scan**.
+4. Click **Run workflow**.
+5. Wait for the job to finish.
+6. Read the CI summary.
+7. Download the `zap-security-report` artifact if deeper inspection is needed.
+
+### Pull request flow
+
+1. Change backend code.
+2. Open or update the pull request.
+3. Let **Backend Security Scan** run automatically.
+4. Review the summary and artifact.
+5. Decide whether findings should be fixed now or tracked explicitly.
+
+---
+
+## How To Interpret Findings
+
+Typical ZAP findings are grouped into levels like:
+
+```text
+Informational
+Low
+Medium
+High
+```
+
+A finding does not automatically mean the backend is broken or exploitable.
+
+The team should review each finding and decide whether it is:
+
+```text
+real and should be fixed
+acceptable in this project context
+a false positive
+future hardening work
+```
+
+Examples of findings that can appear:
+
+```text
+Missing Anti-clickjacking Header
+Missing Content Security Policy
+Server Leaks Version Information
+X-Content-Type-Options Header Missing
+```
+
+Some of these are more relevant for browser-facing applications than for a pure Android client, but they are still valid security observations and worth documenting.
+
+---
+
+## What This Setup Proves
+
+This implementation proves that:
+
+- backend API security testing is automated
+- the scan is integrated into GitHub Actions
+- the scan result is visible inside CI
+- the full reports are retained as artifacts
+- the check can run on pull requests, on demand, and on a schedule
+
+That is a defensible and concrete implementation of the professor’s requirement.
+
+---
+
+## Limitations
+
+This setup is useful, but deliberately limited.
+
+It does **not** replace:
+
+```text
+authentication
+authorization
+input validation
+DTO validation
+membership and turn checks
+secret handling
+manual security review
+secure deployment configuration
+```
+
+It also does **not** perform an aggressive active attack against the backend. That is intentional. Running active security attacks against a small deployed student backend would be harder to control and easier to misuse.
+
+The current setup is therefore best described as:
+
+```text
+automated passive API security scanning in CI
+```
+
+That is still a valid and solid answer to the requirement.
+
+---
+
+## Relation To Backend Security In The Codebase
+
+The ZAP scan should be understood as one layer only.
+
+Actual backend security still depends on the application code rejecting invalid or unauthorized requests.
+
+Examples:
+
+```kotlin
+fun requirePlayerInGame(game: ConfirmedGame, userId: String) {
+    if (game.players.none { it.userId == userId }) {
+        throw SecurityException("Player is not part of this game")
+    }
+}
+
+fun requireCurrentPlayer(game: ConfirmedGame, userId: String) {
+    if (game.currentPlayerUserId != userId) {
+        throw SecurityException("It is not this player's turn")
+    }
+}
+```
+
+And for REST behavior:
+
+```kotlin
+@ExceptionHandler(SecurityException::class)
+fun handleSecurity(ex: SecurityException): ResponseEntity<ApiErrorResponse> {
+    return ResponseEntity
+        .status(HttpStatus.FORBIDDEN)
+        .body(
+            ApiErrorResponse(
+                errorCode = "FORBIDDEN",
+                errorMessage = ex.message ?: "Access denied"
+            )
+        )
+}
+```
+
+The security workflow complements these protections. It does not replace them.
+
+---
+
+## Minimal Submission Statement
+
+If this needs to be explained very briefly in a submission or demo:
+
+```text
+The backend API is automatically scanned with OWASP ZAP through GitHub Actions.
+The workflow waits for the deployed Render backend, runs a passive baseline
+security scan, publishes the result in the CI summary, and uploads HTML,
+Markdown, and JSON reports as artifacts. This provides automated API security
+testing that is visible and repeatable in CI.
+```

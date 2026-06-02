@@ -6,12 +6,17 @@ import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.TileEmbeddable
 import at.se2group.backend.persistence.TurnDraftEntity
 import at.se2group.backend.persistence.TurnDraftRepository
+import at.se2group.backend.rules.service.BoardValidationService
+import at.se2group.backend.rules.service.GroupValidationService
 import at.se2group.backend.rules.service.RummikubRuleService
+import at.se2group.backend.rules.service.RunValidationService
+import at.se2group.backend.rules.service.SetValidationService
 import at.se2group.backend.service.AfterCommitExecutor
 import at.se2group.backend.service.EndTurnService
 import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.GameService
 import at.se2group.backend.service.InvalidTurnSubmissionException
+import at.se2group.backend.service.TileConservationService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -22,6 +27,7 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import shared.models.game.domain.GameStatus
+import shared.models.game.domain.JokerTile
 import shared.models.game.domain.TileColor
 import shared.models.game.request.BoardSetRequest
 import shared.models.game.request.EndTurnRequest
@@ -187,6 +193,61 @@ class EndTurnServiceTest {
     }
 
     @Test
+    fun `commits valid joker containing submitted draft`() {
+        val realRuleService = RummikubRuleService(
+            TileConservationService(),
+            BoardValidationService(SetValidationService(GroupValidationService(), RunValidationService()))
+        )
+        val realEndTurnService = EndTurnService(
+            gameRepository = gameRepository,
+            turnDraftRepository = turnDraftRepository,
+            gameService = gameService,
+            rummikubRuleService = realRuleService,
+            gameBroadcastService = gameBroadcastService,
+            afterCommitExecutor = afterCommitExecutor
+        )
+
+        whenever(
+            gameRepository.findById("game-1")
+        ).thenReturn(
+            Optional.of(
+                gameEntity(
+                    user1Rack = mutableListOf(
+                        tile("tile-1", TileColor.RED, 3, false),
+                        tile("tile-2", TileColor.BLACK, null, true),
+                        tile("tile-3", TileColor.RED, 5, false),
+                        tile("new-rack-tile", TileColor.BLACK, 9, false)
+                    ),
+                    user2Rack = mutableListOf(tile("user-2-rack"))
+                )
+            )
+        )
+        whenever(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(draftEntity())
+        whenever(gameRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+        whenever(turnDraftRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+
+        val result = realEndTurnService.endTurn(
+            gameId = "game-1",
+            userId = "user-1",
+            request = jokerRunRequest()
+        )
+
+        assertEquals("user-2", result.currentPlayerUserId)
+        assertEquals("set-joker-run", result.boardSets.single().boardSetId)
+        assertTrue(result.boardSets.single().tiles[1] is JokerTile)
+        assertEquals(listOf("new-rack-tile"), result.players.first { it.userId == "user-1" }.rackTiles.map { it.tileId })
+
+        verify(gameRepository).save(any())
+        verify(turnDraftRepository).save(any())
+        verify(gameBroadcastService).broadcastGameUpdated(result)
+        verify(gameBroadcastService).broadcastTurnChanged("game-1", "user-2")
+        verify(gameBroadcastService).broadcastDraftUpdated(any())
+    }
+
+    @Test
     fun `replaces old draft with next player draft`() {
         val draft = draftEntity(playerUserId = "user-1", version = 4)
 
@@ -303,6 +364,21 @@ class EndTurnServiceTest {
         rackTiles = rackTiles
     )
 
+    private fun jokerRunRequest() = EndTurnRequest(
+        boardSets = listOf(
+            BoardSetRequest(
+                boardSetId = "set-joker-run",
+                type = shared.models.game.domain.BoardSetType.RUN,
+                tiles = listOf(
+                    TileRequest("tile-1", "RED", 3, false),
+                    TileRequest("tile-2", "BLACK", null, true),
+                    TileRequest("tile-3", "RED", 5, false)
+                )
+            )
+        ),
+        rackTiles = listOf(TileRequest("new-rack-tile", "BLACK", 9, false))
+    )
+
     private fun gameEntity(
         currentPlayerUserId: String = "user-1",
         status: GameStatus = GameStatus.ACTIVE,
@@ -348,10 +424,17 @@ class EndTurnServiceTest {
         version = version
     )
 
-    private fun tile(tileId: String) = TileEmbeddable(
+    private fun tile(tileId: String) = tile(
         tileId = tileId,
         color = TileColor.RED,
         number = 5,
         joker = false
+    )
+
+    private fun tile(tileId: String, color: TileColor, number: Int?, joker: Boolean) = TileEmbeddable(
+        tileId = tileId,
+        color = color,
+        number = number,
+        joker = joker
     )
 }
