@@ -1,5 +1,6 @@
 package at.se2group.backend.game.service
 
+import at.se2group.backend.mapper.toDomain
 import at.se2group.backend.mapper.toEntity
 import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.TurnDraftRepository
@@ -8,10 +9,16 @@ import at.se2group.backend.service.AfterCommitExecutor
 import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.TileConservationService
 import at.se2group.backend.service.TurnDraftService
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import shared.models.game.domain.*
 import java.time.Instant
 import java.util.Optional
@@ -33,6 +40,10 @@ class TurnDraftServiceResetDraftTest {
 
     private lateinit var service: TurnDraftService
 
+    private val rackTile = NumberedTile("rack-1", TileColor.RED, 5)
+    private val boardTile = NumberedTile("board-1", TileColor.BLUE, 7)
+
+
     private val player = GamePlayer(
         userId = "user-1",
         displayName = "Alice",
@@ -45,7 +56,12 @@ class TurnDraftServiceResetDraftTest {
         gameId = "game-1",
         lobbyId = "lobby-1",
         players = listOf(player),
-        boardSets = emptyList(),
+        boardSets = listOf(
+            BoardSet(
+                boardSetId = "set-1",
+                tiles = listOf(boardTile)
+            )
+        ),
         currentPlayerUserId = "user-1",
         status = GameStatus.ACTIVE
     )
@@ -65,6 +81,49 @@ class TurnDraftServiceResetDraftTest {
             gameBroadcastService,
             AfterCommitExecutor()
         )
+    }
+    private fun givenGameAndDraft() {
+        whenever(gameRepository.findById("game-1"))
+            .thenReturn(Optional.of(confirmedGame.toEntity()))
+        whenever(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn((draftEntity))
+        whenever(turnDraftRepository.save(any()))
+                .thenAnswer { it.arguments[0] }
+    }
+
+    @Test
+    fun `resets board from confirmed game`() {
+        givenGameAndDraft()
+        val result = service.resetDraft("game-1", "user-1")
+        assertEquals(confirmedGame.boardSets, result.boardSets)
+    }
+
+    @Test
+    fun `resets rack from confirmed player rack`() {
+        givenGameAndDraft()
+        val result = service.resetDraft("game-1", "user-1")
+        assertEquals(player.rackTiles, result.rackTiles)
+    }
+
+    @Test
+    fun `increments draft version`() {
+        givenGameAndDraft()
+        val result = service.resetDraft("game-1", "user-1")
+        assertEquals(4, result.version)
+    }
+
+    @Test
+    fun `clears drawnTile`() {
+        givenGameAndDraft()
+        val result = service.resetDraft("game-1", "user-1")
+        assertNull(result.drawnTile)
+    }
+
+    @Test
+    fun `persists the reset draft`() {
+        givenGameAndDraft()
+        service.resetDraft("game-1", "user-1")
+        verify(turnDraftRepository).save(any())
     }
 
 }
