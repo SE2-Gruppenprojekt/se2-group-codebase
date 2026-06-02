@@ -1,0 +1,90 @@
+name: Organization User Activity Report (Monthly)
+
+on:
+  # Manual trigger is useful for regenerating a monthly report on demand.
+  workflow_dispatch:
+  # Run automatically on the 21st day of every month at 07:00 UTC. This
+  # matches the requested cadence starting from May 21 and then repeating on
+  # June 21, July 21, and so on.
+  schedule:
+    - cron: "0 7 21 * *"
+
+concurrency:
+  group: org-activity-report-monthly-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # This repository lives inside the target organization, so the repository
+  # owner is the correct organization name for the action input.
+  TARGET_ORGANIZATION: ${{ github.repository_owner }}
+
+jobs:
+  generate-activity-report:
+    name: Generate monthly organization activity report
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Analyze organization user activity
+        id: analyze_user_activity
+        uses: peter-murray/inactive-users-action@v1
+        with:
+          # Personal access token stored as a GitHub secret. It must belong to a
+          # user who can read the organization and all repositories to analyze.
+          token: ${{ secrets.ORG_ACTIVITY_REPORT_TOKEN }}
+          # Use the current repository owner so the workflow stays portable
+          # across repositories inside the same GitHub organization.
+          organization: ${{ env.TARGET_ORGANIZATION }}
+          # Monthly report: include the last 30 days of activity leading into
+          # the scheduled run on the 21st of the month.
+          activity_days: 30
+          # The marketplace action does not expose per-metric feature flags.
+          # It always generates its full built-in activity dataset, so the
+          # only meaningful reporting knobs are time window, output location,
+          # and API retry behavior.
+          octokit_max_retries: 15
+          outputDir: reports
+
+      - name: Publish report summary
+        if: always()
+        run: |
+          {
+            echo "## Monthly Organization User Activity Report"
+            echo
+            echo "- Organization: $TARGET_ORGANIZATION"
+            echo "- Activity window: last 30 days"
+            echo "- Action metrics: full built-in activity dataset"
+            echo "- Octokit max retries: 15"
+            echo
+            if [ -f "${{ steps.analyze_user_activity.outputs.report_csv }}" ]; then
+              echo "CSV report generated successfully."
+              echo
+              echo '```text'
+              head -n 20 "${{ steps.analyze_user_activity.outputs.report_csv }}"
+              echo '```'
+            else
+              echo "No CSV report was generated."
+            fi
+            echo
+            if [ -f "${{ steps.analyze_user_activity.outputs.report_json }}" ]; then
+              echo "JSON report generated successfully."
+            else
+              echo "No JSON report was generated."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload activity reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: organization-user-activity-report-monthly
+          retention-days: 14
+          path: |
+            ${{ steps.analyze_user_activity.outputs.report_csv }}
+            ${{ steps.analyze_user_activity.outputs.report_json }}
