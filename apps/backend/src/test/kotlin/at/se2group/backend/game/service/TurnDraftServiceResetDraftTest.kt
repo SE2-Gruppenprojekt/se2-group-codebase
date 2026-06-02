@@ -159,4 +159,11 @@ class TurnDraftServiceResetDraftTest {
         assertEquals("Draft belongs to a different user", exception.message)
     }
 
+    @Test
+    fun `broadcasts draft updated after successful reset`() {
+        givenGameAndDraft()
+        service.resetDraft("game-1", "user-1")
+        verify(gameBroadcastService).broadcastDraftUpdated(any())
+    }
+
 }
