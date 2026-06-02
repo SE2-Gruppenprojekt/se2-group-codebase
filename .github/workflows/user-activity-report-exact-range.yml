@@ -1,4 +1,4 @@
-name: Organization User Activity Report (Exact Range)
+name: Organization User Activity Report (Exact Range, Archived)
 
 on:
   # Keep this workflow file archived in the repository without exposing a

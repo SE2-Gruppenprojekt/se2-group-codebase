@@ -9,7 +9,7 @@ on:
     - cron: "0 7 * * 4"
 
 concurrency:
-  group: org-activity-report-${{ github.workflow }}-${{ github.ref }}
+  group: org-activity-report-weekly-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -22,7 +22,7 @@ env:
 
 jobs:
   generate-activity-report:
-    name: Generate organization activity report
+    name: Generate weekly organization activity report
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -53,7 +53,7 @@ jobs:
         if: always()
         run: |
           {
-            echo "## Organization User Activity Report"
+            echo "## Weekly Organization User Activity Report"
             echo
             echo "- Organization: $TARGET_ORGANIZATION"
             echo "- Activity window: last 7 days"
