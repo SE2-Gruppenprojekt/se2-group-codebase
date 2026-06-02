@@ -126,4 +126,37 @@ class TurnDraftServiceResetDraftTest {
         verify(turnDraftRepository).save(any())
     }
 
+    @Test
+    fun `rejects when game does not exist`() {
+        whenever(gameRepository.findById("missing")).thenReturn(Optional.empty())
+        assertThrows<NoSuchElementException> { service.resetDraft("missing", "user-1") }
+    }
+
+    @Test
+    fun `rejects when draft does not exist`() {
+        whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(confirmedGame.toEntity()))
+        whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(null)
+        assertThrows<NoSuchElementException> { service.resetDraft("game-1", "user-1") }
+    }
+
+    @Test
+    fun `rejects when user is not the current active player`() {
+        whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(confirmedGame.toEntity()))
+        whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(draftEntity)
+
+
+        val exception = assertThrows<IllegalStateException> { service.resetDraft("game-1", "user-2") }
+        assertEquals("User is not the current active player", exception.message)
+    }
+
+    @Test
+    fun `rejects when draft belongs to a different user`() {
+        whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(confirmedGame.toEntity()))
+        val otherDraft = TurnDraftEntity(gameId = "game-1", playerUserId = "user-2", version = 1)
+        whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(otherDraft)
+
+        val exception = assertThrows<IllegalStateException> { service.resetDraft("game-1", "user-1") }
+        assertEquals("Draft belongs to a different user", exception.message)
+    }
+
 }
