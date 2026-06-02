@@ -126,4 +126,11 @@ class TurnDraftService(
 
         return updatedDraft
     }
+    @Transactional
+    fun resetDraft(
+        gameId: String,
+        userId: String
+    ): TurnDraft {
+        throw UnsupportedOperationException("resetDraft not yet implemented")
+    }
 }
