@@ -14,6 +14,9 @@ The concrete implementation is:
 - the scan is performed with **OWASP ZAP**
 - the result is visible in CI
 - the reports are stored as workflow artifacts for later review
+- the repository now uses both:
+    - a simple **baseline scan**
+    - a plan-driven **Automation Framework scan**
 
 This is intentionally simple. The goal is not to build a full security platform, but to show a correct, automated, repeatable API security check that runs as part of the project workflow.
 
@@ -21,18 +24,33 @@ This is intentionally simple. The goal is not to build a full security platform,
 
 ## What Is Implemented
 
-The project uses the workflow:
+The project currently uses these workflows:
 
 ```text
 .github/workflows/backend-security.yml
+.github/workflows/backend-security-af.yml
 ```
 
-That workflow:
+The baseline workflow:
 
 1. waits until the deployed backend is reachable
 2. runs an **OWASP ZAP baseline scan** against the deployed API
 3. publishes the scan output into the GitHub Actions run summary
 4. uploads the full reports as CI artifacts
+
+The Automation Framework workflow:
+
+1. waits until the deployed backend is reachable
+2. runs a committed **Automation Framework plan** from the repository
+3. generates dedicated markdown, HTML, and JSON AF reports
+4. publishes the AF summary into the GitHub Actions run summary
+5. uploads the AF reports as separate artifacts
+
+The current plan file lives at:
+
+```text
+.github/zap/backend-automation-plan.yaml
+```
 
 This is enough to demonstrate that backend API security testing is:
 
@@ -112,7 +130,7 @@ OWASP ZAP is a widely used web and API security testing tool. For this project i
 - it can scan a deployed HTTP target automatically
 - it produces human-readable and machine-readable reports
 
-For this project, the **baseline scan** is the right choice.
+For this project, the **baseline scan** is the right starting choice.
 
 That matters because the baseline scan is:
 
@@ -122,11 +140,23 @@ That matters because the baseline scan is:
 
 This is a much better fit for a student project deployment than a full active attack scan against production.
 
+The **Automation Framework scan** builds on that baseline setup. It is useful because:
+
+- it keeps the scan design inside a committed YAML plan
+- it is easier to evolve deliberately over time
+- it can grow later into:
+    - richer passive scan configuration
+    - OpenAPI-driven scans
+    - authenticated scans
+    - stricter exit policies
+
+The initial AF rollout should still stay conservative and non-blocking.
+
 ---
 
 ## Security Scan Strategy
 
-The implemented flow is:
+The implemented baseline flow is:
 
 ```text
 GitHub Actions
@@ -142,6 +172,43 @@ This approach is deliberate:
 - the scan runs against the real deployed backend, not only a local mock
 - the scan result is directly visible in the CI run
 - the detailed reports remain downloadable afterwards
+
+The Automation Framework flow follows the same readiness and reporting pattern,
+but replaces the packaged baseline behavior with a committed scan plan:
+
+```text
+GitHub Actions
+    -> wake deployed backend
+    -> verify /actuator/health
+    -> run ZAP Automation Framework plan
+    -> publish CI summary
+    -> upload AF reports as artifacts
+```
+
+---
+
+## Baseline Scan vs Automation Framework Scan
+
+The repository now uses two ZAP-based scan layers for different purposes.
+
+### Baseline scan
+
+Use the baseline workflow when the goal is:
+
+- simple passive scanning
+- fast visibility in CI
+- stable recurring checks with minimal configuration
+
+### Automation Framework scan
+
+Use the AF workflow when the goal is:
+
+- versioned scan design in a repository plan file
+- more deliberate control over requests, reports, and exit behavior
+- a cleaner foundation for future security-scan expansion
+
+The AF workflow does **not** replace the baseline workflow. It extends the
+current security-scanning setup with a second, more structured layer.
 
 ---
 
