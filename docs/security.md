@@ -210,6 +210,54 @@ Use the AF workflow when the goal is:
 The AF workflow does **not** replace the baseline workflow. It extends the
 current security-scanning setup with a second, more structured layer.
 
+### Why the Automation Framework needs a plan file
+
+The difference in configuration model is important:
+
+- the **baseline scan** is a packaged scan with a small number of inputs such
+  as target URL and command options
+- the **Automation Framework scan** is a plan-driven scan where the repository
+  explicitly defines what ZAP should do
+
+For the baseline workflow, this is enough:
+
+```yaml
+with:
+    target: ${{ env.BACKEND_BASE_URL }}
+    cmd_options: "-a -I"
+```
+
+That works because the baseline action already knows its built-in scan flow.
+
+The Automation Framework is different. It needs a committed YAML plan because
+the plan is the scan definition itself. It describes things like:
+
+- which target context to use
+- which requests should be executed
+- which passive scan jobs should run
+- which reports should be generated
+- what exit behavior should be applied
+
+In other words:
+
+- baseline scan = run the standard packaged scan
+- Automation Framework scan = run the exact scan plan defined in the repository
+
+That is why the Automation Framework workflow uses:
+
+```text
+.github/zap/backend-automation-plan.yaml
+```
+
+The extra file is not accidental overhead. It is the mechanism that makes the
+Automation Framework useful for gradual future expansion, such as:
+
+- authenticated scan flows
+- OpenAPI-driven scans
+- stricter exit rules
+- alert filtering
+- controlled active scan jobs
+
 ---
 
 ## Workflow File
