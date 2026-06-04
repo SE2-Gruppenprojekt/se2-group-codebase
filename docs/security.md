@@ -320,6 +320,8 @@ these layered approaches:
 - **Layer 2 — API-wide coverage**
     - generate an OpenAPI spec from the backend
     - import that spec into the existing AF plan through an AF `openapi` job
+    - actively explore the imported API context in a bounded way so ZAP
+      produces real request/response traffic for the API surface
     - use this as the:
         ```text
         scan the whole backend API shape
@@ -332,9 +334,18 @@ these layered approaches:
         - valid request bodies
         - existing backend state
 
-This is the correct split because OpenAPI import can cover broad API shape
-cheaply, while explicit `requestor` flows should be reserved for the smaller
-set of truly stateful interactions.
+This is the correct split because OpenAPI import can define the broad API
+shape cheaply, while explicit `requestor` flows should be reserved for the
+smaller set of truly stateful interactions.
+
+One important detail: importing the OpenAPI definition by itself is **not**
+enough to produce meaningful passive scan coverage in the reports. The passive
+scanner only analyzes real HTTP requests and responses. That means Layer 2 must
+do both:
+
+- import the OpenAPI contract
+- run a bounded scan over the imported context so the API endpoints are actually
+  requested
 
 The repository now implements the start of Layer 2 by exposing `/v3/api-docs`
 from the backend and importing that generated OpenAPI document in:
@@ -342,6 +353,10 @@ from the backend and importing that generated OpenAPI document in:
 ```text
 .github/zap/backend-automation-plan.yaml
 ```
+
+The AF plan then performs a bounded active scan over the imported context so
+the resulting AF reports reflect real API-surface traffic rather than only the
+small public requestor set.
 
 The next remaining expansion is Layer 3, where explicit AF `requestor` jobs
 cover the smaller set of flows that need valid headers, ids, request bodies,
