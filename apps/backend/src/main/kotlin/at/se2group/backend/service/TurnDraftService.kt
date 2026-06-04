@@ -165,7 +165,8 @@ class TurnDraftService(
         playerUserId: String,
         version: Long
     ): TurnDraft {
-        val activePlayer = game.players.first { it.userId == playerUserId }
+        val activePlayer = game.players.firstOrNull { it.userId == playerUserId }
+            ?: throw IllegalArgumentException("Player $playerUserId is not part of the game ${game.gameId}")
 
         return TurnDraft(
             gameId = game.gameId,
