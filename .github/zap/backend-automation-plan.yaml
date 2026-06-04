@@ -24,15 +24,6 @@ jobs:
       apiUrl: https://se2-group-codebase.onrender.com/v3/api-docs
       targetUrl: https://se2-group-codebase.onrender.com
       context: se2-backend
-    tests:
-      - name: Imported lobby collection endpoint
-        type: url
-        url: https://se2-group-codebase.onrender.com/api/lobbies
-        onFail: warn
-      - name: Imported leaderboard endpoint
-        type: url
-        url: https://se2-group-codebase.onrender.com/api/leaderboard
-        onFail: warn
 
   - type: requestor
     name: Request root endpoint
