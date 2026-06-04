@@ -16,6 +16,7 @@ jobs:
     name: Passive scan configuration
     parameters:
       maxAlertsPerRule: 10
+      scanOnlyInScope: true
 
   - type: openapi
     name: Import generated OpenAPI contract
@@ -38,43 +39,193 @@ jobs:
     requests:
       - url: https://se2-group-codebase.onrender.com/
         method: GET
+        responseCode: 200
 
   - type: requestor
     name: Request robots metadata
     requests:
       - url: https://se2-group-codebase.onrender.com/robots.txt
         method: GET
+        responseCode: 200
 
   - type: requestor
     name: Request sitemap metadata
     requests:
       - url: https://se2-group-codebase.onrender.com/sitemap.xml
         method: GET
+        responseCode: 200
 
   - type: requestor
     name: Request health endpoint
     requests:
       - url: https://se2-group-codebase.onrender.com/actuator/health
         method: GET
+        responseCode: 200
 
-  - type: activeScan-config
-    name: Active scan configuration for imported API shape
-    parameters:
-      maxRuleDurationInMins: 1
-      maxScanDurationInMins: 5
-      maxAlertsPerRule: 10
-      defaultStrength: Low
-      defaultThreshold: High
-      handleAntiCSRFTokens: false
+  - type: requestor
+    name: Request leaderboard endpoint
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/leaderboard
+        method: GET
+        responseCode: 200
 
-  - type: activeScan
-    name: Active scan imported API context
-    parameters:
-      context: se2-backend
-      maxScanDurationInMins: 5
-      defaultStrength: Low
-      defaultThreshold: High
-      delayInMs: 200
+  - type: requestor
+    name: Request lobby collection
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies
+        method: GET
+        responseCode: 200
+
+  - type: requestor
+    name: Request seeded open lobby
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/scan-open-lobby
+        method: GET
+        responseCode: 200
+
+  - type: requestor
+    name: Exercise create lobby endpoint without side effects
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies
+        method: POST
+        headers:
+          - "X-User-Id:scan-ephemeral-user"
+          - "Content-Type:application/json"
+        data: |
+          {
+            "displayName": "ZAP Scan"
+          }
+        responseCode: 400
+
+  - type: requestor
+    name: Exercise join lobby endpoint with missing fixture id
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby/join
+        method: POST
+        headers:
+          - "Content-Type:application/json"
+        data: |
+          {
+            "userId": "scan-join-user",
+            "displayName": "Scan Join User"
+          }
+        responseCode: 404
+
+  - type: requestor
+    name: Update seeded lobby settings
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/scan-open-lobby/settings
+        method: PATCH
+        headers:
+          - "X-User-Id:scan-host-user"
+          - "Content-Type:application/json"
+        data: |
+          {
+            "maxPlayers": 4,
+            "isPrivate": false,
+            "allowGuests": true
+          }
+        responseCode: 200
+
+  - type: requestor
+    name: Toggle seeded lobby ready state safely
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/scan-open-lobby/ready
+        method: POST
+        headers:
+          - "X-User-Id:scan-guest-user"
+        responseCode: 200
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/scan-open-lobby/unready
+        method: POST
+        headers:
+          - "X-User-Id:scan-guest-user"
+        responseCode: 200
+
+  - type: requestor
+    name: Exercise start lobby endpoint with missing fixture id
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby/start
+        method: POST
+        headers:
+          - "X-User-Id:scan-host-user"
+        responseCode: 404
+
+  - type: requestor
+    name: Exercise leave lobby endpoint with missing fixture id
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby/leave
+        method: POST
+        headers:
+          - "X-User-Id:scan-guest-user"
+        responseCode: 404
+
+  - type: requestor
+    name: Exercise delete lobby endpoint with missing fixture id
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby
+        method: DELETE
+        headers:
+          - "X-User-Id:scan-host-user"
+        responseCode: 404
+
+  - type: requestor
+    name: Request seeded game state
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/games/scan-game-1
+        method: GET
+        responseCode: 200
+
+  - type: requestor
+    name: Update seeded turn draft
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/games/scan-game-1/draft
+        method: PUT
+        headers:
+          - "X-User-Id:scan-host-user"
+          - "Content-Type:application/json"
+        data: |
+          {
+            "boardSets": [],
+            "rackTiles": [
+              {
+                "tileId": "scan-host-rack-red-5",
+                "color": "RED",
+                "number": 5,
+                "isJoker": false
+              },
+              {
+                "tileId": "scan-host-rack-blue-7",
+                "color": "BLUE",
+                "number": 7,
+                "isJoker": false
+              }
+            ]
+          }
+        responseCode: 200
+
+  - type: requestor
+    name: Exercise draw endpoint with missing fixture id
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/games/zap-missing-game/draw
+        method: POST
+        headers:
+          - "X-User-Id:scan-host-user"
+        responseCode: 404
+
+  - type: requestor
+    name: Exercise end turn endpoint with missing fixture id
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/games/zap-missing-game/end-turn
+        method: POST
+        headers:
+          - "X-User-Id:scan-host-user"
+          - "Content-Type:application/json"
+        data: |
+          {
+            "boardSets": [],
+            "rackTiles": []
+          }
+        responseCode: 404
 
   - type: passiveScan-wait
     name: Wait for passive scan completion
