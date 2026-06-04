@@ -548,6 +548,72 @@ The ZAP scan should be understood as one layer only.
 
 Actual backend security still depends on the application code rejecting invalid or unauthorized requests.
 
+### Current Request Identity Model
+
+Most backend game and lobby endpoints currently receive the acting user through:
+
+```kotlin
+@RequestHeader("X-User-Id") userId: String
+```
+
+That header is then used for application-level security and ownership checks in
+the service layer.
+
+Examples of the kinds of checks this enables:
+
+- only the active player may draw, reset a draft, or end a turn
+- only the owning player may mutate their current `TurnDraft`
+- only users who belong to a game may access or mutate that game
+- only users who belong to a lobby may interact with lobby-backed game state
+- only the lobby host may start the lobby
+- per-turn limits such as one draw per turn can be enforced against the acting
+  user identity
+
+Typical service-level checks look like this:
+
+```kotlin
+fun requirePlayerInGame(game: ConfirmedGame, userId: String) {
+    if (game.players.none { it.userId == userId }) {
+        throw SecurityException("Player is not part of this game")
+    }
+}
+
+fun requireCurrentPlayer(game: ConfirmedGame, userId: String) {
+    if (game.currentPlayerUserId != userId) {
+        throw SecurityException("It is not this player's turn")
+    }
+}
+
+fun requireDraftOwner(draft: TurnDraft, userId: String) {
+    if (draft.playerUserId != userId) {
+        throw SecurityException("Draft does not belong to this player")
+    }
+}
+```
+
+This is a valid lightweight authorization model for the current backend, but it
+has an important limit:
+
+```text
+X-User-Id is only trustworthy if the caller environment is trusted.
+```
+
+In other words, this is not full authentication by itself. If an arbitrary
+external client can choose any header value freely, the client can impersonate
+another user unless an upstream trusted system constrains that header.
+
+So the current model should be understood as:
+
+- suitable for controlled development, demos, tests, and trusted integration
+  scenarios
+- useful for enforcing game membership, turn ownership, and host-only actions
+- not equivalent to real end-user authentication
+
+That distinction matters when discussing backend security. The CI security scan
+checks the deployed API surface, but the correctness of user-level access
+control still depends on the service layer enforcing these `X-User-Id`-based
+authorization checks consistently.
+
 Examples:
 
 ```kotlin
