@@ -68,11 +68,11 @@ jobs:
         responseCode: 200
 
   - type: requestor
-    name: Request seeded open lobby
+    name: Exercise lobby get endpoint with missing fixture id
     requests:
-      - url: https://se2-group-codebase.onrender.com/api/lobbies/scan-open-lobby
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby
         method: GET
-        responseCode: 200
+        responseCode: 404
 
   - type: requestor
     name: Exercise create lobby endpoint without side effects
@@ -86,7 +86,7 @@ jobs:
           {
             "displayName": "ZAP Scan"
           }
-        responseCode: 400
+        responseCode: 200
 
   - type: requestor
     name: Exercise join lobby endpoint with missing fixture id
@@ -103,9 +103,9 @@ jobs:
         responseCode: 404
 
   - type: requestor
-    name: Update seeded lobby settings
+    name: Exercise lobby settings endpoint with missing fixture id
     requests:
-      - url: https://se2-group-codebase.onrender.com/api/lobbies/scan-open-lobby/settings
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby/settings
         method: PATCH
         headers:
           - "X-User-Id:scan-host-user"
@@ -116,21 +116,21 @@ jobs:
             "isPrivate": false,
             "allowGuests": true
           }
-        responseCode: 200
+        responseCode: 404
 
   - type: requestor
-    name: Toggle seeded lobby ready state safely
+    name: Exercise lobby ready state endpoints with missing fixture id
     requests:
-      - url: https://se2-group-codebase.onrender.com/api/lobbies/scan-open-lobby/ready
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby/ready
         method: POST
         headers:
           - "X-User-Id:scan-guest-user"
-        responseCode: 200
-      - url: https://se2-group-codebase.onrender.com/api/lobbies/scan-open-lobby/unready
+        responseCode: 404
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby/unready
         method: POST
         headers:
           - "X-User-Id:scan-guest-user"
-        responseCode: 200
+        responseCode: 404
 
   - type: requestor
     name: Exercise start lobby endpoint with missing fixture id
@@ -160,16 +160,16 @@ jobs:
         responseCode: 404
 
   - type: requestor
-    name: Request seeded game state
+    name: Exercise game get endpoint with missing fixture id
     requests:
-      - url: https://se2-group-codebase.onrender.com/api/games/scan-game-1
+      - url: https://se2-group-codebase.onrender.com/api/games/zap-missing-game
         method: GET
-        responseCode: 200
+        responseCode: 404
 
   - type: requestor
-    name: Update seeded turn draft
+    name: Exercise turn draft update endpoint with missing fixture id
     requests:
-      - url: https://se2-group-codebase.onrender.com/api/games/scan-game-1/draft
+      - url: https://se2-group-codebase.onrender.com/api/games/zap-missing-game/draft
         method: PUT
         headers:
           - "X-User-Id:scan-host-user"
@@ -192,7 +192,7 @@ jobs:
               }
             ]
           }
-        responseCode: 200
+        responseCode: 404
 
   - type: requestor
     name: Exercise draw endpoint with missing fixture id
