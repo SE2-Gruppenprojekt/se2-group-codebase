@@ -424,7 +424,7 @@ class GameControllerTest {
     }
 
     @Test
-    fun `resetDraft returns 400 when game not found`() {
+    fun `resetDraft returns 404 when game not found`() {
         `when`(turnDraftService.resetDraft("missing", "user-1"))
             .thenThrow(NoSuchElementException("Game not found"))
 
