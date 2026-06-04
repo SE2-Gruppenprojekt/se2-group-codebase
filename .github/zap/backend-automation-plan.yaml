@@ -12,12 +12,26 @@ env:
     progressToStdout: true
 
 jobs:
+  - type: passiveScan-config
+    name: Passive scan configuration
+    parameters:
+      maxAlertsPerRule: 10
+
   - type: openapi
     name: Import generated OpenAPI contract
     parameters:
       apiUrl: https://se2-group-codebase.onrender.com/v3/api-docs
       targetUrl: https://se2-group-codebase.onrender.com
       context: se2-backend
+    tests:
+      - name: Imported lobby collection endpoint
+        type: url
+        url: https://se2-group-codebase.onrender.com/api/lobbies
+        onFail: warn
+      - name: Imported leaderboard endpoint
+        type: url
+        url: https://se2-group-codebase.onrender.com/api/leaderboard
+        onFail: warn
 
   - type: requestor
     name: Request root endpoint
@@ -43,10 +57,24 @@ jobs:
       - url: https://se2-group-codebase.onrender.com/actuator/health
         method: GET
 
-  - type: passiveScan-config
-    name: Passive scan configuration
+  - type: activeScan-config
+    name: Active scan configuration for imported API shape
     parameters:
+      maxRuleDurationInMins: 1
+      maxScanDurationInMins: 5
       maxAlertsPerRule: 10
+      defaultStrength: Low
+      defaultThreshold: High
+      handleAntiCSRFTokens: false
+
+  - type: activeScan
+    name: Active scan imported API context
+    parameters:
+      context: se2-backend
+      maxScanDurationInMins: 5
+      defaultStrength: Low
+      defaultThreshold: High
+      delayInMs: 200
 
   - type: passiveScan-wait
     name: Wait for passive scan completion
