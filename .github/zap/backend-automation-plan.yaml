@@ -12,6 +12,13 @@ env:
     progressToStdout: true
 
 jobs:
+  - type: openapi
+    name: Import generated OpenAPI contract
+    parameters:
+      apiUrl: https://se2-group-codebase.onrender.com/v3/api-docs
+      targetUrl: https://se2-group-codebase.onrender.com
+      context: se2-backend
+
   - type: requestor
     name: Request root endpoint
     requests:
