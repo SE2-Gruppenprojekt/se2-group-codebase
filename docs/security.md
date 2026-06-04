@@ -306,16 +306,36 @@ Many backend endpoints require:
 - path variables such as `gameId` or `lobbyId`
 - request bodies
 - existing backend state, such as:
-  - a real lobby
-  - a started game
-  - a current draft
-  - a valid active player
+    - a real lobby
+    - a started game
+    - a current draft
+    - a valid active player
 
 Because of that, generic passive crawling is not enough to reach or exercise
 those endpoints meaningfully.
 
 To scan the real backend API more deeply, a future scan layer needs one of
-these approaches:
+these layered approaches:
+
+- **Layer 2 — API-wide coverage**
+    - generate an OpenAPI spec from the backend
+    - import that spec into the existing AF plan through an AF `openapi` job
+    - use this as the:
+        ```text
+        scan the whole backend API shape
+        ```
+        layer
+- **Layer 3 — Stateful flows**
+    - add explicit AF `requestor` jobs only for flows that need:
+        - `X-User-Id`
+        - specific ids such as `gameId`
+        - valid request bodies
+        - existing backend state
+
+This is the correct split because OpenAPI import can cover broad API shape
+cheaply, while explicit `requestor` flows should be reserved for the smaller
+set of truly stateful interactions.
+
 
 - explicit Automation Framework request definitions for selected API endpoints
 - an OpenAPI-driven scan
@@ -326,13 +346,19 @@ as valuable but partial coverage.
 
 ---
 
-## Workflow File
+## Workflow Files
 
-The workflow is implemented in:
+The workflows are implemented in:
 
 ```text
 .github/workflows/backend-security.yml
+.github/workflows/backend-security-af.yml
 ```
+
+- `backend-security.yml` contains the **baseline scan** workflow.
+- `backend-security-af.yml` contains the **Automation Framework scan** workflow.
+
+The code example below is the **baseline scan** workflow. The AF workflow follows the same overall readiness and reporting pattern, but runs the committed Automation Framework plan instead of the packaged baseline action.
 
 Recommended structure:
 
@@ -425,7 +451,7 @@ jobs:
 
 ---
 
-## Why The Workflow Is Structured This Way
+## Why The Workflows Are Structured This Way
 
 ### `pull_request`
 
@@ -589,7 +615,9 @@ Together, that gives:
 
 ## Generated Reports
 
-The workflow uploads:
+The workflows upload separate report sets.
+
+### Baseline scan reports
 
 ```text
 report_html.html
@@ -597,10 +625,30 @@ report_md.md
 report_json.json
 ```
 
+These are uploaded under the artifact:
+
+```text
+zap-security-report
+```
+
+### Automation Framework scan reports
+
+```text
+zap-af-report.html
+zap-af-report.md
+zap-af-report.json
+```
+
+These are uploaded under the artifact:
+
+```text
+zap-security-report-af
+```
+
 ### HTML
 
 ```text
-report_html.html
+report_html.html / zap-af-report.html
 ```
 
 Best for manual review in a browser.
@@ -608,7 +656,7 @@ Best for manual review in a browser.
 ### Markdown
 
 ```text
-report_md.md
+report_md.md / zap-af-report.md
 ```
 
 Best for CI summaries, PR discussion, and issue creation.
@@ -616,7 +664,7 @@ Best for CI summaries, PR discussion, and issue creation.
 ### JSON
 
 ```text
-report_json.json
+report_json.json / zap-af-report.json
 ```
 
 Best for machine processing or future automation.
