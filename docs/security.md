@@ -358,6 +358,11 @@ The AF plan then performs a bounded active scan over the imported context so
 the resulting AF reports reflect real API-surface traffic rather than only the
 small public requestor set.
 
+For the next layer of valid stateful requests, the backend also seeds a small
+deterministic scan fixture at startup. That fixture provides stable ids such as
+the scan lobby and scan game used by the AF plan when it needs real existing
+backend state instead of only contract-shape coverage.
+
 The next remaining expansion is Layer 3, where explicit AF `requestor` jobs
 cover the smaller set of flows that need valid headers, ids, request bodies,
 and existing backend state.
