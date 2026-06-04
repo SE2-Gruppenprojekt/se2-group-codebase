@@ -68,11 +68,11 @@ jobs:
         responseCode: 200
 
   - type: requestor
-    name: Exercise lobby get endpoint with missing fixture id
+    name: Request prepared scan lobby
     requests:
-      - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_MUTABLE_LOBBY_ID__
         method: GET
-        responseCode: 404
+        responseCode: 200
 
   - type: requestor
     name: Exercise create lobby endpoint without side effects
@@ -103,9 +103,9 @@ jobs:
         responseCode: 404
 
   - type: requestor
-    name: Exercise lobby settings endpoint with missing fixture id
+    name: Update prepared scan lobby settings
     requests:
-      - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby/settings
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_MUTABLE_LOBBY_ID__/settings
         method: PATCH
         headers:
           - "X-User-Id:scan-host-user"
@@ -116,21 +116,39 @@ jobs:
             "isPrivate": false,
             "allowGuests": true
           }
-        responseCode: 404
+        responseCode: 200
 
   - type: requestor
-    name: Exercise lobby ready state endpoints with missing fixture id
+    name: Toggle prepared scan lobby ready state safely
     requests:
-      - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby/ready
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_MUTABLE_LOBBY_ID__/ready
         method: POST
         headers:
           - "X-User-Id:scan-guest-user"
-        responseCode: 404
-      - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby/unready
+        responseCode: 200
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_MUTABLE_LOBBY_ID__/unready
         method: POST
         headers:
           - "X-User-Id:scan-guest-user"
-        responseCode: 404
+        responseCode: 200
+
+  - type: requestor
+    name: Exercise leave endpoint on prepared scan lobby
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_MUTABLE_LOBBY_ID__/leave
+        method: POST
+        headers:
+          - "X-User-Id:scan-guest-user"
+        responseCode: 200
+
+  - type: requestor
+    name: Delete prepared scan lobby
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_MUTABLE_LOBBY_ID__
+        method: DELETE
+        headers:
+          - "X-User-Id:scan-host-user"
+        responseCode: 204
 
   - type: requestor
     name: Exercise start lobby endpoint with missing fixture id
@@ -233,14 +251,14 @@ jobs:
   - type: report
     name: Generate html report
     parameters:
-      template: traditional-html
+      template: traditional-html-plus
       reportDir: /zap/wrk
       reportFile: zap-af-report.html
 
   - type: report
     name: Generate json report
     parameters:
-      template: traditional-json
+      template: traditional-json-plus
       reportDir: /zap/wrk
       reportFile: zap-af-report.json
 
