@@ -402,4 +402,91 @@ class GameControllerTest {
             }
     }
 
+    @Test
+    fun `resetDraft returns 200 with TurnDraftResponse`() {
+        val draft = TurnDraft(
+            gameId = "game-1",
+            playerUserId = "user-1",
+            boardSets = emptyList(),
+            rackTiles = listOf(NumberedTile("rack-1", TileColor.RED,5)),
+            version = 4
+        )
+        `when`(turnDraftService.resetDraft("game-1", "user-1")).thenReturn(draft)
+
+        mockMvc.post("/api/games/game-1/reset-draft") {
+            header("X-User-Id", "user-1")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.gameId") { value("game-1") }
+            jsonPath("$.playerUserId") { value("user-1") }
+            jsonPath("$.version") { value("4") }
+        }
+    }
+
+    @Test
+    fun `resetDraft returns 404 when game not found`() {
+        `when`(turnDraftService.resetDraft("missing", "user-1"))
+            .thenThrow(NoSuchElementException("Game not found"))
+
+        mockMvc.post("/api/games/missing/reset-draft") {
+            header("X-User-Id", "user-1")
+        }.andExpect {
+            status { isNotFound() }
+            jsonPath("$.errorCode") { value("NOT_FOUND") }
+            jsonPath("$.errorMessage") { value("Game not found") }
+        }
+    }
+
+    @Test
+    fun `resetDraft returns 404 when draft not found`() {
+        `when`(turnDraftService.resetDraft("game-1", "user-1"))
+            .thenThrow(NoSuchElementException("Draft not found"))
+
+        mockMvc.post("/api/games/game-1/reset-draft") {
+            header("X-User-Id", "user-1")
+        }.andExpect {
+            status { isNotFound() }
+            jsonPath("$.errorCode") { value("NOT_FOUND") }
+            jsonPath("$.errorMessage") { value("Draft not found") }
+        }
+    }
+
+    @Test
+    fun `resetDraft returns 409 when user is not current player`() {
+        `when`(turnDraftService.resetDraft("game-1", "user-2"))
+            .thenThrow(IllegalStateException("User is not the current active player"))
+
+        mockMvc.post("/api/games/game-1/reset-draft") {
+            header("X-User-Id", "user-2")
+        }.andExpect {
+            status { isConflict() }
+            jsonPath("$.errorCode") { value("CONFLICT") }
+            jsonPath("$.errorMessage") { value("User is not the current active player") }
+        }
+    }
+
+    @Test
+    fun `resetDraft returns 409 when draft belongs to different user`() {
+        `when`(turnDraftService.resetDraft("game-1", "user-2"))
+            .thenThrow(IllegalStateException("Draft belongs to a different user"))
+
+        mockMvc.post("/api/games/game-1/reset-draft") {
+            header("X-User-Id", "user-2")
+        }.andExpect {
+            status { isConflict() }
+            jsonPath("$.errorCode") { value("CONFLICT") }
+            jsonPath("$.errorMessage") { value("Draft belongs to a different user") }
+        }
+    }
+
+    @Test
+    fun `resetDraft returns 400 when X-User-Id header is missing`() {
+        mockMvc.post("/api/games/game-1/reset-draft")
+            .andExpect {
+                status { isBadRequest() }
+        }
+
+    }
+
+
 }
