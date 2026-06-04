@@ -341,34 +341,157 @@ smaller set of truly stateful interactions.
 One important detail: importing the OpenAPI definition by itself is **not**
 enough to produce meaningful passive scan coverage in the reports. The passive
 scanner only analyzes real HTTP requests and responses. That means Layer 2 must
-do both:
+combine:
 
-- import the OpenAPI contract
-- run a bounded scan over the imported context so the API endpoints are actually
-  requested
+- import of the generated OpenAPI contract
+- explicit requests that actually produce request/response traffic over the
+  imported REST surface
 
-The repository now implements the start of Layer 2 by exposing `/v3/api-docs`
-from the backend and importing that generated OpenAPI document in:
+The repository now implements Layer 2 like this:
+
+1. the backend exposes a generated OpenAPI document at:
+
+   ```text
+   /v3/api-docs
+   ```
+
+2. the Automation Framework plan imports that contract from:
+
+   ```text
+   .github/zap/backend-automation-plan.yaml
+   ```
+
+3. the same plan sends explicit `requestor` traffic to the documented REST
+   endpoints so the resulting AF reports contain real HTTP messages instead of
+   only a contract import
+
+### How the AF workflow now prepares real state before the scan
+
+One practical problem showed up when the AF plan was first expanded to stateful
+endpoints: the deployed Render backend did **not** contain the fixed scan IDs
+that existed in local fixture code, such as:
+
+- `scan-open-lobby`
+- `scan-game-1`
+
+That made a purely static AF plan brittle. Requests like:
+
+- `GET /api/lobbies/scan-open-lobby`
+- `PATCH /api/lobbies/scan-open-lobby/settings`
+- `GET /api/games/scan-game-1`
+
+failed on the deployed environment because those resources were not actually
+present.
+
+The workflow therefore now prepares **dynamic lobby scan state** before ZAP
+runs.
+
+The current flow inside:
 
 ```text
-.github/zap/backend-automation-plan.yaml
+.github/workflows/backend-security-af.yml
 ```
 
-The AF plan then performs a bounded active scan over the imported context so
-the resulting AF reports reflect real API-surface traffic rather than only the
-small public requestor set.
+is:
 
-For the next layer of valid stateful requests, the backend also seeds a small
-deterministic scan fixture at startup. That fixture provides stable ids such as
-the scan lobby and scan game used by the AF plan when it needs real existing
-backend state instead of only contract-shape coverage.
+1. wait for the deployed backend to become reachable
+2. create a real lobby by calling:
+   - `POST /api/lobbies`
+3. join a real guest player by calling:
+   - `POST /api/lobbies/{lobbyId}/join`
+4. extract the returned `lobbyId`
+5. generate a temporary plan file where placeholder tokens are replaced with
+   that real `lobbyId`
+6. run the AF scan against the generated plan
 
-The next remaining expansion is Layer 3, where explicit AF `requestor` jobs
-cover the smaller set of flows that need valid headers, ids, request bodies,
-and existing backend state.
+This keeps the stateful lobby coverage real without requiring hard-coded,
+pre-seeded persistent IDs on Render.
 
-Until that follow-up exists, the current baseline and AF scans should be read
-as valuable but partial coverage.
+### What the generated-plan placeholders are used for
+
+The committed plan file contains placeholder values such as:
+
+```text
+__SCAN_MUTABLE_LOBBY_ID__
+```
+
+Before ZAP starts, the workflow replaces that placeholder with the real lobby
+that was just created for the scan run.
+
+That generated plan is then passed to the ZAP AF action.
+
+This allows the AF plan to run positive lobby flows such as:
+
+- `GET /api/lobbies/{lobbyId}`
+- `PATCH /api/lobbies/{lobbyId}/settings`
+- `POST /api/lobbies/{lobbyId}/ready`
+- `POST /api/lobbies/{lobbyId}/unready`
+- `POST /api/lobbies/{lobbyId}/leave`
+- `DELETE /api/lobbies/{lobbyId}`
+
+against a **real** existing resource rather than a guessed static ID.
+
+### Why the workflow does not create a real game yet
+
+The same technique is not cleanly available for game coverage yet.
+
+The backend can create and mutate real lobby state over REST, but the current
+public REST API does not expose a simple reliable way for the workflow to:
+
+- start a lobby,
+- obtain the resulting `gameId`,
+- and then feed that `gameId` back into the AF plan
+
+without introducing more persistent side effects or much more complex
+orchestration.
+
+Because of that, the current AF implementation uses:
+
+- **positive real-state coverage** for the lobby flows that can be created
+  safely before the scan
+- **negative-path coverage** for game endpoints that still need a reliable game
+  identifier strategy
+
+That means the AF workflow already exercises:
+
+- API-wide contract shape through OpenAPI import
+- real positive lobby stateful flows
+- negative-path game endpoint behavior
+
+but it does **not yet** provide fully positive created-state coverage for the
+game and draft endpoints on the deployed backend.
+
+### Current practical coverage model
+
+The current AF workflow should therefore be read as:
+
+- **Layer 2**
+  - generated OpenAPI import
+  - broad REST endpoint-shape traffic
+- **Layer 3 (implemented in part)**
+  - real positive lobby-state flows created dynamically in the workflow
+  - negative-path game-state requests until a reliable `gameId` strategy exists
+
+This is materially stronger than the earlier public-endpoint-only scan, but it
+is still not the final end state for stateful game coverage.
+
+### The remaining follow-up for full positive stateful game coverage
+
+To complete Layer 3 for game endpoints, one of these needs to be added in a
+future PR:
+
+- a reliable REST-visible way to discover the created `gameId` after starting a
+  lobby
+- a dedicated scan-fixture endpoint or environment for controlled game setup
+- a more advanced AF/script chaining approach that can extract and reuse
+  created game identifiers safely
+
+Until then, the AF workflow should be treated as:
+
+- complete for public endpoint coverage
+- complete for OpenAPI-driven REST shape coverage
+- complete for dynamic positive lobby-state coverage
+- partial for positive game/draft-state coverage
 
 ---
 
