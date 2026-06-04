@@ -1,0 +1,74 @@
+env:
+  contexts:
+    - name: se2-backend
+      urls:
+        - https://se2-group-codebase.onrender.com
+      includePaths:
+        - https://se2-group-codebase.onrender.com.*
+
+  parameters:
+    failOnError: true
+    failOnWarning: false
+    progressToStdout: true
+
+jobs:
+  - type: requestor
+    name: Request root endpoint
+    requests:
+      - url: https://se2-group-codebase.onrender.com/
+        method: GET
+
+  - type: requestor
+    name: Request robots metadata
+    requests:
+      - url: https://se2-group-codebase.onrender.com/robots.txt
+        method: GET
+
+  - type: requestor
+    name: Request sitemap metadata
+    requests:
+      - url: https://se2-group-codebase.onrender.com/sitemap.xml
+        method: GET
+
+  - type: requestor
+    name: Request health endpoint
+    requests:
+      - url: https://se2-group-codebase.onrender.com/actuator/health
+        method: GET
+
+  - type: passiveScan-config
+    name: Passive scan configuration
+    parameters:
+      maxAlertsPerRule: 10
+
+  - type: passiveScan-wait
+    name: Wait for passive scan completion
+    parameters:
+      maxDuration: 10
+
+  - type: report
+    name: Generate markdown report
+    parameters:
+      template: traditional-md
+      reportDir: /zap/wrk
+      reportFile: zap-af-report.md
+
+  - type: report
+    name: Generate html report
+    parameters:
+      template: traditional-html
+      reportDir: /zap/wrk
+      reportFile: zap-af-report.html
+
+  - type: report
+    name: Generate json report
+    parameters:
+      template: traditional-json
+      reportDir: /zap/wrk
+      reportFile: zap-af-report.json
+
+  - type: exitStatus
+    name: Non-blocking initial exit policy
+    parameters:
+      warnLevel: High
+      errorLevel: High
