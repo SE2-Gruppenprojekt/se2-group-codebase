@@ -336,10 +336,16 @@ This is the correct split because OpenAPI import can cover broad API shape
 cheaply, while explicit `requestor` flows should be reserved for the smaller
 set of truly stateful interactions.
 
+The repository now implements the start of Layer 2 by exposing `/v3/api-docs`
+from the backend and importing that generated OpenAPI document in:
 
-- explicit Automation Framework request definitions for selected API endpoints
-- an OpenAPI-driven scan
-- authenticated/stateful scan setup in a controlled environment
+```text
+.github/zap/backend-automation-plan.yaml
+```
+
+The next remaining expansion is Layer 3, where explicit AF `requestor` jobs
+cover the smaller set of flows that need valid headers, ids, request bodies,
+and existing backend state.
 
 Until that follow-up exists, the current baseline and AF scans should be read
 as valuable but partial coverage.
