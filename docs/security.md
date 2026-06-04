@@ -59,6 +59,15 @@ This is enough to demonstrate that backend API security testing is:
 - visible in CI
 - integrated into the repository
 
+What is important to understand, however, is that the current scan coverage is
+still **narrower than the full backend API surface**. The workflows are
+implemented correctly, but they do not yet exercise the entire game and lobby
+API described in:
+
+```text
+docs/game-api.md
+```
+
 ---
 
 ## Scan Target
@@ -89,6 +98,34 @@ Expected response:
 {
     "status": "UP"
 }
+```
+
+### What is actually being scanned right now
+
+In practice, the current ZAP setup mainly covers:
+
+- `/`
+- `/robots.txt`
+- `/sitemap.xml`
+- `/actuator/health`
+
+This is true for two different reasons:
+
+1. the baseline scan only discovers what it can reach automatically from the
+   deployed public surface
+2. the current Automation Framework plan explicitly requests only those public
+   GET endpoints
+
+That means the current scanning setup is best understood as:
+
+```text
+public endpoint and transport-layer security scanning
+```
+
+not yet as:
+
+```text
+full backend game API security scanning
 ```
 
 ---
@@ -257,6 +294,35 @@ Automation Framework useful for gradual future expansion, such as:
 - stricter exit rules
 - alert filtering
 - controlled active scan jobs
+
+### Why the current scans do not yet cover the full game API
+
+The backend game API is much more stateful than the small public endpoint
+surface that ZAP is currently hitting.
+
+Many backend endpoints require:
+
+- `X-User-Id`
+- path variables such as `gameId` or `lobbyId`
+- request bodies
+- existing backend state, such as:
+  - a real lobby
+  - a started game
+  - a current draft
+  - a valid active player
+
+Because of that, generic passive crawling is not enough to reach or exercise
+those endpoints meaningfully.
+
+To scan the real backend API more deeply, a future scan layer needs one of
+these approaches:
+
+- explicit Automation Framework request definitions for selected API endpoints
+- an OpenAPI-driven scan
+- authenticated/stateful scan setup in a controlled environment
+
+Until that follow-up exists, the current baseline and AF scans should be read
+as valuable but partial coverage.
 
 ---
 
@@ -654,6 +720,26 @@ automated passive API security scanning in CI
 ```
 
 That is still a valid and solid answer to the requirement.
+
+An equally important limitation is scope:
+
+```text
+the current ZAP workflows do not yet cover the full stateful game API.
+```
+
+They are currently strongest at:
+
+- public endpoint checks
+- response-header checks
+- cache-policy checks
+- transport-level observations
+
+They are not yet a substitute for a future deeper scan against:
+
+- game command endpoints
+- draft mutation endpoints
+- end-turn submission flows
+- stateful or authenticated API interactions
 
 ---
 
