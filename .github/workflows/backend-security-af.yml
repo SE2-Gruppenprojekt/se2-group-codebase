@@ -58,42 +58,35 @@ jobs:
           echo "Backend was not reachable"
           exit 1
 
-      - name: Prepare dynamic lobby scan state
+      - name: Prepare dynamic scan fixture state
+        env:
+          ZAP_SCAN_FIXTURE_SECRET: ${{ secrets.ZAP_SCAN_FIXTURE_SECRET }}
         run: |
           set -euo pipefail
 
-          create_lobby() {
-            local user_id="$1"
-            local display_name="$2"
-
+          FIXTURE_JSON="$(
             curl -fsS \
-              -X POST "$BACKEND_BASE_URL/api/lobbies" \
-              -H "X-User-Id: $user_id" \
-              -H "Content-Type: application/json" \
-              -d "{\"displayName\":\"$display_name\",\"maxPlayers\":4,\"isPrivate\":false,\"allowGuests\":true}"
-          }
-
-          join_lobby() {
-            local lobby_id="$1"
-            local user_id="$2"
-            local display_name="$3"
-
-            curl -fsS \
-              -X POST "$BACKEND_BASE_URL/api/lobbies/$lobby_id/join" \
-              -H "Content-Type: application/json" \
-              -d "{\"userId\":\"$user_id\",\"displayName\":\"$display_name\"}" \
-              >/dev/null
-          }
-
-          MUTABLE_LOBBY_ID="$(
-            create_lobby "scan-host-user" "ZAP AF Host" | jq -r '.lobbyId'
+              -X POST "$BACKEND_BASE_URL/internal/security/scan-fixture" \
+              -H "X-Scan-Secret: $ZAP_SCAN_FIXTURE_SECRET"
           )"
-          join_lobby "$MUTABLE_LOBBY_ID" "scan-guest-user" "ZAP AF Guest"
 
-          echo "Prepared mutable lobby: $MUTABLE_LOBBY_ID"
+          SCAN_LOBBY_ID="$(echo "$FIXTURE_JSON" | jq -r '.lobbyId')"
+          SCAN_GAME_ID="$(echo "$FIXTURE_JSON" | jq -r '.gameId')"
+          SCAN_HOST_USER_ID="$(echo "$FIXTURE_JSON" | jq -r '.hostUserId')"
+          SCAN_GUEST_USER_ID="$(echo "$FIXTURE_JSON" | jq -r '.guestUserId')"
+
+          for value in "$SCAN_LOBBY_ID" "$SCAN_GAME_ID" "$SCAN_HOST_USER_ID" "$SCAN_GUEST_USER_ID"; do
+            if [ -z "$value" ] || [ "$value" = "null" ]; then
+              echo "Scan fixture endpoint returned incomplete data"
+              exit 1
+            fi
+          done
 
           sed \
-            -e "s/__SCAN_MUTABLE_LOBBY_ID__/$MUTABLE_LOBBY_ID/g" \
+            -e "s/__SCAN_LOBBY_ID__/$SCAN_LOBBY_ID/g" \
+            -e "s/__SCAN_GAME_ID__/$SCAN_GAME_ID/g" \
+            -e "s/__SCAN_HOST_USER_ID__/$SCAN_HOST_USER_ID/g" \
+            -e "s/__SCAN_GUEST_USER_ID__/$SCAN_GUEST_USER_ID/g" \
             .github/zap/backend-automation-plan.yaml \
             > .github/zap/backend-automation-plan.generated.yaml
 
@@ -102,12 +95,20 @@ jobs:
         with:
           plan: ".github/zap/backend-automation-plan.generated.yaml"
 
+      - name: Generate endpoint coverage artifact
+        if: always()
+        run: ruby .github/scripts/generate_zap_af_endpoint_coverage.rb .github/zap/backend-automation-plan.generated.yaml zap-af-report.json zap-af-endpoint-coverage.md
+
       - name: Publish AF summary
         if: always()
         run: |
           {
             echo "## OWASP ZAP Automation Framework Scan"
             echo
+            if [ -f zap-af-endpoint-coverage.md ]; then
+              cat zap-af-endpoint-coverage.md
+              echo
+            fi
             if [ -f zap-af-report.md ]; then
               cat zap-af-report.md
             else
@@ -122,6 +123,8 @@ jobs:
           name: zap-security-report-af
           retention-days: 14
           path: |
+            .github/zap/backend-automation-plan.generated.yaml
             zap-af-report.md
             zap-af-report.html
             zap-af-report.json
+            zap-af-endpoint-coverage.md
