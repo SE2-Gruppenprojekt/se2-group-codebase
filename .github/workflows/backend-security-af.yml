@@ -82,6 +82,13 @@ jobs:
             fi
           done
 
+          {
+            echo "SCAN_LOBBY_ID=$SCAN_LOBBY_ID"
+            echo "SCAN_GAME_ID=$SCAN_GAME_ID"
+            echo "SCAN_HOST_USER_ID=$SCAN_HOST_USER_ID"
+            echo "SCAN_GUEST_USER_ID=$SCAN_GUEST_USER_ID"
+          } >> "$GITHUB_ENV"
+
           sed \
             -e "s/__SCAN_LOBBY_ID__/$SCAN_LOBBY_ID/g" \
             -e "s/__SCAN_GAME_ID__/$SCAN_GAME_ID/g" \
@@ -94,6 +101,19 @@ jobs:
         uses: zaproxy/action-af@v0.3.0
         with:
           plan: ".github/zap/backend-automation-plan.generated.yaml"
+
+      - name: Regenerate concrete AF plan for reporting
+        if: always()
+        run: |
+          set -euo pipefail
+
+          sed \
+            -e "s/__SCAN_LOBBY_ID__/$SCAN_LOBBY_ID/g" \
+            -e "s/__SCAN_GAME_ID__/$SCAN_GAME_ID/g" \
+            -e "s/__SCAN_HOST_USER_ID__/$SCAN_HOST_USER_ID/g" \
+            -e "s/__SCAN_GUEST_USER_ID__/$SCAN_GUEST_USER_ID/g" \
+            .github/zap/backend-automation-plan.yaml \
+            > .github/zap/backend-automation-plan.generated.yaml
 
       - name: Generate endpoint coverage artifact
         if: always()
