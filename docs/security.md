@@ -41,10 +41,13 @@ The baseline workflow:
 The Automation Framework workflow:
 
 1. waits until the deployed backend is reachable
-2. runs a committed **Automation Framework plan** from the repository
-3. generates dedicated markdown, HTML, and JSON AF reports
-4. publishes the AF summary into the GitHub Actions run summary
-5. uploads the AF reports as separate artifacts
+2. creates a dedicated scan fixture through an internal backend-only endpoint
+3. substitutes the returned ids into a generated Automation Framework plan
+4. runs a committed **Automation Framework plan** from the repository
+5. generates dedicated markdown, HTML, and JSON AF reports
+6. generates a separate endpoint-inventory markdown artifact
+7. publishes the AF summary into the GitHub Actions run summary
+8. uploads the AF reports and endpoint inventory as separate artifacts
 
 The current plan file lives at:
 
@@ -58,15 +61,8 @@ This is enough to demonstrate that backend API security testing is:
 - repeatable
 - visible in CI
 - integrated into the repository
-
-What is important to understand, however, is that the current scan coverage is
-still **narrower than the full backend API surface**. The workflows are
-implemented correctly, but they do not yet exercise the entire game and lobby
-API described in:
-
-```text
-docs/game-api.md
-```
+- aligned with the real REST API contract exposed through `/v3/api-docs`
+- able to acquire a real positive-state `gameId` automatically before the AF run
 
 ---
 
@@ -102,31 +98,24 @@ Expected response:
 
 ### What is actually being scanned right now
 
-In practice, the current ZAP setup mainly covers:
+The two ZAP workflows now cover different layers:
 
-- `/`
-- `/robots.txt`
-- `/sitemap.xml`
-- `/actuator/health`
+1. the baseline scan still provides passive public-surface and transport-layer checks
+2. the Automation Framework scan imports the generated OpenAPI contract and then
+   sends explicit request traffic across public, positive lobby-state, positive
+   game-state, and negative-path endpoint groups
 
-This is true for two different reasons:
+The AF workflow now exercises the real REST API shape, including positive-state
+coverage for:
 
-1. the baseline scan only discovers what it can reach automatically from the
-   deployed public surface
-2. the current Automation Framework plan explicitly requests only those public
-   GET endpoints
+- `GET /api/games/{gameId}`
+- `PUT /api/games/{gameId}/draft`
+- `POST /api/games/{gameId}/draw`
+- `POST /api/games/{gameId}/end-turn`
 
-That means the current scanning setup is best understood as:
-
-```text
-public endpoint and transport-layer security scanning
-```
-
-not yet as:
-
-```text
-full backend game API security scanning
-```
+That positive game coverage is possible because the workflow no longer relies on
+hard-coded public fixture ids. Instead, it creates fresh scan-safe state through
+an internal fixture endpoint before each AF run.
 
 ---
 
@@ -217,6 +206,8 @@ but replaces the packaged baseline behavior with a committed scan plan:
 GitHub Actions
     -> wake deployed backend
     -> verify /actuator/health
+    -> call /internal/security/scan-fixture with X-Scan-Secret
+    -> substitute returned ids into a generated AF plan
     -> run ZAP Automation Framework plan
     -> publish CI summary
     -> upload AF reports as artifacts
@@ -295,132 +286,78 @@ Automation Framework useful for gradual future expansion, such as:
 - alert filtering
 - controlled active scan jobs
 
-### Why the current scans do not yet cover the full game API
+### Dedicated scan-fixture endpoint
 
-The backend game API is much more stateful than the small public endpoint
-surface that ZAP is currently hitting.
-
-Many backend endpoints require:
-
-- `X-User-Id`
-- path variables such as `gameId` or `lobbyId`
-- request bodies
-- existing backend state, such as:
-    - a real lobby
-    - a started game
-    - a current draft
-    - a valid active player
-
-Because of that, generic passive crawling is not enough to reach or exercise
-those endpoints meaningfully.
-
-To scan the real backend API more deeply, a future scan layer needs one of
-these layered approaches:
-
-- **Layer 2 — API-wide coverage**
-    - generate an OpenAPI spec from the backend
-    - import that spec into the existing AF plan through an AF `openapi` job
-    - actively explore the imported API context in a bounded way so ZAP
-      produces real request/response traffic for the API surface
-    - use this as the:
-        ```text
-        scan the whole backend API shape
-        ```
-        layer
-- **Layer 3 — Stateful flows**
-    - add explicit AF `requestor` jobs only for flows that need:
-        - `X-User-Id`
-        - specific ids such as `gameId`
-        - valid request bodies
-        - existing backend state
-
-This is the correct split because OpenAPI import can define the broad API
-shape cheaply, while explicit `requestor` flows should be reserved for the
-smaller set of truly stateful interactions.
-
-One important detail: importing the OpenAPI definition by itself is **not**
-enough to produce meaningful passive scan coverage in the reports. The passive
-scanner only analyzes real HTTP requests and responses. That means Layer 2 must
-combine:
-
-- import of the generated OpenAPI contract
-- explicit requests that actually produce request/response traffic over the
-  imported REST surface
-
-The repository now implements Layer 2 like this:
-
-1. the backend exposes a generated OpenAPI document at:
-
-   ```text
-   /v3/api-docs
-   ```
-
-2. the Automation Framework plan imports that contract from:
-
-   ```text
-   .github/zap/backend-automation-plan.yaml
-   ```
-
-3. the same plan sends explicit `requestor` traffic to the documented REST
-   endpoints so the resulting AF reports contain real HTTP messages instead of
-   only a contract import
-
-### How the AF workflow now prepares real state before the scan
-
-One practical problem showed up when the AF plan was first expanded to stateful
-endpoints: the deployed Render backend did **not** contain the fixed scan IDs
-that existed in local fixture code, such as:
-
-- `scan-open-lobby`
-- `scan-game-1`
-
-That made a purely static AF plan brittle. Requests like:
-
-- `GET /api/lobbies/scan-open-lobby`
-- `PATCH /api/lobbies/scan-open-lobby/settings`
-- `GET /api/games/scan-game-1`
-
-failed on the deployed environment because those resources were not actually
-present.
-
-The workflow therefore now prepares **dynamic lobby scan state** before ZAP
-runs.
-
-The current flow inside:
+The repository now exposes one internal infrastructure endpoint for the
+Automation Framework workflow:
 
 ```text
-.github/workflows/backend-security-af.yml
+POST /internal/security/scan-fixture
 ```
 
-is:
+This endpoint is not part of the public gameplay API. It exists only so the
+workflow can create deterministic, scan-safe backend state immediately before
+the AF run.
 
-1. wait for the deployed backend to become reachable
-2. create a real lobby by calling:
-   - `POST /api/lobbies`
-3. join a real guest player by calling:
-   - `POST /api/lobbies/{lobbyId}/join`
-4. extract the returned `lobbyId`
-5. generate a temporary plan file where placeholder tokens are replaced with
-   that real `lobbyId`
-6. run the AF scan against the generated plan
+The endpoint is protected by:
 
-This keeps the stateful lobby coverage real without requiring hard-coded,
-pre-seeded persistent IDs on Render.
+- request header:
+    - `X-Scan-Secret`
+- backend property:
+    - `app.scan-fixture.secret`
 
-### What the generated-plan placeholders are used for
+If the header is missing or wrong, the backend returns `403 FORBIDDEN`.
 
-The committed plan file contains placeholder values such as:
+The endpoint is only registered when:
 
 ```text
-__SCAN_MUTABLE_LOBBY_ID__
+app.scan-fixture.enabled=true
 ```
 
-Before ZAP starts, the workflow replaces that placeholder with the real lobby
-that was just created for the scan run.
+If the feature is not enabled, the endpoint is absent from routing and behaves
+like a normal `404`.
 
-That generated plan is then passed to the ZAP AF action.
+### Layer 2: API-wide coverage
 
-This allows the AF plan to run positive lobby flows such as:
+Layer 2 is implemented through the generated OpenAPI document:
+
+```text
+/v3/api-docs
+```
+
+The Automation Framework plan imports that contract and then sends explicit
+request traffic so the AF reports contain real HTTP messages instead of only a
+schema import.
+
+This is the repository’s:
+
+```text
+scan the whole backend API shape
+```
+
+layer.
+
+### Layer 3: Positive stateful flows
+
+Layer 3 uses the dedicated fixture endpoint to recreate deterministic state and
+return:
+
+- `lobbyId`
+- `hostUserId`
+- `guestUserId`
+- `gameId`
+- `draftOwnerUserId`
+
+The workflow substitutes those values into a generated plan before ZAP runs.
+
+The placeholders currently used are:
+
+- `__SCAN_LOBBY_ID__`
+- `__SCAN_GAME_ID__`
+- `__SCAN_HOST_USER_ID__`
+- `__SCAN_GUEST_USER_ID__`
+
+This allows the AF run to execute positive real-state requests for:
 
 - `GET /api/lobbies/{lobbyId}`
 - `PATCH /api/lobbies/{lobbyId}/settings`
@@ -428,70 +365,69 @@ This allows the AF plan to run positive lobby flows such as:
 - `POST /api/lobbies/{lobbyId}/unready`
 - `POST /api/lobbies/{lobbyId}/leave`
 - `DELETE /api/lobbies/{lobbyId}`
+- `GET /api/games/{gameId}`
+- `PUT /api/games/{gameId}/draft`
+- `POST /api/games/{gameId}/draw`
+- `POST /api/games/{gameId}/end-turn`
 
-against a **real** existing resource rather than a guessed static ID.
+The fixture guarantees a known pre-draw host rack and first draw tile:
 
-### Why the workflow does not create a real game yet
+- pre-draw rack:
+    - `scan-host-rack-red-5`
+    - `scan-host-rack-blue-7`
+- first draw tile:
+    - `scan-draw-red-1`
 
-The same technique is not cleanly available for game coverage yet.
+That is why the plan can run:
 
-The backend can create and mutate real lobby state over REST, but the current
-public REST API does not expose a simple reliable way for the workflow to:
+- a valid positive `PUT /draft` request before draw
+- a valid positive `POST /draw`
+- a valid positive `POST /end-turn` request with the post-draw rack
 
-- start a lobby,
-- obtain the resulting `gameId`,
-- and then feed that `gameId` back into the AF plan
+Negative-path requests are still kept in the plan so missing-id behavior
+remains visible alongside the positive-state coverage.
 
-without introducing more persistent side effects or much more complex
-orchestration.
+### Authentication scope
 
-Because of that, the current AF implementation uses:
+This implementation does **not** add real backend authentication.
 
-- **positive real-state coverage** for the lobby flows that can be created
-  safely before the scan
-- **negative-path coverage** for game endpoints that still need a reliable game
-  identifier strategy
+Gameplay requests still rely on the backend’s current trusted-header identity
+model:
 
-That means the AF workflow already exercises:
+```text
+X-User-Id
+```
 
-- API-wide contract shape through OpenAPI import
-- real positive lobby stateful flows
-- negative-path game endpoint behavior
+Only the fixture setup endpoint uses the additional `X-Scan-Secret` header.
+Authenticated scan flows remain follow-up work.
 
-but it does **not yet** provide fully positive created-state coverage for the
-game and draft endpoints on the deployed backend.
+### Endpoint coverage artifact
 
-### Current practical coverage model
+The workflow now generates an extra artifact:
 
-The current AF workflow should therefore be read as:
+```text
+zap-af-endpoint-coverage.md
+```
 
-- **Layer 2**
-  - generated OpenAPI import
-  - broad REST endpoint-shape traffic
-- **Layer 3 (implemented in part)**
-  - real positive lobby-state flows created dynamically in the workflow
-  - negative-path game-state requests until a reliable `gameId` strategy exists
+This file is produced from:
 
-This is materially stronger than the earlier public-endpoint-only scan, but it
-is still not the final end state for stateful game coverage.
+- the generated AF plan used in the run
+- the AF JSON report, when present
 
-### The remaining follow-up for full positive stateful game coverage
+It surfaces:
 
-To complete Layer 3 for game endpoints, one of these needs to be added in a
-future PR:
+- target site metadata
+- imported OpenAPI URL count
+- explicit endpoint inventory
+- grouping by:
+    - public endpoints
+    - positive lobby-state endpoints
+    - positive game-state endpoints
+    - negative-path endpoints
+- response-profile statistics from the ZAP JSON output
 
-- a reliable REST-visible way to discover the created `gameId` after starting a
-  lobby
-- a dedicated scan-fixture endpoint or environment for controlled game setup
-- a more advanced AF/script chaining approach that can extract and reuse
-  created game identifiers safely
-
-Until then, the AF workflow should be treated as:
-
-- complete for public endpoint coverage
-- complete for OpenAPI-driven REST shape coverage
-- complete for dynamic positive lobby-state coverage
-- partial for positive game/draft-state coverage
+This artifact is more useful than the raw markdown report when the goal is to
+see exactly which endpoint inventory the AF run exercised.
 
 ---
 
@@ -501,13 +437,7 @@ The workflows are implemented in:
 
 ```text
 .github/workflows/backend-security.yml
-.github/workflows/backend-security-af.yml
 ```
-
-- `backend-security.yml` contains the **baseline scan** workflow.
-- `backend-security-af.yml` contains the **Automation Framework scan** workflow.
-
-The code example below is the **baseline scan** workflow. The AF workflow follows the same overall readiness and reporting pattern, but runs the committed Automation Framework plan instead of the packaged baseline action.
 
 Recommended structure:
 
@@ -600,7 +530,7 @@ jobs:
 
 ---
 
-## Why The Workflows Are Structured This Way
+## Why The Workflow Is Structured This Way
 
 ### `pull_request`
 
@@ -764,9 +694,7 @@ Together, that gives:
 
 ## Generated Reports
 
-The workflows upload separate report sets.
-
-### Baseline scan reports
+The workflow uploads:
 
 ```text
 report_html.html
@@ -774,30 +702,10 @@ report_md.md
 report_json.json
 ```
 
-These are uploaded under the artifact:
-
-```text
-zap-security-report
-```
-
-### Automation Framework scan reports
-
-```text
-zap-af-report.html
-zap-af-report.md
-zap-af-report.json
-```
-
-These are uploaded under the artifact:
-
-```text
-zap-security-report-af
-```
-
 ### HTML
 
 ```text
-report_html.html / zap-af-report.html
+report_html.html
 ```
 
 Best for manual review in a browser.
@@ -805,7 +713,7 @@ Best for manual review in a browser.
 ### Markdown
 
 ```text
-report_md.md / zap-af-report.md
+report_md.md
 ```
 
 Best for CI summaries, PR discussion, and issue creation.
@@ -813,7 +721,7 @@ Best for CI summaries, PR discussion, and issue creation.
 ### JSON
 
 ```text
-report_json.json / zap-af-report.json
+report_json.json
 ```
 
 Best for machine processing or future automation.
