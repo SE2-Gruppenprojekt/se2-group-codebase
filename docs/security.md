@@ -337,6 +337,198 @@ scan the whole backend API shape
 
 layer.
 
+#### Why the committed plan file matters
+
+The committed Automation Framework plan:
+
+```text
+.github/zap/backend-automation-plan.yaml
+```
+
+is the actual scan definition for the AF workflow.
+
+Unlike the baseline scan, which mostly takes a small set of inputs and then
+executes packaged behavior, the Automation Framework needs an explicit
+repository-owned plan that tells ZAP:
+
+- which context exists
+- which base URLs are in scope
+- which jobs run and in what order
+- which requests should be sent
+- which responses are expected
+- which report formats should be written
+- which exit policy should be used
+
+At the top of the file, the plan defines the scan context and scope:
+
+```yaml
+env:
+  contexts:
+    - name: se2-backend
+      urls:
+        - https://se2-group-codebase.onrender.com
+      includePaths:
+        - https://se2-group-codebase.onrender.com.*
+
+  parameters:
+    failOnError: true
+    failOnWarning: false
+    progressToStdout: true
+```
+
+This block matters because it establishes three important operational rules:
+
+1. the scan is anchored to the deployed backend, not a local host
+2. only that backend is considered in scope
+3. warnings stay visible without making the first rollout overly brittle
+
+The plan then starts with the passive-scan configuration and OpenAPI import:
+
+```yaml
+jobs:
+  - type: passiveScan-config
+    name: Passive scan configuration
+    parameters:
+      maxAlertsPerRule: 10
+      scanOnlyInScope: true
+
+  - type: openapi
+    name: Import generated OpenAPI contract
+    parameters:
+      apiUrl: https://se2-group-codebase.onrender.com/v3/api-docs
+      targetUrl: https://se2-group-codebase.onrender.com
+      context: se2-backend
+```
+
+This pairing is deliberate.
+
+The `openapi` job teaches ZAP the backend API shape, but by itself that would
+still be too abstract for good scan reporting. The later `requestor` jobs are
+what turn the imported schema into real HTTP traffic that the passive scanner
+can inspect and that the generated reports can display.
+
+The public-surface requestors look like this:
+
+```yaml
+  - type: requestor
+    name: "Public endpoint: leaderboard"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/leaderboard
+        method: GET
+        responseCode: 200
+```
+
+These jobs are intentionally simple:
+
+- one job name describes the intent
+- each request declares the exact URL
+- the HTTP method is explicit
+- the expected status is explicit
+
+That makes the plan readable as both:
+
+- machine configuration
+- human review document
+
+#### How the plan is split conceptually
+
+The committed plan is easiest to understand if it is read in four slices.
+
+##### 1. Public endpoint slice
+
+These requestors exercise the public GET surface and root metadata:
+
+- `/`
+- `/robots.txt`
+- `/sitemap.xml`
+- `/actuator/health`
+- `/api/leaderboard`
+- `GET /api/lobbies`
+
+##### 2. Positive lobby-state slice
+
+These requestors use a real `lobbyId` injected by the workflow:
+
+```yaml
+  - type: requestor
+    name: "Positive lobby state: update prepared scan lobby settings"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_LOBBY_ID__/settings
+        method: PATCH
+        headers:
+          - "X-User-Id:__SCAN_HOST_USER_ID__"
+          - "Content-Type:application/json"
+        data: |
+          {
+            "maxPlayers": 4,
+            "isPrivate": false,
+            "allowGuests": true
+          }
+        responseCode: 200
+```
+
+This is where the plan stops being a generic crawler configuration and becomes
+a deliberate API test harness. The placeholders are not valid by themselves;
+they are replaced in CI after the fixture endpoint returns real ids.
+
+##### 3. Positive game-state slice
+
+These requestors use a real `gameId` and the prepared host player:
+
+```yaml
+  - type: requestor
+    name: "Positive game state: draw from prepared scan game"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/games/__SCAN_GAME_ID__/draw
+        method: POST
+        headers:
+          - "X-User-Id:__SCAN_HOST_USER_ID__"
+        responseCode: 200
+```
+
+The same pattern is used for:
+
+- `GET /api/games/{gameId}`
+- `PUT /api/games/{gameId}/draft`
+- `POST /api/games/{gameId}/draw`
+- `POST /api/games/{gameId}/end-turn`
+
+The important detail is that these are not fake examples. They are aligned to
+the deterministic fixture state created before the scan.
+
+##### 4. Negative-path slice
+
+The plan also keeps stable failure-path coverage:
+
+```yaml
+  - type: requestor
+    name: "Negative path: missing game endpoints"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/games/zap-missing-game
+        method: GET
+        responseCode: 404
+```
+
+This is useful for two reasons:
+
+- it keeps error-path regressions visible
+- it distinguishes "we exercised the happy path" from "we also verified
+  missing-id behavior"
+
+#### Why the plan stays committed to the repository
+
+Keeping the plan file committed instead of generating the whole thing in shell
+has several benefits:
+
+- the scan logic is code-reviewed like any other source file
+- changes to endpoint coverage are visible in diffs
+- the current intended scan surface is understandable without opening CI logs
+- the workflow only has to inject dynamic values, not rebuild the entire scan
+  structure from scratch
+
+That last point is important. The workflow should orchestrate execution. The
+plan file should define scanning behavior.
+
 ### Layer 3: Positive stateful flows
 
 Layer 3 uses the dedicated fixture endpoint to recreate deterministic state and
@@ -428,6 +620,189 @@ It surfaces:
 
 This artifact is more useful than the raw markdown report when the goal is to
 see exactly which endpoint inventory the AF run exercised.
+
+#### How the endpoint coverage script works
+
+The endpoint inventory artifact is generated by:
+
+```text
+.github/scripts/generate_zap_af_endpoint_coverage.rb
+```
+
+This script exists because the raw ZAP markdown report is not a good source of
+truth for endpoint inventory. It is good at summarizing alerts, but weaker at
+answering:
+
+- which exact requestors ran
+- which endpoint groups were exercised
+- which expected statuses were declared in the plan
+
+So the repository adds a small post-processing step that combines:
+
+1. the generated concrete AF plan
+2. the ZAP JSON report
+
+and writes a reviewer-friendly markdown artifact.
+
+#### Inputs and top-level structure
+
+The script starts by loading three runtime arguments:
+
+```ruby
+plan_path = ARGV.fetch(0)
+json_path = ARGV.fetch(1)
+output_path = ARGV.fetch(2)
+
+plan = YAML.load_file(plan_path)
+report = File.exist?(json_path) ? JSON.parse(File.read(json_path)) : {}
+```
+
+This is intentionally simple.
+
+- `plan_path` points to the generated plan with real substituted ids
+- `json_path` points to `zap-af-report.json`
+- `output_path` is the markdown artifact to write
+
+The script therefore operates on the **actual run configuration**, not the
+placeholder template plan.
+
+#### Request categorization logic
+
+The first important piece of logic is `request_category`:
+
+```ruby
+def request_category(job_name, request)
+  url = request.fetch("url")
+  expected = request["responseCode"]
+
+  return "Public Endpoints" if job_name.start_with?("Public endpoint:")
+  return "Positive Lobby-State Endpoints" if url.include?("/api/lobbies/") && [200, 204].include?(expected)
+  return "Positive Game-State Endpoints" if url.include?("/api/games/") && expected == 200
+
+  "Negative-Path Endpoints"
+end
+```
+
+This function is doing the conceptual flattening that ZAP itself does not do
+for you.
+
+Instead of dumping one long unsorted request list, it groups the scan into the
+same logical layers the rest of the documentation uses:
+
+- public endpoints
+- positive lobby-state endpoints
+- positive game-state endpoints
+- negative-path endpoints
+
+That is why the artifact reads like an implementation summary instead of a raw
+machine log.
+
+#### Path normalization and request extraction
+
+The script then normalizes request paths and extracts requestor jobs from the
+plan:
+
+```ruby
+def display_path(url)
+  url.sub(%r{\Ahttps://[^/]+}, "")
+end
+
+requests = plan.fetch("jobs", []).select { |job| job["type"] == "requestor" }.flat_map do |job|
+  (job["requests"] || []).map do |request|
+    {
+      job_name: job.fetch("name"),
+      method: request.fetch("method", "GET"),
+      url: request.fetch("url"),
+      expected_status: request["responseCode"],
+      category: request_category(job.fetch("name"), request)
+    }
+  end
+end
+```
+
+This block is the core bridge between the Automation Framework plan and the
+final human-readable artifact.
+
+It converts nested YAML job definitions into a flat inventory where each row
+knows:
+
+- which logical job it came from
+- which method it uses
+- which path it targets
+- which status it expects
+- which documentation category it belongs to
+
+#### Report metadata extraction
+
+The script also pulls useful metadata from the JSON report:
+
+```ruby
+site_name = report.fetch("site", []).first&.fetch("@name", nil) || ENV.fetch("BACKEND_BASE_URL", "unknown")
+generated_at = report["@generated"] || Time.now.utc.rfc2822
+created_at = report["created"] || Time.now.utc.iso8601
+insights = Array(report["insights"])
+statistics = report["statistics"] || {}
+endpoint_total = insights.find { |insight| insight["key"] == "insight.endpoint.total" }&.fetch("statistic", nil)
+openapi_urls_added = statistics["openapi.urls.added"]
+site_statistics = report.fetch("site", []).first&.fetch("statistics", {}) || {}
+```
+
+This is what lets the artifact say more than just "here are the requests."
+
+It can also report:
+
+- target site
+- generation timestamps
+- imported OpenAPI URL count
+- total endpoint count seen by ZAP
+- response-profile statistics
+
+That gives the markdown artifact both:
+
+- structural inventory from the plan
+- execution context from the report
+
+#### Markdown generation strategy
+
+The file output section is straightforward by design:
+
+```ruby
+File.open(output_path, "w") do |file|
+  file.puts "# ZAP AF Endpoint Coverage"
+  ...
+  file.puts "## Metadata"
+  ...
+  file.puts "## Coverage Summary"
+  ...
+  file.puts "## Response Profile"
+  ...
+  file.puts "## Interpretation"
+end
+```
+
+The script does not try to be clever with templates or external gems. That is
+intentional. This repository only needs a deterministic internal reporting
+utility, not a second report-generation framework layered on top of ZAP.
+
+#### Why this script is part of the feature, not just a nice extra
+
+This script is not cosmetic.
+
+It solves a real review problem:
+
+- the AF plan is rich and stateful
+- the raw ZAP reports are alert-centric
+- reviewers need a direct answer to "what exactly did this run cover?"
+
+Without this script, that answer would require manually cross-reading:
+
+- the committed plan
+- the generated plan
+- the JSON report
+- the markdown report
+
+The script reduces that to one additional markdown artifact that stays aligned
+with the executed plan.
 
 ---
 
@@ -580,7 +955,7 @@ The workflow currently needs only:
 
 ```yaml
 permissions:
-  contents: read
+    contents: read
 ```
 
 This is the correct least-privilege model for the current implementation. The workflow does not need issue-writing behavior.
@@ -771,10 +1146,10 @@ The current deterministic identifiers are:
 The service seeds:
 
 - a host rack before draw:
-  - `scan-host-rack-red-5`
-  - `scan-host-rack-blue-7`
+    - `scan-host-rack-red-5`
+    - `scan-host-rack-blue-7`
 - a known first draw tile:
-  - `scan-draw-red-1`
+    - `scan-draw-red-1`
 
 That allows the AF plan to do:
 
@@ -1009,10 +1384,10 @@ zap-af-endpoint-coverage.md
 - report generation timestamps
 - endpoint count reported by ZAP
 - grouped inventory by:
-  - public endpoints
-  - positive lobby-state endpoints
-  - positive game-state endpoints
-  - negative-path endpoints
+    - public endpoints
+    - positive lobby-state endpoints
+    - positive game-state endpoints
+    - negative-path endpoints
 - expected method and status per request
 - response profile statistics from the JSON report
 
@@ -1124,10 +1499,10 @@ Verifies:
 - fixture recreation is idempotent
 - the service creates deterministic state
 - the positive game flow is valid for:
-  - get game
-  - update draft
-  - draw tile
-  - end turn
+    - get game
+    - update draft
+    - draw tile
+    - end turn
 
 This test is especially important because it proves that the AF plan’s positive game-state requests are not arbitrary. They are grounded in a real backend state that the service constructs intentionally.
 
