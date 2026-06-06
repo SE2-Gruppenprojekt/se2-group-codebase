@@ -329,7 +329,7 @@ and repository variables for:
 
 The detailed operator instructions live in:
 
-- [release-management.md](/Users/julianblaschke/Desktop/se2-group-codebase/docs/release-management.md)
+- [release-management.md](release-management.md)
 
 ---
 
