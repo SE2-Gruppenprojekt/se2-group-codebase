@@ -1,0 +1,240 @@
+name: Backend Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_channel:
+        description: "Release channel"
+        required: true
+        default: "internal"
+        type: choice
+        options:
+          - internal
+          - production
+      release_version:
+        description: "Optional product/release version label"
+        required: false
+      trigger_render_deploy:
+        description: "Trigger Render deployment"
+        required: true
+        default: true
+        type: boolean
+  push:
+    branches: [main]
+    tags:
+      - "v*"
+    paths:
+      - "apps/backend/**"
+      - "apps/shared/**"
+      - "gradle/**"
+      - "gradlew"
+      - "gradlew.bat"
+      - "settings.gradle.kts"
+      - "build.gradle.kts"
+      - ".github/workflows/backend-release.yml"
+      - "docs/workflows.md"
+      - "docs/pr-monorepo-release-management.md"
+
+concurrency:
+  group: backend-release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  BACKEND_BASE_URL: https://se2-group-codebase.onrender.com
+  HEALTH_URL: https://se2-group-codebase.onrender.com/actuator/health
+
+jobs:
+  prepare-release:
+    name: Prepare backend release metadata
+    runs-on: ubuntu-latest
+    outputs:
+      release_channel: ${{ steps.meta.outputs.release_channel }}
+      release_version: ${{ steps.meta.outputs.release_version }}
+      trigger_render_deploy: ${{ steps.meta.outputs.trigger_render_deploy }}
+      deployment_reason: ${{ steps.meta.outputs.deployment_reason }}
+    steps:
+      - id: meta
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          RUN_NUMBER: ${{ github.run_number }}
+          INPUT_RELEASE_CHANNEL: ${{ inputs.release_channel }}
+          INPUT_RELEASE_VERSION: ${{ inputs.release_version }}
+          INPUT_TRIGGER_RENDER_DEPLOY: ${{ inputs.trigger_render_deploy }}
+        run: |
+          set -euo pipefail
+
+          if [ "$REF_TYPE" = "tag" ]; then
+            RELEASE_CHANNEL="production"
+            RELEASE_VERSION="${REF_NAME#v}"
+            TRIGGER_RENDER_DEPLOY="true"
+            DEPLOYMENT_REASON="tagged product release"
+          elif [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            RELEASE_CHANNEL="$INPUT_RELEASE_CHANNEL"
+            RELEASE_VERSION="${INPUT_RELEASE_VERSION:-0.1.0-manual.${RUN_NUMBER}}"
+            TRIGGER_RENDER_DEPLOY="$INPUT_TRIGGER_RENDER_DEPLOY"
+            DEPLOYMENT_REASON="manual backend release run"
+          else
+            RELEASE_CHANNEL="internal"
+            RELEASE_VERSION="0.1.0-main.${RUN_NUMBER}"
+            TRIGGER_RENDER_DEPLOY="true"
+            DEPLOYMENT_REASON="main branch deployment"
+          fi
+
+          {
+            echo "release_channel=$RELEASE_CHANNEL"
+            echo "release_version=$RELEASE_VERSION"
+            echo "trigger_render_deploy=$TRIGGER_RENDER_DEPLOY"
+            echo "deployment_reason=$DEPLOYMENT_REASON"
+          } >> "$GITHUB_OUTPUT"
+
+  build-backend:
+    name: Build backend release candidate
+    needs: prepare-release
+    runs-on: ubuntu-latest
+    outputs:
+      jar_path: ${{ steps.stage.outputs.jar_path }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: ${{ runner.os }}-gradle
+
+      - name: Run backend tests
+        run: ./gradlew :apps:backend:test
+
+      - name: Build backend boot jar
+        run: ./gradlew :apps:backend:bootJar
+
+      - name: Stage backend jar artifact
+        id: stage
+        env:
+          RELEASE_VERSION: ${{ needs.prepare-release.outputs.release_version }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p dist
+          JAR_SOURCE="$(find apps/backend/build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*plain*.jar' | head -n 1)"
+
+          if [ -z "$JAR_SOURCE" ]; then
+            echo "No backend release jar found"
+            exit 1
+          fi
+
+          JAR_TARGET="dist/se2-backend-${RELEASE_VERSION}.jar"
+          cp "$JAR_SOURCE" "$JAR_TARGET"
+          echo "jar_path=$JAR_TARGET" >> "$GITHUB_OUTPUT"
+
+      - name: Upload backend release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-release-jar
+          retention-days: 14
+          path: ${{ steps.stage.outputs.jar_path }}
+
+  deploy-render:
+    name: Deploy backend to Render
+    needs: [prepare-release, build-backend]
+    if: needs.prepare-release.outputs.trigger_render_deploy == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify tagged backend release matches main before Render deploy
+        if: github.ref_type == 'tag'
+        run: |
+          set -euo pipefail
+
+          git fetch origin main --depth=1
+
+          TAG_SHA="$(git rev-parse HEAD)"
+          MAIN_SHA="$(git rev-parse origin/main)"
+
+          if [ "$TAG_SHA" != "$MAIN_SHA" ]; then
+            echo "Tagged backend release does not match origin/main."
+            echo "Render deploy hooks normally deploy the configured branch, so this tag could drift from the Render deployment target."
+            echo "Tag SHA:  $TAG_SHA"
+            echo "Main SHA: $MAIN_SHA"
+            exit 1
+          fi
+
+      - name: Trigger Render deploy
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "Missing required secret: RENDER_DEPLOY_HOOK_URL"
+            exit 1
+          fi
+
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL"
+
+      - name: Wait for deployed backend health
+        run: |
+          set -euo pipefail
+
+          for i in {1..36}; do
+            if curl -fsS "$HEALTH_URL"; then
+              echo "Backend is healthy"
+              exit 0
+            fi
+
+            echo "Waiting for Render deployment to become healthy..."
+            sleep 10
+          done
+
+          echo "Backend did not become healthy in time"
+          exit 1
+
+  release-summary:
+    name: Backend release summary
+    needs:
+      - prepare-release
+      - build-backend
+      - deploy-render
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write backend release summary
+        env:
+          RELEASE_CHANNEL: ${{ needs.prepare-release.outputs.release_channel }}
+          RELEASE_VERSION: ${{ needs.prepare-release.outputs.release_version }}
+          DEPLOYMENT_REASON: ${{ needs.prepare-release.outputs.deployment_reason }}
+          RENDER_RESULT: ${{ needs.deploy-render.result }}
+        run: |
+          {
+            echo "# Backend Release Summary"
+            echo
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| Release channel | \`$RELEASE_CHANNEL\` |"
+            echo "| Release version | \`$RELEASE_VERSION\` |"
+            echo "| Reason | $DEPLOYMENT_REASON |"
+            echo "| Backend artifact | \`backend-release-jar\` |"
+            echo "| Render deployment job | \`${RENDER_RESULT:-skipped}\` |"
+            echo "| Health endpoint | \`$HEALTH_URL\` |"
+            echo
+            echo "The backend release candidate jar is available as the \`backend-release-jar\` workflow artifact."
+          } >> "$GITHUB_STEP_SUMMARY"
