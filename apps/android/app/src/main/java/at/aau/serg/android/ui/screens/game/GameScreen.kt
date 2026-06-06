@@ -179,12 +179,14 @@ fun GameScreenContent(
                                 )
 
                                 if (isInvalid) {
-                                    Text(
-                                        text = rowViolations.first().message,
-                                        color = NotReadyRed,
-                                        fontSize = 12.sp,
-                                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-                                    )
+                                    rowViolations.forEach { violation ->
+                                        Text(
+                                            text = violation.message,
+                                            color = NotReadyRed,
+                                            fontSize = 12.sp,
+                                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                                        )
+                                    }
                                 }
                             }
                         }

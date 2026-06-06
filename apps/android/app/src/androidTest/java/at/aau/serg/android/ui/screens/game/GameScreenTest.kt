@@ -343,7 +343,7 @@ class GameScreenTest {
     // --- rule validation UI ---
 
     @Test
-    fun gameScreen_showsViolationMessage_whenRowHasViolations() {
+    fun gameScreen_showsViolationMessages_whenRowHasViolations() {
 
         stateFlow.value = stateFlow.value.copy(
             ruleValidation = RuleValidationUiState(
@@ -352,6 +352,11 @@ class GameScreenTest {
                         ApiRuleViolation(
                             code = "RUN_NOT_CONSECUTIVE",
                             message = "Tiles must be consecutive",
+                            boardSetId = "row1"
+                        ),
+                        ApiRuleViolation(
+                            code = "MIN_SET_SIZE",
+                            message = "Set must have at least 3 tiles",
                             boardSetId = "row1"
                         )
                     )
@@ -365,6 +370,10 @@ class GameScreenTest {
 
         composeRule
             .onNodeWithText("Tiles must be consecutive")
+            .assertExists()
+
+        composeRule
+            .onNodeWithText("Set must have at least 3 tiles")
             .assertExists()
     }
 
