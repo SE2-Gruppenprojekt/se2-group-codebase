@@ -369,6 +369,11 @@ class GameViewModel(
                     )
                 }
             } catch (e: Throwable) {
+                /*
+                Rule-validation failures are recoverable: the player stays on the board
+                and corrects the move. All other errors (network, server, etc.) are fatal
+                and surface through LoadState.Error as usual.
+                */
                 when (val appError = NetworkErrorMapper.map(e)) {
                     is AppError.Rest.RuleValidation -> {
                         val setViolations = appError.violations.filter { it.boardSetId != null }
