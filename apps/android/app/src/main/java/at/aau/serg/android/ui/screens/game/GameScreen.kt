@@ -28,6 +28,7 @@ import at.aau.serg.android.ui.screens.game.components.GlobalValidationBanner
 import at.aau.serg.android.ui.screens.game.components.PlayerChip
 import at.aau.serg.android.ui.screens.game.components.TileRow
 import at.aau.serg.android.ui.screens.game.components.TileRowPlaceholder
+import at.aau.serg.android.ui.theme.NotReadyRed
 import at.aau.serg.android.ui.theme.appColors
 
 @Composable
