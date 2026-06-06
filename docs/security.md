@@ -14,6 +14,9 @@ The concrete implementation is:
 - the scan is performed with **OWASP ZAP**
 - the result is visible in CI
 - the reports are stored as workflow artifacts for later review
+- the repository now uses both:
+    - a simple **baseline scan**
+    - a plan-driven **Automation Framework scan**
 
 This is intentionally simple. The goal is not to build a full security platform, but to show a correct, automated, repeatable API security check that runs as part of the project workflow.
 
@@ -21,18 +24,33 @@ This is intentionally simple. The goal is not to build a full security platform,
 
 ## What Is Implemented
 
-The project uses the workflow:
+The project currently uses these workflows:
 
 ```text
 .github/workflows/backend-security.yml
+.github/workflows/backend-security-af.yml
 ```
 
-That workflow:
+The baseline workflow:
 
 1. waits until the deployed backend is reachable
 2. runs an **OWASP ZAP baseline scan** against the deployed API
 3. publishes the scan output into the GitHub Actions run summary
 4. uploads the full reports as CI artifacts
+
+The Automation Framework workflow:
+
+1. waits until the deployed backend is reachable
+2. runs a committed **Automation Framework plan** from the repository
+3. generates dedicated markdown, HTML, and JSON AF reports
+4. publishes the AF summary into the GitHub Actions run summary
+5. uploads the AF reports as separate artifacts
+
+The current plan file lives at:
+
+```text
+.github/zap/backend-automation-plan.yaml
+```
 
 This is enough to demonstrate that backend API security testing is:
 
@@ -40,6 +58,15 @@ This is enough to demonstrate that backend API security testing is:
 - repeatable
 - visible in CI
 - integrated into the repository
+
+What is important to understand, however, is that the current scan coverage is
+still **narrower than the full backend API surface**. The workflows are
+implemented correctly, but they do not yet exercise the entire game and lobby
+API described in:
+
+```text
+docs/game-api.md
+```
 
 ---
 
@@ -71,6 +98,34 @@ Expected response:
 {
     "status": "UP"
 }
+```
+
+### What is actually being scanned right now
+
+In practice, the current ZAP setup mainly covers:
+
+- `/`
+- `/robots.txt`
+- `/sitemap.xml`
+- `/actuator/health`
+
+This is true for two different reasons:
+
+1. the baseline scan only discovers what it can reach automatically from the
+   deployed public surface
+2. the current Automation Framework plan explicitly requests only those public
+   GET endpoints
+
+That means the current scanning setup is best understood as:
+
+```text
+public endpoint and transport-layer security scanning
+```
+
+not yet as:
+
+```text
+full backend game API security scanning
 ```
 
 ---
@@ -112,7 +167,7 @@ OWASP ZAP is a widely used web and API security testing tool. For this project i
 - it can scan a deployed HTTP target automatically
 - it produces human-readable and machine-readable reports
 
-For this project, the **baseline scan** is the right choice.
+For this project, the **baseline scan** is the right starting choice.
 
 That matters because the baseline scan is:
 
@@ -122,11 +177,23 @@ That matters because the baseline scan is:
 
 This is a much better fit for a student project deployment than a full active attack scan against production.
 
+The **Automation Framework scan** builds on that baseline setup. It is useful because:
+
+- it keeps the scan design inside a committed YAML plan
+- it is easier to evolve deliberately over time
+- it can grow later into:
+    - richer passive scan configuration
+    - OpenAPI-driven scans
+    - authenticated scans
+    - stricter exit policies
+
+The initial AF rollout should still stay conservative and non-blocking.
+
 ---
 
 ## Security Scan Strategy
 
-The implemented flow is:
+The implemented baseline flow is:
 
 ```text
 GitHub Actions
@@ -142,6 +209,120 @@ This approach is deliberate:
 - the scan runs against the real deployed backend, not only a local mock
 - the scan result is directly visible in the CI run
 - the detailed reports remain downloadable afterwards
+
+The Automation Framework flow follows the same readiness and reporting pattern,
+but replaces the packaged baseline behavior with a committed scan plan:
+
+```text
+GitHub Actions
+    -> wake deployed backend
+    -> verify /actuator/health
+    -> run ZAP Automation Framework plan
+    -> publish CI summary
+    -> upload AF reports as artifacts
+```
+
+---
+
+## Baseline Scan vs Automation Framework Scan
+
+The repository now uses two ZAP-based scan layers for different purposes.
+
+### Baseline scan
+
+Use the baseline workflow when the goal is:
+
+- simple passive scanning
+- fast visibility in CI
+- stable recurring checks with minimal configuration
+
+### Automation Framework scan
+
+Use the AF workflow when the goal is:
+
+- versioned scan design in a repository plan file
+- more deliberate control over requests, reports, and exit behavior
+- a cleaner foundation for future security-scan expansion
+
+The AF workflow does **not** replace the baseline workflow. It extends the
+current security-scanning setup with a second, more structured layer.
+
+### Why the Automation Framework needs a plan file
+
+The difference in configuration model is important:
+
+- the **baseline scan** is a packaged scan with a small number of inputs such
+  as target URL and command options
+- the **Automation Framework scan** is a plan-driven scan where the repository
+  explicitly defines what ZAP should do
+
+For the baseline workflow, this is enough:
+
+```yaml
+with:
+    target: ${{ env.BACKEND_BASE_URL }}
+    cmd_options: "-a -I"
+```
+
+That works because the baseline action already knows its built-in scan flow.
+
+The Automation Framework is different. It needs a committed YAML plan because
+the plan is the scan definition itself. It describes things like:
+
+- which target context to use
+- which requests should be executed
+- which passive scan jobs should run
+- which reports should be generated
+- what exit behavior should be applied
+
+In other words:
+
+- baseline scan = run the standard packaged scan
+- Automation Framework scan = run the exact scan plan defined in the repository
+
+That is why the Automation Framework workflow uses:
+
+```text
+.github/zap/backend-automation-plan.yaml
+```
+
+The extra file is not accidental overhead. It is the mechanism that makes the
+Automation Framework useful for gradual future expansion, such as:
+
+- authenticated scan flows
+- OpenAPI-driven scans
+- stricter exit rules
+- alert filtering
+- controlled active scan jobs
+
+### Why the current scans do not yet cover the full game API
+
+The backend game API is much more stateful than the small public endpoint
+surface that ZAP is currently hitting.
+
+Many backend endpoints require:
+
+- `X-User-Id`
+- path variables such as `gameId` or `lobbyId`
+- request bodies
+- existing backend state, such as:
+  - a real lobby
+  - a started game
+  - a current draft
+  - a valid active player
+
+Because of that, generic passive crawling is not enough to reach or exercise
+those endpoints meaningfully.
+
+To scan the real backend API more deeply, a future scan layer needs one of
+these approaches:
+
+- explicit Automation Framework request definitions for selected API endpoints
+- an OpenAPI-driven scan
+- authenticated/stateful scan setup in a controlled environment
+
+Until that follow-up exists, the current baseline and AF scans should be read
+as valuable but partial coverage.
 
 ---
 
@@ -540,6 +721,26 @@ automated passive API security scanning in CI
 
 That is still a valid and solid answer to the requirement.
 
+An equally important limitation is scope:
+
+```text
+the current ZAP workflows do not yet cover the full stateful game API.
+```
+
+They are currently strongest at:
+
+- public endpoint checks
+- response-header checks
+- cache-policy checks
+- transport-level observations
+
+They are not yet a substitute for a future deeper scan against:
+
+- game command endpoints
+- draft mutation endpoints
+- end-turn submission flows
+- stateful or authenticated API interactions
+
 ---
 
 ## Relation To Backend Security In The Codebase
@@ -547,6 +748,72 @@ That is still a valid and solid answer to the requirement.
 The ZAP scan should be understood as one layer only.
 
 Actual backend security still depends on the application code rejecting invalid or unauthorized requests.
+
+### Current Request Identity Model
+
+Most backend game and lobby endpoints currently receive the acting user through:
+
+```kotlin
+@RequestHeader("X-User-Id") userId: String
+```
+
+That header is then used for application-level security and ownership checks in
+the service layer.
+
+Examples of the kinds of checks this enables:
+
+- only the active player may draw, reset a draft, or end a turn
+- only the owning player may mutate their current `TurnDraft`
+- only users who belong to a game may access or mutate that game
+- only users who belong to a lobby may interact with lobby-backed game state
+- only the lobby host may start the lobby
+- per-turn limits such as one draw per turn can be enforced against the acting
+  user identity
+
+Typical service-level checks look like this:
+
+```kotlin
+fun requirePlayerInGame(game: ConfirmedGame, userId: String) {
+    if (game.players.none { it.userId == userId }) {
+        throw SecurityException("Player is not part of this game")
+    }
+}
+
+fun requireCurrentPlayer(game: ConfirmedGame, userId: String) {
+    if (game.currentPlayerUserId != userId) {
+        throw SecurityException("It is not this player's turn")
+    }
+}
+
+fun requireDraftOwner(draft: TurnDraft, userId: String) {
+    if (draft.playerUserId != userId) {
+        throw SecurityException("Draft does not belong to this player")
+    }
+}
+```
+
+This is a valid lightweight authorization model for the current backend, but it
+has an important limit:
+
+```text
+X-User-Id is only trustworthy if the caller environment is trusted.
+```
+
+In other words, this is not full authentication by itself. If an arbitrary
+external client can choose any header value freely, the client can impersonate
+another user unless an upstream trusted system constrains that header.
+
+So the current model should be understood as:
+
+- suitable for controlled development, demos, tests, and trusted integration
+  scenarios
+- useful for enforcing game membership, turn ownership, and host-only actions
+- not equivalent to real end-user authentication
+
+That distinction matters when discussing backend security. The CI security scan
+checks the deployed API surface, but the correctness of user-level access
+control still depends on the service layer enforcing these `X-User-Id`-based
+authorization checks consistently.
 
 Examples:
 

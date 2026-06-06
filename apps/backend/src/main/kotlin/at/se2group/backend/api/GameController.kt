@@ -58,4 +58,12 @@ class GameController(
     ): GameResponse {
         return endTurnService.endTurn(gameId, userId, request).toResponse()
     }
+
+    @PostMapping("/{gameId}/reset-draft")
+    fun resetDraft(
+        @PathVariable gameId: String,
+        @RequestHeader("X-User-Id") userId: String
+    ): TurnDraftResponse {
+        return turnDraftService.resetDraft(gameId,userId).toResponse()
+    }
 }
