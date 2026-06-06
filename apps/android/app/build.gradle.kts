@@ -34,7 +34,7 @@ android {
     signingConfigs {
         create("ciRelease") {
             env("ANDROID_KEYSTORE_PATH")?.let { path ->
-                storeFile = file(path)
+                storeFile = rootProject.file(path)
             }
             env("ANDROID_KEYSTORE_PASSWORD")?.let { password ->
                 storePassword = password
