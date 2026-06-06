@@ -155,6 +155,29 @@ jobs:
     if: needs.prepare-release.outputs.trigger_render_deploy == 'true'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify tagged backend release matches main before Render deploy
+        if: github.ref_type == 'tag'
+        run: |
+          set -euo pipefail
+
+          git fetch origin main --depth=1
+
+          TAG_SHA="$(git rev-parse HEAD)"
+          MAIN_SHA="$(git rev-parse origin/main)"
+
+          if [ "$TAG_SHA" != "$MAIN_SHA" ]; then
+            echo "Tagged backend release does not match origin/main."
+            echo "Render deploy hooks normally deploy the configured branch, so this tag could drift from the Render deployment target."
+            echo "Tag SHA:  $TAG_SHA"
+            echo "Main SHA: $MAIN_SHA"
+            exit 1
+          fi
+
       - name: Trigger Render deploy
         env:
           RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
