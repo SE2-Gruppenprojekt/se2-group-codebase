@@ -7,6 +7,7 @@ on:
     paths:
       - "apps/backend/**"
       - "docs/security.md"
+      - ".github/scripts/**"
       - ".github/workflows/backend-security-af.yml"
       - ".github/zap/backend-automation-plan.yaml"
   # Keep the default branch covered after merges as well.
@@ -15,6 +16,7 @@ on:
     paths:
       - "apps/backend/**"
       - "docs/security.md"
+      - ".github/scripts/**"
       - ".github/workflows/backend-security-af.yml"
       - ".github/zap/backend-automation-plan.yaml"
   # Separate scheduled scan from the Monday baseline run to keep the jobs and
