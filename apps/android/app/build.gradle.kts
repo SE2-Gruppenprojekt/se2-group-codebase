@@ -1,5 +1,3 @@
-import org.gradle.internal.declarativedsl.language.FunctionArgument
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -14,6 +12,10 @@ jacoco {
     toolVersion = "0.8.11"
 }
 
+fun env(name: String): String? = System.getenv(name)
+
+val ciVersionCode = env("ANDROID_VERSION_CODE")?.toIntOrNull()
+val ciVersionName = env("ANDROID_VERSION_NAME")
 
 android {
     namespace = "at.aau.serg.android"
@@ -23,10 +25,27 @@ android {
         applicationId = "at.aau.serg.android"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = ciVersionCode ?: 1
+        versionName = ciVersionName ?: "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("ciRelease") {
+            env("ANDROID_KEYSTORE_PATH")?.let { path ->
+                storeFile = file(path)
+            }
+            env("ANDROID_KEYSTORE_PASSWORD")?.let { password ->
+                storePassword = password
+            }
+            env("ANDROID_KEY_ALIAS")?.let { alias ->
+                keyAlias = alias
+            }
+            env("ANDROID_KEY_PASSWORD")?.let { password ->
+                keyPassword = password
+            }
+        }
     }
 
     buildTypes {
@@ -40,6 +59,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            if (env("ANDROID_KEYSTORE_PATH") != null) {
+                signingConfig = signingConfigs.getByName("ciRelease")
+            }
         }
     }
     testOptions {
