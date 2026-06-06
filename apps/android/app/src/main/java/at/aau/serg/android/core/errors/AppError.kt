@@ -1,5 +1,11 @@
 package at.aau.serg.android.core.errors
 
+data class ApiRuleViolation(
+    val code: String,
+    val message: String,
+    val boardSetId: String? = null
+)
+
 sealed class AppError {
 
     // REST / HTTP
@@ -11,6 +17,10 @@ sealed class AppError {
         data object NotFound : Rest()
         data object Conflict : Rest()
         data class Api(val message: String) : Rest()
+        data class RuleValidation(
+            val message: String,
+            val violations: List<ApiRuleViolation>
+        ) : Rest()
     }
 
     // WebSocket / STOMP

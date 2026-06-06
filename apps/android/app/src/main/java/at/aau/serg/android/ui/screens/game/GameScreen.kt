@@ -23,9 +23,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import at.aau.serg.android.ui.components.BackButton
+import at.aau.serg.android.ui.screens.game.components.BoardSetValidationMessage
+import at.aau.serg.android.ui.screens.game.components.GlobalValidationBanner
 import at.aau.serg.android.ui.screens.game.components.PlayerChip
 import at.aau.serg.android.ui.screens.game.components.TileRow
 import at.aau.serg.android.ui.screens.game.components.TileRowPlaceholder
+import at.aau.serg.android.ui.theme.NotReadyRed
 import at.aau.serg.android.ui.theme.appColors
 
 @Composable
@@ -113,6 +116,14 @@ fun GameScreenContent(
                 }
             }
 
+            // GLOBAL VALIDATION BANNER
+            if (uiState.ruleValidation.globalViolations.isNotEmpty()) {
+                GlobalValidationBanner(
+                    summaryMessage = uiState.ruleValidation.summaryMessage,
+                    violations = uiState.ruleValidation.globalViolations
+                )
+            }
+
             // CONTENT
             Box(
                 Modifier
@@ -134,15 +145,26 @@ fun GameScreenContent(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         items(uiState.boardSets) { boardSet ->
-                            TileRow(
-                                onEvent,
-                                tiles = boardSet.tiles,
-                                tileSize = 60,
-                                borderColor = c.game.boardBorder,
-                                selectedTiles = uiState.selectedTiles,
-                                selectedRow = uiState.activeSelectionRow,
-                                rowId = boardSet.boardSetId,
-                            )
+                            val rowViolations = uiState.ruleValidation
+                                .violationsByBoardSetId[boardSet.boardSetId]
+                                .orEmpty()
+                            val isInvalid = rowViolations.isNotEmpty()
+
+                            Column {
+                                TileRow(
+                                    onEvent,
+                                    tiles = boardSet.tiles,
+                                    tileSize = 60,
+                                    borderColor = if (isInvalid) NotReadyRed else c.game.boardBorder,
+                                    selectedTiles = uiState.selectedTiles,
+                                    selectedRow = uiState.activeSelectionRow,
+                                    rowId = boardSet.boardSetId,
+                                )
+
+                                if (isInvalid) {
+                                    BoardSetValidationMessage(violations = rowViolations)
+                                }
+                            }
                         }
 
                         if (uiState.selectedTiles.isNotEmpty()) {

@@ -229,7 +229,8 @@ class GameViewModel(
                 rackTiles = newRack,
                 boardSets = updatedBoardSets,
                 selectedTiles = emptySet(),
-                activeSelectionRow = null
+                activeSelectionRow = null,
+                ruleValidation = RuleValidationUiState()
             )
         }
         sendTurnDraft()
@@ -267,7 +268,8 @@ class GameViewModel(
                 rackTiles = finalRack,
                 boardSets = updatedBoardSets,
                 selectedTiles = emptySet(),
-                activeSelectionRow = null
+                activeSelectionRow = null,
+                ruleValidation = RuleValidationUiState()
             )
         }
         sendTurnDraft()
@@ -289,11 +291,11 @@ class GameViewModel(
             list.add(to, item)
 
             if (boardIndex == null) {
-                state.copy(rackTiles = list)
+                state.copy(rackTiles = list, ruleValidation = RuleValidationUiState())
             } else {
                 val updatedSets = state.boardSets.toMutableList()
                 updatedSets[boardIndex] = updatedSets[boardIndex].copy(tiles = list)
-                state.copy(boardSets = updatedSets)
+                state.copy(boardSets = updatedSets, ruleValidation = RuleValidationUiState())
             }
         }
         sendTurnDraft()
@@ -306,7 +308,8 @@ class GameViewModel(
         _uiState.update { state ->
             state.copy(
                 selectedTiles = emptySet(),
-                activeSelectionRow = null
+                activeSelectionRow = null,
+                ruleValidation = RuleValidationUiState()
             )
         }
         sendTurnDraft()
@@ -361,14 +364,36 @@ class GameViewModel(
                     it.copy(
                         selectedTiles = emptySet(),
                         activeSelectionRow = null,
-                        loadState = LoadState.Success
+                        loadState = LoadState.Success,
+                        ruleValidation = RuleValidationUiState()
                     )
                 }
             } catch (e: Throwable) {
-                val appError = NetworkErrorMapper.map(e)
-
-                _uiState.update {
-                    it.copy(loadState = LoadState.Error(appError))
+                /*
+                Rule-validation failures are recoverable: the player stays on the board
+                and corrects the move. All other errors (network, server, etc.) are fatal
+                and surface through LoadState.Error as usual.
+                */
+                when (val appError = NetworkErrorMapper.map(e)) {
+                    is AppError.Rest.RuleValidation -> {
+                        val setViolations = appError.violations.filter { it.boardSetId != null }
+                        val globalViolations = appError.violations.filter { it.boardSetId == null }
+                        _uiState.update {
+                            it.copy(
+                                loadState = LoadState.Success,
+                                ruleValidation = RuleValidationUiState(
+                                    violationsByBoardSetId = setViolations.groupBy { v -> v.boardSetId!! },
+                                    globalViolations = globalViolations,
+                                    summaryMessage = appError.message
+                                )
+                            )
+                        }
+                    }
+                    else -> {
+                        _uiState.update {
+                            it.copy(loadState = LoadState.Error(appError))
+                        }
+                    }
                 }
             }
         }

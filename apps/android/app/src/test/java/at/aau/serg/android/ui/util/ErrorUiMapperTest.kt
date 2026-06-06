@@ -1,5 +1,6 @@
 package at.aau.serg.android.ui.util
 
+import at.aau.serg.android.core.errors.ApiRuleViolation
 import at.aau.serg.android.core.errors.AppError
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -53,6 +54,16 @@ class ErrorUiMapperTest {
             "custom failure",
             ErrorUiMapper.toMessage(error)
         )
+    }
+
+    @Test
+    fun maps_rule_validation_error_with_message() {
+        val violation = ApiRuleViolation(code = "RUN_NOT_CONSECUTIVE", message = "Tiles must be consecutive", boardSetId = "set-1")
+        val error = AppError.Rest.RuleValidation(
+            message = "Draft is invalid",
+            violations = listOf(violation)
+        )
+        assertEquals("Draft is invalid", ErrorUiMapper.toMessage(error))
     }
 
     @Test

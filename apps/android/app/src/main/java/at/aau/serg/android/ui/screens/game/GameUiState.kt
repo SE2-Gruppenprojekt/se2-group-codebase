@@ -1,11 +1,17 @@
 package at.aau.serg.android.ui.screens.game
 
+import at.aau.serg.android.core.errors.ApiRuleViolation
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.state.LoadState
 import shared.models.game.domain.BoardSet
 import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.Tile
 
+data class RuleValidationUiState(
+    val violationsByBoardSetId: Map<String, List<ApiRuleViolation>> = emptyMap(),
+    val globalViolations: List<ApiRuleViolation> = emptyList(),
+    val summaryMessage: String? = null
+)
 
 data class GameUiState(
     val loadState: LoadState = LoadState.Success,
@@ -16,5 +22,6 @@ data class GameUiState(
     val activeSelectionRow: String? = null,
     val gameState: ConfirmedGame? = null,
     val winnerUserId: String? = null,
-    val isActivePlayer: Boolean = false
+    val isActivePlayer: Boolean = false,
+    val ruleValidation: RuleValidationUiState = RuleValidationUiState()
 )

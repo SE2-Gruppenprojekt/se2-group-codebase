@@ -105,4 +105,50 @@ class NetworkErrorMapperTest {
         assertTrue(result is AppError.UnknownNetwork)
         assertEquals("Unexpected Network Error", (result as AppError.UnknownNetwork).message)
     }
+
+    // --- RuleValidation ---
+
+    @Test
+    fun map_returnsRuleValidation_for409_withInvalidTurnSubmission() {
+        val json = """
+            {
+              "errorCode": "INVALID_TURN_SUBMISSION",
+              "errorMessage": "Submitted draft is invalid",
+              "violations": [
+                { "code": "RUN_NOT_CONSECUTIVE", "message": "Tiles must be consecutive", "boardSetId": "set-1" },
+                { "code": "INITIAL_MELD_TOO_SMALL", "message": "Initial meld too small", "boardSetId": null }
+              ]
+            }
+        """.trimIndent()
+
+        val result = NetworkErrorMapper.map(httpException(409, json))
+
+        assertTrue(result is AppError.Rest.RuleValidation)
+        val rv = result as AppError.Rest.RuleValidation
+        assertEquals("Submitted draft is invalid", rv.message)
+        assertEquals(2, rv.violations.size)
+        assertEquals("set-1", rv.violations[0].boardSetId)
+        assertEquals(null, rv.violations[1].boardSetId)
+    }
+
+    @Test
+    fun map_returnsConflict_for409_withoutInvalidTurnSubmissionCode() {
+        val json = """{"errorCode": "SOME_OTHER_CODE", "errorMessage": ""}"""
+        val result = NetworkErrorMapper.map(httpException(409, json))
+        assertEquals(AppError.Rest.Conflict, result)
+    }
+
+    @Test
+    fun map_returnsConflict_for409_withMalformedJson() {
+        val result = NetworkErrorMapper.map(httpException(409, "not-json{{{"))
+        assertEquals(AppError.Rest.Conflict, result)
+    }
+
+    @Test
+    fun map_returnsRuleValidation_withFallbackMessage_whenErrorMessageMissing() {
+        val json = """{"errorCode": "INVALID_TURN_SUBMISSION", "violations": []}"""
+        val result = NetworkErrorMapper.map(httpException(409, json))
+        assertTrue(result is AppError.Rest.RuleValidation)
+        assertEquals("Submitted draft is invalid", (result as AppError.Rest.RuleValidation).message)
+    }
 }

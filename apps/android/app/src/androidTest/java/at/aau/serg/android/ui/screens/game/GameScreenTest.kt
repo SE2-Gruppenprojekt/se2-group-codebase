@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import at.aau.serg.android.core.errors.ApiRuleViolation
 import at.aau.serg.android.ui.theme.ThemeState
 import io.mockk.every
 import io.mockk.mockk
@@ -337,6 +338,95 @@ class GameScreenTest {
 
         composeRule.onNodeWithText("Charlie").assertExists()
         composeRule.onNodeWithText("Dana").assertExists()
+    }
+
+    // --- rule validation UI ---
+
+    @Test
+    fun gameScreen_showsViolationMessages_whenRowHasViolations() {
+
+        stateFlow.value = stateFlow.value.copy(
+            ruleValidation = RuleValidationUiState(
+                violationsByBoardSetId = mapOf(
+                    "row1" to listOf(
+                        ApiRuleViolation(
+                            code = "RUN_NOT_CONSECUTIVE",
+                            message = "Tiles must be consecutive",
+                            boardSetId = "row1"
+                        ),
+                        ApiRuleViolation(
+                            code = "MIN_SET_SIZE",
+                            message = "Set must have at least 3 tiles",
+                            boardSetId = "row1"
+                        )
+                    )
+                )
+            )
+        )
+
+        composeRule.setContent {
+            GameScreen(viewModel = viewModel)
+        }
+
+        composeRule
+            .onNodeWithText("Tiles must be consecutive")
+            .assertExists()
+
+        composeRule
+            .onNodeWithText("Set must have at least 3 tiles")
+            .assertExists()
+    }
+
+    @Test
+    fun gameScreen_showsGlobalValidationBanner_whenGlobalViolationsExist() {
+
+        stateFlow.value = stateFlow.value.copy(
+            ruleValidation = RuleValidationUiState(
+                globalViolations = listOf(
+                    ApiRuleViolation(
+                        code = "INITIAL_MELD_TOO_SMALL",
+                        message = "Initial meld must score at least 30 points",
+                        boardSetId = null
+                    )
+                ),
+                summaryMessage = "Submitted draft is invalid"
+            )
+        )
+
+        composeRule.setContent {
+            GameScreen(viewModel = viewModel)
+        }
+
+        composeRule
+            .onNodeWithTag(GameTestTags.GLOBAL_VALIDATION_BANNER)
+            .assertExists()
+
+        composeRule
+            .onNodeWithText("Submitted draft is invalid")
+            .assertExists()
+
+        composeRule
+            .onNodeWithText("• Initial meld must score at least 30 points")
+            .assertExists()
+    }
+
+    @Test
+    fun gameScreen_noGlobalValidationBanner_whenNoViolations() {
+
+        stateFlow.value = stateFlow.value.copy(
+            ruleValidation = RuleValidationUiState()
+        )
+
+        composeRule.setContent {
+            GameScreen(viewModel = viewModel)
+        }
+
+        assert(
+            composeRule
+                .onAllNodes(hasTestTag(GameTestTags.GLOBAL_VALIDATION_BANNER))
+                .fetchSemanticsNodes()
+                .isEmpty()
+        )
     }
 
     // --- ViewModel fallback when callbacks are null ---
