@@ -40,6 +40,15 @@ class OpenApiDocsTest {
                 jsonPath("$.openapi") { exists() }
                 jsonPath("$.info") { exists() }
                 jsonPath("$.paths") { exists() }
+                jsonPath("$['paths']['/api/games/{gameId}']") { exists() }
+                jsonPath("$['paths']['/api/games/{gameId}/draft']") { exists() }
+                jsonPath("$['paths']['/api/games/{gameId}/draw']") { exists() }
+                jsonPath("$['paths']['/api/games/{gameId}/end-turn']") { exists() }
+                jsonPath("$['paths']['/api/lobbies']") { exists() }
+                jsonPath("$['paths']['/api/lobbies/{lobbyId}']") { exists() }
+                jsonPath("$['paths']['/api/lobbies/{lobbyId}/settings']") { exists() }
+                jsonPath("$['paths']['/api/lobbies/{lobbyId}/join']") { exists() }
+                jsonPath("$['paths']['/internal/security/scan-fixture']") { doesNotExist() }
                 header { string("Content-Type", org.hamcrest.Matchers.containsString("application/json")) }
                 header { string("X-Content-Type-Options", "nosniff") }
                 header { string("Cross-Origin-Resource-Policy", "same-origin") }

@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import java.time.Instant
+import shared.models.game.domain.BoardSetType
+import shared.models.game.domain.TileColor
 import java.util.Optional
 import shared.models.game.validation.invalid
 import shared.models.game.validation.valid
