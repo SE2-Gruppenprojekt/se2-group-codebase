@@ -75,7 +75,7 @@ jobs:
         responseCode: 200
 
   - type: requestor
-    name: Exercise create lobby endpoint without side effects
+    name: "Negative path: invalid create lobby request"
     requests:
       - url: https://se2-group-codebase.onrender.com/api/lobbies
         method: POST
@@ -84,9 +84,12 @@ jobs:
           - "Content-Type:application/json"
         data: |
           {
-            "displayName": "ZAP Scan"
+            "displayName": "",
+            "maxPlayers": 4,
+            "isPrivate": false,
+            "allowGuests": true
           }
-        responseCode: 200
+        responseCode: 400
 
   - type: requestor
     name: Exercise join lobby endpoint with missing fixture id
