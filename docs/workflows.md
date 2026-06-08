@@ -7,12 +7,14 @@
 
 [![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=se2-gruppenprojekt_se2-group-codebase_backend)
 
-This document explains the three GitHub Actions workflows used in the
+This document explains the main GitHub Actions workflows used in the
 repository:
 
 - backend
 - android frontend
 - shared
+- android release management
+- backend release management
 
 It first documents what they have in common, then describes each workflow on
 its own with its current implementation details.
@@ -152,7 +154,7 @@ not a good required-status surface.
 
 ## 3. Shared Differences
 
-Although the three workflows share the same overall shape, they differ in the
+Although the three validation workflows share the same overall shape, they differ in the
 build and Sonar execution details:
 
 - backend uses Gradle’s Sonar task directly
@@ -258,6 +260,146 @@ Source file:
 Workflow name:
 
 - `Frontend CI`
+
+This workflow remains the normal Android validation workflow:
+
+- unit tests
+- coverage generation
+- Sonar analysis
+
+It does **not** handle release distribution.
+
+---
+
+## 6. Android Release Workflow
+
+Source file:
+
+- `.github/workflows/android-release.yml`
+
+Workflow name:
+
+- `Android Release`
+
+This workflow is separate from normal Android CI because it deals with:
+
+- release signing
+- downloadable APK artifacts
+- GitHub release assets
+- Itch.io publication
+
+### 6.1 Trigger model
+
+The workflow supports:
+
+- manual runs through `workflow_dispatch`
+- pushes to `main`
+- pushes of tags matching `v*`
+
+The trigger model is intentionally broader than the validation workflow because
+release management is operational rather than purely test-oriented.
+
+### 6.2 Responsibilities
+
+The workflow:
+
+1. derives release metadata such as:
+   - release channel
+   - version name
+   - version code
+   - APK file name
+2. decodes the Android keystore from repository secrets
+3. builds a signed `assembleRelease` APK
+4. uploads the APK as the `android-release-apk` artifact
+5. attaches the APK to GitHub releases for tagged runs
+6. optionally pushes the APK to Itch.io using `butler`
+7. writes a workflow summary with the release metadata
+
+### 6.3 Secrets and variables
+
+The workflow depends on repository secrets for:
+
+- Android signing
+- Itch publishing
+
+and repository variables for:
+
+- `ITCH_IO_USER`
+- `ITCH_IO_GAME`
+
+The detailed operator instructions live in:
+
+- [release-management.md](release-management.md)
+
+---
+
+## 7. Backend Release Workflow
+
+Source file:
+
+- `.github/workflows/backend-release.yml`
+
+Workflow name:
+
+- `Backend Release`
+
+This workflow is the backend deployment counterpart to the Android release
+workflow.
+
+It is intentionally separate from:
+
+- `backend.yml`, which is validation CI
+- `android-release.yml`, which is APK distribution
+
+### 7.1 Trigger model
+
+The workflow supports:
+
+- manual runs through `workflow_dispatch`
+- pushes to `main`
+- pushes of tags matching `v*`
+
+That means the repository can support both:
+
+- continuous backend deployment on mainline changes
+- coordinated official product releases on tags
+
+### 7.2 Responsibilities
+
+The workflow:
+
+1. derives backend release metadata such as:
+   - release channel
+   - release version
+   - deployment reason
+2. runs backend tests
+3. builds the backend `bootJar`
+4. uploads the resulting jar as the `backend-release-jar` artifact
+5. triggers the configured Render deploy hook
+6. waits for the deployed backend to become healthy via `/actuator/health`
+7. writes a workflow summary
+
+### 7.3 Required secret
+
+The workflow depends on:
+
+```text
+RENDER_DEPLOY_HOOK_URL
+```
+
+### 7.4 Relationship to monorepo release management
+
+The backend release workflow should usually be read together with:
+
+- [android-release.yml](/Users/julianblaschke/Desktop/se2-group-codebase/.github/workflows/android-release.yml)
+
+Those two workflows form the repository’s release-management layer:
+
+- backend workflow handles deployment
+- Android workflow handles APK distribution
+
+They stay operationally separate, but can be coordinated by the same
+product/release tag.
 
 ### 5.1 Change scope
 

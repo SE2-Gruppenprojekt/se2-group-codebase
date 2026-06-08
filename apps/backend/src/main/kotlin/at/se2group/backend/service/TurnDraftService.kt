@@ -10,6 +10,7 @@ import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.persistence.TurnDraftRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import shared.models.game.domain.ConfirmedGame
 
 /**
  * Service responsible for loading and updating persisted live turn draft state.
@@ -95,7 +96,7 @@ class TurnDraftService(
     ): TurnDraft {
         val game = gameRepository.findById(gameId)
             .orElseThrow { NoSuchElementException(GAME_NOT_FOUND) }
-                .toGameDomain()
+            .toGameDomain()
 
         val draftEntity = turnDraftRepository.findByGameId(gameId)
             ?: throw NoSuchElementException(DRAFT_NOT_FOUND)
@@ -126,4 +127,56 @@ class TurnDraftService(
 
         return updatedDraft
     }
+
+    @Transactional
+    fun resetDraft(
+        gameId: String,
+        userId: String
+    ): TurnDraft {
+        val game = gameRepository.findById(gameId)
+            .orElseThrow { NoSuchElementException(GAME_NOT_FOUND) }
+            .toGameDomain()
+
+        val draftEntity = turnDraftRepository.findByGameId(gameId)
+            ?: throw NoSuchElementException(DRAFT_NOT_FOUND)
+
+        check(game.currentPlayerUserId == userId) { NOT_CURRENT_PLAYER }
+        check(draftEntity.playerUserId == userId) { NOT_DRAFT_OWNER }
+
+        val resetDraft = createDraftFromConfirmedGame(
+            game = game,
+            playerUserId = userId,
+            version = (draftEntity.version + 1)
+        )
+
+        val savedDraft = turnDraftRepository.save(resetDraft.toEntity(draftEntity)).toDomain()
+
+        afterCommitExecutor.execute {
+            gameBroadcastService.broadcastDraftUpdated(savedDraft)
+
+        }
+
+       return savedDraft
+
+    }
+
+    private fun createDraftFromConfirmedGame(
+        game: ConfirmedGame,
+        playerUserId: String,
+        version: Long
+    ): TurnDraft {
+        val activePlayer = game.players.firstOrNull { it.userId == playerUserId }
+            ?: throw IllegalArgumentException("Player $playerUserId is not part of the game ${game.gameId}")
+
+        return TurnDraft(
+            gameId = game.gameId,
+            playerUserId = playerUserId,
+            boardSets = game.boardSets,
+            rackTiles = activePlayer.rackTiles,
+            drawnTile = null,
+            version = version
+        )
+    }
+
 }
+

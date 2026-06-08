@@ -12,6 +12,10 @@ import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.just
 import io.mockk.mockk
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.ResponseBody.Companion.toResponseBody
+import retrofit2.HttpException
+import retrofit2.Response
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
@@ -410,6 +414,40 @@ class GameViewModelTest {
         ))
         viewmodel.endTurn()
         advanceUntilIdle()
+    }
+
+    @Test
+    fun endTurn_setsRuleValidation_onInvalidTurnSubmission() = runTest {
+        setTestGameState()
+
+        val json = """{"errorCode":"INVALID_TURN_SUBMISSION","errorMessage":"Draft invalid","violations":[{"code":"RUN_NOT_CONSECUTIVE","message":"Not consecutive","boardSetId":"b1"},{"code":"INITIAL_MELD_TOO_SMALL","message":"Meld too small","boardSetId":null}]}"""
+        val response = Response.error<Any>(409, json.toResponseBody("application/json".toMediaType()))
+        coEvery { service.endTurn(any(), any(), any()) } throws HttpException(response)
+
+        viewmodel.onUIEvent(GameUIEvent.EndTurn)
+        advanceUntilIdle()
+
+        val state = viewmodel.uiState.value
+        assertTrue(state.loadState is LoadState.Success)
+        assertEquals("Draft invalid", state.ruleValidation.summaryMessage)
+        assertTrue(state.ruleValidation.violationsByBoardSetId.containsKey("b1"))
+        assertEquals(1, state.ruleValidation.globalViolations.size)
+    }
+
+    @Test
+    fun endTurn_clearsRuleValidation_onSuccess() = runTest {
+        setTestGameState()
+        viewmodel.setUiStateForTest(
+            viewmodel.uiState.value.copy(
+                ruleValidation = RuleValidationUiState(summaryMessage = "old error")
+            )
+        )
+        coEvery { service.endTurn(any(), any(), any()) } just Runs
+
+        viewmodel.onUIEvent(GameUIEvent.EndTurn)
+        advanceUntilIdle()
+
+        assertEquals(RuleValidationUiState(), viewmodel.uiState.value.ruleValidation)
     }
 
     @Test

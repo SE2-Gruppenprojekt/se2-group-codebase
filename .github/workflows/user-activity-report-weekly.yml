@@ -1,0 +1,95 @@
+name: Organization User Activity Report (Weekly)
+
+on:
+  workflow_dispatch:
+    inputs:
+      report_since:
+        description: "Optional exact start date in YYYY-MM-DD"
+        required: false
+      report_until:
+        description: "Optional exact end date in YYYY-MM-DD"
+        required: false
+  schedule:
+    - cron: "0 7 * * 4"
+
+concurrency:
+  group: org-activity-report-weekly-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  TARGET_ORGANIZATION: ${{ github.repository_owner }}
+
+jobs:
+  generate-activity-report:
+    name: Generate weekly organization activity report
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Resolve weekly reporting window
+        env:
+          INPUT_REPORT_SINCE: ${{ inputs.report_since }}
+          INPUT_REPORT_UNTIL: ${{ inputs.report_until }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "${INPUT_REPORT_SINCE:-}" ] && [ -n "${INPUT_REPORT_UNTIL:-}" ]; then
+            REPORT_SINCE="${INPUT_REPORT_SINCE}T00:00:00Z"
+            REPORT_UNTIL="${INPUT_REPORT_UNTIL}T00:00:00Z"
+          else
+            REPORT_UNTIL="$(date -u +%Y-%m-%d)T00:00:00Z"
+            REPORT_SINCE="$(date -u -d '7 days ago' +%Y-%m-%d)T00:00:00Z"
+          fi
+
+          {
+            echo "REPORT_SINCE=$REPORT_SINCE"
+            echo "REPORT_UNTIL=$REPORT_UNTIL"
+          } >> "$GITHUB_ENV"
+
+      - name: Generate weekly organization activity report
+        env:
+          GH_TOKEN: ${{ secrets.ORG_ACTIVITY_REPORT_TOKEN }}
+        run: python3 .github/scripts/generate_org_user_activity.py
+
+      - name: Publish report summary
+        if: always()
+        run: |
+          {
+            echo "## Weekly Organization User Activity Report"
+            echo
+            echo "- Organization: $TARGET_ORGANIZATION"
+            echo "- Date span: ${REPORT_SINCE:0:10} to ${REPORT_UNTIL:0:10}"
+            echo "- Data source: direct GitHub organization and repository API queries"
+            echo
+            if [ -f reports/organization_user_activity.csv ]; then
+              echo "CSV report generated successfully."
+              echo
+              echo '```text'
+              head -n 20 reports/organization_user_activity.csv
+              echo '```'
+            else
+              echo "No CSV report was generated."
+            fi
+            echo
+            if [ -f reports/organization_user_activity.json ]; then
+              echo "JSON report generated successfully."
+            else
+              echo "No JSON report was generated."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload activity reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: organization-user-activity-report-weekly
+          retention-days: 14
+          path: |
+            reports/organization_user_activity.csv
+            reports/organization_user_activity.json

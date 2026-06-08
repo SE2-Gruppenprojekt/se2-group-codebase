@@ -1,0 +1,156 @@
+name: Backend Security Scan (Automation Framework)
+
+on:
+  # Manual trigger is useful while the AF plan is still being tuned.
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "apps/backend/**"
+      - "docs/security.md"
+      - ".github/scripts/**"
+      - ".github/workflows/backend-security-af.yml"
+      - ".github/zap/backend-automation-plan.yaml"
+  # Keep the default branch covered after merges as well.
+  push:
+    branches: [main]
+    paths:
+      - "apps/backend/**"
+      - "docs/security.md"
+      - ".github/scripts/**"
+      - ".github/workflows/backend-security-af.yml"
+      - ".github/zap/backend-automation-plan.yaml"
+  # Separate scheduled scan from the Monday baseline run to keep the jobs and
+  # artifact streams easier to inspect.
+  schedule:
+    - cron: "0 8 * * 3"
+
+concurrency:
+  group: backend-security-af-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  BACKEND_BASE_URL: https://se2-group-codebase.onrender.com
+  HEALTH_URL: https://se2-group-codebase.onrender.com/actuator/health
+
+jobs:
+  zap-automation-framework-scan:
+    name: OWASP ZAP Automation Framework Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Wait for deployed backend
+        run: |
+          for i in {1..30}; do
+            if curl -fsS "$HEALTH_URL"; then
+              echo "Backend is reachable"
+              exit 0
+            fi
+
+            echo "Waiting for backend to wake up..."
+            sleep 10
+          done
+
+          echo "Backend was not reachable"
+          exit 1
+
+      - name: Prepare dynamic scan fixture state
+        env:
+          ZAP_SCAN_FIXTURE_SECRET: ${{ secrets.ZAP_SCAN_FIXTURE_SECRET }}
+        run: |
+          set -euo pipefail
+
+          FIXTURE_JSON="$(
+            curl -fsS \
+              -X POST "$BACKEND_BASE_URL/internal/security/scan-fixture" \
+              -H "X-Scan-Secret: $ZAP_SCAN_FIXTURE_SECRET"
+          )"
+
+          SCAN_LOBBY_ID="$(echo "$FIXTURE_JSON" | jq -r '.lobbyId')"
+          SCAN_GAME_ID="$(echo "$FIXTURE_JSON" | jq -r '.gameId')"
+          SCAN_HOST_USER_ID="$(echo "$FIXTURE_JSON" | jq -r '.hostUserId')"
+          SCAN_GUEST_USER_ID="$(echo "$FIXTURE_JSON" | jq -r '.guestUserId')"
+
+          for value in "$SCAN_LOBBY_ID" "$SCAN_GAME_ID" "$SCAN_HOST_USER_ID" "$SCAN_GUEST_USER_ID"; do
+            if [ -z "$value" ] || [ "$value" = "null" ]; then
+              echo "Scan fixture endpoint returned incomplete data"
+              exit 1
+            fi
+          done
+
+          {
+            echo "SCAN_LOBBY_ID=$SCAN_LOBBY_ID"
+            echo "SCAN_GAME_ID=$SCAN_GAME_ID"
+            echo "SCAN_HOST_USER_ID=$SCAN_HOST_USER_ID"
+            echo "SCAN_GUEST_USER_ID=$SCAN_GUEST_USER_ID"
+          } >> "$GITHUB_ENV"
+
+          sed \
+            -e "s/__SCAN_LOBBY_ID__/$SCAN_LOBBY_ID/g" \
+            -e "s/__SCAN_GAME_ID__/$SCAN_GAME_ID/g" \
+            -e "s/__SCAN_HOST_USER_ID__/$SCAN_HOST_USER_ID/g" \
+            -e "s/__SCAN_GUEST_USER_ID__/$SCAN_GUEST_USER_ID/g" \
+            .github/zap/backend-automation-plan.yaml \
+            > .github/zap/backend-automation-plan.generated.yaml
+
+      - name: Run ZAP Automation Framework plan
+        uses: zaproxy/action-af@v0.3.0
+        with:
+          plan: ".github/zap/backend-automation-plan.generated.yaml"
+
+      - name: Regenerate concrete AF plan for reporting
+        if: always()
+        run: |
+          set -euo pipefail
+
+          if [ -n "${SCAN_LOBBY_ID:-}" ] && [ -n "${SCAN_GAME_ID:-}" ] && [ -n "${SCAN_HOST_USER_ID:-}" ] && [ -n "${SCAN_GUEST_USER_ID:-}" ]; then
+            sed \
+              -e "s/__SCAN_LOBBY_ID__/$SCAN_LOBBY_ID/g" \
+              -e "s/__SCAN_GAME_ID__/$SCAN_GAME_ID/g" \
+              -e "s/__SCAN_HOST_USER_ID__/$SCAN_HOST_USER_ID/g" \
+              -e "s/__SCAN_GUEST_USER_ID__/$SCAN_GUEST_USER_ID/g" \
+              .github/zap/backend-automation-plan.yaml \
+              > .github/zap/backend-automation-plan.generated.yaml
+          else
+            cp .github/zap/backend-automation-plan.yaml .github/zap/backend-automation-plan.generated.yaml
+          fi
+
+      - name: Generate endpoint coverage artifact
+        if: always()
+        run: ruby .github/scripts/generate_zap_af_endpoint_coverage.rb .github/zap/backend-automation-plan.generated.yaml zap-af-report.json zap-af-endpoint-coverage.md
+
+      - name: Publish AF summary
+        if: always()
+        run: |
+          {
+            echo "## OWASP ZAP Automation Framework Scan"
+            echo
+            if [ -f zap-af-endpoint-coverage.md ]; then
+              cat zap-af-endpoint-coverage.md
+              echo
+            fi
+            if [ -f zap-af-report.md ]; then
+              cat zap-af-report.md
+            else
+              echo "No AF markdown report was generated."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload AF reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-security-report-af
+          retention-days: 14
+          path: |
+            .github/zap/backend-automation-plan.generated.yaml
+            zap-af-report.md
+            zap-af-report.html
+            zap-af-report.json
+            zap-af-endpoint-coverage.md

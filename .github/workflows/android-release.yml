@@ -1,0 +1,303 @@
+name: Android Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_channel:
+        description: "Release channel"
+        required: true
+        default: "preview"
+        type: choice
+        options:
+          - preview
+          - internal
+          - production
+      version_name:
+        description: "Android versionName"
+        required: true
+      version_code:
+        description: "Android versionCode"
+        required: true
+      publish_to_itch:
+        description: "Publish APK to Itch.io"
+        required: true
+        default: false
+        type: boolean
+  push:
+    branches: [main]
+    tags:
+      - "v*"
+    paths:
+      - "apps/android/**"
+      - "gradle/**"
+      - "gradlew"
+      - "gradlew.bat"
+      - "settings.gradle.kts"
+      - "build.gradle.kts"
+      - ".github/workflows/android-release.yml"
+      - "docs/release-management.md"
+      - "docs/workflows.md"
+
+concurrency:
+  group: android-release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-release:
+    name: Prepare release metadata
+    runs-on: ubuntu-latest
+    outputs:
+      release_channel: ${{ steps.meta.outputs.release_channel }}
+      version_name: ${{ steps.meta.outputs.version_name }}
+      version_code: ${{ steps.meta.outputs.version_code }}
+      apk_name: ${{ steps.meta.outputs.apk_name }}
+      itch_channel: ${{ steps.meta.outputs.itch_channel }}
+      publish_to_itch: ${{ steps.meta.outputs.publish_to_itch }}
+      publish_github_release: ${{ steps.meta.outputs.publish_github_release }}
+      release_name: ${{ steps.meta.outputs.release_name }}
+    steps:
+      - id: meta
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          RUN_NUMBER: ${{ github.run_number }}
+          INPUT_RELEASE_CHANNEL: ${{ inputs.release_channel }}
+          INPUT_VERSION_NAME: ${{ inputs.version_name }}
+          INPUT_VERSION_CODE: ${{ inputs.version_code }}
+          INPUT_PUBLISH_TO_ITCH: ${{ inputs.publish_to_itch }}
+        run: |
+          set -euo pipefail
+
+          if [ "$REF_TYPE" = "tag" ]; then
+            RELEASE_CHANNEL="production"
+            VERSION_NAME="${REF_NAME#v}"
+            VERSION_CODE="$RUN_NUMBER"
+            PUBLISH_TO_ITCH="true"
+            PUBLISH_GITHUB_RELEASE="true"
+            RELEASE_NAME="Android ${VERSION_NAME}"
+          elif [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            RELEASE_CHANNEL="$INPUT_RELEASE_CHANNEL"
+            VERSION_NAME="$INPUT_VERSION_NAME"
+            VERSION_CODE="$INPUT_VERSION_CODE"
+            PUBLISH_TO_ITCH="$INPUT_PUBLISH_TO_ITCH"
+            PUBLISH_GITHUB_RELEASE="false"
+            RELEASE_NAME="Android ${VERSION_NAME} (${RELEASE_CHANNEL})"
+          else
+            RELEASE_CHANNEL="internal"
+            VERSION_NAME="0.1.0-main.${RUN_NUMBER}"
+            VERSION_CODE="$RUN_NUMBER"
+            PUBLISH_TO_ITCH="false"
+            PUBLISH_GITHUB_RELEASE="false"
+            RELEASE_NAME="Android internal ${VERSION_NAME}"
+          fi
+
+          case "$RELEASE_CHANNEL" in
+            preview) ITCH_CHANNEL="android-preview" ;;
+            internal) ITCH_CHANNEL="android-internal" ;;
+            production) ITCH_CHANNEL="android-release" ;;
+            *)
+              echo "Unsupported release channel: $RELEASE_CHANNEL"
+              exit 1
+              ;;
+          esac
+
+          echo "$VERSION_CODE" | grep -E '^[0-9]+$' >/dev/null
+          APK_NAME="rummikub-android-${VERSION_NAME}-${RELEASE_CHANNEL}.apk"
+
+          {
+            echo "release_channel=$RELEASE_CHANNEL"
+            echo "version_name=$VERSION_NAME"
+            echo "version_code=$VERSION_CODE"
+            echo "apk_name=$APK_NAME"
+            echo "itch_channel=$ITCH_CHANNEL"
+            echo "publish_to_itch=$PUBLISH_TO_ITCH"
+            echo "publish_github_release=$PUBLISH_GITHUB_RELEASE"
+            echo "release_name=$RELEASE_NAME"
+          } >> "$GITHUB_OUTPUT"
+
+  build-release-apk:
+    name: Build signed release APK
+    needs: prepare-release
+    runs-on: ubuntu-latest
+    outputs:
+      apk_path: ${{ steps.stage.outputs.apk_path }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: ${{ runner.os }}-gradle
+
+      - name: Validate release secrets
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          for secret_name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            if [ -z "${!secret_name}" ]; then
+              echo "Missing required secret: $secret_name"
+              exit 1
+            fi
+          done
+
+      - name: Decode Android keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$GITHUB_WORKSPACE/apps/android/app/release.keystore"
+
+      - name: Assemble release APK
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/apps/android/app/release.keystore
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_VERSION_NAME: ${{ needs.prepare-release.outputs.version_name }}
+          ANDROID_VERSION_CODE: ${{ needs.prepare-release.outputs.version_code }}
+        run: ./gradlew :apps:android:app:assembleRelease
+
+      - name: Stage release APK
+        id: stage
+        env:
+          APK_NAME: ${{ needs.prepare-release.outputs.apk_name }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p dist
+          cp apps/android/app/build/outputs/apk/release/app-release.apk "dist/$APK_NAME"
+          echo "apk_path=dist/$APK_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-apk
+          retention-days: 14
+          path: ${{ steps.stage.outputs.apk_path }}
+
+  publish-github-release:
+    name: Publish GitHub release asset
+    needs: [prepare-release, build-release-apk]
+    if: needs.prepare-release.outputs.publish_github_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download staged APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: android-release-apk
+          path: dist
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ needs.prepare-release.outputs.release_name }}
+          files: dist/*.apk
+          generate_release_notes: true
+          prerelease: false
+
+  publish-itch:
+    name: Publish APK to Itch.io
+    needs: [prepare-release, build-release-apk]
+    if: needs.prepare-release.outputs.publish_to_itch == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Itch configuration
+        env:
+          ITCH_IO_API_KEY: ${{ secrets.ITCH_IO_API_KEY }}
+          ITCH_IO_USER: ${{ vars.ITCH_IO_USER }}
+          ITCH_IO_GAME: ${{ vars.ITCH_IO_GAME }}
+        run: |
+          set -euo pipefail
+
+          for value_name in ITCH_IO_API_KEY ITCH_IO_USER ITCH_IO_GAME; do
+            if [ -z "${!value_name}" ]; then
+              echo "Missing required Itch configuration: $value_name"
+              exit 1
+            fi
+          done
+
+      - name: Download staged APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: android-release-apk
+          path: dist
+
+      - name: Install butler
+        run: |
+          set -euo pipefail
+          curl -L -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip -d butler-bin
+          chmod +x butler-bin/butler
+
+      - name: Push APK to Itch.io
+        env:
+          BUTLER_API_KEY: ${{ secrets.ITCH_IO_API_KEY }}
+          ITCH_IO_USER: ${{ vars.ITCH_IO_USER }}
+          ITCH_IO_GAME: ${{ vars.ITCH_IO_GAME }}
+          ITCH_CHANNEL: ${{ needs.prepare-release.outputs.itch_channel }}
+        run: |
+          set -euo pipefail
+          ./butler-bin/butler push dist/*.apk "${ITCH_IO_USER}/${ITCH_IO_GAME}:${ITCH_CHANNEL}"
+
+  release-summary:
+    name: Release summary
+    needs:
+      - prepare-release
+      - build-release-apk
+      - publish-github-release
+      - publish-itch
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write release summary
+        env:
+          RELEASE_CHANNEL: ${{ needs.prepare-release.outputs.release_channel }}
+          VERSION_NAME: ${{ needs.prepare-release.outputs.version_name }}
+          VERSION_CODE: ${{ needs.prepare-release.outputs.version_code }}
+          APK_NAME: ${{ needs.prepare-release.outputs.apk_name }}
+          ITCH_CHANNEL: ${{ needs.prepare-release.outputs.itch_channel }}
+          PUBLISH_TO_ITCH: ${{ needs.prepare-release.outputs.publish_to_itch }}
+          GITHUB_RELEASE_RESULT: ${{ needs.publish-github-release.result }}
+          ITCH_RESULT: ${{ needs.publish-itch.result }}
+        run: |
+          {
+            echo "# Android Release Summary"
+            echo
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| Release channel | \`$RELEASE_CHANNEL\` |"
+            echo "| Version name | \`$VERSION_NAME\` |"
+            echo "| Version code | \`$VERSION_CODE\` |"
+            echo "| APK | \`$APK_NAME\` |"
+            echo "| Itch channel | \`$ITCH_CHANNEL\` |"
+            echo "| Artifact upload | \`done in build-release-apk\` |"
+            echo "| GitHub release job | \`${GITHUB_RELEASE_RESULT:-skipped}\` |"
+            echo "| Itch publish job | \`${ITCH_RESULT:-skipped}\` |"
+            echo
+            echo "The signed APK is available as the \`android-release-apk\` workflow artifact."
+            echo
+            echo "Tagged releases additionally attach the APK as a GitHub release asset."
+          } >> "$GITHUB_STEP_SUMMARY"

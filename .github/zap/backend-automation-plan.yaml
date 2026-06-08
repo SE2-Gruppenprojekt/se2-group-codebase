@@ -1,0 +1,338 @@
+env:
+  contexts:
+    - name: se2-backend
+      urls:
+        - https://se2-group-codebase.onrender.com
+      includePaths:
+        - https://se2-group-codebase.onrender.com.*
+
+  parameters:
+    failOnError: true
+    failOnWarning: false
+    progressToStdout: true
+
+jobs:
+  - type: passiveScan-config
+    name: Passive scan configuration
+    parameters:
+      maxAlertsPerRule: 10
+      scanOnlyInScope: true
+
+  - type: openapi
+    name: Import generated OpenAPI contract
+    parameters:
+      apiUrl: https://se2-group-codebase.onrender.com/v3/api-docs
+      targetUrl: https://se2-group-codebase.onrender.com
+      context: se2-backend
+
+  - type: requestor
+    name: "Public endpoint: root"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/
+        method: GET
+        responseCode: 200
+
+  - type: requestor
+    name: "Public endpoint: robots metadata"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/robots.txt
+        method: GET
+        responseCode: 200
+
+  - type: requestor
+    name: "Public endpoint: sitemap metadata"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/sitemap.xml
+        method: GET
+        responseCode: 200
+
+  - type: requestor
+    name: "Public endpoint: health"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/actuator/health
+        method: GET
+        responseCode: 200
+
+  - type: requestor
+    name: "Public endpoint: leaderboard"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/leaderboard
+        method: GET
+        responseCode: 200
+
+  - type: requestor
+    name: "Public endpoint: lobby collection"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies
+        method: GET
+        responseCode: 200
+
+  - type: requestor
+    name: "Positive lobby state: get prepared scan lobby"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_LOBBY_ID__
+        method: GET
+        responseCode: 200
+
+  - type: requestor
+    name: "Negative path: invalid create lobby request"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies
+        method: POST
+        headers:
+          - "X-User-Id:scan-ephemeral-user"
+          - "Content-Type:application/json"
+        data: |
+          {
+            "displayName": "",
+            "maxPlayers": 4,
+            "isPrivate": false,
+            "allowGuests": true
+          }
+        responseCode: 400
+
+  - type: requestor
+    name: Exercise join lobby endpoint with missing fixture id
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby/join
+        method: POST
+        headers:
+          - "Content-Type:application/json"
+        data: |
+          {
+            "userId": "scan-join-user",
+            "displayName": "Scan Join User"
+          }
+        responseCode: 404
+
+  - type: requestor
+    name: "Positive lobby state: update prepared scan lobby settings"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_LOBBY_ID__/settings
+        method: PATCH
+        headers:
+          - "X-User-Id:__SCAN_HOST_USER_ID__"
+          - "Content-Type:application/json"
+        data: |
+          {
+            "maxPlayers": 4,
+            "isPrivate": false,
+            "allowGuests": true
+          }
+        responseCode: 200
+
+  - type: requestor
+    name: "Positive lobby state: toggle prepared scan lobby ready state"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_LOBBY_ID__/ready
+        method: POST
+        headers:
+          - "X-User-Id:__SCAN_GUEST_USER_ID__"
+        responseCode: 200
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_LOBBY_ID__/unready
+        method: POST
+        headers:
+          - "X-User-Id:__SCAN_GUEST_USER_ID__"
+        responseCode: 200
+
+  - type: requestor
+    name: "Positive lobby state: leave prepared scan lobby"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_LOBBY_ID__/leave
+        method: POST
+        headers:
+          - "X-User-Id:__SCAN_GUEST_USER_ID__"
+        responseCode: 200
+
+  - type: requestor
+    name: "Positive lobby state: delete prepared scan lobby"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_LOBBY_ID__
+        method: DELETE
+        headers:
+          - "X-User-Id:__SCAN_HOST_USER_ID__"
+        responseCode: 204
+
+  - type: requestor
+    name: Exercise start lobby endpoint with missing fixture id
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby/start
+        method: POST
+        headers:
+          - "X-User-Id:__SCAN_HOST_USER_ID__"
+        responseCode: 404
+
+  - type: requestor
+    name: Exercise leave lobby endpoint with missing fixture id
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby/leave
+        method: POST
+        headers:
+          - "X-User-Id:__SCAN_GUEST_USER_ID__"
+        responseCode: 404
+
+  - type: requestor
+    name: Exercise delete lobby endpoint with missing fixture id
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby
+        method: DELETE
+        headers:
+          - "X-User-Id:__SCAN_HOST_USER_ID__"
+        responseCode: 404
+
+  - type: requestor
+    name: "Positive game state: get prepared scan game"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/games/__SCAN_GAME_ID__
+        method: GET
+        responseCode: 200
+
+  - type: requestor
+    name: "Positive game state: update prepared turn draft"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/games/__SCAN_GAME_ID__/draft
+        method: PUT
+        headers:
+          - "X-User-Id:__SCAN_HOST_USER_ID__"
+          - "Content-Type:application/json"
+        data: |
+          {
+            "boardSets": [],
+            "rackTiles": [
+              {
+                "tileId": "scan-host-rack-red-5",
+                "color": "RED",
+                "number": 5,
+                "isJoker": false
+              },
+              {
+                "tileId": "scan-host-rack-blue-7",
+                "color": "BLUE",
+                "number": 7,
+                "isJoker": false
+              }
+            ]
+          }
+        responseCode: 200
+
+  - type: requestor
+    name: "Positive game state: draw from prepared scan game"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/games/__SCAN_GAME_ID__/draw
+        method: POST
+        headers:
+          - "X-User-Id:__SCAN_HOST_USER_ID__"
+        responseCode: 200
+
+  - type: requestor
+    name: "Positive game state: end turn for prepared scan game"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/games/__SCAN_GAME_ID__/end-turn
+        method: POST
+        headers:
+          - "X-User-Id:__SCAN_HOST_USER_ID__"
+          - "Content-Type:application/json"
+        data: |
+          {
+            "boardSets": [],
+            "rackTiles": [
+              {
+                "tileId": "scan-host-rack-red-5",
+                "color": "RED",
+                "number": 5,
+                "isJoker": false
+              },
+              {
+                "tileId": "scan-host-rack-blue-7",
+                "color": "BLUE",
+                "number": 7,
+                "isJoker": false
+              },
+              {
+                "tileId": "scan-draw-red-1",
+                "color": "RED",
+                "number": 1,
+                "isJoker": false
+              }
+            ]
+          }
+        responseCode: 200
+
+  - type: requestor
+    name: "Negative path: missing game endpoints"
+    requests:
+      - url: https://se2-group-codebase.onrender.com/api/games/zap-missing-game
+        method: GET
+        responseCode: 404
+      - url: https://se2-group-codebase.onrender.com/api/games/zap-missing-game/draft
+        method: PUT
+        headers:
+          - "X-User-Id:__SCAN_HOST_USER_ID__"
+          - "Content-Type:application/json"
+        data: |
+          {
+            "boardSets": [],
+            "rackTiles": [
+              {
+                "tileId": "scan-host-rack-red-5",
+                "color": "RED",
+                "number": 5,
+                "isJoker": false
+              },
+              {
+                "tileId": "scan-host-rack-blue-7",
+                "color": "BLUE",
+                "number": 7,
+                "isJoker": false
+              }
+            ]
+          }
+        responseCode: 404
+      - url: https://se2-group-codebase.onrender.com/api/games/zap-missing-game/draw
+        method: POST
+        headers:
+          - "X-User-Id:__SCAN_HOST_USER_ID__"
+        responseCode: 404
+      - url: https://se2-group-codebase.onrender.com/api/games/zap-missing-game/end-turn
+        method: POST
+        headers:
+          - "X-User-Id:__SCAN_HOST_USER_ID__"
+          - "Content-Type:application/json"
+        data: |
+          {
+            "boardSets": [],
+            "rackTiles": []
+          }
+        responseCode: 404
+
+  - type: passiveScan-wait
+    name: Wait for passive scan completion
+    parameters:
+      maxDuration: 10
+
+  - type: report
+    name: Generate markdown report
+    parameters:
+      template: traditional-md
+      reportDir: /zap/wrk
+      reportFile: zap-af-report.md
+
+  - type: report
+    name: Generate html report
+    parameters:
+      template: traditional-html-plus
+      reportDir: /zap/wrk
+      reportFile: zap-af-report.html
+
+  - type: report
+    name: Generate json report
+    parameters:
+      template: traditional-json-plus
+      reportDir: /zap/wrk
+      reportFile: zap-af-report.json
+
+  - type: exitStatus
+    name: Non-blocking initial exit policy
+    parameters:
+      warnLevel: High
+      errorLevel: High

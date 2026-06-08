@@ -19,6 +19,7 @@ object ErrorUiMapper {
             AppError.Rest.NotFound -> "Resource not found"
             AppError.Rest.Conflict -> "Conflict"
             is AppError.Rest.Api -> error.message
+            is AppError.Rest.RuleValidation -> error.message
 
             is AppError.Game.TurnTimedOut -> "Your turn has ended!"
 
