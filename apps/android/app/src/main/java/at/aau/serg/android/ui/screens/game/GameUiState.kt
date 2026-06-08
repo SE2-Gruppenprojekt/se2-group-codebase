@@ -13,6 +13,17 @@ data class RuleValidationUiState(
     val summaryMessage: String? = null
 )
 
+data class GameResultPlayerSummary(
+    val userId: String,
+    val displayName: String,
+    val score: Int
+)
+
+data class GameResultUiModel(
+    val winnerUserId: String,
+    val players: List<GameResultPlayerSummary>
+)
+
 data class GameUiState(
     val loadState: LoadState = LoadState.Success,
     val user: User? = null,
@@ -21,7 +32,7 @@ data class GameUiState(
     val selectedTiles: Set<Tile> = emptySet(),
     val activeSelectionRow: String? = null,
     val gameState: ConfirmedGame? = null,
-    val winnerUserId: String? = null,
     val isActivePlayer: Boolean = false,
-    val ruleValidation: RuleValidationUiState = RuleValidationUiState()
+    val ruleValidation: RuleValidationUiState = RuleValidationUiState(),
+    val gameResult: GameResultUiModel? = null
 )

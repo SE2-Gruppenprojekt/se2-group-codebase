@@ -443,9 +443,7 @@ class GameViewModel(
                 }
 
                 is GameEvent.Ended -> {
-                    _uiState.update {
-                        it.copy(winnerUserId = event.payload.winnerUserId)
-                    }
+                    // TODO: replaced in next issue [feat(android)(game): detect game end in ViewModel and emit navigation effect]
                 }
 
                 is GameEvent.TurnChanged -> {
