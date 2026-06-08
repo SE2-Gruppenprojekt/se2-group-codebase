@@ -1,0 +1,384 @@
+package at.aau.serg.android.ui.screens.game
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+private val ResBackground    = Color(0xFF0D0B1E)
+private val ResSurface       = Color(0xFF1A1740)
+private val ResCardHighlight = Color(0xFF2A2560)
+private val ResAccent        = Color(0xFF7B61FF)
+private val ResGold          = Color(0xFFFFD700)
+private val ResGreen         = Color(0xFF4CAF50)
+private val ResRed           = Color(0xFFFF5252)
+private val ResGray          = Color(0xFF9E9E9E)
+private val ResStillPlaying  = Color(0xFF4ECDC4)
+
+@Composable
+fun GameResultScreen(
+    gameResult: GameResultUiModel?,
+    currentUserId: String? = null,
+    onNavigateHome: () -> Unit = {},
+    onShareResult: () -> Unit = {}
+) {
+    val players = gameResult?.players.orEmpty()
+    val winnerUserId = gameResult?.winnerUserId.orEmpty()
+    val matchDuration = gameResult?.matchDuration ?: "0:00"
+    val currentPlayer = players.firstOrNull { it.userId == currentUserId }
+    val isWinner = currentUserId != null && currentUserId == winnerUserId
+    val finishedCount = players.count { !it.isStillPlaying }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(listOf(Color(0xFF1A1060), ResBackground))
+            )
+            .testTag(GameTestTags.RESULT_SCREEN)
+    ) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 88.dp)
+        ) {
+
+            // --- HEADER ---
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    IconButton(onClick = onNavigateHome) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Game #4821", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
+                        Text("Still In Progress", color = ResGray, fontSize = 12.sp)
+                    }
+                    Text("Play Time: $matchDuration", color = Color.White, fontSize = 13.sp)
+                }
+            }
+
+            // --- HERO ---
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // "GAME OVER" badge
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = Color.White.copy(alpha = 0.15f)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(Icons.Default.Star, contentDescription = null, tint = Color.White, modifier = Modifier.size(13.dp))
+                            Text("GAME OVER", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    // Trophy
+                    Icon(
+                        Icons.Default.Star,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.9f),
+                        modifier = Modifier.size(80.dp)
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    Text(
+                        text = if (isWinner) "YOU WIN!" else "YOU FINISHED",
+                        fontSize = 34.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.White,
+                        modifier = Modifier.testTag(GameTestTags.RESULT_TITLE)
+                    )
+
+                    Spacer(Modifier.height(4.dp))
+                    Text("RESULTS", color = ResGray, fontSize = 11.sp, letterSpacing = 2.sp)
+
+                    Spacer(Modifier.height(12.dp))
+
+                    // Players finished pill
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = Color.White.copy(alpha = 0.1f)
+                    ) {
+                        Text(
+                            "Players $finishedCount/${players.size} Finished",
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                        )
+                    }
+
+                    Spacer(Modifier.height(20.dp))
+
+                    // Stats row (current player's stats)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ResultStatBox("Duration", matchDuration, Modifier.weight(1f))
+                        ResultStatBox("Moves", "${currentPlayer?.turnsCompleted ?: gameResult?.totalTurns ?: 0}", Modifier.weight(1f))
+                        ResultStatBox("Points", "+${currentPlayer?.pointsFromTiles ?: 0}", Modifier.weight(1f))
+                        ResultStatBox("Melds", "${currentPlayer?.meldsCreated ?: 0}", Modifier.weight(1f))
+                    }
+
+                    Spacer(Modifier.height(20.dp))
+                }
+            }
+
+            // --- LEADERBOARD ---
+            itemsIndexed(players) { index, player ->
+                PlayerResultCard(
+                    player = player,
+                    rank = index + 1,
+                    isCurrentUser = player.userId == currentUserId,
+                    isWinner = player.userId == winnerUserId,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                )
+            }
+
+            // --- BOTTOM PLAYER STATS ---
+            if (currentPlayer != null) {
+                item {
+                    Spacer(Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ResultStatBox(
+                            label = "Tiles Played",
+                            value = "+${currentPlayer.tilesPlayed}",
+                            modifier = Modifier.weight(1f),
+                            valueColor = ResGreen
+                        )
+                        ResultStatBox(
+                            label = "Sets Created",
+                            value = "${currentPlayer.meldsCreated}",
+                            modifier = Modifier.weight(1f)
+                        )
+                        ResultStatBox(
+                            label = "Avg Turn",
+                            value = "0:00", // TODO: calculate from backend data when available
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+            }
+        }
+
+        // --- BOTTOM ACTIONS ---
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(ResSurface)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Button(
+                onClick = onNavigateHome, // TODO: wire to "Next Round" when backend supports it
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp)
+                    .testTag(GameTestTags.RESULT_HOME_BUTTON),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = ResAccent)
+            ) {
+                Text("▶  Next Round", fontWeight = FontWeight.Bold, color = Color.White)
+            }
+
+            IconButton(
+                onClick = onShareResult,
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color.White.copy(alpha = 0.08f))
+                    .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(14.dp))
+            ) {
+                Icon(Icons.Default.Share, contentDescription = "Share", tint = Color.White)
+            }
+
+            IconButton(
+                onClick = onNavigateHome,
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color.White.copy(alpha = 0.08f))
+                    .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(14.dp))
+            ) {
+                Icon(Icons.Default.Home, contentDescription = "Home", tint = Color.White)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResultStatBox(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    valueColor: Color = Color.White
+) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.1f))
+            .padding(vertical = 10.dp, horizontal = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(value, fontWeight = FontWeight.Bold, fontSize = 17.sp, color = valueColor)
+        Text(label, fontSize = 10.sp, color = ResGray)
+    }
+}
+
+@Composable
+private fun PlayerResultCard(
+    player: GameResultPlayerSummary,
+    rank: Int,
+    isCurrentUser: Boolean,
+    isWinner: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(if (isCurrentUser) ResCardHighlight else Color.White.copy(alpha = 0.05f))
+            .then(
+                if (isCurrentUser) Modifier.border(1.5.dp, ResAccent, RoundedCornerShape(16.dp))
+                else Modifier
+            )
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Rank badge + avatar
+        Box(contentAlignment = Alignment.TopStart) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(ResSurface),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.Person, contentDescription = null, tint = ResGray, modifier = Modifier.size(24.dp))
+            }
+            Box(
+                modifier = Modifier
+                    .size(18.dp)
+                    .clip(CircleShape)
+                    .background(ResAccent),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("$rank", fontSize = 9.sp, color = Color.White, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        // Name + stats line
+        Column(modifier = Modifier.weight(1f)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = if (isCurrentUser) "You" else player.displayName,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    fontSize = 15.sp,
+                    modifier = if (isWinner) Modifier.testTag(GameTestTags.RESULT_WINNER_NAME) else Modifier
+                )
+                when {
+                    isWinner -> Surface(shape = RoundedCornerShape(50), color = ResGold.copy(alpha = 0.15f)) {
+                        Text("🏆 1st Place", fontSize = 10.sp, color = ResGold,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                    }
+                    player.isStillPlaying -> Surface(shape = RoundedCornerShape(50), color = ResStillPlaying.copy(alpha = 0.15f)) {
+                        Text("Still Playing", fontSize = 10.sp, color = ResStillPlaying,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(3.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("${player.remainingTiles} tiles left", fontSize = 11.sp, color = ResGray)
+                Text("•", fontSize = 11.sp, color = ResGray)
+                Text("${player.meldsCreated} melds", fontSize = 11.sp, color = ResGray)
+                if (player.penaltyPoints > 0) {
+                    Text("•", fontSize = 11.sp, color = ResGray)
+                    Text("-${player.penaltyPoints} penalty", fontSize = 11.sp, color = ResRed)
+                }
+                if (isWinner) {
+                    Text("•", fontSize = 11.sp, color = ResGray)
+                    Text("Bonus +50", fontSize = 11.sp, color = ResGreen)
+                }
+            }
+        }
+
+        // Score
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                text = "${player.score}",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 22.sp,
+                color = Color.White
+            )
+            Text("points", fontSize = 10.sp, color = ResGray)
+        }
+    }
+}

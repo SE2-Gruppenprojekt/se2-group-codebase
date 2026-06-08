@@ -498,7 +498,22 @@ class GameViewModel(
 
         val players = _uiState.value.gameState?.players.orEmpty()
             .sortedByDescending { it.score }
-            .map { GameResultPlayerSummary(userId = it.userId, displayName = it.displayName, score = it.score) }
+            .mapIndexed { index, it ->
+                GameResultPlayerSummary(
+                    userId = it.userId,
+                    displayName = it.displayName,
+                    score = it.score,
+                    finishPosition = index + 1,
+                    remainingTiles = it.rackTiles.size,
+                    // TODO: map from backend response when available
+                    tilesPlayed = 0,
+                    meldsCreated = 0,
+                    turnsCompleted = 0,
+                    pointsFromTiles = it.score,
+                    penaltyPoints = 0,
+                    isStillPlaying = it.rackTiles.isNotEmpty() && it.userId != winnerUserId
+                )
+            }
 
         _uiState.update {
             it.copy(gameResult = GameResultUiModel(winnerUserId = winnerUserId, players = players))

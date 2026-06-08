@@ -16,12 +16,23 @@ data class RuleValidationUiState(
 data class GameResultPlayerSummary(
     val userId: String,
     val displayName: String,
-    val score: Int
+    val score: Int,
+    val finishPosition: Int = 0,
+    val tilesPlayed: Int = 0,
+    val meldsCreated: Int = 0,
+    val turnsCompleted: Int = 0,
+    val pointsFromTiles: Int = 0,
+    val remainingTiles: Int = 0,
+    val penaltyPoints: Int = 0,
+    val isStillPlaying: Boolean = false
 )
 
 data class GameResultUiModel(
     val winnerUserId: String,
-    val players: List<GameResultPlayerSummary>
+    val players: List<GameResultPlayerSummary>,
+    val matchDuration: String = "0:00",
+    val totalTurns: Int = 0,
+    val finishedTimestamp: String? = null
 )
 
 data class GameUiState(
