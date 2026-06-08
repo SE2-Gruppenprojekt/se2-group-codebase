@@ -504,6 +504,12 @@ class GameViewModel(
         }
     }
 
+    @VisibleForTesting
+    internal fun cancelTimer() {
+        timerJob?.cancel()
+        timerJob = null
+    }
+
     private fun formatElapsed(seconds: Int): String {
         val m = seconds / 60
         val s = seconds % 60

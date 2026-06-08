@@ -578,9 +578,11 @@ class GameViewModelTest {
 
         coEvery { service.loadGame(any()) } returns fakeGameResponse
         viewmodel.onUIEvent(GameUIEvent.OnLoadGame("g1"))
-        runCurrent() // advanceUntilIdle() would loop forever due to the infinite timer coroutine
+        runCurrent()
 
         assertNotEquals(state.gameState, viewmodel.uiState.value.gameState)
+
+        viewmodel.cancelTimer() // must cancel before runTest cleanup calls advanceUntilIdle()
     }
 
     @Test
@@ -717,8 +719,9 @@ class GameViewModelTest {
     fun loadGame_sets_loadState_success_if_not_players_turn() = runTest {
         setPlayerTurnInactive()
         viewmodel.onUIEvent(GameUIEvent.OnLoadGame("g1"))
-        runCurrent() // advanceUntilIdle() would loop forever due to the infinite timer coroutine
+        runCurrent()
         assertTrue(viewmodel.uiState.value.loadState is LoadState.Success)
+        viewmodel.cancelTimer() // must cancel before runTest cleanup calls advanceUntilIdle()
     }
 
     @Test
