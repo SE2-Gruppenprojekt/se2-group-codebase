@@ -1,0 +1,100 @@
+package at.se2group.backend.service
+
+import org.springframework.stereotype.Service
+import shared.models.game.domain.ConfirmedGame
+import shared.models.game.domain.GamePlayer
+import shared.models.game.domain.JokerTile
+import shared.models.game.domain.NumberedTile
+import shared.models.game.domain.Tile
+import java.time.Instant
+
+@Service
+class GameMetricsService {
+    fun applyCommittedTurnMetrics(
+        confirmedBeforeTurn: ConfirmedGame,
+        committedGame: ConfirmedGame,
+        actingPlayerUserId: String
+    ): ConfirmedGame {
+        val beforePlayer = confirmedBeforeTurn.players.first { it.userId == actingPlayerUserId }
+        val afterPlayer = committedGame.players.first { it.userId == actingPlayerUserId }
+
+        val afterRackTileIds = afterPlayer.rackTiles.map { it.tileId }.toSet()
+        val playedTiles = beforePlayer.rackTiles.filter { it.tileId !in afterRackTileIds }
+
+        val previousBoardSetIds = confirmedBeforeTurn.boardSets.map { it.boardSetId }.toSet()
+        val meldsCreated = committedGame.boardSets.count { it.boardSetId !in previousBoardSetIds }
+
+        val updatedPlayers = committedGame.players.map { player ->
+            if (player.userId != actingPlayerUserId) {
+                player
+            } else {
+                player.copy(
+                    metrics = player.metrics.copy(
+                        turnsCompleted = player.metrics.turnsCompleted + 1,
+                        tilesPlayed = player.metrics.tilesPlayed + playedTiles.size,
+                        meldsCreated = player.metrics.meldsCreated + meldsCreated,
+                        pointsPlayed = player.metrics.pointsPlayed + playedTiles.sumOf { metricPointValue(it) }
+                    )
+                )
+            }
+        }
+
+        return committedGame.copy(
+            players = updatedPlayers,
+            totalTurnsCompleted = committedGame.totalTurnsCompleted + 1
+        )
+    }
+
+    fun finalizeEndGameMetrics(game: ConfirmedGame): ConfirmedGame {
+        val winnerUserId = game.winnerUserId ?: determineWinnerUserId(game)
+
+        val rankedPlayers = game.players
+            .sortedWith(
+                compareBy<GamePlayer> { if (it.userId == winnerUserId) 0 else 1 }
+                    .thenBy { it.rackTiles.sumOf(::tilePenaltyValue) }
+                    .thenBy { it.turnOrder }
+            )
+
+        val finishPositionsByUserId = rankedPlayers
+            .mapIndexed { index, player -> player.userId to index + 1 }
+            .toMap()
+
+        val updatedPlayers = game.players.map { player ->
+            val penalty = player.rackTiles.sumOf(::tilePenaltyValue)
+
+            player.copy(
+                metrics = player.metrics.copy(
+                    tilesRemainingAtEnd = player.rackTiles.size,
+                    penaltyPointsAtEnd = penalty,
+                    winner = player.userId == winnerUserId,
+                    finishPosition = finishPositionsByUserId[player.userId]
+                )
+            )
+        }
+
+        return game.copy(
+            players = updatedPlayers,
+            winnerUserId = winnerUserId,
+            finishedAt = game.finishedAt ?: Instant.now()
+        )
+    }
+
+    private fun determineWinnerUserId(game: ConfirmedGame): String {
+        return game.players
+            .firstOrNull { it.rackTiles.isEmpty() }
+            ?.userId
+            ?: game.currentPlayerUserId
+    }
+
+    private fun metricPointValue(tile: Tile): Int =
+        when (tile) {
+            is NumberedTile -> tile.number
+            is JokerTile -> 0
+        }
+
+    private fun tilePenaltyValue(tile: Tile): Int =
+        when (tile) {
+            is NumberedTile -> tile.number
+            is JokerTile -> 30
+        }
+}
