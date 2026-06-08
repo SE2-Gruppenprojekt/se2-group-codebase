@@ -14,5 +14,7 @@ data class GameResponse(
     val status: String,
     val createdAt: String,
     val startedAt: String?,
-    val finishedAt: String?
+    val finishedAt: String?,
+    val totalTurnsCompleted: Int,
+    val winnerUserId: String?
 )
