@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.post
 import org.springframework.http.MediaType
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
+import shared.models.game.domain.GamePlayerMetrics
 import shared.models.game.validation.ValidationResult
 
 /**
@@ -75,7 +76,14 @@ class GameControllerTest {
                         NumberedTile("tile-1", TileColor.BLUE, 3)
                     ),
                     score = 10,
-                    joinedAt = Instant.parse("2026-04-27T17:55:00Z")
+                    joinedAt = Instant.parse("2026-04-27T17:55:00Z"),
+                    metrics = GamePlayerMetrics(
+                        turnsCompleted = 2,
+                        tilesPlayed = 5,
+                        meldsCreated = 1,
+                        pointsPlayed = 18,
+                        winner = false
+                    )
                 )
             ),
             drawPile = listOf(
@@ -83,7 +91,9 @@ class GameControllerTest {
             ),
             currentPlayerUserId = "user-1",
             status = GameStatus.ACTIVE,
-            createdAt = Instant.parse("2026-04-27T18:00:00Z")
+            createdAt = Instant.parse("2026-04-27T18:00:00Z"),
+            totalTurnsCompleted = 4,
+            winnerUserId = null
         )
 
         `when`(gameService.getGame("game-1")).thenReturn(game)
@@ -108,6 +118,13 @@ class GameControllerTest {
                 jsonPath("$.board") { isArray() }
                 jsonPath("$.drawPile[0].tileId") { value("tile-2") }
                 jsonPath("$.drawPile[0].color") { value("RED") }
+                jsonPath("$.totalTurnsCompleted") { value(4) }
+                jsonPath("$.winnerUserId") { isEmpty() }
+                jsonPath("$.players[0].metrics.turnsCompleted") { value(2) }
+                jsonPath("$.players[0].metrics.tilesPlayed") { value(5) }
+                jsonPath("$.players[0].metrics.meldsCreated") { value(1) }
+                jsonPath("$.players[0].metrics.pointsPlayed") { value(18) }
+                jsonPath("$.players[0].metrics.winner") { value(false) }
             }
     }
 
@@ -203,6 +220,9 @@ class GameControllerTest {
                 jsonPath("$.gameId") { value("game-1") }
                 jsonPath("$.currentPlayerUserId") { value("user-1") }
                 jsonPath("$.status") { value("ACTIVE") }
+                jsonPath("$.totalTurnsCompleted") { value(0) }
+                jsonPath("$.winnerUserId") { isEmpty() }
+                jsonPath("$.players[0].metrics.turnsCompleted") { value(0) }
             }
     }
 
