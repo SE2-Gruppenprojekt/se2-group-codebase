@@ -43,6 +43,30 @@ class GamePlayerEntity(
     @Column(name = "joined_at", nullable = false)
     var joinedAt: Instant = Instant.now(),
 
+    @Column(name = "turns_completed", nullable = false)
+    var turnsCompleted: Int = 0,
+
+    @Column(name = "tiles_played", nullable = false)
+    var tilesPlayed: Int = 0,
+
+    @Column(name = "melds_created", nullable = false)
+    var meldsCreated: Int = 0,
+
+    @Column(name = "points_played", nullable = false)
+    var pointsPlayed: Int = 0,
+
+    @Column(name = "tiles_remaining_at_end")
+    var tilesRemainingAtEnd: Int? = null,
+
+    @Column(name = "penalty_points_at_end")
+    var penaltyPointsAtEnd: Int? = null,
+
+    @Column(name = "winner", nullable = false)
+    var winner: Boolean = false,
+
+    @Column(name = "finish_position")
+    var finishPosition: Int? = null,
+
     @ElementCollection
     @CollectionTable(name = "game_player_rack_tiles", joinColumns = [JoinColumn(name = "game_player_id")])
     @OrderColumn(name = "rack_tile_order")
