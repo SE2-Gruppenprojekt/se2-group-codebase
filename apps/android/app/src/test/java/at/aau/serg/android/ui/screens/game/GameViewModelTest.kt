@@ -821,7 +821,7 @@ class GameViewModelTest {
             GameEvent.Ended(GameEndedEvent(gameId = "Game123", winnerUserId = "User123"))
         )
 
-        // navigation effect is verified in next issue [feat(android)(game): detect game end in ViewModel and emit navigation effect]
+        // navigation effect is verified in next issue [feat(android)(game): add ViewModel and UI tests for game-end flow]
     }
 
     @Test

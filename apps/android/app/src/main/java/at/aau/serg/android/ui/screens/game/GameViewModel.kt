@@ -28,6 +28,7 @@ import kotlinx.coroutines.launch
 import shared.models.game.domain.BoardSet
 import shared.models.game.domain.BoardSetType
 import shared.models.game.domain.ConfirmedGame
+import shared.models.game.domain.GameStatus
 import shared.models.game.domain.Tile
 import shared.models.game.event.GameEvent
 import shared.models.game.request.EndTurnRequest
@@ -44,6 +45,7 @@ class GameViewModel(
 ) : ViewModel() {
 
     private var socketJob: Job? = null
+    private var hasEmittedGameResultNavigation = false
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState
 
@@ -91,6 +93,11 @@ class GameViewModel(
                 boardSets = if (refreshView) game.boardSets else old.boardSets,
                 isActivePlayer = game.currentPlayerUserId == user.uid
             )
+        }
+
+        if (game.status == GameStatus.FINISHED) {
+            val winner = game.players.maxByOrNull { it.score }
+            if (winner != null) handleFinishedGame(winner.userId)
         }
     }
 
@@ -443,7 +450,7 @@ class GameViewModel(
                 }
 
                 is GameEvent.Ended -> {
-                    // TODO: replaced in next issue [feat(android)(game): detect game end in ViewModel and emit navigation effect]
+                    handleFinishedGame(event.payload.winnerUserId)
                 }
 
                 is GameEvent.TurnChanged -> {
@@ -467,14 +474,38 @@ class GameViewModel(
                 }
 
                 is GameEvent.Updated -> {
-                    if (!_uiState.value.isActivePlayer)
-                        applyGameState(event.payload.game.toDomain(), true)
+                    val game = event.payload.game.toDomain()
+                    if (game.status == GameStatus.FINISHED) {
+                        applyGameState(game, true)
+                        val winner = game.players.maxByOrNull { it.score }
+                        if (winner != null) handleFinishedGame(winner.userId)
+                    } else if (!_uiState.value.isActivePlayer) {
+                        applyGameState(game, true)
+                    }
                 }
 
             }
         } catch (e: Exception) {
             val appError = ErrorUiMapper.map(e)
             _uiState.update { it.copy(loadState = LoadState.Error(appError)) }
+        }
+    }
+
+    @VisibleForTesting
+    internal fun handleFinishedGame(winnerUserId: String) {
+        if (hasEmittedGameResultNavigation) return
+        hasEmittedGameResultNavigation = true
+
+        val players = _uiState.value.gameState?.players.orEmpty()
+            .sortedByDescending { it.score }
+            .map { GameResultPlayerSummary(userId = it.userId, displayName = it.displayName, score = it.score) }
+
+        _uiState.update {
+            it.copy(gameResult = GameResultUiModel(winnerUserId = winnerUserId, players = players))
+        }
+
+        viewModelScope.launch {
+            _effect.emit(GameEffect.NavigateToResult(winnerUserId))
         }
     }
 
