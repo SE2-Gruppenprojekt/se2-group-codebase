@@ -45,5 +45,6 @@ data class GameUiState(
     val gameState: ConfirmedGame? = null,
     val isActivePlayer: Boolean = false,
     val ruleValidation: RuleValidationUiState = RuleValidationUiState(),
-    val gameResult: GameResultUiModel? = null
+    val gameResult: GameResultUiModel? = null,
+    val elapsedSeconds: Int = 0
 )

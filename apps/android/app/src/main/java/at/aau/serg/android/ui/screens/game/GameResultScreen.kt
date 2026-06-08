@@ -56,6 +56,7 @@ fun GameResultScreen(
     gameResult: GameResultUiModel?,
     currentUserId: String? = null,
     onNavigateHome: () -> Unit = {},
+    onNextRound: (() -> Unit)? = null,
     onShareResult: () -> Unit = {}
 ) {
     val players = gameResult?.players.orEmpty()

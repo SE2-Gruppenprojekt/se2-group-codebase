@@ -17,6 +17,7 @@ import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.util.ErrorUiMapper
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -45,6 +46,7 @@ class GameViewModel(
 ) : ViewModel() {
 
     private var socketJob: Job? = null
+    private var timerJob: Job? = null
     private var hasEmittedGameResultNavigation = false
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState
@@ -182,6 +184,7 @@ class GameViewModel(
                 _uiState.update {
                     it.copy(loadState = LoadState.Success)
                 }
+                startTimer()
                 startSocket(gameId)
             } catch (e: Throwable) {
                 val appError = NetworkErrorMapper.map(e)
@@ -491,11 +494,28 @@ class GameViewModel(
         }
     }
 
+    private fun startTimer() {
+        timerJob?.cancel()
+        timerJob = viewModelScope.launch {
+            while (true) {
+                delay(1000L)
+                _uiState.update { it.copy(elapsedSeconds = it.elapsedSeconds + 1) }
+            }
+        }
+    }
+
+    private fun formatElapsed(seconds: Int): String {
+        val m = seconds / 60
+        val s = seconds % 60
+        return "%d:%02d".format(m, s)
+    }
+
     @VisibleForTesting
     internal fun handleFinishedGame(winnerUserId: String) {
         if (hasEmittedGameResultNavigation) return
         hasEmittedGameResultNavigation = true
 
+        val matchDuration = formatElapsed(_uiState.value.elapsedSeconds)
         val players = _uiState.value.gameState?.players.orEmpty()
             .sortedByDescending { it.score }
             .mapIndexed { index, it ->
@@ -516,7 +536,11 @@ class GameViewModel(
             }
 
         _uiState.update {
-            it.copy(gameResult = GameResultUiModel(winnerUserId = winnerUserId, players = players))
+            it.copy(gameResult = GameResultUiModel(
+                winnerUserId = winnerUserId,
+                players = players,
+                matchDuration = matchDuration
+            ))
         }
 
         viewModelScope.launch {

@@ -99,7 +99,9 @@ fun GameScreenContent(
                     }
 
                     Row(Modifier.align(Alignment.CenterEnd)) {
-                        Text("3:45")
+                        val m = uiState.elapsedSeconds / 60
+                        val s = uiState.elapsedSeconds % 60
+                        Text("%d:%02d".format(m, s))
                         IconButton(onClick = { onEvent(GameUIEvent.OnSettings) }) {
                             Icon(Icons.Default.Settings, null)
                         }
