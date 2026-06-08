@@ -342,13 +342,15 @@ private fun PlayerResultCard(
                     fontSize = 15.sp,
                     modifier = if (isWinner) Modifier.testTag(GameTestTags.RESULT_WINNER_NAME) else Modifier
                 )
-                when {
-                    isWinner -> Surface(shape = RoundedCornerShape(50), color = ResGold.copy(alpha = 0.15f)) {
-                        Text("🏆 1st Place", fontSize = 10.sp, color = ResGold,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
-                    }
-                    player.isStillPlaying -> Surface(shape = RoundedCornerShape(50), color = ResStillPlaying.copy(alpha = 0.15f)) {
-                        Text("Still Playing", fontSize = 10.sp, color = ResStillPlaying,
+                val placeBadge = when (player.finishPosition) {
+                    1 -> Pair("🏆 1st Place", ResGold)
+                    2 -> Pair("🥈 2nd Place", Color(0xFFB0BEC5))
+                    3 -> Pair("🥉 3rd Place", Color(0xFFCD7F32))
+                    else -> if (player.isStillPlaying) Pair("Still Playing", ResStillPlaying) else null
+                }
+                if (placeBadge != null) {
+                    Surface(shape = RoundedCornerShape(50), color = placeBadge.second.copy(alpha = 0.15f)) {
+                        Text(placeBadge.first, fontSize = 10.sp, color = placeBadge.second,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                     }
                 }

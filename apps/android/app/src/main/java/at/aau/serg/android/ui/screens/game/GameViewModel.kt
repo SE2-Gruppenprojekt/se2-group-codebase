@@ -531,7 +531,8 @@ class GameViewModel(
                     turnsCompleted = 0,
                     pointsFromTiles = it.score,
                     penaltyPoints = 0,
-                    isStillPlaying = it.rackTiles.isNotEmpty() && it.userId != winnerUserId
+                    // TODO: set from backend when per-player finish status is available
+                    isStillPlaying = false
                 )
             }
 
