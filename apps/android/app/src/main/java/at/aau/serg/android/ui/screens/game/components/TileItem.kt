@@ -46,7 +46,10 @@ fun TileItem(
                 }
             }
             .background(
-                color = Color(tile.color.colorInt)
+                color = when (tile) {
+                    is JokerTile -> Color(0xFF5B5B5B)
+                    else -> Color(tile.color.colorInt)
+                }
             )
             .border(
                 width = if (selected) 3.dp else 0.dp,
@@ -59,7 +62,7 @@ fun TileItem(
             Text(
                 text = when (tile) {
                     is NumberedTile -> tile.number.toString()
-                    is JokerTile -> "0"
+                    is JokerTile -> "J"
                 },
                 color = Color.Black,
                 fontWeight = FontWeight.Black,
@@ -75,7 +78,7 @@ fun TileItem(
             Text(
                 text = when (tile) {
                     is NumberedTile -> tile.number.toString()
-                    is JokerTile -> "0"
+                    is JokerTile -> "J"
                 },
                 color = Color.White,
                 fontWeight = FontWeight.Black,
