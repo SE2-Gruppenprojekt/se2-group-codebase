@@ -15,6 +15,7 @@ import at.se2group.backend.persistence.GameEntity
 import at.se2group.backend.persistence.GamePlayerEntity
 import at.se2group.backend.persistence.TileEmbeddable
 import shared.models.game.domain.GamePlayerMetrics
+import shared.models.game.response.GamePlayerMetricsResponse
 
 fun GameEntity.toDomain(): ConfirmedGame =
     ConfirmedGame(
@@ -150,7 +151,9 @@ fun ConfirmedGame.toResponse(): GameResponse =
         status = status.name,
         createdAt = createdAt.toString(),
         startedAt = startedAt?.toString(),
-        finishedAt = finishedAt?.toString()
+        finishedAt = finishedAt?.toString(),
+        totalTurnsCompleted = totalTurnsCompleted,
+        winnerUserId = winnerUserId
     )
 
 fun GamePlayer.toResponse(): GamePlayerResponse =
@@ -161,7 +164,8 @@ fun GamePlayer.toResponse(): GamePlayerResponse =
         rackTiles = rackTiles.map { it.toResponse() },
         hasCompletedInitialMeld = hasCompletedInitialMeld,
         score = score,
-        joinedAt = joinedAt.toString()
+        joinedAt = joinedAt.toString(),
+        metrics = metrics.toResponse()
     )
 
 fun BoardSet.toResponse(): BoardSetResponse =
@@ -186,3 +190,15 @@ fun Tile.toResponse(): TileResponse =
             isJoker = false
         )
     }
+
+fun GamePlayerMetrics.toResponse(): GamePlayerMetricsResponse =
+    GamePlayerMetricsResponse(
+        turnsCompleted = turnsCompleted,
+        tilesPlayed = tilesPlayed,
+        meldsCreated = meldsCreated,
+        pointsPlayed = pointsPlayed,
+        tilesRemainingAtEnd = tilesRemainingAtEnd,
+        penaltyPointsAtEnd = penaltyPointsAtEnd,
+        winner = winner,
+        finishPosition = finishPosition
+    )
