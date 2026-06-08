@@ -21,7 +21,8 @@ class EndTurnService(
     private val gameService: GameService,
     private val rummikubRuleService: RummikubRuleService,
     private val gameBroadcastService: GameBroadcastService,
-    private val afterCommitExecutor: AfterCommitExecutor
+    private val afterCommitExecutor: AfterCommitExecutor,
+    private val gameMetricsService: GameMetricsService
 ) {
     private companion object {
         const val GAME_NOT_FOUND = "Game not found"
@@ -60,11 +61,24 @@ class EndTurnService(
             throw InvalidTurnSubmissionException(validation)
         }
 
-        val resolvedGame = commitDraftToConfirmedGame(game, submittedDraft)
-            .finishIfWinnerExists(userId)
+        val committedGame = commitDraftToConfirmedGame(game, submittedDraft)
 
-        if (resolvedGame.status == GameStatus.FINISHED) {
-            val savedGame = gameRepository.save(resolvedGame.toEntity()).toDomain()
+        val gameWithMetrics = gameMetricsService.applyCommittedTurnMetrics(
+            confirmedBeforeTurn = game,
+            committedGame = committedGame,
+            actingPlayerUserId = userId
+        )
+
+        val resolvedGame = gameWithMetrics.finishIfWinnerExists(userId)
+
+        val finalizedGame = if (resolvedGame.status == GameStatus.FINISHED) {
+            gameMetricsService.finalizeEndGameMetrics(resolvedGame)
+        } else {
+            resolvedGame
+        }
+
+        if (finalizedGame.status == GameStatus.FINISHED) {
+            val savedGame = gameRepository.save(finalizedGame.toEntity()).toDomain()
 
             turnDraftRepository.deleteById(gameId)
 
@@ -76,8 +90,8 @@ class EndTurnService(
             return savedGame
         }
 
-        val nextPlayerId = gameService.nextPlayerId(resolvedGame)
-        val advancedGame = resolvedGame.copy(currentPlayerUserId = nextPlayerId)
+        val nextPlayerId = gameService.nextPlayerId(finalizedGame)
+        val advancedGame = finalizedGame.copy(currentPlayerUserId = nextPlayerId)
         val savedGame = gameRepository.save(advancedGame.toEntity()).toDomain()
 
         val nextDraft = createNextDraft(savedGame)
