@@ -27,6 +27,6 @@ object Routes {
 
     // game
     const val GAME = "game"
-    const val GAME_RESULT = "game_result/{winnerId}"
+    const val GAME_RESULT = "game_result"
     // End of HOME_GRAPH
 }
