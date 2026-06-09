@@ -151,7 +151,7 @@ fun NavGraphBuilder.homeGraph(
                             navController.popBackStack()
 
                         is GameEffect.NavigateToResult ->
-                            navController.navigate("${Routes.GAME_RESULT}/${effect.winnerUserId}")
+                            navController.navigate(Routes.GAME_RESULT)
                     }
                 }
             }
@@ -159,8 +159,7 @@ fun NavGraphBuilder.homeGraph(
             GameScreen(viewModel = vm)
         }
 
-        composable("${Routes.GAME_RESULT}/{winnerId}") { backStackEntry ->
-            val winnerId = backStackEntry.arguments?.getString("winnerId").orEmpty()
+        composable(Routes.GAME_RESULT) { backStackEntry ->
             val userStore = remember { provider.getStore<User>() }
 
             // Reuse the GameViewModel from the game screen (still in backstack)

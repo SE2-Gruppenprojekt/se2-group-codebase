@@ -551,7 +551,7 @@ class GameViewModel(
         }
 
         viewModelScope.launch {
-            _effect.emit(GameEffect.NavigateToResult(winnerUserId))
+            _effect.emit(GameEffect.NavigateToResult)
         }
     }
 
