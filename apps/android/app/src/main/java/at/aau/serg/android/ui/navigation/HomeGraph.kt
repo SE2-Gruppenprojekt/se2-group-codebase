@@ -129,69 +129,75 @@ fun NavGraphBuilder.homeGraph(
             AuthScreen(viewModel = vm)
         }
 
-        composable("${Routes.GAME}/{gameId}") {
-            val gameId = it.arguments?.getString("gameId")!!
-            val userStore = remember { provider.getStore<User>() }
+        navigation(
+            startDestination = "${Routes.GAME}/{gameId}",
+            route = Routes.GAME_FLOW
+        ) {
+            composable("${Routes.GAME}/{gameId}") { backStackEntry ->
+                val gameId = backStackEntry.arguments?.getString("gameId")!!
+                val userStore = remember { provider.getStore<User>() }
 
-            val vm: GameViewModel = viewModel(
-                factory = GenericViewModelFactory { GameViewModel(userStore) }
-            )
-
-            LaunchedEffect(gameId) {
-                vm.onUIEvent(GameUIEvent.OnLoadGame(gameId))
-            }
-
-            LaunchedEffect(Unit) {
-                vm.effects.collect { effect ->
-                    when (effect) {
-                        GameEffect.NavigateToSettings ->
-                            navController.navigate(Routes.SETTINGS)
-
-                        GameEffect.NavigateBack ->
-                            navController.popBackStack()
-
-                        is GameEffect.NavigateToResult ->
-                            navController.navigate(Routes.GAME_RESULT)
-                    }
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(Routes.GAME_FLOW)
                 }
-            }
+                val vm: GameViewModel = viewModel(
+                    parentEntry,
+                    factory = GenericViewModelFactory { GameViewModel(userStore) }
+                )
 
-            GameScreen(viewModel = vm)
-        }
+                LaunchedEffect(gameId) {
+                    vm.onUIEvent(GameUIEvent.OnLoadGame(gameId))
+                }
 
-        composable(Routes.GAME_RESULT) { backStackEntry ->
-            val userStore = remember { provider.getStore<User>() }
+                LaunchedEffect(Unit) {
+                    vm.effects.collect { effect ->
+                        when (effect) {
+                            GameEffect.NavigateToSettings ->
+                                navController.navigate(Routes.SETTINGS)
 
-            // Reuse the GameViewModel from the game screen (still in backstack)
-            // so the full result data (players, scores) is available
-            val gameBackStackEntry = remember(backStackEntry) {
-                navController.previousBackStackEntry
-            }
-            val vm: GameViewModel = if (gameBackStackEntry != null) {
-                viewModel(gameBackStackEntry, factory = GenericViewModelFactory { GameViewModel(userStore) })
-            } else {
-                viewModel(factory = GenericViewModelFactory { GameViewModel(userStore) })
-            }
-            val uiState by vm.uiState.collectAsState()
+                            GameEffect.NavigateBack ->
+                                navController.popBackStack()
 
-            val lobbyId = uiState.gameState?.lobbyId
-
-            GameResultScreen(
-                gameResult = uiState.gameResult,
-                currentUserId = uiState.user?.uid,
-                onNavigateHome = {
-                    navController.navigate(Routes.HOME_SCREEN) {
-                        popUpTo(Routes.HOME_SCREEN) { inclusive = true }
-                    }
-                },
-                onNextRound = if (lobbyId != null) {
-                    {
-                        navController.navigate("${Routes.WAITING_ROOM}/$lobbyId") {
-                            popUpTo(Routes.HOME_SCREEN) { inclusive = false }
+                            GameEffect.NavigateToResult ->
+                                navController.navigate(Routes.GAME_RESULT)
                         }
                     }
-                } else null
-            )
+                }
+
+                GameScreen(viewModel = vm)
+            }
+
+            composable(Routes.GAME_RESULT) { backStackEntry ->
+                val userStore = remember { provider.getStore<User>() }
+
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(Routes.GAME_FLOW)
+                }
+                val vm: GameViewModel = viewModel(
+                    parentEntry,
+                    factory = GenericViewModelFactory { GameViewModel(userStore) }
+                )
+                val uiState by vm.uiState.collectAsState()
+
+                val lobbyId = uiState.gameState?.lobbyId
+
+                GameResultScreen(
+                    gameResult = uiState.gameResult,
+                    currentUserId = uiState.user?.uid,
+                    onNavigateHome = {
+                        navController.navigate(Routes.HOME_SCREEN) {
+                            popUpTo(Routes.HOME_SCREEN) { inclusive = true }
+                        }
+                    },
+                    onNextRound = if (lobbyId != null) {
+                        {
+                            navController.navigate("${Routes.WAITING_ROOM}/$lobbyId") {
+                                popUpTo(Routes.HOME_SCREEN) { inclusive = false }
+                            }
+                        }
+                    } else null
+                )
+            }
         }
 
         composable(Routes.CREATE_LOBBY_FANCY) {
