@@ -67,7 +67,19 @@ fun GameResultScreen(
     val isWinner = currentUserId != null && currentUserId == winnerUserId
     val finishedCount = players.count { !it.isStillPlaying }
 
-    Box(
+    val shareText = buildString {
+        appendLine("Rummikub — Game Results")
+        appendLine("Duration: $matchDuration")
+        appendLine()
+        players.forEach { player ->
+            val medal = when (player.finishPosition) {
+                1 -> "🏆"; 2 -> "🥈"; 3 -> "🥉"; else -> "   "
+            }
+            appendLine("$medal ${player.displayName} — ${player.score} pts")
+        }
+    }
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(
@@ -75,9 +87,14 @@ fun GameResultScreen(
             )
             .testTag(GameTestTags.RESULT_SCREEN)
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 88.dp)
+
+        // --- HEADER ---
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
 
             // --- HEADER ---
@@ -141,7 +158,16 @@ fun GameResultScreen(
                 }
             }
 
-            // --- LEADERBOARD ---
+            Spacer(Modifier.height(12.dp))
+        }
+
+        // --- LEADERBOARD (scrollable) ---
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            verticalArrangement = Arrangement.spacedBy(0.dp)
+        ) {
             itemsIndexed(players) { index, player ->
                 PlayerResultCard(
                     player = player,
@@ -152,35 +178,31 @@ fun GameResultScreen(
                 )
             }
 
-            // --- BOTTOM PLAYER STATS ---
-            if (currentPlayer != null) {
-                item {
-                    Spacer(Modifier.height(16.dp))
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        ResultStatBox(
-                            label = "Tiles Played",
-                            value = "+${currentPlayer.tilesPlayed}",
-                            modifier = Modifier.weight(1f),
-                            valueColor = ResGreen
-                        )
-                        ResultStatBox(
-                            label = "Sets Created",
-                            value = "${currentPlayer.meldsCreated}",
-                            modifier = Modifier.weight(1f)
-                        )
-                        ResultStatBox(
-                            label = "Avg Turn",
-                            value = "0:00", // TODO: calculate from backend data when available
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    Spacer(Modifier.height(8.dp))
-                }
+        // --- BOTTOM PLAYER STATS (fixed above action bar) ---
+        if (currentPlayer != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(ResSurface)
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ResultStatBox(
+                    label = "Tiles Played",
+                    value = "+${currentPlayer.tilesPlayed}",
+                    modifier = Modifier.weight(1f),
+                    valueColor = ResGreen
+                )
+                ResultStatBox(
+                    label = "Sets Created",
+                    value = "${currentPlayer.meldsCreated}",
+                    modifier = Modifier.weight(1f)
+                )
+                ResultStatBox(
+                    label = "Avg Turn",
+                    value = "0:00",
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
 
