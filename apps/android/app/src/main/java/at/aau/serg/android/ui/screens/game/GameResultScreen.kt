@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.sp
 
 private val ResBackground    = Color(0xFF0D0B1E)
 private val ResSurface       = Color(0xFF1A1740)
+private val ResCard          = Color(0xFF1D1A38)
 private val ResCardHighlight = Color(0xFF2A2560)
 private val ResAccent        = Color(0xFF7B61FF)
 private val ResGold          = Color(0xFFFFD700)
@@ -229,7 +230,13 @@ fun GameResultScreen(
             }
 
             IconButton(
-                onClick = onShareResult,
+                onClick = {
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, shareText)
+                    }
+                    context.startActivity(Intent.createChooser(intent, "Share Results"))
+                },
                 modifier = Modifier
                     .size(52.dp)
                     .clip(RoundedCornerShape(14.dp))
@@ -284,7 +291,7 @@ private fun PlayerResultCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(if (isCurrentUser) ResCardHighlight else Color.White.copy(alpha = 0.05f))
+            .background(if (isCurrentUser) ResCardHighlight else ResCard)
             .then(
                 if (isCurrentUser) Modifier.border(1.5.dp, ResAccent, RoundedCornerShape(16.dp))
                 else Modifier
