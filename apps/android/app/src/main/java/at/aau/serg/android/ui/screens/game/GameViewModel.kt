@@ -420,28 +420,10 @@ class GameViewModel(
                 )
                 _uiState.update { it.copy(loadState = LoadState.Success) }
             } catch (e: Throwable) {
-                when (val appError = NetworkErrorMapper.map(e)) {
-                    is AppError.Rest.RuleValidation -> {
-                        val setViolations = appError.violations.filter { it.boardSetId != null }
-                        val globalViolations = appError.violations.filter { it.boardSetId == null }
+                val appError = NetworkErrorMapper.map(e)
 
-                        _uiState.update {
-                            it.copy(
-                                loadState = LoadState.Success,
-                                ruleValidation = RuleValidationUiState(
-                                    violationsByBoardSetId = setViolations.groupBy { v -> v.boardSetId!! },
-                                    globalViolations = globalViolations,
-                                    summaryMessage = appError.message
-                                )
-                            )
-                        }
-                    }
-
-                    else -> {
-                        _uiState.update {
-                            it.copy(loadState = LoadState.Error(appError))
-                        }
-                    }
+                _uiState.update {
+                    it.copy(loadState = LoadState.Error(appError))
                 }
             }
         }
