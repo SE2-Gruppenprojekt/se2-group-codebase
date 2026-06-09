@@ -61,6 +61,7 @@ fun GameResultScreen(
     onNextRound: (() -> Unit)? = null,
     onShareResult: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     val players = gameResult?.players.orEmpty()
     val winnerUserId = gameResult?.winnerUserId.orEmpty()
     val matchDuration = gameResult?.matchDuration ?: "0:00"
@@ -97,24 +98,41 @@ fun GameResultScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Game #4821", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
+                Text("Still In Progress", color = ResGray, fontSize = 12.sp)
+            }
+            Text("Play Time: $matchDuration", color = Color.White, fontSize = 13.sp)
+        }
 
-            // --- HEADER ---
-            item {
+        // --- HERO ---
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // "GAME OVER" badge
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = Color.White.copy(alpha = 0.15f)
+            ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Icon(
                         Icons.Filled.EmojiEvents,
                         contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.9f),
-                        modifier = Modifier.size(80.dp)
+                        tint = Color.White,
+                        modifier = Modifier.size(13.dp)
                     )
+                    Text("GAME OVER", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
 
-                    Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
 
             // Trophy (winner) or medal (finished)
             Icon(
@@ -124,39 +142,45 @@ fun GameResultScreen(
                 modifier = Modifier.size(80.dp)
             )
 
-                    Spacer(Modifier.height(4.dp))
-                    Text("RESULTS", color = ResGray, fontSize = 11.sp, letterSpacing = 2.sp)
+            Spacer(Modifier.height(12.dp))
 
-                    Spacer(Modifier.height(12.dp))
+            Text(
+                text = if (isWinner) "YOU WIN!" else "YOU FINISHED",
+                fontSize = 34.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color.White,
+                modifier = Modifier.testTag(GameTestTags.RESULT_TITLE)
+            )
 
-                    // Players finished pill
-                    Surface(
-                        shape = RoundedCornerShape(50),
-                        color = Color.White.copy(alpha = 0.1f)
-                    ) {
-                        Text(
-                            "Players $finishedCount/${players.size} Finished",
-                            color = Color.White,
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
-                        )
-                    }
+            Spacer(Modifier.height(4.dp))
+            Text("RESULTS", color = ResGray, fontSize = 11.sp, letterSpacing = 2.sp)
 
-                    Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(12.dp))
 
-                    // Stats row (current player's stats)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        ResultStatBox("Duration", matchDuration, Modifier.weight(1f))
-                        ResultStatBox("Moves", "${currentPlayer?.turnsCompleted ?: gameResult?.totalTurns ?: 0}", Modifier.weight(1f))
-                        ResultStatBox("Points", "+${currentPlayer?.pointsFromTiles ?: 0}", Modifier.weight(1f))
-                        ResultStatBox("Melds", "${currentPlayer?.meldsCreated ?: 0}", Modifier.weight(1f))
-                    }
+            // Players finished pill
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = Color.White.copy(alpha = 0.1f)
+            ) {
+                Text(
+                    "Players $finishedCount/${players.size} Finished",
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                )
+            }
 
-                    Spacer(Modifier.height(20.dp))
-                }
+            Spacer(Modifier.height(20.dp))
+
+            // Stats row (current player's stats)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ResultStatBox("Duration", matchDuration, Modifier.weight(1f))
+                ResultStatBox("Moves", "${currentPlayer?.turnsCompleted ?: gameResult?.totalTurns ?: 0}", Modifier.weight(1f))
+                ResultStatBox("Points", "+${currentPlayer?.pointsFromTiles ?: 0}", Modifier.weight(1f))
+                ResultStatBox("Melds", "${currentPlayer?.meldsCreated ?: 0}", Modifier.weight(1f))
             }
 
             Spacer(Modifier.height(12.dp))
@@ -178,6 +202,8 @@ fun GameResultScreen(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
             }
+            item { Spacer(Modifier.height(8.dp)) }
+        }
 
         // --- BOTTOM PLAYER STATS (fixed above action bar) ---
         if (currentPlayer != null) {
@@ -207,10 +233,9 @@ fun GameResultScreen(
             }
         }
 
-        // --- BOTTOM ACTIONS ---
+        // --- BOTTOM ACTIONS (fixed) ---
         Row(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .background(ResSurface)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
@@ -343,8 +368,12 @@ private fun PlayerResultCard(
                 }
                 if (placeBadge != null) {
                     Surface(shape = RoundedCornerShape(50), color = placeBadge.second.copy(alpha = 0.15f)) {
-                        Text(placeBadge.first, fontSize = 10.sp, color = placeBadge.second,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                        Text(
+                            placeBadge.first,
+                            fontSize = 10.sp,
+                            color = placeBadge.second,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
                     }
                 }
             }
