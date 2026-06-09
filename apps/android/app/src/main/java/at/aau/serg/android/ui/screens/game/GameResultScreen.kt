@@ -5,7 +5,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,17 +18,19 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -88,45 +89,8 @@ fun GameResultScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    IconButton(onClick = onNavigateHome) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Game #4821", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
-                        Text("Still In Progress", color = ResGray, fontSize = 12.sp)
-                    }
-                    Text("Play Time: $matchDuration", color = Color.White, fontSize = 13.sp)
-                }
-            }
-
-            // --- HERO ---
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // "GAME OVER" badge
-                    Surface(
-                        shape = RoundedCornerShape(50),
-                        color = Color.White.copy(alpha = 0.15f)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(Icons.Default.Star, contentDescription = null, tint = Color.White, modifier = Modifier.size(13.dp))
-                            Text("GAME OVER", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-
-                    Spacer(Modifier.height(16.dp))
-
-                    // Trophy
                     Icon(
-                        Icons.Default.Star,
+                        Icons.Filled.EmojiEvents,
                         contentDescription = null,
                         tint = Color.White.copy(alpha = 0.9f),
                         modifier = Modifier.size(80.dp)
@@ -134,13 +98,13 @@ fun GameResultScreen(
 
                     Spacer(Modifier.height(12.dp))
 
-                    Text(
-                        text = if (isWinner) "YOU WIN!" else "YOU FINISHED",
-                        fontSize = 34.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White,
-                        modifier = Modifier.testTag(GameTestTags.RESULT_TITLE)
-                    )
+            // Trophy (winner) or medal (finished)
+            Icon(
+                imageVector = if (isWinner) Icons.Filled.EmojiEvents else Icons.Filled.MilitaryTech,
+                contentDescription = null,
+                tint = if (isWinner) ResGold else Color.White.copy(alpha = 0.9f),
+                modifier = Modifier.size(80.dp)
+            )
 
                     Spacer(Modifier.height(4.dp))
                     Text("RESULTS", color = ResGray, fontSize = 11.sp, letterSpacing = 2.sp)
