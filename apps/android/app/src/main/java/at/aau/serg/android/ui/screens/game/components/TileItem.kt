@@ -59,7 +59,7 @@ fun TileItem(
             Text(
                 text = when (tile) {
                     is NumberedTile -> tile.number.toString()
-                    is JokerTile -> "0"
+                    is JokerTile -> "J"
                 },
                 color = Color.Black,
                 fontWeight = FontWeight.Black,
@@ -75,7 +75,7 @@ fun TileItem(
             Text(
                 text = when (tile) {
                     is NumberedTile -> tile.number.toString()
-                    is JokerTile -> "0"
+                    is JokerTile -> "J"
                 },
                 color = Color.White,
                 fontWeight = FontWeight.Black,
