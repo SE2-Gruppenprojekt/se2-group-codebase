@@ -46,7 +46,10 @@ fun TileItem(
                 }
             }
             .background(
-                color = Color(tile.color.colorInt)
+                color = when (tile) {
+                    is NumberedTile -> Color(tile.color.colorInt)
+                    is JokerTile -> Color(0xFF6B7280)
+                }
             )
             .border(
                 width = if (selected) 3.dp else 0.dp,
