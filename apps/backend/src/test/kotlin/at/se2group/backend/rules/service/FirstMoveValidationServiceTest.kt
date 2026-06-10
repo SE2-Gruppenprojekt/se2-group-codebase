@@ -109,5 +109,27 @@ class FirstMoveValidationServiceTest {
         assertTrue(result.isValid)
     }
 
+    @Test
+    fun `does not count existing board tiles toward initial meld score`() {
+        val existingBoardTile = tile("existing-1", TileColor.BLUE, 13)
+        val rackTile = tile("rack-1", TileColor.RED, 5)
+
+        val player = player().copy(rackTiles = listOf(rackTile))
+        val game = game(player).copy(
+            boardSets = listOf(BoardSet(boardSetId = "existing-1", tiles = listOf(existingBoardTile)))
+        )
+        val draft = draft(
+            boardSets = listOf(
+                BoardSet(boardSetId = "existing-1", tiles = listOf(existingBoardTile)),
+                BoardSet(boardSetId = "new-set", tiles = listOf(rackTile))
+            )
+        )
+        val result = service.validate(game, player, draft)
+
+        assertFalse(result.isValid)
+        assertEquals("INITIAL_MELD_TOO_LOW", result.violations.single().code)
+
+    }
+
 
 }
