@@ -34,6 +34,11 @@ class FirstMoveValidationServiceTest {
         rackTiles = emptyList()
     )
 
+    private fun tile(id: String, color: TileColor, number: Int) = NumberedTile(
+        tileId = id,
+        color = color,
+        number = number)
+
     @Test
     fun `returns valid when player already completed initial meld`() {
        val result = service.validate(

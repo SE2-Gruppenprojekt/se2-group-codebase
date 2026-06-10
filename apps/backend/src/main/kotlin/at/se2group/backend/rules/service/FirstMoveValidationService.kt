@@ -3,6 +3,7 @@ package at.se2group.backend.rules.service
 import org.springframework.stereotype.Service
 import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.GamePlayer
+import shared.models.game.domain.NumberedTile
 import shared.models.game.domain.TurnDraft
 import shared.models.game.validation.ValidationResult
 import shared.models.game.validation.valid
@@ -29,6 +30,33 @@ class FirstMoveValidationService {
         if (actingPlayer.hasCompletedInitialMeld) {
             return valid()
         }
+        val score = calculateNewlyCommitedScore(confirmedGame, actingPlayer, submittedDraft)
+
         throw UnsupportedOperationException("Not yet implemented")
+    }
+
+    private fun calculateNewlyCommitedScore(
+        confirmedGame: ConfirmedGame,
+        actingPlayer: GamePlayer,
+        submittedDraft: TurnDraft
+    ): Int {
+        val confirmedBoardTileIds = confirmedGame.boardSets
+            .flatMap { it.tiles }
+            .map { it.tileId }
+            .toSet()
+        val confirmedRackTileIds = actingPlayer.rackTiles
+            .map { it.tileId }
+            .toSet()
+        val newlyCommitedScore = submittedDraft.boardSets
+            .flatMap { it.tiles }
+            .filter { it.tileId !in confirmedBoardTileIds }
+            .filter { it.tileId in confirmedRackTileIds }
+
+        return newlyCommitedScore.sumOf { tile ->
+            when (tile) {
+                is NumberedTile -> tile.number
+                else -> 0
+            }
+        }
     }
 }
