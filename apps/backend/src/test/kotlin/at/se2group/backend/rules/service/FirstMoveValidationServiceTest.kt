@@ -70,5 +70,44 @@ class FirstMoveValidationServiceTest {
         assertEquals("Initial meld must score at least 30 points", result.violations.single().message)
     }
 
+    @Test
+    fun `returns valid when newly committed score is 30`(){
+        val tiles = listOf(
+            tile("tile-1", TileColor.RED, 10),
+            tile("tile-2", TileColor.RED, 10),
+            tile("tile-3", TileColor.RED, 10),
+        )
+        val player = player().copy(rackTiles = tiles)
+        val game = game(player)
+        val draft = draft(
+            boardSets = listOf(
+                BoardSet(boardSetId = "set-1", tiles = tiles)))
+
+        val result = service.validate(game, player, draft)
+
+        assertTrue(result.isValid)
+    }
+
+    @Test
+    fun `returns valid when newly committed is higher than 30`() {
+        val tiles = listOf(
+            tile("tile-1", TileColor.RED, 13),
+            tile("tile-2", TileColor.RED, 13),
+            tile("tile-3", TileColor.RED, 13)
+
+        )
+        val player = player().copy(rackTiles = tiles)
+        val game = game(player)
+        val draft = draft(
+            boardSets = listOf(
+                BoardSet(boardSetId = "set-1", tiles = tiles)
+            )
+        )
+
+        val result = service.validate(game, player, draft)
+
+        assertTrue(result.isValid)
+    }
+
 
 }
