@@ -186,7 +186,7 @@ class RummikubRuleServiceTest {
             NumberedTile("tile-3", TileColor.RED, 5)
         )
         val game = confirmedGame.copy(
-            players = listOf(player.copy(rackTiles = jokerRun))
+            players = listOf(player.copy(rackTiles = jokerRun, hasCompletedInitialMeld = true))
         )
         val draft = TurnDraft(
             gameId = "game-1",
@@ -213,7 +213,7 @@ class RummikubRuleServiceTest {
             JokerTile("tile-3", TileColor.RED)
         )
         val game = confirmedGame.copy(
-            players = listOf(player.copy(rackTiles = allJokers))
+            players = listOf(player.copy(rackTiles = allJokers, hasCompletedInitialMeld = true))
         )
         val draft = TurnDraft(
             gameId = "game-1",
