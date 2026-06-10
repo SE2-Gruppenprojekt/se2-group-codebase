@@ -2,6 +2,7 @@ package at.se2group.backend.rules.service
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import shared.models.game.domain.*
 import java.time.Instant
@@ -34,10 +35,13 @@ class FirstMoveValidationServiceTest {
     )
 
     @Test
-    fun `validate throws not implemented yet`() {
-        val exception = assertThrows(UnsupportedOperationException::class.java) {
-            service.validate(game(player()), player(), draft())
-        }
-        assertEquals("Not implemented yet", exception.message)
+    fun `returns valid when player already completed initial meld`() {
+       val result = service.validate(
+           confirmedGame = game(player(hasCompletedInitialMeld = true)),
+           actingPlayer = player(hasCompletedInitialMeld = true),
+           submittedDraft = draft()
+       )
+        assertTrue(result.isValid)
+        assertTrue(result.violations.isEmpty())
     }
 }

@@ -5,6 +5,7 @@ import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.GamePlayer
 import shared.models.game.domain.TurnDraft
 import shared.models.game.validation.ValidationResult
+import shared.models.game.validation.valid
 
 /**
  * Service responsible for validating the initial meld rule during the first
@@ -25,6 +26,9 @@ class FirstMoveValidationService {
         actingPlayer: GamePlayer,
         submittedDraft: TurnDraft
     ): ValidationResult {
+        if (actingPlayer.hasCompletedInitialMeld) {
+            return valid()
+        }
         throw UnsupportedOperationException("Not yet implemented")
     }
 }
