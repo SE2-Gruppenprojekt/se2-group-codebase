@@ -61,6 +61,7 @@ class EndTurnService(
         }
 
         val resolvedGame = commitDraftToConfirmedGame(game, submittedDraft)
+            .applyInitialMeldCompletion(userId)
             .finishIfWinnerExists(userId)
 
         if (resolvedGame.status == GameStatus.FINISHED) {
@@ -131,6 +132,19 @@ class EndTurnService(
             .first { it.userId == actingPlayerUserId }
             .rackTiles
             .isEmpty()
+    }
+
+    private fun ConfirmedGame.applyInitialMeldCompletion(
+        actingPlayerUserId: String
+    ): ConfirmedGame {
+        val updatePlayers = players.map { player ->
+            if (player.userId == actingPlayerUserId && !player.hasCompletedInitialMeld) {
+                player.copy(hasCompletedInitialMeld = true)
+            } else {
+                player
+            }
+        }
+        return copy(players = updatePlayers)
     }
 
     private fun createNextDraft(game: ConfirmedGame): TurnDraft {
