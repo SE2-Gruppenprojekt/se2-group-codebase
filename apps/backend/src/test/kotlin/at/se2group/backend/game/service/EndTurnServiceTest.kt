@@ -380,6 +380,20 @@ class EndTurnServiceTest {
 
     }
 
+    @Test
+    fun `player with successful initial meld can submit low score turn`() {
+        val entity = gameEntity(hasCompletedInitialMeld = true)
+        whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(entity))
+        whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(draftEntity())
+        whenever(rummikubRuleService.validateSubmittedDraft(any(), any(), any())).thenReturn(valid())
+        whenever(gameRepository.save(any())).thenAnswer { it.arguments[0] }
+        whenever(turnDraftRepository.save(any())).thenAnswer { it.arguments[0] }
+
+        val result = endTurnService.endTurn("game-1", "user-1", request())
+
+        assertTrue(result.players.first { it.userId == "user-1" }.hasCompletedInitialMeld)
+    }
+
     private fun request(
         rackTiles: List<TileRequest> = listOf(TileRequest("new-rack-tile", "BLACK", 9, false))
     ) = EndTurnRequest(
@@ -416,14 +430,16 @@ class EndTurnServiceTest {
         currentPlayerUserId: String = "user-1",
         status: GameStatus = GameStatus.ACTIVE,
         user1Rack: MutableList<TileEmbeddable> = mutableListOf(),
-        user2Rack: MutableList<TileEmbeddable> = mutableListOf()
+        user2Rack: MutableList<TileEmbeddable> = mutableListOf(),
+        hasCompletedInitialMeld: Boolean = false
     ): GameEntity {
         val game = GameEntity(
             gameId = "game-1",
             lobbyId = "lobby-1",
             currentPlayerUserId = currentPlayerUserId,
             status = status,
-            createdAt = Instant.parse("2026-04-27T18:00:00Z")
+            createdAt = Instant.parse("2026-04-27T18:00:00Z"),
+
         )
 
         game.players = mutableListOf(
@@ -433,7 +449,8 @@ class EndTurnServiceTest {
                 displayName = "Alice",
                 turnOrder = 0,
                 rackTiles = user1Rack,
-                joinedAt = Instant.parse("2026-04-27T17:55:00Z")
+                joinedAt = Instant.parse("2026-04-27T17:55:00Z"),
+                hasCompletedInitialMeld = hasCompletedInitialMeld
             ),
             GamePlayerEntity(
                 game = game,
