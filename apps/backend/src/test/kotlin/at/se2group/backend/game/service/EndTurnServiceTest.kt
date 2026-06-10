@@ -17,6 +17,7 @@ import at.se2group.backend.service.GameBroadcastService
 import at.se2group.backend.service.GameService
 import at.se2group.backend.service.InvalidTurnSubmissionException
 import at.se2group.backend.service.TileConservationService
+import at.se2group.backend.rules.service.FirstMoveValidationService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -196,7 +197,8 @@ class EndTurnServiceTest {
     fun `commits valid joker containing submitted draft`() {
         val realRuleService = RummikubRuleService(
             TileConservationService(),
-            BoardValidationService(SetValidationService(GroupValidationService(), RunValidationService()))
+            BoardValidationService(SetValidationService(GroupValidationService(), RunValidationService())),
+            FirstMoveValidationService()
         )
         val realEndTurnService = EndTurnService(
             gameRepository = gameRepository,
@@ -345,6 +347,21 @@ class EndTurnServiceTest {
         verify(gameBroadcastService).broadcastGameEnded("game-1", "user-1")
         verify(gameBroadcastService, never()).broadcastTurnChanged(any(), any())
         verify(gameBroadcastService, never()).broadcastDraftUpdated(any())
+    }
+
+    @Test
+    fun `marks player as having completed initial meld`() {
+        whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(gameEntity()))
+        whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(draftEntity())
+        whenever(rummikubRuleService.validateSubmittedDraft(any(), any(), any())).thenReturn(valid())
+        whenever(gameRepository.save(any())).thenAnswer { it.arguments[0] }
+        whenever(turnDraftRepository.save(any())).thenAnswer { it.arguments[0] }
+
+        val result = endTurnService.endTurn("game-1", "user-1", request())
+
+        val actingPlayer = result.players.first { it.userId == "user-1" }
+
+        assertTrue(actingPlayer.hasCompletedInitialMeld)
     }
 
     private fun request(
