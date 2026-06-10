@@ -364,6 +364,22 @@ class EndTurnServiceTest {
         assertTrue(actingPlayer.hasCompletedInitialMeld)
     }
 
+    @Test
+    fun `failed initial meld does not commit game state`() {
+        whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(gameEntity()))
+        whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(draftEntity())
+        whenever(rummikubRuleService.validateSubmittedDraft(any(), any(), any()))
+            .thenReturn(invalid("INITIAL_MELD_TOO_LOW", "Initial meld must score at least 30 points"))
+
+        assertThrows<InvalidTurnSubmissionException> {
+            endTurnService.endTurn("game-1", "user-1", request())
+        }
+
+        verify(gameRepository, never()).save(any())
+        verify(gameBroadcastService, never()).broadcastGameUpdated(any())
+
+    }
+
     private fun request(
         rackTiles: List<TileRequest> = listOf(TileRequest("new-rack-tile", "BLACK", 9, false))
     ) = EndTurnRequest(
