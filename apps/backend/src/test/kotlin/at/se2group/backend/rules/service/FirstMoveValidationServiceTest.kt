@@ -1,10 +1,13 @@
 package at.se2group.backend.rules.service
 
+
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import shared.models.game.domain.*
+import shared.models.game.domain.TileColor
 import java.time.Instant
 
 class FirstMoveValidationServiceTest {
@@ -49,4 +52,23 @@ class FirstMoveValidationServiceTest {
         assertTrue(result.isValid)
         assertTrue(result.violations.isEmpty())
     }
+
+    @Test
+    fun `returns invalid when newly committed score is lower than 30`() {
+        val rackTile = tile("tile-1", TileColor.RED, 5)
+        val player = player().copy(rackTiles = listOf(rackTile))
+        val game = game(player)
+        val draft = draft(
+            boardSets = listOf(
+                BoardSet(boardSetId = "set-1", tiles = listOf(rackTile)))
+        )
+
+        val result = service.validate(game, player, draft)
+
+        assertFalse(result.isValid)
+        assertEquals("INITIAL_MELD_TOO_LOW", result.violations.single().code)
+        assertEquals("Initial meld must score at least 30 points", result.violations.single().message)
+    }
+
+
 }

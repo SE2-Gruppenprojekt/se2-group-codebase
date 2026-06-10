@@ -7,6 +7,7 @@ import shared.models.game.domain.NumberedTile
 import shared.models.game.domain.TurnDraft
 import shared.models.game.validation.ValidationResult
 import shared.models.game.validation.valid
+import shared.models.game.validation.invalid
 
 /**
  * Service responsible for validating the initial meld rule during the first
@@ -22,6 +23,10 @@ import shared.models.game.validation.valid
 
 @Service
 class FirstMoveValidationService {
+
+    private companion object {
+        const val INITIAL_MELD_MINIMUM_SCORE = 30
+    }
     fun validate(
         confirmedGame: ConfirmedGame,
         actingPlayer: GamePlayer,
@@ -30,12 +35,19 @@ class FirstMoveValidationService {
         if (actingPlayer.hasCompletedInitialMeld) {
             return valid()
         }
-        val score = calculateNewlyCommitedScore(confirmedGame, actingPlayer, submittedDraft)
+        val score = calculateNewlyCommittedScore(confirmedGame, actingPlayer, submittedDraft)
 
-        throw UnsupportedOperationException("Not yet implemented")
+        return if (score >= INITIAL_MELD_MINIMUM_SCORE) {
+            valid()
+        } else {
+            invalid(
+                code = "INITIAL_MELD_TOO_LOW",
+                message = "Initial meld must score at least 30 points"
+            )
+        }
     }
 
-    private fun calculateNewlyCommitedScore(
+    private fun calculateNewlyCommittedScore(
         confirmedGame: ConfirmedGame,
         actingPlayer: GamePlayer,
         submittedDraft: TurnDraft
@@ -47,12 +59,12 @@ class FirstMoveValidationService {
         val confirmedRackTileIds = actingPlayer.rackTiles
             .map { it.tileId }
             .toSet()
-        val newlyCommitedScore = submittedDraft.boardSets
+        val newlyCommittedScore = submittedDraft.boardSets
             .flatMap { it.tiles }
             .filter { it.tileId !in confirmedBoardTileIds }
             .filter { it.tileId in confirmedRackTileIds }
 
-        return newlyCommitedScore.sumOf { tile ->
+        return newlyCommittedScore.sumOf { tile ->
             when (tile) {
                 is NumberedTile -> tile.number
                 else -> 0
