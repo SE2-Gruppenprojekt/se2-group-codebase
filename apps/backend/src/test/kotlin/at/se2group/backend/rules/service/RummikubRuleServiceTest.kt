@@ -29,12 +29,17 @@ class RummikubRuleServiceTest {
     @Mock
     lateinit var boardValidationService: BoardValidationService
 
+    @Mock
+    lateinit var firstMoveValidationService: FirstMoveValidationService
+
     private val ruleService by lazy {
-        RummikubRuleService(tileConservationService, boardValidationService)
+        RummikubRuleService(tileConservationService, boardValidationService, firstMoveValidationService)
     }
+
     private val realRuleService = RummikubRuleService(
         TileConservationService(),
-        BoardValidationService(SetValidationService(GroupValidationService(), RunValidationService()))
+        BoardValidationService(SetValidationService(GroupValidationService(), RunValidationService())),
+        FirstMoveValidationService()
     )
 
     private val player = GamePlayer(
@@ -63,6 +68,7 @@ class RummikubRuleServiceTest {
     fun `returns valid when both tile conservation and board validation pass`() {
         whenever(tileConservationService.validate(any(), any(), any())).thenReturn(valid())
         whenever(boardValidationService.validate(any())).thenReturn(valid())
+        whenever(firstMoveValidationService.validate(any(), any(), any())).thenReturn(valid())
 
         val result = ruleService.validateSubmittedDraft(
             confirmedGame = confirmedGame,
@@ -78,6 +84,7 @@ class RummikubRuleServiceTest {
     fun `invokes tile conservation service`() {
         whenever(tileConservationService.validate(any(), any(), any())).thenReturn(valid())
         whenever(boardValidationService.validate(any())).thenReturn(valid())
+        whenever(firstMoveValidationService.validate(any(), any(), any())).thenReturn(valid())
 
         ruleService.validateSubmittedDraft(
             confirmedGame = confirmedGame,
@@ -92,6 +99,8 @@ class RummikubRuleServiceTest {
     fun `invokes board validation service`() {
         whenever(tileConservationService.validate(any(), any(), any())).thenReturn(valid())
         whenever(boardValidationService.validate(any())).thenReturn(valid())
+        whenever(firstMoveValidationService.validate(any(), any(), any())).thenReturn(valid())
+
 
         ruleService.validateSubmittedDraft(
             confirmedGame = confirmedGame,
@@ -107,6 +116,7 @@ class RummikubRuleServiceTest {
         whenever(tileConservationService.validate(any(), any(), any()))
             .thenReturn(invalid("TILE_CONSERVATION_VIOLATION", "tile mismatch"))
         whenever(boardValidationService.validate(any())).thenReturn(valid())
+        whenever(firstMoveValidationService.validate(any(), any(), any())).thenReturn(valid())
 
         val result = ruleService.validateSubmittedDraft(
             confirmedGame = confirmedGame,
@@ -127,6 +137,7 @@ class RummikubRuleServiceTest {
             message = "Run must have at least 3 tiles",
         )
         whenever(boardValidationService.validate(any())).thenReturn(ValidationResult(violations = listOf(boardViolation)))
+        whenever(firstMoveValidationService.validate(any(), any(), any())).thenReturn(valid())
 
 
         val result = ruleService.validateSubmittedDraft(
@@ -151,6 +162,7 @@ class RummikubRuleServiceTest {
         )
         whenever(boardValidationService.validate(any()))
             .thenReturn(ValidationResult(violations = listOf(boardViolation)))
+        whenever(firstMoveValidationService.validate(any(), any(), any())).thenReturn(valid())
 
 
         val result = ruleService.validateSubmittedDraft(
@@ -222,6 +234,43 @@ class RummikubRuleServiceTest {
             result.violations.map { it.code }
         )
         assertTrue(result.violations.all { it.boardSetId == "set-1" })
+    }
+
+    @Test
+    fun `invokes first move validation service`() {
+        whenever(tileConservationService.validate(any(), any(), any())).thenReturn(valid())
+        whenever(boardValidationService.validate(any())).thenReturn(valid())
+        whenever(firstMoveValidationService.validate(any(), any(), any())).thenReturn(valid())
+
+        ruleService.validateSubmittedDraft(confirmedGame, "user-1", submittedDraft)
+
+        verify(firstMoveValidationService).validate(confirmedGame, player, submittedDraft)
+    }
+
+    @Test
+    fun `returns invalid when initial meld score is too low`(){
+        whenever(tileConservationService.validate(any(), any(), any())).thenReturn(valid())
+        whenever(boardValidationService.validate(any())).thenReturn(valid())
+        whenever(firstMoveValidationService.validate(any(), any(), any()))
+            .thenReturn(invalid("INITIAL_MELD_SCORE_TOO_LOW", "Initial meld score must be at least 30 points"))
+
+        val result = ruleService.validateSubmittedDraft(confirmedGame, "user-1", submittedDraft)
+
+        assertFalse(result.isValid)
+        assertEquals("INITIAL_MELD_SCORE_TOO_LOW", result.violations.single().code)
+
+    }
+
+    @Test
+    fun `returns valid when initial meld score is at least 30`() {
+        whenever(tileConservationService.validate(any(), any(), any())).thenReturn(valid())
+        whenever(boardValidationService.validate(any())).thenReturn(valid())
+        whenever(firstMoveValidationService.validate(any(), any(), any())).thenReturn(valid())
+
+        val result = ruleService.validateSubmittedDraft(confirmedGame, "user-1", submittedDraft)
+
+        assertTrue(result.isValid)
+
     }
 
 
