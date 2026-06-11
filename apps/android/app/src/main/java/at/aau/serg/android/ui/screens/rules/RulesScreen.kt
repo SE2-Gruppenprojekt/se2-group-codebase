@@ -17,8 +17,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.MiscellaneousServices
+import androidx.compose.material.icons.filled.PanTool
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +41,8 @@ import androidx.compose.ui.unit.sp
 import at.aau.serg.android.ui.components.BackButton
 import at.aau.serg.android.ui.theme.AccentBlue
 import at.aau.serg.android.ui.theme.AccentPurple
+import at.aau.serg.android.ui.theme.AccentYellow
+import at.aau.serg.android.ui.theme.RulesKeyRulesGreen
 import at.aau.serg.android.ui.theme.appColors
 import shared.models.game.domain.TileColor
 
@@ -194,6 +199,64 @@ fun RulesScreenContent(
                 ),
                 showAddTile = true
             )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Key Rules section
+            RulesSectionHeader(
+                icon = Icons.Filled.MiscellaneousServices,
+                iconBg = RulesKeyRulesGreen,
+                title = "Key Rules"
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                RuleItemCard(
+                    badgeContent = {
+                        Text(
+                            text = "30",
+                            color = RulesKeyRulesGreen,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                    },
+                    badgeBg = RulesKeyRulesGreen.copy(alpha = 0.15f),
+                    title = "Initial Meld",
+                    description = "Your first move must total at least 30 points using only tiles from your rack. You cannot use board tiles until this is met."
+                )
+
+                RuleItemCard(
+                    badgeContent = {
+                        Icon(
+                            imageVector = Icons.Filled.Casino,
+                            contentDescription = null,
+                            tint = AccentYellow,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    },
+                    badgeBg = AccentYellow.copy(alpha = 0.15f),
+                    title = "The Joker",
+                    description = "Wildcards that can represent any number/color. If you replace a Joker on the board with the actual tile, you must use it in a set immediately."
+                )
+
+                RuleItemCard(
+                    badgeContent = {
+                        Icon(
+                            imageVector = Icons.Filled.PanTool,
+                            contentDescription = null,
+                            tint = AccentBlue,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    },
+                    badgeBg = AccentBlue.copy(alpha = 0.15f),
+                    title = "Manipulation",
+                    description = "You can rearrange any tiles already on the board to form new valid sets, as long as every set remains valid at the end of your turn."
+                )
+            }
         }
     }
 }
@@ -299,6 +362,51 @@ private fun RuleTilePreview(label: String, color: Color) {
                 color = Color.White,
                 fontWeight = FontWeight.Black,
                 fontSize = 16.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun RuleItemCard(
+    badgeContent: @Composable () -> Unit,
+    badgeBg: Color,
+    title: String,
+    description: String
+) {
+    val c = appColors()
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(c.settings.card)
+            .padding(16.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(badgeBg),
+            contentAlignment = Alignment.Center
+        ) {
+            badgeContent()
+        }
+
+        Spacer(modifier = Modifier.width(14.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = c.settings.primaryText
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = c.settings.secondaryText
             )
         }
     }
