@@ -7,6 +7,7 @@ import at.se2group.backend.persistence.TileEmbeddable
 import at.se2group.backend.persistence.TurnDraftEntity
 import at.se2group.backend.persistence.TurnDraftRepository
 import at.se2group.backend.rules.service.BoardValidationService
+import at.se2group.backend.rules.service.FirstMoveValidationService
 import at.se2group.backend.rules.service.GroupValidationService
 import at.se2group.backend.rules.service.RummikubRuleService
 import at.se2group.backend.rules.service.RunValidationService
@@ -196,7 +197,8 @@ class EndTurnServiceTest {
     fun `commits valid joker containing submitted draft`() {
         val realRuleService = RummikubRuleService(
             TileConservationService(),
-            BoardValidationService(SetValidationService(GroupValidationService(), RunValidationService()))
+            BoardValidationService(SetValidationService(GroupValidationService(), RunValidationService())),
+            FirstMoveValidationService()
         )
         val realEndTurnService = EndTurnService(
             gameRepository = gameRepository,
