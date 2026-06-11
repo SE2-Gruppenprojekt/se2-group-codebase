@@ -385,7 +385,8 @@ class EndTurnServiceTest {
         currentPlayerUserId: String = "user-1",
         status: GameStatus = GameStatus.ACTIVE,
         user1Rack: MutableList<TileEmbeddable> = mutableListOf(),
-        user2Rack: MutableList<TileEmbeddable> = mutableListOf()
+        user2Rack: MutableList<TileEmbeddable> = mutableListOf(),
+        hasCompletedInitialMeld: Boolean = false
     ): GameEntity {
         val game = GameEntity(
             gameId = "game-1",
@@ -402,7 +403,8 @@ class EndTurnServiceTest {
                 displayName = "Alice",
                 turnOrder = 0,
                 rackTiles = user1Rack,
-                joinedAt = Instant.parse("2026-04-27T17:55:00Z")
+                joinedAt = Instant.parse("2026-04-27T17:55:00Z"),
+                hasCompletedInitialMeld = hasCompletedInitialMeld
             ),
             GamePlayerEntity(
                 game = game,
