@@ -83,7 +83,7 @@ fun RulesScreenContent(
             backButtonModifier = Modifier.testTag(RulesTestTags.BACK_BUTTON)
         )
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(28.dp))
 
         // rules content
         Column(
