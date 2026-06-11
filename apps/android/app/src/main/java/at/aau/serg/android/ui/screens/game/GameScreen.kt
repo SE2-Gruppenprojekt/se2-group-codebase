@@ -39,16 +39,31 @@ fun GameScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    GameScreenContent(
-        uiState = uiState,
-        onEvent = { event ->
-            when (event) {
-                GameUIEvent.OnBack -> onBack?.invoke() ?: viewModel.onUIEvent(event)
-                GameUIEvent.OnSettings -> onSettings?.invoke() ?: viewModel.onUIEvent(event)
-                else -> viewModel.onUIEvent(event)
+    Box(Modifier.fillMaxSize()) {
+        GameScreenContent(
+            uiState = uiState,
+            onEvent = { event ->
+                when (event) {
+                    GameUIEvent.OnBack -> onBack?.invoke() ?: viewModel.onUIEvent(event)
+                    GameUIEvent.OnSettings -> onSettings?.invoke() ?: viewModel.onUIEvent(event)
+                    else -> viewModel.onUIEvent(event)
+                }
+            }
+        )
+
+        // DEBUG ONLY — remove before release
+        val firstPlayerId = uiState.gameState?.players?.firstOrNull()?.userId
+        if (firstPlayerId != null) {
+            androidx.compose.material3.TextButton(
+                onClick = { viewModel.handleFinishedGame(firstPlayerId) },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 56.dp, end = 56.dp)
+            ) {
+                Text("🏁", fontSize = 20.sp)
             }
         }
-    )
+    }
 }
 
 @Composable
@@ -84,7 +99,9 @@ fun GameScreenContent(
                     }
 
                     Row(Modifier.align(Alignment.CenterEnd)) {
-                        Text("3:45")
+                        val m = uiState.elapsedSeconds / 60
+                        val s = uiState.elapsedSeconds % 60
+                        Text("%d:%02d".format(m, s))
                         IconButton(onClick = { onEvent(GameUIEvent.OnSettings) }) {
                             Icon(Icons.Default.Settings, null)
                         }
