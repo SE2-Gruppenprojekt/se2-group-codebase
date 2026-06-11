@@ -47,6 +47,11 @@ class HomeViewModel(
                     _effects.emit(HomeEffect.NavigateToSettings)
                 }
             }
+            HomeEvent.OnRules -> {
+                viewModelScope.launch {
+                    _effects.emit(HomeEffect.NavigateToRules)
+                }
+            }
         }
     }
 }

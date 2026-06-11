@@ -33,6 +33,7 @@ import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingEffect
 import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingEvent
 import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingScreen
 import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingViewModel
+import at.aau.serg.android.ui.screens.rules.RulesScreen
 import at.aau.serg.android.ui.screens.settings.SettingsEffect
 import at.aau.serg.android.ui.screens.settings.SettingsScreen
 import at.aau.serg.android.ui.screens.settings.SettingsViewModel
@@ -63,12 +64,18 @@ fun NavGraphBuilder.homeGraph(
                             navController.navigate(Routes.BROWSING_LOBBIES)
                         HomeEffect.NavigateToSettings ->
                             navController.navigate(Routes.SETTINGS)
+                        HomeEffect.NavigateToRules ->
+                            navController.navigate(Routes.RULES)
 
                     }
                 }
             }
 
             HomeScreen(viewModel = vm)
+        }
+
+        composable(Routes.RULES) {
+            RulesScreen(onBack = { navController.popBackStack() })
         }
 
 

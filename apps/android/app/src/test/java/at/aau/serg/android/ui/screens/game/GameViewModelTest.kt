@@ -46,6 +46,7 @@ import shared.models.game.event.GameUpdatedEvent
 import shared.models.game.event.TurnChangedEvent
 import shared.models.game.event.TurnTimedOutEvent
 import shared.models.game.response.BoardSetResponse
+import shared.models.game.response.GamePlayerMetricsResponse
 import shared.models.game.response.GamePlayerResponse
 import shared.models.game.response.GameResponse
 import shared.models.game.response.TileResponse
@@ -100,7 +101,17 @@ class GameViewModelTest {
                 rackTiles = emptyList(),
                 hasCompletedInitialMeld = false,
                 score = 0,
-                joinedAt = "2026-05-08T10:00:00Z"
+                joinedAt = "2026-05-08T10:00:00Z",
+                metrics = GamePlayerMetricsResponse(
+                    turnsCompleted = 0,
+                    tilesPlayed = 0,
+                    meldsCreated = 0,
+                    pointsPlayed = 0,
+                    tilesRemainingAtEnd = null,
+                    penaltyPointsAtEnd = null,
+                    winner = false,
+                    finishPosition = null
+                )
             )
         ),
         board = emptyList(),
@@ -113,7 +124,9 @@ class GameViewModelTest {
         status = GameStatus.WAITING.toString(),
         createdAt = "2026-05-08T10:00:00Z",
         startedAt = "2026-05-08T10:00:00Z",
-        finishedAt = "2026-05-08T10:00:00Z"
+        finishedAt = "2026-05-08T10:00:00Z",
+        totalTurnsCompleted = 0,
+        winnerUserId = null
     )
 
     fun setTestGameState() {

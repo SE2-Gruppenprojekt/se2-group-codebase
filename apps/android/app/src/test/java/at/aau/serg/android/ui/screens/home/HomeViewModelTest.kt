@@ -89,4 +89,13 @@ class HomeViewModelTest {
 
         assertEquals(HomeEffect.NavigateToSettings, effect)
     }
+
+    @Test
+    fun onRules_emitsNavigateToRules() = runTest {
+        vm.onEvent(HomeEvent.OnRules)
+
+        val effect = vm.effects.first()
+
+        assertEquals(HomeEffect.NavigateToRules, effect)
+    }
 }
