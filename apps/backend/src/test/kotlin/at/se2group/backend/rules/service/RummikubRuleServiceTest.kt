@@ -29,12 +29,16 @@ class RummikubRuleServiceTest {
     @Mock
     lateinit var boardValidationService: BoardValidationService
 
+    @Mock
+    lateinit var firstMoveValidationService: FirstMoveValidationService
+
     private val ruleService by lazy {
-        RummikubRuleService(tileConservationService, boardValidationService)
+        RummikubRuleService(tileConservationService, boardValidationService, firstMoveValidationService)
     }
     private val realRuleService = RummikubRuleService(
         TileConservationService(),
-        BoardValidationService(SetValidationService(GroupValidationService(), RunValidationService()))
+        BoardValidationService(SetValidationService(GroupValidationService(), RunValidationService())),
+        FirstMoveValidationService()
     )
 
     private val player = GamePlayer(
