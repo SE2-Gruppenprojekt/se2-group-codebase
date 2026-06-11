@@ -22,6 +22,9 @@ class GameMetricsService {
         val playedTiles = beforePlayer.rackTiles.filter { it.tileId !in afterRackTileIds }
 
         val previousBoardSetIds = confirmedBeforeTurn.boardSets.map { it.boardSetId }.toSet()
+
+        // A meld is counted only when a new board set is introduced.
+        // Rearranging or extending existing board sets does not increase this metric.
         val meldsCreated = committedGame.boardSets.count { it.boardSetId !in previousBoardSetIds }
 
         val updatedPlayers = committedGame.players.map { player ->

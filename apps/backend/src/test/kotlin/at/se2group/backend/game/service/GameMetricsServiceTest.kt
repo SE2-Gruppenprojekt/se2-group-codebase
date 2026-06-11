@@ -211,6 +211,59 @@ class GameMetricsServiceTest {
         )
     }
 
+    @Test
+    fun `applyCommittedTurnMetrics does not count modified existing board sets as melds created`() {
+        val playedTile = numbered("tile-1", 5)
+
+        val before = game(
+            players = listOf(
+                player("user-1", 0, rackTiles = listOf(playedTile)),
+                player("user-2", 1)
+            ),
+            boardSets = listOf(
+                boardSet(
+                    "set-1",
+                    listOf(
+                        numbered("tile-2", 6),
+                        numbered("tile-3", 7),
+                        numbered("tile-4", 8)
+                    )
+                )
+            )
+        )
+
+        val committed = before.copy(
+            players = listOf(
+                player("user-1", 0, rackTiles = emptyList()),
+                player("user-2", 1)
+            ),
+            boardSets = listOf(
+                boardSet(
+                    "set-1",
+                    listOf(
+                        numbered("tile-2", 6),
+                        numbered("tile-3", 7),
+                        numbered("tile-4", 8),
+                        playedTile
+                    )
+                )
+            )
+        )
+
+        val result = service.applyCommittedTurnMetrics(
+            confirmedBeforeTurn = before,
+            committedGame = committed,
+            actingPlayerUserId = "user-1"
+        )
+
+        val actingPlayer = result.players.first { it.userId == "user-1" }
+
+        assertEquals(1, actingPlayer.metrics.turnsCompleted)
+        assertEquals(1, actingPlayer.metrics.tilesPlayed)
+        assertEquals(5, actingPlayer.metrics.pointsPlayed)
+        assertEquals(0, actingPlayer.metrics.meldsCreated)
+    }
+
     private fun game(
         players: List<GamePlayer>,
         boardSets: List<BoardSet> = emptyList(),
