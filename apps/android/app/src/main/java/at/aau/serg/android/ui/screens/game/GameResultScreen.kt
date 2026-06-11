@@ -99,7 +99,6 @@ fun GameResultScreen(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Game #4821", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
-                Text("Still In Progress", color = ResGray, fontSize = 12.sp)
             }
             Text("Play Time: $matchDuration", color = Color.White, fontSize = 13.sp)
         }
