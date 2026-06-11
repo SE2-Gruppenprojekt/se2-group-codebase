@@ -220,7 +220,8 @@ class EndTurnServiceTest {
                         tile("tile-3", TileColor.RED, 5, false),
                         tile("new-rack-tile", TileColor.BLACK, 9, false)
                     ),
-                    user2Rack = mutableListOf(tile("user-2-rack"))
+                    user2Rack = mutableListOf(tile("user-2-rack")),
+                    hasCompletedInitialMeld = true
                 )
             )
         )
