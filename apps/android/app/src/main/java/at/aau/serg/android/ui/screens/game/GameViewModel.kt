@@ -522,31 +522,32 @@ class GameViewModel(
         hasEmittedGameResultNavigation = true
 
         val matchDuration = formatElapsed(_uiState.value.elapsedSeconds)
-        val players = _uiState.value.gameState?.players.orEmpty()
-            .sortedByDescending { it.score }
+        val gameState = _uiState.value.gameState
+        val players = gameState?.players.orEmpty()
+            .sortedWith(compareBy({ it.metrics.finishPosition ?: Int.MAX_VALUE }, { -it.score }))
             .mapIndexed { index, it ->
                 GameResultPlayerSummary(
                     userId = it.userId,
                     displayName = it.displayName,
                     score = it.score,
-                    finishPosition = index + 1,
-                    remainingTiles = it.rackTiles.size,
-                    // TODO: map from backend response when available
-                    tilesPlayed = 0,
-                    meldsCreated = 0,
-                    turnsCompleted = 0,
-                    pointsFromTiles = it.score,
-                    penaltyPoints = 0,
-                    // TODO: set from backend when per-player finish status is available
+                    finishPosition = it.metrics.finishPosition ?: (index + 1),
+                    remainingTiles = it.metrics.tilesRemainingAtEnd ?: it.rackTiles.size,
+                    tilesPlayed = it.metrics.tilesPlayed,
+                    meldsCreated = it.metrics.meldsCreated,
+                    turnsCompleted = it.metrics.turnsCompleted,
+                    pointsFromTiles = it.metrics.pointsPlayed,
+                    penaltyPoints = it.metrics.penaltyPointsAtEnd ?: 0,
                     isStillPlaying = false
                 )
             }
 
         _uiState.update {
             it.copy(gameResult = GameResultUiModel(
-                winnerUserId = winnerUserId,
+                winnerUserId = gameState?.winnerUserId ?: winnerUserId,
                 players = players,
-                matchDuration = matchDuration
+                matchDuration = matchDuration,
+                totalTurns = gameState?.totalTurnsCompleted ?: 0,
+                finishedTimestamp = gameState?.finishedAt?.toString()
             ))
         }
 
