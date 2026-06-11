@@ -51,13 +51,17 @@ class GameEventDtoTest {
                 status = "ACTIVE",
                 createdAt = Instant.parse("2026-05-08T10:00:00Z").toString(),
                 startedAt = null,
-                finishedAt = null
+                finishedAt = null,
+                totalTurnsCompleted = 0,
+                winnerUserId = null
             )
         )
 
         assertEquals(GameUpdatedEvent.TYPE, event.type)
         assertEquals("game-1", event.gameId)
         assertEquals(42, event.game.drawPileCount)
+        assertEquals(0, event.game.totalTurnsCompleted)
+        assertEquals(null, event.game.winnerUserId)
     }
 
     @Test
