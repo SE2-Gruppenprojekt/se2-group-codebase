@@ -7,6 +7,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import shared.models.game.domain.*
+import shared.models.game.response.GamePlayerMetricsResponse
 import shared.models.game.response.GamePlayerResponse
 import shared.models.game.response.GameResponse
 import shared.models.game.response.TileResponse
@@ -15,6 +16,16 @@ import java.time.Instant
 
 class GameNetworkMapperTest {
     private val fakeDate: String = "2025-01-01T10:00:00Z"
+    private val fakeMetricsResponse = GamePlayerMetricsResponse(
+        turnsCompleted = 3,
+        tilesPlayed = 9,
+        meldsCreated = 2,
+        pointsPlayed = 45,
+        tilesRemainingAtEnd = 1,
+        penaltyPointsAtEnd = 0,
+        winner = true,
+        finishPosition = 1
+    )
 
     @Test
     fun numberedTile_to_tileRequest() {
@@ -104,7 +115,8 @@ class GameNetworkMapperTest {
             rackTiles = listOf(TileResponse("t1", "RED", 5, false)),
             hasCompletedInitialMeld = true,
             score = 100,
-            joinedAt = now
+            joinedAt = now,
+            metrics = fakeMetricsResponse
         )
 
         val domain = response.toDomain()
@@ -113,6 +125,14 @@ class GameNetworkMapperTest {
         assertEquals("Player 1", domain.displayName)
         assertEquals(100, domain.score)
         assertEquals(Instant.parse(now), domain.joinedAt)
+        assertEquals(3, domain.metrics.turnsCompleted)
+        assertEquals(9, domain.metrics.tilesPlayed)
+        assertEquals(2, domain.metrics.meldsCreated)
+        assertEquals(45, domain.metrics.pointsPlayed)
+        assertEquals(1, domain.metrics.tilesRemainingAtEnd)
+        assertEquals(0, domain.metrics.penaltyPointsAtEnd)
+        assertTrue(domain.metrics.winner)
+        assertEquals(1, domain.metrics.finishPosition)
     }
 
     @Test
@@ -129,7 +149,8 @@ class GameNetworkMapperTest {
                     rackTiles = emptyList(),
                     hasCompletedInitialMeld = false,
                     score = 0,
-                    joinedAt = fakeDate
+                    joinedAt = fakeDate,
+                    metrics = fakeMetricsResponse
                 )
             ),
             drawPile = emptyList(),
@@ -148,7 +169,9 @@ class GameNetworkMapperTest {
             drawPileCount = 0,
             currentTurnPlayerId = "u1",
             turnDeadline = fakeDate,
-            remainingTurnSeconds = 0
+            remainingTurnSeconds = 0,
+            totalTurnsCompleted = 5,
+            winnerUserId = "u1"
         )
 
         val domain = response.toDomain()
@@ -159,6 +182,8 @@ class GameNetworkMapperTest {
         assertNull(domain.finishedAt)
         assertEquals(1, domain.boardSets.size)
         assertEquals("b1", domain.boardSets[0].boardSetId)
+        assertEquals(5, domain.totalTurnsCompleted)
+        assertEquals("u1", domain.winnerUserId)
     }
 
     @Test
@@ -174,7 +199,8 @@ class GameNetworkMapperTest {
                     rackTiles = emptyList(),
                     hasCompletedInitialMeld = false,
                     score = 0,
-                    joinedAt = fakeDate
+                    joinedAt = fakeDate,
+                    metrics = fakeMetricsResponse
                 )
             ),
             drawPile = emptyList(),
@@ -187,7 +213,9 @@ class GameNetworkMapperTest {
             drawPileCount = 0,
             currentTurnPlayerId = "u1",
             turnDeadline = "null",
-            remainingTurnSeconds = 0
+            remainingTurnSeconds = 0,
+            totalTurnsCompleted = 0,
+            winnerUserId = null
         )
 
         val domain = response.toDomain()
