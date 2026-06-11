@@ -122,7 +122,7 @@ fun RulesScreenContent(
             // Valid Sets section
             RulesSectionHeader(
                 icon = Icons.Filled.Layers,
-                iconBg = AccentPurple,
+                iconBg = AccentBlue,
                 title = "Valid Sets"
             )
 
