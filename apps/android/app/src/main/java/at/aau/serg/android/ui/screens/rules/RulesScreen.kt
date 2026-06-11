@@ -17,7 +17,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.GpsFixed
@@ -46,7 +45,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import at.aau.serg.android.ui.components.BackButton
+import at.aau.serg.android.ui.components.TopBar
 import at.aau.serg.android.ui.theme.AccentBlue
 import at.aau.serg.android.ui.theme.AccentPurple
 import at.aau.serg.android.ui.theme.AccentYellow
@@ -73,72 +72,18 @@ fun RulesScreenContent(
         modifier = Modifier
             .fillMaxSize()
             .background(c.settings.background)
+            .padding(16.dp)
             .testTag(RulesTestTags.SCREEN)
     ) {
 
         // header section
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(colors = listOf(AccentPurple, AccentBlue))
-                )
-                .padding(16.dp)
-        ) {
-            BackButton(
-                onBack = onBack,
-                tint = Color.White,
-                modifier = Modifier.testTag(RulesTestTags.BACK_BUTTON)
-            )
+        TopBar(
+            subtitle = "Game Rules",
+            onBack = onBack,
+            backButtonModifier = Modifier.testTag(RulesTestTags.BACK_BUTTON)
+        )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // master class badge
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color.White.copy(alpha = 0.15f))
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(14.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "MASTER CLASS",
-                    color = Color.White,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "HOW TO PLAY",
-                color = Color.White,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Black
-            )
-            Text(
-                text = "RUMMIKUB",
-                color = Color.White.copy(alpha = 0.85f),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Black
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Master the art of sets and runs to clear your rack and become the champion.",
-                color = Color.White.copy(alpha = 0.8f),
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
+        Spacer(modifier = Modifier.height(18.dp))
 
         // rules content
         Column(
@@ -146,7 +91,6 @@ fun RulesScreenContent(
                 .weight(1f)
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp)
                 .testTag(RulesTestTags.CONTENT)
         ) {
 
@@ -362,7 +306,7 @@ fun RulesScreenContent(
             onClick = onBack,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(top = 16.dp)
                 .height(52.dp)
                 .testTag(RulesTestTags.READY_BUTTON),
             shape = RoundedCornerShape(14.dp),
@@ -555,8 +499,8 @@ private fun RulesSectionHeader(
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier
-                .size(32.dp)
-                .clip(RoundedCornerShape(10.dp))
+                .size(40.dp)
+                .clip(RoundedCornerShape(12.dp))
                 .background(iconBg),
             contentAlignment = Alignment.Center
         ) {
@@ -564,7 +508,7 @@ private fun RulesSectionHeader(
                 imageVector = icon,
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(20.dp)
             )
         }
 
