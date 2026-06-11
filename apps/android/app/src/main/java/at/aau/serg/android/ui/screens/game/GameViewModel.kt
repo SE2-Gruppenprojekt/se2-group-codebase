@@ -98,8 +98,8 @@ class GameViewModel(
         }
 
         if (game.status == GameStatus.FINISHED) {
-            val winner = game.players.maxByOrNull { it.score }
-            if (winner != null) handleFinishedGame(winner.userId)
+            val winnerUserId = game.winnerUserId ?: game.players.maxByOrNull { it.score }?.userId
+            if (winnerUserId != null) handleFinishedGame(winnerUserId)
         }
     }
 
@@ -480,8 +480,6 @@ class GameViewModel(
                     val game = event.payload.game.toDomain()
                     if (game.status == GameStatus.FINISHED) {
                         applyGameState(game, true)
-                        val winner = game.players.maxByOrNull { it.score }
-                        if (winner != null) handleFinishedGame(winner.userId)
                     } else if (!_uiState.value.isActivePlayer) {
                         applyGameState(game, true)
                     }
