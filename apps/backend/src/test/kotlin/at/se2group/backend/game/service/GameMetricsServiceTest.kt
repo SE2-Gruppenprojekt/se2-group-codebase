@@ -188,6 +188,29 @@ class GameMetricsServiceTest {
         assertEquals(3, result.players.first { it.userId == "user-4" }.metrics.finishPosition)
     }
 
+    @Test
+    fun `finalizeEndGameMetrics counts joker as thirty penalty points`() {
+        val game = game(
+            players = listOf(
+                player("winner", 0, rackTiles = emptyList()),
+                player(
+                    "loser",
+                    1,
+                    rackTiles = listOf(JokerTile("joker-1", TileColor.BLACK))
+                )
+            ),
+            currentPlayerUserId = "winner"
+        )
+
+        val result = service.finalizeEndGameMetrics(game)
+
+        assertEquals(
+            30,
+            result.players.first { it.userId == "loser" }
+                .metrics.penaltyPointsAtEnd
+        )
+    }
+
     private fun game(
         players: List<GamePlayer>,
         boardSets: List<BoardSet> = emptyList(),

@@ -88,12 +88,20 @@ class GameMetricsService {
         }
     }
 
+    /**
+     * Point value used for gameplay metrics (e.g. pointsPlayed).
+     * Jokers contribute 0 points because they do not have an intrinsic number value.
+     */
     private fun metricPointValue(tile: Tile): Int =
         when (tile) {
             is NumberedTile -> tile.number
             is JokerTile -> 0
         }
 
+    /**
+     * Penalty value used for end-game scoring.
+     * Jokers count as 30 penalty points according to the game rules.
+     */
     private fun tilePenaltyValue(tile: Tile): Int =
         when (tile) {
             is NumberedTile -> tile.number
