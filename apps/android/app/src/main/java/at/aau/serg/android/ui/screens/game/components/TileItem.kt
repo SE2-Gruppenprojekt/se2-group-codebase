@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -46,7 +47,20 @@ fun TileItem(
                 }
             }
             .background(
-                color = Color(tile.color.colorInt)
+                color = when (tile) {
+                    is NumberedTile -> Color(tile.color.colorInt)
+                    is JokerTile -> Modifier.background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFF4DE3E8),
+                                Color(0xFF7CEEFF),
+                                Color(0xFFB16CFF),
+                                Color(0xFF59E7F0)
+                            )
+                        )
+                    )
+                } as Color
+
             )
             .border(
                 width = if (selected) 3.dp else 0.dp,
@@ -59,7 +73,7 @@ fun TileItem(
             Text(
                 text = when (tile) {
                     is NumberedTile -> tile.number.toString()
-                    is JokerTile -> "0"
+                    is JokerTile -> "★"
                 },
                 color = Color.Black,
                 fontWeight = FontWeight.Black,
@@ -75,7 +89,7 @@ fun TileItem(
             Text(
                 text = when (tile) {
                     is NumberedTile -> tile.number.toString()
-                    is JokerTile -> "0"
+                    is JokerTile -> "★"
                 },
                 color = Color.White,
                 fontWeight = FontWeight.Black,
