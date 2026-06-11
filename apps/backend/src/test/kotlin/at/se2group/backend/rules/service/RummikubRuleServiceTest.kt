@@ -1,7 +1,6 @@
 package at.se2group.backend.rules.service
 
 import at.se2group.backend.service.TileConservationService
-import at.se2group.backend.rules.service.FirstMoveValidationService
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
