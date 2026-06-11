@@ -17,6 +17,10 @@ import at.se2group.backend.persistence.TileEmbeddable
 import shared.models.game.domain.GamePlayerMetrics
 import shared.models.game.response.GamePlayerMetricsResponse
 
+/**
+ * Mapping extensions between persistence entities, domain models and API response models.
+ */
+
 fun GameEntity.toDomain(): ConfirmedGame =
     ConfirmedGame(
         gameId = gameId,

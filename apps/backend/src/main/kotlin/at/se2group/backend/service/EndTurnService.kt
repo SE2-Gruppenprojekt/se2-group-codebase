@@ -13,6 +13,14 @@ import shared.models.game.domain.TurnDraft
 import shared.models.game.request.EndTurnRequest
 import java.time.Instant
 
+/**
+ * Handles turn completion for active games.
+ *
+ * The service validates the submitted draft, applies the changes to the
+ * confirmed game state, updates gameplay metrics, determines whether the game
+ * has finished, advances the turn if necessary and broadcasts the resulting
+ * game state changes.
+ */
 @Service
 @Transactional(readOnly = true)
 class EndTurnService(
@@ -32,6 +40,12 @@ class EndTurnService(
         const val NOT_DRAFT_OWNER = "Draft belongs to a different user"
     }
 
+    /**
+     * Validates and commits the current player's draft.
+     *
+     * If the submitted turn is valid, gameplay metrics are updated and the game
+     * either advances to the next player or is finalized if a winner exists.
+     */
     @Transactional
     fun endTurn(
         gameId: String,
@@ -63,6 +77,8 @@ class EndTurnService(
 
         val committedGame = commitDraftToConfirmedGame(game, submittedDraft)
 
+        // Turn metrics are recorded before potential game finalization so the
+        // winning move is included in the aggregated statistics.
         val gameWithMetrics = gameMetricsService.applyCommittedTurnMetrics(
             confirmedBeforeTurn = game,
             committedGame = committedGame,
@@ -108,6 +124,12 @@ class EndTurnService(
         return savedGame
     }
 
+    /**
+     * Applies the submitted draft to the confirmed game state.
+     *
+     * The acting player's rack and the board configuration are taken from the
+     * validated draft.
+     */
     private fun commitDraftToConfirmedGame(
         confirmedGame: ConfirmedGame,
         draft: TurnDraft
@@ -126,6 +148,12 @@ class EndTurnService(
         )
     }
 
+    /**
+     * Marks the game as finished when the acting player has emptied their rack.
+     *
+     * Winner determination and end-game metric calculation are performed
+     * separately after the game has been marked as finished.
+     */
     private fun ConfirmedGame.finishIfWinnerExists(
         actingPlayerUserId: String,
         finishedAt: Instant = Instant.now()
@@ -147,6 +175,10 @@ class EndTurnService(
             .isEmpty()
     }
 
+    /**
+     * Creates a fresh draft for the next active player based on the current
+     * confirmed game state.
+     */
     private fun createNextDraft(game: ConfirmedGame): TurnDraft {
         val nextPlayer = game.players.first { it.userId == game.currentPlayerUserId }
 

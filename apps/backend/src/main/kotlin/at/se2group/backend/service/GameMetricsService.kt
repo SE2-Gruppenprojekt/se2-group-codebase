@@ -8,8 +8,24 @@ import shared.models.game.domain.NumberedTile
 import shared.models.game.domain.Tile
 import java.time.Instant
 
+/**
+ * Calculates and aggregates player and game metrics used for post-game
+ * statistics and result screens.
+ *
+ * Metrics are updated incrementally when a turn is committed and finalized
+ * once a game has ended.
+ */
 @Service
 class GameMetricsService {
+    /**
+     * Updates gameplay metrics for the player who committed a valid turn.
+     *
+     * Tracks:
+     * - completed turns
+     * - tiles played from the rack
+     * - newly created board sets
+     * - points contributed by played tiles
+     */
     fun applyCommittedTurnMetrics(
         confirmedBeforeTurn: ConfirmedGame,
         committedGame: ConfirmedGame,
@@ -19,6 +35,8 @@ class GameMetricsService {
         val afterPlayer = committedGame.players.first { it.userId == actingPlayerUserId }
 
         val afterRackTileIds = afterPlayer.rackTiles.map { it.tileId }.toSet()
+        // Tiles played during the turn are determined by comparing the acting
+        // player's rack before and after the committed draft.
         val playedTiles = beforePlayer.rackTiles.filter { it.tileId !in afterRackTileIds }
 
         val previousBoardSetIds = confirmedBeforeTurn.boardSets.map { it.boardSetId }.toSet()
@@ -48,9 +66,17 @@ class GameMetricsService {
         )
     }
 
+    /**
+     * Computes end-game metrics and final rankings.
+     *
+     * Determines the winner, calculates remaining rack penalties, assigns finish
+     * positions and populates result-screen statistics.
+     */
     fun finalizeEndGameMetrics(game: ConfirmedGame): ConfirmedGame {
         val winnerUserId = game.winnerUserId ?: determineWinnerUserId(game)
 
+        // Winner always ranks first. Remaining players are ranked by ascending
+        // penalty points with turn order used as a deterministic tie-breaker.
         val rankedPlayers = game.players
             .sortedWith(
                 compareBy<GamePlayer> { if (it.userId == winnerUserId) 0 else 1 }
@@ -82,6 +108,12 @@ class GameMetricsService {
         )
     }
 
+    /**
+     * Resolves the winner of a finished game.
+     *
+     * A finished game is expected to either explicitly store a winner or have a
+     * player with an empty rack from which the winner can be derived.
+     */
     private fun determineWinnerUserId(game: ConfirmedGame): String {
         return requireNotNull(
             game.winnerUserId
