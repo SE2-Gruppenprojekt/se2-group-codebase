@@ -80,10 +80,12 @@ class GameMetricsService {
     }
 
     private fun determineWinnerUserId(game: ConfirmedGame): String {
-        return game.players
-            .firstOrNull { it.rackTiles.isEmpty() }
-            ?.userId
-            ?: game.currentPlayerUserId
+        return requireNotNull(
+            game.winnerUserId
+                ?: game.players.firstOrNull { it.rackTiles.isEmpty() }?.userId
+        ) {
+            "Expected finished game to have either winnerUserId set or a player with an empty rack"
+        }
     }
 
     private fun metricPointValue(tile: Tile): Int =
