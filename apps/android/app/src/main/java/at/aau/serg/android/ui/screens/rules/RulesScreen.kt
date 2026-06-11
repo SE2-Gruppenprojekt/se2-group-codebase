@@ -1,6 +1,7 @@
 package at.aau.serg.android.ui.screens.rules
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,10 +16,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -123,13 +126,66 @@ fun RulesScreenContent(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
+                .testTag(RulesTestTags.CONTENT)
         ) {
-            Text(
-                text = "TODO: Rummikub rules content",
-                style = MaterialTheme.typography.bodyLarge,
-                color = c.settings.primaryText,
-                modifier = Modifier.testTag(RulesTestTags.CONTENT)
+
+            // The Objective section
+            RulesSectionHeader(
+                icon = Icons.Filled.GpsFixed,
+                iconBg = AccentPurple,
+                title = "The Objective"
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(c.settings.card)
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Be the first player to empty your rack by placing all your tiles on the table in \"Groups\" and \"Runs\". Accumulate the highest score over several rounds to win.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = c.settings.secondaryText
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RulesSectionHeader(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconBg: Color,
+    title: String
+) {
+    val c = appColors()
+
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(iconBg),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(16.dp)
             )
         }
+
+        Spacer(modifier = Modifier.width(10.dp))
+
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = c.settings.primaryText
+        )
     }
 }
