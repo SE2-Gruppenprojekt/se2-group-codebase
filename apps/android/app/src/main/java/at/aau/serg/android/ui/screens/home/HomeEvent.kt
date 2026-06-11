@@ -4,4 +4,5 @@ sealed class HomeEvent {
     object OnCreateLobby : HomeEvent()
     object OnBrowseLobby : HomeEvent()
     object OnSettings : HomeEvent()
+    object OnRules : HomeEvent()
 }

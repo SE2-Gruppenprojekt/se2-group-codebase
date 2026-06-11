@@ -4,4 +4,5 @@ sealed class HomeEffect {
     object NavigateToCreate : HomeEffect()
     object NavigateToBrowse : HomeEffect()
     object NavigateToSettings : HomeEffect()
+    object NavigateToRules : HomeEffect()
 }
