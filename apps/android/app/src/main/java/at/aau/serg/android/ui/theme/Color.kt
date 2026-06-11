@@ -110,6 +110,7 @@ val HomeCreateBrushEnd = Color(0xD74B3FD4)
 val HomeIconGradientEnd = Color(0xFF9B42FF)
 val HomeRulesButtonColor = Color(0xFF8A63F7)
 val RulesKeyRulesGreen = Color(0xFF10B981)
+val RulesScoringPink = Color(0xFFEC4899)
 
 // Game screen
 val GameDarkBackground = Color(0xFF0F172A)

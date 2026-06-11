@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Casino
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.MiscellaneousServices
@@ -35,7 +36,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import at.aau.serg.android.ui.components.BackButton
@@ -43,6 +48,8 @@ import at.aau.serg.android.ui.theme.AccentBlue
 import at.aau.serg.android.ui.theme.AccentPurple
 import at.aau.serg.android.ui.theme.AccentYellow
 import at.aau.serg.android.ui.theme.RulesKeyRulesGreen
+import at.aau.serg.android.ui.theme.RulesScoringPink
+import at.aau.serg.android.ui.theme.SettingsIconRedTint
 import at.aau.serg.android.ui.theme.appColors
 import shared.models.game.domain.TileColor
 
@@ -256,6 +263,94 @@ fun RulesScreenContent(
                     title = "Manipulation",
                     description = "You can rearrange any tiles already on the board to form new valid sets, as long as every set remains valid at the end of your turn."
                 )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Scoring System section
+            RulesSectionHeader(
+                icon = Icons.Filled.EmojiEvents,
+                iconBg = RulesScoringPink,
+                title = "Scoring System"
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(c.settings.card)
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Winner's Score",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = c.settings.primaryText
+                        )
+                        Text(
+                            text = "Sum of all opponents' remaining tiles.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = c.settings.secondaryText
+                        )
+                    }
+                    Text(
+                        text = "+Sum",
+                        color = AccentPurple,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(c.settings.card)
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Once you empty your rack, the game continues until everyone else finishes too. Places are awarded in the order players finish - 1st, 2nd, 3rd, and so on.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = c.settings.secondaryText
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(SettingsIconRedTint.copy(alpha = 0.1f))
+                        .padding(12.dp)
+                ) {
+                    Text(
+                        text = buildAnnotatedString {
+                            append("Careful! A Joker left on your rack at the end of a game counts as ")
+                            withStyle(
+                                style = SpanStyle(
+                                    fontWeight = FontWeight.Bold,
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            ) {
+                                append("30 penalty points")
+                            }
+                            append(".")
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SettingsIconRedTint
+                    )
+                }
             }
         }
     }
