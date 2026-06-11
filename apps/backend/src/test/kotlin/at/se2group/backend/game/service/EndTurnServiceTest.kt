@@ -349,6 +349,48 @@ class EndTurnServiceTest {
         verify(gameBroadcastService, never()).broadcastDraftUpdated(any())
     }
 
+    @Test
+    fun `marks player as having completed initial meld after first turn`() {
+        whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(gameEntity()))
+        whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(draftEntity())
+        whenever(rummikubRuleService.validateSubmittedDraft(any(), any(), any())).thenReturn(valid())
+        whenever(gameRepository.save(any())).thenAnswer { it.arguments[0] }
+        whenever(turnDraftRepository.save(any())).thenAnswer { it.arguments[0] }
+
+        val result = endTurnService.endTurn("game-1", "user-1", request())
+
+        val actingPlayer = result.players.first { it.userId == "user-1" }
+        assertTrue(actingPlayer.hasCompletedInitialMeld)
+    }
+
+    @Test
+    fun `does not commit game state if initial meld validation failed`() {
+        whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(gameEntity()))
+        whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(draftEntity())
+        whenever(rummikubRuleService.validateSubmittedDraft(any(), any(), any()))
+            .thenReturn(invalid("INITIAL_MELD_TOO_LOW", "Initial meld must score at least 30 points"))
+
+        assertThrows<InvalidTurnSubmissionException> {
+            endTurnService.endTurn("game-1", "user-1", request())
+        }
+
+        verify(gameRepository, never()).save(any())
+        verify(gameBroadcastService, never()).broadcastGameUpdated(any())
+    }
+
+    @Test
+    fun `player with completed initial meld can submit a low-score turn`() {
+        whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(gameEntity(hasCompletedInitialMeld = true)))
+        whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(draftEntity())
+        whenever(rummikubRuleService.validateSubmittedDraft(any(), any(), any())).thenReturn(valid())
+        whenever(gameRepository.save(any())).thenAnswer { it.arguments[0] }
+        whenever(turnDraftRepository.save(any())).thenAnswer { it.arguments[0] }
+
+        val result = endTurnService.endTurn("game-1", "user-1", request())
+
+        assertTrue(result.players.first { it.userId == "user-1" }.hasCompletedInitialMeld)
+    }
+
     private fun request(
         rackTiles: List<TileRequest> = listOf(TileRequest("new-rack-tile", "BLACK", 9, false))
     ) = EndTurnRequest(
