@@ -14,6 +14,7 @@ import at.se2group.backend.rules.service.SetValidationService
 import at.se2group.backend.service.AfterCommitExecutor
 import at.se2group.backend.service.EndTurnService
 import at.se2group.backend.service.GameBroadcastService
+import at.se2group.backend.service.GameMetricsService
 import at.se2group.backend.service.GameService
 import at.se2group.backend.service.InvalidTurnSubmissionException
 import at.se2group.backend.service.TileConservationService
@@ -43,6 +44,7 @@ class EndTurnServiceTest {
     private val turnDraftRepository: TurnDraftRepository = mock()
     private val rummikubRuleService: RummikubRuleService = mock()
     private val gameBroadcastService: GameBroadcastService = mock()
+    private val gameMetricsService = GameMetricsService()
 
     private val gameService = GameService(gameRepository)
     private val afterCommitExecutor = AfterCommitExecutor()
@@ -53,7 +55,8 @@ class EndTurnServiceTest {
         gameService = gameService,
         rummikubRuleService = rummikubRuleService,
         gameBroadcastService = gameBroadcastService,
-        afterCommitExecutor = afterCommitExecutor
+        afterCommitExecutor = afterCommitExecutor,
+        gameMetricsService = gameMetricsService
     )
 
     @Test
@@ -185,6 +188,12 @@ class EndTurnServiceTest {
         val user1 = result.players.first { it.userId == "user-1" }
         assertEquals(listOf("new-rack-tile"), user1.rackTiles.map { it.tileId })
 
+        assertEquals(1, result.totalTurnsCompleted)
+        assertEquals(1, user1.metrics.turnsCompleted)
+        assertEquals(1, user1.metrics.tilesPlayed)
+        assertEquals(1, user1.metrics.meldsCreated)
+        assertEquals(5, user1.metrics.pointsPlayed)
+
         verify(gameRepository).save(any())
         verify(turnDraftRepository).save(any())
         verify(gameBroadcastService).broadcastGameUpdated(result)
@@ -204,7 +213,8 @@ class EndTurnServiceTest {
             gameService = gameService,
             rummikubRuleService = realRuleService,
             gameBroadcastService = gameBroadcastService,
-            afterCommitExecutor = afterCommitExecutor
+            afterCommitExecutor = afterCommitExecutor,
+            gameMetricsService = gameMetricsService
         )
 
         whenever(
@@ -296,6 +306,14 @@ class EndTurnServiceTest {
         assertEquals(GameStatus.FINISHED, result.status)
         assertTrue(result.finishedAt != null)
 
+        assertEquals("user-1", result.winnerUserId)
+
+        val winner = result.players.first { it.userId == "user-1" }
+        assertEquals(true, winner.metrics.winner)
+        assertEquals(1, winner.metrics.finishPosition)
+        assertEquals(0, winner.metrics.tilesRemainingAtEnd)
+        assertEquals(0, winner.metrics.penaltyPointsAtEnd)
+
         verify(turnDraftRepository).deleteById("game-1")
         verify(turnDraftRepository, never()).save(any())
         verify(gameBroadcastService).broadcastGameUpdated(result)
@@ -336,6 +354,12 @@ class EndTurnServiceTest {
         assertEquals("user-1", result.currentPlayerUserId)
         assertEquals(emptyList<String>(), result.players.first { it.userId == "user-1" }.rackTiles.map { it.tileId })
         assertEquals(listOf("user-2-rack"), result.players.first { it.userId == "user-2" }.rackTiles.map { it.tileId })
+
+        val loser = result.players.first { it.userId == "user-2" }
+        assertEquals(false, loser.metrics.winner)
+        assertEquals(2, loser.metrics.finishPosition)
+        assertEquals(1, loser.metrics.tilesRemainingAtEnd)
+        assertEquals(5, loser.metrics.penaltyPointsAtEnd)
 
         verify(gameRepository).save(any())
         verify(turnDraftRepository).deleteById("game-1")

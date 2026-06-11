@@ -15,6 +15,14 @@ import jakarta.persistence.OrderColumn
 import jakarta.persistence.Table
 import java.time.Instant
 
+/**
+ * JPA persistence model for a game.
+ *
+ * Stores the complete game state including players, board sets, draw pile,
+ * turn information and aggregated game metrics. The entity is mapped to the
+ * `games` table and acts as the root aggregate for all game-related data.
+ */
+
 @Entity
 @Table(name = "games")
 class GameEntity(
@@ -41,14 +49,39 @@ class GameEntity(
     @Column(name = "finished_at")
     var finishedAt: Instant? = null,
 
+    /**
+     * Total number of completed turns across the entire game.
+     */
+    @Column(name = "total_turns_completed", nullable = false)
+    var totalTurnsCompleted: Int = 0,
+
+    /**
+     * User id of the winning player once the game has finished.
+     */
+    @Column(name = "winner_user_id")
+    var winnerUserId: String? = null,
+
+    /**
+     * Players participating in the game.
+     *
+     * The persisted order corresponds to the players' turn order.
+     */
     @OneToMany(mappedBy = "game", cascade = [CascadeType.ALL], orphanRemoval = true)
     @OrderColumn(name = "player_order")
     var players: MutableList<GamePlayerEntity> = mutableListOf(),
 
+    /**
+     * Current board sets in display order.
+     */
     @OneToMany(mappedBy = "game", cascade = [CascadeType.ALL], orphanRemoval = true)
     @OrderColumn(name = "board_set_order")
     var boardSets: MutableList<BoardSetEntity> = mutableListOf(),
 
+    /**
+     * Remaining draw pile.
+     *
+     * Order is significant because tiles are drawn from the front of the pile.
+     */
     @ElementCollection
     @CollectionTable(name = "game_draw_pile_tiles", joinColumns = [JoinColumn(name = "game_id")])
     @OrderColumn(name = "draw_pile_order")

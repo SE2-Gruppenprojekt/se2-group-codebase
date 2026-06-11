@@ -9,7 +9,8 @@ data class GamePlayer(
     val rackTiles: List<Tile> = emptyList(),
     val hasCompletedInitialMeld: Boolean = false,
     val score: Int = 0,
-    val joinedAt: Instant = Instant.now()
+    val joinedAt: Instant = Instant.now(),
+    val metrics: GamePlayerMetrics = GamePlayerMetrics()
 ) {
     init {
         require(userId.isNotBlank()) { "userId must not be blank" }
