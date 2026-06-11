@@ -1,6 +1,7 @@
 package at.aau.serg.android.ui.screens.rules
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,7 +18,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.GpsFixed
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,6 +29,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -34,6 +39,7 @@ import at.aau.serg.android.ui.components.BackButton
 import at.aau.serg.android.ui.theme.AccentBlue
 import at.aau.serg.android.ui.theme.AccentPurple
 import at.aau.serg.android.ui.theme.appColors
+import shared.models.game.domain.TileColor
 
 @Composable
 fun RulesScreen(
@@ -151,6 +157,149 @@ fun RulesScreenContent(
                     color = c.settings.secondaryText
                 )
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Valid Sets section
+            RulesSectionHeader(
+                icon = Icons.Filled.Layers,
+                iconBg = AccentPurple,
+                title = "Valid Sets"
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            RuleSetCard(
+                name = "THE GROUP",
+                badge = "3-4 Different Colors",
+                description = "Same number, different colors. Must have at least 3 tiles.",
+                tiles = listOf(
+                    RuleTileData("7", TileColor.RED),
+                    RuleTileData("7", TileColor.BLUE),
+                    RuleTileData("7", TileColor.ORANGE)
+                ),
+                showAddTile = true
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            RuleSetCard(
+                name = "THE RUN",
+                badge = "Same Color, Sequential",
+                description = "Consecutive numbers of the same color. Must have at least 3 tiles.",
+                tiles = listOf(
+                    RuleTileData("4", TileColor.RED),
+                    RuleTileData("5", TileColor.RED),
+                    RuleTileData("6", TileColor.RED)
+                ),
+                showAddTile = true
+            )
+        }
+    }
+}
+
+private data class RuleTileData(
+    val label: String,
+    val color: TileColor
+)
+
+@Composable
+private fun RuleSetCard(
+    name: String,
+    badge: String,
+    description: String,
+    tiles: List<RuleTileData>,
+    showAddTile: Boolean
+) {
+    val c = appColors()
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(c.settings.card)
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = name,
+                color = AccentPurple,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                letterSpacing = 1.sp
+            )
+            Text(
+                text = badge,
+                color = c.settings.secondaryText,
+                fontSize = 11.sp
+            )
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = description,
+            style = MaterialTheme.typography.bodySmall,
+            color = c.settings.secondaryText
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            tiles.forEach { tile ->
+                RuleTilePreview(label = tile.label, color = Color(tile.color.colorInt))
+            }
+            if (showAddTile) {
+                Box(
+                    modifier = Modifier
+                        .width(36.dp)
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(c.settings.background),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "+",
+                        color = c.settings.secondaryText,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RuleTilePreview(label: String, color: Color) {
+    Box(
+        modifier = Modifier
+            .width(36.dp)
+            .height(50.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(color),
+        contentAlignment = Alignment.Center
+    ) {
+        Box {
+            Text(
+                text = label,
+                color = Color.Black,
+                fontWeight = FontWeight.Black,
+                fontSize = 16.sp,
+                style = LocalTextStyle.current.copy(
+                    drawStyle = Stroke(width = 4f, join = StrokeJoin.Round)
+                )
+            )
+            Text(
+                text = label,
+                color = Color.White,
+                fontWeight = FontWeight.Black,
+                fontSize = 16.sp
+            )
         }
     }
 }
