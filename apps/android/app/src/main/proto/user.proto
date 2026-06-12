@@ -8,5 +8,6 @@ message User {
   string uid = 1;
   string displayName = 2;
   string gameId = 3;
+  string accessToken = 4;
   // string currentLobbyId = 3; possibly added later to make Home -> Waiting Room possible?
 }
