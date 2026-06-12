@@ -1,3 +1,8 @@
 app:
+  auth:
+    jwt:
+      issuer: test-backend
+      secret: test-secret-test-secret-test-secret
+      access-token-ttl-seconds: 3600
   scan-fixture:
     enabled: false
