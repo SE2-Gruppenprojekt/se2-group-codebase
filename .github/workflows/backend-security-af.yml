@@ -88,7 +88,6 @@ jobs:
 
           SCAN_HOST_AUTH_HEADER="Authorization:Bearer $SCAN_HOST_ACCESS_TOKEN"
           SCAN_GUEST_AUTH_HEADER="Authorization:Bearer $SCAN_GUEST_ACCESS_TOKEN"
-          SCAN_JOIN_USER_ID_LINE=""
 
           {
             echo "SCAN_LOBBY_ID=$SCAN_LOBBY_ID"
@@ -99,7 +98,6 @@ jobs:
             echo "SCAN_GUEST_ACCESS_TOKEN=$SCAN_GUEST_ACCESS_TOKEN"
             echo "SCAN_HOST_AUTH_HEADER=$SCAN_HOST_AUTH_HEADER"
             echo "SCAN_GUEST_AUTH_HEADER=$SCAN_GUEST_AUTH_HEADER"
-            echo "SCAN_JOIN_USER_ID_LINE=$SCAN_JOIN_USER_ID_LINE"
           } >> "$GITHUB_ENV"
 
           sed \
@@ -111,7 +109,6 @@ jobs:
             -e "s/__SCAN_GUEST_ACCESS_TOKEN__/$SCAN_GUEST_ACCESS_TOKEN/g" \
             -e "s|__SCAN_HOST_AUTH_HEADER__|$SCAN_HOST_AUTH_HEADER|g" \
             -e "s|__SCAN_GUEST_AUTH_HEADER__|$SCAN_GUEST_AUTH_HEADER|g" \
-            -e "s|__SCAN_JOIN_USER_ID_LINE__|$SCAN_JOIN_USER_ID_LINE|g" \
             .github/zap/backend-automation-plan.yaml \
             > .github/zap/backend-automation-plan.generated.yaml
 
@@ -135,7 +132,6 @@ jobs:
               -e "s/__SCAN_GUEST_ACCESS_TOKEN__/$SCAN_GUEST_ACCESS_TOKEN/g" \
               -e "s|__SCAN_HOST_AUTH_HEADER__|$SCAN_HOST_AUTH_HEADER|g" \
               -e "s|__SCAN_GUEST_AUTH_HEADER__|$SCAN_GUEST_AUTH_HEADER|g" \
-              -e "s|__SCAN_JOIN_USER_ID_LINE__|${SCAN_JOIN_USER_ID_LINE:-}|g" \
               .github/zap/backend-automation-plan.yaml \
               > .github/zap/backend-automation-plan.generated.yaml
           else

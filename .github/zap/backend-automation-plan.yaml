@@ -101,7 +101,6 @@ jobs:
           - "Content-Type:application/json"
         data: |
           {
-__SCAN_JOIN_USER_ID_LINE__
             "displayName": "Scan Join User"
           }
         responseCode: 404
