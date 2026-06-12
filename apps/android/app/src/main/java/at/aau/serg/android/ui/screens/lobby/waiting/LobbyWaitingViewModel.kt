@@ -3,14 +3,13 @@ package at.aau.serg.android.ui.screens.lobby.waiting
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import at.aau.serg.android.core.datastore.ProtoStore
+import at.aau.serg.android.core.datastore.user.UserStore
 import at.aau.serg.android.core.network.RetrofitProvider
 import at.aau.serg.android.core.network.ServiceLocator
 import at.aau.serg.android.core.network.lobby.LobbyAPI
 import at.aau.serg.android.core.network.lobby.LobbyWebSocketService
 import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
 import at.aau.serg.android.core.network.mapper.toDomain
-import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.util.ErrorUiMapper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,7 +28,7 @@ import shared.models.lobby.event.LobbyEvent
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LobbyWaitingViewModel(
-    private val userStore: ProtoStore<User>,
+    private val userStore: UserStore,
     private val api: LobbyAPI = RetrofitProvider.retrofit.create(LobbyAPI::class.java),
     private val socket : LobbyWebSocketService = ServiceLocator.lobbyWebSocketService
 ) : ViewModel() {
@@ -77,14 +76,8 @@ class LobbyWaitingViewModel(
             is LobbyEvent.Started -> {
                 viewModelScope.launch {
                     try {
-                        val user = _uiState.value.user ?: throw IllegalStateException("User must not be null when attempting to start a match.")
-                        userStore.save(
-                            User.newBuilder()
-                                .setUid(user.uid)
-                                .setDisplayName(user.displayName)
-                                .setGameId(event.payload.matchId)
-                                .build()
-                        )
+                        _uiState.value.user ?: throw IllegalStateException("User must not be null when attempting to start a match.")
+                        userStore.updateGameId(event.payload.matchId)
                         _effect.emit(LobbyWaitingEffect.NavigateToMatch(event.payload.matchId))
                     } catch (e : Exception) {
                         val appError = ErrorUiMapper.map(e)
@@ -150,7 +143,7 @@ class LobbyWaitingViewModel(
                     val user = state.user ?: throw IllegalStateException("User must not be null when attempting to start a match.")
                     val lobby = state.lobby ?: throw IllegalStateException("Lobby must not be null when attempting to start a match.")
 
-                    startMatch(user.uid, lobby.lobbyId)
+                    startMatch(lobby.lobbyId)
                 }
 
                 LobbyWaitingEvent.OnSettings -> {
@@ -174,7 +167,7 @@ class LobbyWaitingViewModel(
                         ?: throw IllegalStateException("Lobby must not be null when attempting ready change.")
                     val currentPlayer = lobby.players.find { it.userId == user.uid } ?: throw IllegalStateException("Player must be in lobby to attempt ready change.")
 
-                    requestReadyChange(user.uid, lobby.lobbyId, !currentPlayer.isReady)
+                    requestReadyChange(lobby.lobbyId, !currentPlayer.isReady)
                 }
             }
         } catch (e : Exception) {
@@ -186,7 +179,7 @@ class LobbyWaitingViewModel(
         }
     }
 
-    private fun requestReadyChange(userId: String, lobbyId: String, newReadyState: Boolean) {
+    private fun requestReadyChange(lobbyId: String, newReadyState: Boolean) {
         viewModelScope.launch {
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
@@ -194,19 +187,21 @@ class LobbyWaitingViewModel(
 
             try {
                 if (newReadyState) {
-                    api.ready(
-                        userId = userId,
-                        lobbyId = lobbyId
-                    )
+                    val lobby = api.ready(lobbyId = lobbyId).toDomain()
+                    _uiState.update {
+                        it.copy(
+                            lobby = lobby,
+                            loadState = LoadState.Success
+                        )
+                    }
                 } else {
-                    api.unready(
-                        userId = userId,
-                        lobbyId = lobbyId
-                    )
-                }
-
-                _uiState.update {
-                    it.copy(loadState = LoadState.Success)
+                    val lobby = api.unready(lobbyId = lobbyId).toDomain()
+                    _uiState.update {
+                        it.copy(
+                            lobby = lobby,
+                            loadState = LoadState.Success
+                        )
+                    }
                 }
 
             } catch (e: Throwable) {
@@ -244,14 +239,14 @@ class LobbyWaitingViewModel(
         }
     }
 
-    private fun startMatch(userId: String, lobbyId: String) {
+    private fun startMatch(lobbyId: String) {
         viewModelScope.launch {
             _uiState.update {
                 it.copy(loadState = LoadState.Loading)
             }
 
             try {
-                api.startMatch(userId, lobbyId)
+                api.startMatch(lobbyId)
                 _uiState.update {
                     it.copy(loadState = LoadState.Success)
                 }
@@ -270,5 +265,3 @@ class LobbyWaitingViewModel(
         _uiState.value = state
     }
 }
-
-
