@@ -2,11 +2,11 @@ package at.aau.serg.android.ui.screens.lobby.browse
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import at.aau.serg.android.core.datastore.ProtoStore
+import at.aau.serg.android.core.datastore.user.UserStore
+import at.aau.serg.android.core.network.auth.JwtSubjectDecoder
 import at.aau.serg.android.core.network.RetrofitProvider
 import at.aau.serg.android.core.network.lobby.LobbyAPI
 import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
-import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.state.LoadState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,11 +15,10 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
 import shared.models.lobby.request.JoinLobbyRequest
 
 class LobbyBrowseViewModel(
-    private val userStore: ProtoStore<User>,
+    private val userStore: UserStore,
     private val api: LobbyAPI = RetrofitProvider.retrofit.create(LobbyAPI::class.java)
 ) : ViewModel() {
 
@@ -91,10 +90,15 @@ class LobbyBrowseViewModel(
         try {
             val user = userStore.data.first()
             val request = JoinLobbyRequest(
-                userId = user.uid,
                 displayName = user.displayName
             )
-            api.joinLobby(lobbyId, request)
+            val response = api.joinLobby(lobbyId, request)
+
+            userStore.saveSession(
+                userId = JwtSubjectDecoder.decodeSubject(response.accessToken),
+                displayName = user.displayName,
+                accessToken = response.accessToken
+            )
 
             _uiState.update {
                 it.copy(
@@ -103,13 +107,6 @@ class LobbyBrowseViewModel(
             }
             _effects.emit(LobbyBrowseEffect.NavigateToWaitingRoom(lobbyId))
         } catch (e: Throwable) {
-            // Fixes rejoin
-            if (e is HttpException && e.code() == 409) {
-                _uiState.update { it.copy(loadState = LoadState.Success) }
-                _effects.emit(LobbyBrowseEffect.NavigateToWaitingRoom(lobbyId))
-                return@launch
-            }
-
             val appError = NetworkErrorMapper.map(e)
             _uiState.update {
                 it.copy(loadState = LoadState.Error(appError))

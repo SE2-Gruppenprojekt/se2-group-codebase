@@ -2,12 +2,12 @@ package at.aau.serg.android.ui.screens.lobby.create
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import at.aau.serg.android.core.datastore.ProtoStore
+import at.aau.serg.android.core.datastore.user.UserStore
+import at.aau.serg.android.core.network.auth.JwtSubjectDecoder
 import at.aau.serg.android.core.network.RetrofitProvider
 import at.aau.serg.android.core.network.lobby.LobbyAPI
 import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
 import at.aau.serg.android.core.network.mapper.toDomain
-import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.state.LoadState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 import shared.models.lobby.request.CreateLobbyRequest
 
 class LobbyCreateViewModel(
-    private val userStore: ProtoStore<User>,
+    private val userStore: UserStore,
     private val api: LobbyAPI = RetrofitProvider.retrofit.create(LobbyAPI::class.java)
     ) : ViewModel() {
 
@@ -38,15 +38,22 @@ class LobbyCreateViewModel(
         val state = _uiState.value
 
         try {
-            val lobby = api.createLobby(
-                user.uid,
+            val response = api.createLobby(
                 CreateLobbyRequest(
                     displayName = user.displayName,
                     maxPlayers = state.maxPlayers,
                     isPrivate = state.isPrivate,
                     allowGuests = true
                 )
-            ).toDomain()
+            )
+
+            userStore.saveSession(
+                userId = JwtSubjectDecoder.decodeSubject(response.accessToken),
+                displayName = user.displayName,
+                accessToken = response.accessToken
+            )
+
+            val lobby = response.lobby.toDomain()
 
             _uiState.update {
                 it.copy(loadState = LoadState.Success)
