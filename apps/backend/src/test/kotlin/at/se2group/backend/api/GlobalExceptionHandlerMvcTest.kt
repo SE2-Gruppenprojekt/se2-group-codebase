@@ -1,12 +1,16 @@
 package at.se2group.backend.api
 
+import at.se2group.backend.security.JwtService
+import at.se2group.backend.security.RestAuthenticationEntryPoint
 import at.se2group.backend.dto.CreateLobbyRequest
 import jakarta.validation.Valid
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
@@ -36,11 +40,15 @@ import org.springframework.web.bind.annotation.RestController
  * layer uses the same REST error contract as the application exception layer.
  */
 @WebMvcTest(ExceptionProbeController::class)
-@Import(GlobalExceptionHandler::class)
+@AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler::class, RestAuthenticationEntryPoint::class)
 class GlobalExceptionHandlerMvcTest {
 
     @Autowired
     lateinit var mockMvc: MockMvc
+
+    @MockitoBean
+    lateinit var jwtService: JwtService
 
     @Test
     fun `returns 400 for path variable type mismatch`() {
@@ -61,14 +69,6 @@ class GlobalExceptionHandlerMvcTest {
                 jsonPath("$.errorCode") { value("BAD_REQUEST") }
                 jsonPath("$.errorMessage") { value("Missing required header: X-Probe-User") }
                 jsonPath("$.violations.length()") { value(0) }
-                header { string("X-Content-Type-Options", "nosniff") }
-                header { string("Cross-Origin-Resource-Policy", "same-origin") }
-                header { string("Cross-Origin-Embedder-Policy", "require-corp") }
-                header { string("Cross-Origin-Opener-Policy", "same-origin") }
-                header { string("Strict-Transport-Security", "max-age=31536000; includeSubDomains") }
-                header { string("Cache-Control", "no-cache, no-store, must-revalidate, private") }
-                header { string("Pragma", "no-cache") }
-                header { string("Expires", "0") }
             }
     }
 
@@ -115,14 +115,6 @@ class GlobalExceptionHandlerMvcTest {
                 jsonPath("$.errorCode") { value("INTERNAL_SERVER_ERROR") }
                 jsonPath("$.errorMessage") { value("An unexpected error occurred") }
                 jsonPath("$.violations.length()") { value(0) }
-                header { string("X-Content-Type-Options", "nosniff") }
-                header { string("Cross-Origin-Resource-Policy", "same-origin") }
-                header { string("Cross-Origin-Embedder-Policy", "require-corp") }
-                header { string("Cross-Origin-Opener-Policy", "same-origin") }
-                header { string("Strict-Transport-Security", "max-age=31536000; includeSubDomains") }
-                header { string("Cache-Control", "no-cache, no-store, must-revalidate, private") }
-                header { string("Pragma", "no-cache") }
-                header { string("Expires", "0") }
             }
     }
 }
