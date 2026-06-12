@@ -27,6 +27,8 @@ class GameRepositoryTest {
             createdAt = Instant.parse("2026-04-27T18:00:00Z"),
             startedAt = Instant.parse("2026-04-27T18:05:00Z"),
             finishedAt = null,
+            totalTurnsCompleted = 6,
+            winnerUserId = "user-1",
             drawPile = mutableListOf(
                 embeddable("tile-1", TileColor.RED, 5, false),
                 embeddable("tile-2", TileColor.BLUE, null, true),
@@ -45,7 +47,15 @@ class GameRepositoryTest {
             ),
             hasCompletedInitialMeld = true,
             score = 25,
-            joinedAt = Instant.parse("2026-04-27T17:55:00Z")
+            joinedAt = Instant.parse("2026-04-27T17:55:00Z"),
+            turnsCompleted = 3,
+            tilesPlayed = 8,
+            meldsCreated = 2,
+            pointsPlayed = 34,
+            tilesRemainingAtEnd = 0,
+            penaltyPointsAtEnd = 0,
+            winner = true,
+            finishPosition = 1
         )
 
         val player2 = GamePlayerEntity(
@@ -58,7 +68,15 @@ class GameRepositoryTest {
             ),
             hasCompletedInitialMeld = false,
             score = 10,
-            joinedAt = Instant.parse("2026-04-27T17:56:00Z")
+            joinedAt = Instant.parse("2026-04-27T17:56:00Z"),
+            turnsCompleted = 3,
+            tilesPlayed = 4,
+            meldsCreated = 1,
+            pointsPlayed = 19,
+            tilesRemainingAtEnd = 1,
+            penaltyPointsAtEnd = 13,
+            winner = false,
+            finishPosition = 2
         )
 
         val boardSet = BoardSetEntity(
@@ -86,6 +104,8 @@ class GameRepositoryTest {
         assertEquals("lobby-1", saved.lobbyId)
         assertEquals("user-1", saved.currentPlayerUserId)
         assertEquals(GameStatus.ACTIVE, saved.status)
+        assertEquals(6, saved.totalTurnsCompleted)
+        assertEquals("user-1", saved.winnerUserId)
         assertEquals(2, saved.players.size)
         assertEquals(1, saved.boardSets.size)
         assertEquals(3, saved.drawPile.size)
@@ -96,10 +116,26 @@ class GameRepositoryTest {
         assertEquals(2, saved.players[0].rackTiles.size)
         assertEquals(true, saved.players[0].hasCompletedInitialMeld)
         assertEquals(25, saved.players[0].score)
+        assertEquals(3, saved.players[0].turnsCompleted)
+        assertEquals(8, saved.players[0].tilesPlayed)
+        assertEquals(2, saved.players[0].meldsCreated)
+        assertEquals(34, saved.players[0].pointsPlayed)
+        assertEquals(0, saved.players[0].tilesRemainingAtEnd)
+        assertEquals(0, saved.players[0].penaltyPointsAtEnd)
+        assertEquals(true, saved.players[0].winner)
+        assertEquals(1, saved.players[0].finishPosition)
 
         assertEquals("user-2", saved.players[1].userId)
         assertEquals("Bob", saved.players[1].displayName)
         assertEquals(1, saved.players[1].rackTiles.size)
+        assertEquals(3, saved.players[1].turnsCompleted)
+        assertEquals(4, saved.players[1].tilesPlayed)
+        assertEquals(1, saved.players[1].meldsCreated)
+        assertEquals(19, saved.players[1].pointsPlayed)
+        assertEquals(1, saved.players[1].tilesRemainingAtEnd)
+        assertEquals(13, saved.players[1].penaltyPointsAtEnd)
+        assertEquals(false, saved.players[1].winner)
+        assertEquals(2, saved.players[1].finishPosition)
 
         assertEquals("set-1", saved.boardSets[0].boardSetId)
         assertEquals(BoardSetType.RUN, saved.boardSets[0].type)

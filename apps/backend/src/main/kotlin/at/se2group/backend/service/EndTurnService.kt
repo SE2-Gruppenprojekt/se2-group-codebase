@@ -13,6 +13,14 @@ import shared.models.game.domain.TurnDraft
 import shared.models.game.request.EndTurnRequest
 import java.time.Instant
 
+/**
+ * Handles turn completion for active games.
+ *
+ * The service validates the submitted draft, applies the changes to the
+ * confirmed game state, updates gameplay metrics, determines whether the game
+ * has finished, advances the turn if necessary and broadcasts the resulting
+ * game state changes.
+ */
 @Service
 @Transactional(readOnly = true)
 class EndTurnService(
@@ -21,7 +29,8 @@ class EndTurnService(
     private val gameService: GameService,
     private val rummikubRuleService: RummikubRuleService,
     private val gameBroadcastService: GameBroadcastService,
-    private val afterCommitExecutor: AfterCommitExecutor
+    private val afterCommitExecutor: AfterCommitExecutor,
+    private val gameMetricsService: GameMetricsService
 ) {
     private companion object {
         const val GAME_NOT_FOUND = "Game not found"
@@ -31,6 +40,12 @@ class EndTurnService(
         const val NOT_DRAFT_OWNER = "Draft belongs to a different user"
     }
 
+    /**
+     * Validates and commits the current player's draft.
+     *
+     * If the submitted turn is valid, gameplay metrics are updated and the game
+     * either advances to the next player or is finalized if a winner exists.
+     */
     @Transactional
     fun endTurn(
         gameId: String,
@@ -60,12 +75,27 @@ class EndTurnService(
             throw InvalidTurnSubmissionException(validation)
         }
 
-        val resolvedGame = commitDraftToConfirmedGame(game, submittedDraft)
+        val committedGame = commitDraftToConfirmedGame(game, submittedDraft)
             .applyInitialMeldCompletion(userId)
-            .finishIfWinnerExists(userId)
 
-        if (resolvedGame.status == GameStatus.FINISHED) {
-            val savedGame = gameRepository.save(resolvedGame.toEntity()).toDomain()
+        // Turn metrics are recorded before potential game finalization so the
+        // winning move is included in the aggregated statistics.
+        val gameWithMetrics = gameMetricsService.applyCommittedTurnMetrics(
+            confirmedBeforeTurn = game,
+            committedGame = committedGame,
+            actingPlayerUserId = userId
+        )
+
+        val resolvedGame = gameWithMetrics.finishIfWinnerExists(userId)
+
+        val finalizedGame = if (resolvedGame.status == GameStatus.FINISHED) {
+            gameMetricsService.finalizeEndGameMetrics(resolvedGame)
+        } else {
+            resolvedGame
+        }
+
+        if (finalizedGame.status == GameStatus.FINISHED) {
+            val savedGame = gameRepository.save(finalizedGame.toEntity()).toDomain()
 
             turnDraftRepository.deleteById(gameId)
 
@@ -77,8 +107,8 @@ class EndTurnService(
             return savedGame
         }
 
-        val nextPlayerId = gameService.nextPlayerId(resolvedGame)
-        val advancedGame = resolvedGame.copy(currentPlayerUserId = nextPlayerId)
+        val nextPlayerId = gameService.nextPlayerId(finalizedGame)
+        val advancedGame = finalizedGame.copy(currentPlayerUserId = nextPlayerId)
         val savedGame = gameRepository.save(advancedGame.toEntity()).toDomain()
 
         val nextDraft = createNextDraft(savedGame)
@@ -95,6 +125,12 @@ class EndTurnService(
         return savedGame
     }
 
+    /**
+     * Applies the submitted draft to the confirmed game state.
+     *
+     * The acting player's rack and the board configuration are taken from the
+     * validated draft.
+     */
     private fun commitDraftToConfirmedGame(
         confirmedGame: ConfirmedGame,
         draft: TurnDraft
@@ -113,6 +149,12 @@ class EndTurnService(
         )
     }
 
+    /**
+     * Marks the game as finished when the acting player has emptied their rack.
+     *
+     * Winner determination and end-game metric calculation are performed
+     * separately after the game has been marked as finished.
+     */
     private fun ConfirmedGame.finishIfWinnerExists(
         actingPlayerUserId: String,
         finishedAt: Instant = Instant.now()
@@ -147,6 +189,10 @@ class EndTurnService(
             .isEmpty()
     }
 
+    /**
+     * Creates a fresh draft for the next active player based on the current
+     * confirmed game state.
+     */
     private fun createNextDraft(game: ConfirmedGame): TurnDraft {
         val nextPlayer = game.players.first { it.userId == game.currentPlayerUserId }
 

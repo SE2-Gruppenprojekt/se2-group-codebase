@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import shared.models.game.domain.GamePlayerMetrics
 import java.time.Instant
 
 class GameMapperTest {
@@ -38,7 +39,17 @@ class GameMapperTest {
                     ),
                     hasCompletedInitialMeld = true,
                     score = 25,
-                    joinedAt = Instant.parse("2026-04-27T17:55:00Z")
+                    joinedAt = Instant.parse("2026-04-27T17:55:00Z"),
+                    metrics = GamePlayerMetrics(
+                        turnsCompleted = 3,
+                        tilesPlayed = 8,
+                        meldsCreated = 2,
+                        pointsPlayed = 34,
+                        tilesRemainingAtEnd = 4,
+                        penaltyPointsAtEnd = 18,
+                        winner = true,
+                        finishPosition = 1
+                    )
                 ),
                 GamePlayer(
                     userId = "user-2",
@@ -71,7 +82,9 @@ class GameMapperTest {
             status = GameStatus.ACTIVE,
             createdAt = createdAt,
             startedAt = startedAt,
-            finishedAt = null
+            finishedAt = null,
+            totalTurnsCompleted = 7,
+            winnerUserId = "user-1"
         )
 
         val entity = game.toEntity()
@@ -82,12 +95,22 @@ class GameMapperTest {
         assertEquals(GameStatus.ACTIVE, entity.status)
         assertEquals(createdAt, entity.createdAt)
         assertEquals(startedAt, entity.startedAt)
+        assertEquals(7, entity.totalTurnsCompleted)
+        assertEquals("user-1", entity.winnerUserId)
 
         assertEquals(2, entity.players.size)
         assertEquals("user-1", entity.players[0].userId)
         assertEquals("Alice", entity.players[0].displayName)
         assertEquals(0, entity.players[0].turnOrder)
         assertEquals(2, entity.players[0].rackTiles.size)
+        assertEquals(3, entity.players[0].turnsCompleted)
+        assertEquals(8, entity.players[0].tilesPlayed)
+        assertEquals(2, entity.players[0].meldsCreated)
+        assertEquals(34, entity.players[0].pointsPlayed)
+        assertEquals(4, entity.players[0].tilesRemainingAtEnd)
+        assertEquals(18, entity.players[0].penaltyPointsAtEnd)
+        assertEquals(true, entity.players[0].winner)
+        assertEquals(1, entity.players[0].finishPosition)
         assertTrue(entity.players.all { it.game === entity })
 
         assertEquals(1, entity.boardSets.size)
@@ -115,6 +138,8 @@ class GameMapperTest {
             createdAt = Instant.parse("2026-04-27T18:00:00Z"),
             startedAt = Instant.parse("2026-04-27T18:05:00Z"),
             finishedAt = null,
+            totalTurnsCompleted = 9,
+            winnerUserId = "user-2",
             drawPile = mutableListOf(
                 embeddable("tile-9", TileColor.RED, 6, false),
                 embeddable("tile-10", TileColor.BLUE, null, true)
@@ -132,7 +157,15 @@ class GameMapperTest {
                 ),
                 hasCompletedInitialMeld = true,
                 score = 20,
-                joinedAt = Instant.parse("2026-04-27T17:55:00Z")
+                joinedAt = Instant.parse("2026-04-27T17:55:00Z"),
+                turnsCompleted = 4,
+                tilesPlayed = 10,
+                meldsCreated = 3,
+                pointsPlayed = 42,
+                tilesRemainingAtEnd = 1,
+                penaltyPointsAtEnd = 4,
+                winner = false,
+                finishPosition = 2
             ),
             GamePlayerEntity(
                 game = entity,
@@ -167,11 +200,21 @@ class GameMapperTest {
         assertEquals("lobby-1", game.lobbyId)
         assertEquals("user-2", game.currentPlayerUserId)
         assertEquals(GameStatus.ACTIVE, game.status)
+        assertEquals(9, game.totalTurnsCompleted)
+        assertEquals("user-2", game.winnerUserId)
 
         assertEquals(2, game.players.size)
         assertEquals("Alice", game.players[0].displayName)
         assertEquals(0, game.players[0].turnOrder)
         assertEquals(1, game.players[0].rackTiles.size)
+        assertEquals(4, game.players[0].metrics.turnsCompleted)
+        assertEquals(10, game.players[0].metrics.tilesPlayed)
+        assertEquals(3, game.players[0].metrics.meldsCreated)
+        assertEquals(42, game.players[0].metrics.pointsPlayed)
+        assertEquals(1, game.players[0].metrics.tilesRemainingAtEnd)
+        assertEquals(4, game.players[0].metrics.penaltyPointsAtEnd)
+        assertEquals(false, game.players[0].metrics.winner)
+        assertEquals(2, game.players[0].metrics.finishPosition)
 
         assertEquals(1, game.boardSets.size)
         assertEquals("set-1", game.boardSets[0].boardSetId)
@@ -255,7 +298,17 @@ class GameMapperTest {
                     ),
                     hasCompletedInitialMeld = true,
                     score = 25,
-                    joinedAt = Instant.parse("2026-04-27T17:55:00Z")
+                    joinedAt = Instant.parse("2026-04-27T17:55:00Z"),
+                    metrics = GamePlayerMetrics(
+                        turnsCompleted = 5,
+                        tilesPlayed = 12,
+                        meldsCreated = 4,
+                        pointsPlayed = 55,
+                        tilesRemainingAtEnd = 2,
+                        penaltyPointsAtEnd = 9,
+                        winner = true,
+                        finishPosition = 1
+                    )
                 )
             ),
             boardSets = listOf(
@@ -277,7 +330,9 @@ class GameMapperTest {
             status = GameStatus.ACTIVE,
             createdAt = createdAt,
             startedAt = startedAt,
-            finishedAt = null
+            finishedAt = null,
+            totalTurnsCompleted = 11,
+            winnerUserId = "user-1"
         )
 
         val response = game.toResponse()
@@ -293,6 +348,8 @@ class GameMapperTest {
         assertEquals(1, response.board.size)
         assertEquals(2, response.drawPile.size)
         assertEquals(2, response.drawPileCount)
+        assertEquals(11, response.totalTurnsCompleted)
+        assertEquals("user-1", response.winnerUserId)
         assertEquals(null, response.turnDeadline)
         assertEquals(null, response.remainingTurnSeconds)
 
@@ -300,6 +357,14 @@ class GameMapperTest {
         assertEquals("Alice", response.players[0].displayName)
         assertEquals(0, response.players[0].turnOrder)
         assertEquals(Instant.parse("2026-04-27T17:55:00Z").toString(), response.players[0].joinedAt)
+        assertEquals(5, response.players[0].metrics.turnsCompleted)
+        assertEquals(12, response.players[0].metrics.tilesPlayed)
+        assertEquals(4, response.players[0].metrics.meldsCreated)
+        assertEquals(55, response.players[0].metrics.pointsPlayed)
+        assertEquals(2, response.players[0].metrics.tilesRemainingAtEnd)
+        assertEquals(9, response.players[0].metrics.penaltyPointsAtEnd)
+        assertEquals(true, response.players[0].metrics.winner)
+        assertEquals(1, response.players[0].metrics.finishPosition)
         assertEquals(2, response.players[0].rackTiles.size)
         assertEquals("tile-22", response.players[0].rackTiles[0].tileId)
         assertEquals("BLUE", response.players[0].rackTiles[0].color)
