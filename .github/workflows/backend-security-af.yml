@@ -76,25 +76,19 @@ jobs:
           SCAN_GAME_ID="$(echo "$FIXTURE_JSON" | jq -r '.gameId')"
           SCAN_HOST_USER_ID="$(echo "$FIXTURE_JSON" | jq -r '.hostUserId')"
           SCAN_GUEST_USER_ID="$(echo "$FIXTURE_JSON" | jq -r '.guestUserId')"
-          SCAN_HOST_ACCESS_TOKEN="$(echo "$FIXTURE_JSON" | jq -r '.hostAccessToken // empty')"
-          SCAN_GUEST_ACCESS_TOKEN="$(echo "$FIXTURE_JSON" | jq -r '.guestAccessToken // empty')"
+          SCAN_HOST_ACCESS_TOKEN="$(echo "$FIXTURE_JSON" | jq -r '.hostAccessToken')"
+          SCAN_GUEST_ACCESS_TOKEN="$(echo "$FIXTURE_JSON" | jq -r '.guestAccessToken')"
 
-          for value in "$SCAN_LOBBY_ID" "$SCAN_GAME_ID" "$SCAN_HOST_USER_ID" "$SCAN_GUEST_USER_ID"; do
+          for value in "$SCAN_LOBBY_ID" "$SCAN_GAME_ID" "$SCAN_HOST_USER_ID" "$SCAN_GUEST_USER_ID" "$SCAN_HOST_ACCESS_TOKEN" "$SCAN_GUEST_ACCESS_TOKEN"; do
             if [ -z "$value" ] || [ "$value" = "null" ]; then
               echo "Scan fixture endpoint returned incomplete data"
               exit 1
             fi
           done
 
-          if [ -n "$SCAN_HOST_ACCESS_TOKEN" ] && [ -n "$SCAN_GUEST_ACCESS_TOKEN" ]; then
-            SCAN_HOST_AUTH_HEADER="Authorization:Bearer $SCAN_HOST_ACCESS_TOKEN"
-            SCAN_GUEST_AUTH_HEADER="Authorization:Bearer $SCAN_GUEST_ACCESS_TOKEN"
-            SCAN_JOIN_USER_ID_LINE=""
-          else
-            SCAN_HOST_AUTH_HEADER="X-User-Id:$SCAN_HOST_USER_ID"
-            SCAN_GUEST_AUTH_HEADER="X-User-Id:$SCAN_GUEST_USER_ID"
-            SCAN_JOIN_USER_ID_LINE='            "userId": "scan-join-user",'
-          fi
+          SCAN_HOST_AUTH_HEADER="Authorization:Bearer $SCAN_HOST_ACCESS_TOKEN"
+          SCAN_GUEST_AUTH_HEADER="Authorization:Bearer $SCAN_GUEST_ACCESS_TOKEN"
+          SCAN_JOIN_USER_ID_LINE=""
 
           {
             echo "SCAN_LOBBY_ID=$SCAN_LOBBY_ID"
