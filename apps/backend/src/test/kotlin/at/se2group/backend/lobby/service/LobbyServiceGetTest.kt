@@ -100,4 +100,32 @@ class LobbyServiceGetTest {
         verify(lobbyRepository).findById("missing-lobby")
         verifyNoInteractions(lobbyBroadcastService)
     }
+
+    @Test
+    fun `getLobbyForUser rejects non participant access`() {
+        val entity = LobbyEntity(
+            lobbyId = "lobby-1",
+            hostUserId = "host-1",
+            status = LobbyStatus.OPEN,
+            maxPlayers = 4,
+            isPrivate = false,
+            allowGuests = true,
+            players = mutableListOf(
+                LobbyPlayerEmbeddable(
+                    userId = "host-1",
+                    displayName = "Alice",
+                    isReady = false,
+                )
+            )
+        )
+
+        Mockito.`when`(lobbyRepository.findById("lobby-1"))
+            .thenReturn(Optional.of(entity))
+
+        val exception = assertThrows<SecurityException> {
+            lobbyService.getLobbyForUser("lobby-1", "outsider")
+        }
+
+        assertEquals("Only lobby participants can access this lobby", exception.message)
+    }
 }
