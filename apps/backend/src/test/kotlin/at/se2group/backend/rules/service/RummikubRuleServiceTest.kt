@@ -11,6 +11,7 @@ import org.mockito.Mock
 import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.mockito.kotlin.never
 import shared.models.game.domain.*
 import shared.models.game.validation.RuleViolation
 import shared.models.game.validation.ValidationResult
@@ -269,6 +270,34 @@ class RummikubRuleServiceTest {
         val result = ruleService.validateSubmittedDraft(confirmedGame, "user-1", submittedDraft)
 
         assertTrue(result.isValid)
+
+    }
+
+    @Test
+    fun `skip first move validation when requireInitialMeld is false`() {
+        whenever(tileConservationService.validate(any(), any(), any())).thenReturn(valid())
+        whenever(boardValidationService.validate(any())).thenReturn(valid())
+
+        val game = confirmedGame.copy(requireInitialMeld = false)
+
+        val result = ruleService.validateSubmittedDraft(game, "user-1", submittedDraft)
+
+        assertTrue(result.isValid)
+        verify(firstMoveValidationService, never()).validate(any(), any(), any())
+    }
+
+
+    @Test
+    fun `runs first move validation when requireInitialMeld is true`() {
+        whenever(tileConservationService.validate(any(), any(), any())).thenReturn(valid())
+        whenever(boardValidationService.validate(any())).thenReturn(valid())
+        whenever(firstMoveValidationService.validate(any(), any(), any())).thenReturn(valid())
+
+        val game = confirmedGame.copy(requireInitialMeld = true)
+
+        ruleService.validateSubmittedDraft(game, "user-1", submittedDraft)
+
+        verify(firstMoveValidationService).validate(game, player, submittedDraft)
 
     }
 
