@@ -7,6 +7,7 @@ import at.se2group.backend.persistence.TileEmbeddable
 import at.se2group.backend.persistence.TurnDraftEntity
 import at.se2group.backend.persistence.TurnDraftRepository
 import at.se2group.backend.rules.service.BoardValidationService
+import at.se2group.backend.rules.service.FirstMoveValidationService
 import at.se2group.backend.rules.service.GroupValidationService
 import at.se2group.backend.rules.service.RummikubRuleService
 import at.se2group.backend.rules.service.RunValidationService
@@ -205,7 +206,8 @@ class EndTurnServiceTest {
     fun `commits valid joker containing submitted draft`() {
         val realRuleService = RummikubRuleService(
             TileConservationService(),
-            BoardValidationService(SetValidationService(GroupValidationService(), RunValidationService()))
+            BoardValidationService(SetValidationService(GroupValidationService(), RunValidationService())),
+            FirstMoveValidationService()
         )
         val realEndTurnService = EndTurnService(
             gameRepository = gameRepository,
@@ -228,7 +230,8 @@ class EndTurnServiceTest {
                         tile("tile-3", TileColor.RED, 5, false),
                         tile("new-rack-tile", TileColor.BLACK, 9, false)
                     ),
-                    user2Rack = mutableListOf(tile("user-2-rack"))
+                    user2Rack = mutableListOf(tile("user-2-rack")),
+                    hasCompletedInitialMeld = true
                 )
             )
         )
@@ -371,6 +374,48 @@ class EndTurnServiceTest {
         verify(gameBroadcastService, never()).broadcastDraftUpdated(any())
     }
 
+    @Test
+    fun `marks player as having completed initial meld after first turn`() {
+        whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(gameEntity()))
+        whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(draftEntity())
+        whenever(rummikubRuleService.validateSubmittedDraft(any(), any(), any())).thenReturn(valid())
+        whenever(gameRepository.save(any())).thenAnswer { it.arguments[0] }
+        whenever(turnDraftRepository.save(any())).thenAnswer { it.arguments[0] }
+
+        val result = endTurnService.endTurn("game-1", "user-1", request())
+
+        val actingPlayer = result.players.first { it.userId == "user-1" }
+        assertTrue(actingPlayer.hasCompletedInitialMeld)
+    }
+
+    @Test
+    fun `does not commit game state if initial meld validation failed`() {
+        whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(gameEntity()))
+        whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(draftEntity())
+        whenever(rummikubRuleService.validateSubmittedDraft(any(), any(), any()))
+            .thenReturn(invalid("INITIAL_MELD_TOO_LOW", "Initial meld must score at least 30 points"))
+
+        assertThrows<InvalidTurnSubmissionException> {
+            endTurnService.endTurn("game-1", "user-1", request())
+        }
+
+        verify(gameRepository, never()).save(any())
+        verify(gameBroadcastService, never()).broadcastGameUpdated(any())
+    }
+
+    @Test
+    fun `player with completed initial meld can submit a low-score turn`() {
+        whenever(gameRepository.findById("game-1")).thenReturn(Optional.of(gameEntity(hasCompletedInitialMeld = true)))
+        whenever(turnDraftRepository.findByGameId("game-1")).thenReturn(draftEntity())
+        whenever(rummikubRuleService.validateSubmittedDraft(any(), any(), any())).thenReturn(valid())
+        whenever(gameRepository.save(any())).thenAnswer { it.arguments[0] }
+        whenever(turnDraftRepository.save(any())).thenAnswer { it.arguments[0] }
+
+        val result = endTurnService.endTurn("game-1", "user-1", request())
+
+        assertTrue(result.players.first { it.userId == "user-1" }.hasCompletedInitialMeld)
+    }
+
     private fun request(
         rackTiles: List<TileRequest> = listOf(TileRequest("new-rack-tile", "BLACK", 9, false))
     ) = EndTurnRequest(
@@ -407,7 +452,8 @@ class EndTurnServiceTest {
         currentPlayerUserId: String = "user-1",
         status: GameStatus = GameStatus.ACTIVE,
         user1Rack: MutableList<TileEmbeddable> = mutableListOf(),
-        user2Rack: MutableList<TileEmbeddable> = mutableListOf()
+        user2Rack: MutableList<TileEmbeddable> = mutableListOf(),
+        hasCompletedInitialMeld: Boolean = false
     ): GameEntity {
         val game = GameEntity(
             gameId = "game-1",
@@ -424,7 +470,8 @@ class EndTurnServiceTest {
                 displayName = "Alice",
                 turnOrder = 0,
                 rackTiles = user1Rack,
-                joinedAt = Instant.parse("2026-04-27T17:55:00Z")
+                joinedAt = Instant.parse("2026-04-27T17:55:00Z"),
+                hasCompletedInitialMeld = hasCompletedInitialMeld
             ),
             GamePlayerEntity(
                 game = game,

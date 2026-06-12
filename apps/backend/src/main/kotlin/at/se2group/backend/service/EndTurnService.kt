@@ -76,6 +76,7 @@ class EndTurnService(
         }
 
         val committedGame = commitDraftToConfirmedGame(game, submittedDraft)
+            .applyInitialMeldCompletion(userId)
 
         // Turn metrics are recorded before potential game finalization so the
         // winning move is included in the aggregated statistics.
@@ -167,6 +168,19 @@ class EndTurnService(
             this
         }
     }
+        private fun ConfirmedGame.applyInitialMeldCompletion(
+            actingPlayerUserId: String
+        ): ConfirmedGame {
+            val updatedPlayers = players.map { player ->
+                if(player.userId == actingPlayerUserId && !player.hasCompletedInitialMeld) {
+                    player.copy(hasCompletedInitialMeld = true)
+                } else {
+                    player
+                }
+            }
+            return copy(players = updatedPlayers)
+        }
+
 
     private fun ConfirmedGame.hasEmptyRack(actingPlayerUserId: String): Boolean {
         return players

@@ -156,6 +156,7 @@ class GameDtoTest {
             turnDeadline = null,
             remainingTurnSeconds = null,
             status = "ACTIVE",
+            requireInitialMeld = true,
             createdAt = createdAt.toString(),
             startedAt = startedAt.toString(),
             finishedAt = null,
