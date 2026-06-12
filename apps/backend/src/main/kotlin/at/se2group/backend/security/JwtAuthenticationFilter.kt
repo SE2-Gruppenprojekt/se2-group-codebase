@@ -6,10 +6,8 @@ import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.AuthenticationEntryPoint
-import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
-@Component
 class JwtAuthenticationFilter(
     private val jwtService: JwtService,
     private val authenticationEntryPoint: AuthenticationEntryPoint
@@ -27,7 +25,11 @@ class JwtAuthenticationFilter(
             return
         }
 
-        if (!authorization.startsWith("Bearer ")) {
+        val parts = authorization.trim().split(Regex("\\s+"), limit = 2)
+        val scheme = parts.firstOrNull()
+        val token = parts.getOrNull(1)?.trim()
+
+        if (!scheme.equals("Bearer", ignoreCase = true) || token.isNullOrBlank()) {
             authenticationEntryPoint.commence(
                 request,
                 response,
@@ -35,8 +37,6 @@ class JwtAuthenticationFilter(
             )
             return
         }
-
-        val token = authorization.removePrefix("Bearer ").trim()
 
         try {
             val userId = jwtService.extractUserId(token)
