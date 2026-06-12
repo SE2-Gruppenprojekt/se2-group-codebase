@@ -72,6 +72,8 @@ jobs:
     requests:
       - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_LOBBY_ID__
         method: GET
+        headers:
+          - "Authorization:Bearer __SCAN_HOST_ACCESS_TOKEN__"
         responseCode: 200
 
   - type: requestor
@@ -80,7 +82,6 @@ jobs:
       - url: https://se2-group-codebase.onrender.com/api/lobbies
         method: POST
         headers:
-          - "X-User-Id:scan-ephemeral-user"
           - "Content-Type:application/json"
         data: |
           {
@@ -100,7 +101,6 @@ jobs:
           - "Content-Type:application/json"
         data: |
           {
-            "userId": "scan-join-user",
             "displayName": "Scan Join User"
           }
         responseCode: 404
@@ -111,7 +111,7 @@ jobs:
       - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_LOBBY_ID__/settings
         method: PATCH
         headers:
-          - "X-User-Id:__SCAN_HOST_USER_ID__"
+          - "Authorization:Bearer __SCAN_HOST_ACCESS_TOKEN__"
           - "Content-Type:application/json"
         data: |
           {
@@ -127,12 +127,12 @@ jobs:
       - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_LOBBY_ID__/ready
         method: POST
         headers:
-          - "X-User-Id:__SCAN_GUEST_USER_ID__"
+          - "Authorization:Bearer __SCAN_GUEST_ACCESS_TOKEN__"
         responseCode: 200
       - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_LOBBY_ID__/unready
         method: POST
         headers:
-          - "X-User-Id:__SCAN_GUEST_USER_ID__"
+          - "Authorization:Bearer __SCAN_GUEST_ACCESS_TOKEN__"
         responseCode: 200
 
   - type: requestor
@@ -141,7 +141,7 @@ jobs:
       - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_LOBBY_ID__/leave
         method: POST
         headers:
-          - "X-User-Id:__SCAN_GUEST_USER_ID__"
+          - "Authorization:Bearer __SCAN_GUEST_ACCESS_TOKEN__"
         responseCode: 200
 
   - type: requestor
@@ -150,7 +150,7 @@ jobs:
       - url: https://se2-group-codebase.onrender.com/api/lobbies/__SCAN_LOBBY_ID__
         method: DELETE
         headers:
-          - "X-User-Id:__SCAN_HOST_USER_ID__"
+          - "Authorization:Bearer __SCAN_HOST_ACCESS_TOKEN__"
         responseCode: 204
 
   - type: requestor
@@ -159,7 +159,7 @@ jobs:
       - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby/start
         method: POST
         headers:
-          - "X-User-Id:__SCAN_HOST_USER_ID__"
+          - "Authorization:Bearer __SCAN_HOST_ACCESS_TOKEN__"
         responseCode: 404
 
   - type: requestor
@@ -168,7 +168,7 @@ jobs:
       - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby/leave
         method: POST
         headers:
-          - "X-User-Id:__SCAN_GUEST_USER_ID__"
+          - "Authorization:Bearer __SCAN_GUEST_ACCESS_TOKEN__"
         responseCode: 404
 
   - type: requestor
@@ -177,7 +177,7 @@ jobs:
       - url: https://se2-group-codebase.onrender.com/api/lobbies/zap-missing-lobby
         method: DELETE
         headers:
-          - "X-User-Id:__SCAN_HOST_USER_ID__"
+          - "Authorization:Bearer __SCAN_HOST_ACCESS_TOKEN__"
         responseCode: 404
 
   - type: requestor
@@ -185,6 +185,8 @@ jobs:
     requests:
       - url: https://se2-group-codebase.onrender.com/api/games/__SCAN_GAME_ID__
         method: GET
+        headers:
+          - "Authorization:Bearer __SCAN_HOST_ACCESS_TOKEN__"
         responseCode: 200
 
   - type: requestor
@@ -193,7 +195,7 @@ jobs:
       - url: https://se2-group-codebase.onrender.com/api/games/__SCAN_GAME_ID__/draft
         method: PUT
         headers:
-          - "X-User-Id:__SCAN_HOST_USER_ID__"
+          - "Authorization:Bearer __SCAN_HOST_ACCESS_TOKEN__"
           - "Content-Type:application/json"
         data: |
           {
@@ -221,7 +223,7 @@ jobs:
       - url: https://se2-group-codebase.onrender.com/api/games/__SCAN_GAME_ID__/draw
         method: POST
         headers:
-          - "X-User-Id:__SCAN_HOST_USER_ID__"
+          - "Authorization:Bearer __SCAN_HOST_ACCESS_TOKEN__"
         responseCode: 200
 
   - type: requestor
@@ -230,7 +232,7 @@ jobs:
       - url: https://se2-group-codebase.onrender.com/api/games/__SCAN_GAME_ID__/end-turn
         method: POST
         headers:
-          - "X-User-Id:__SCAN_HOST_USER_ID__"
+          - "Authorization:Bearer __SCAN_HOST_ACCESS_TOKEN__"
           - "Content-Type:application/json"
         data: |
           {
@@ -263,11 +265,13 @@ jobs:
     requests:
       - url: https://se2-group-codebase.onrender.com/api/games/zap-missing-game
         method: GET
+        headers:
+          - "Authorization:Bearer __SCAN_HOST_ACCESS_TOKEN__"
         responseCode: 404
       - url: https://se2-group-codebase.onrender.com/api/games/zap-missing-game/draft
         method: PUT
         headers:
-          - "X-User-Id:__SCAN_HOST_USER_ID__"
+          - "Authorization:Bearer __SCAN_HOST_ACCESS_TOKEN__"
           - "Content-Type:application/json"
         data: |
           {
@@ -291,12 +295,12 @@ jobs:
       - url: https://se2-group-codebase.onrender.com/api/games/zap-missing-game/draw
         method: POST
         headers:
-          - "X-User-Id:__SCAN_HOST_USER_ID__"
+          - "Authorization:Bearer __SCAN_HOST_ACCESS_TOKEN__"
         responseCode: 404
       - url: https://se2-group-codebase.onrender.com/api/games/zap-missing-game/end-turn
         method: POST
         headers:
-          - "X-User-Id:__SCAN_HOST_USER_ID__"
+          - "Authorization:Bearer __SCAN_HOST_ACCESS_TOKEN__"
           - "Content-Type:application/json"
         data: |
           {
