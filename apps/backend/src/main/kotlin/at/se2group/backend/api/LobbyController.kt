@@ -1,8 +1,11 @@
 package at.se2group.backend.api
 
+import at.se2group.backend.dto.AuthenticatedLobbyResponse
 import at.se2group.backend.dto.LobbyListItemResponse
 import at.se2group.backend.mapper.toListItemResponse
 import at.se2group.backend.service.LobbyService
+import at.se2group.backend.service.LobbyAuthenticationService
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.bind.annotation.RequestMapping
@@ -12,18 +15,19 @@ import at.se2group.backend.dto.LobbyResponse
 import at.se2group.backend.mapper.toResponse
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.PathVariable
 import at.se2group.backend.dto.JoinLobbyRequest
 import at.se2group.backend.dto.UpdateLobbySettingsRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import jakarta.validation.Valid
+import org.springframework.security.core.Authentication
 
 @RestController
 @RequestMapping("/api/lobbies")
 class LobbyController(
-    private val lobbyService: LobbyService
+    private val lobbyService: LobbyService,
+    private val lobbyAuthenticationService: LobbyAuthenticationService
 ) {
 
     @GetMapping
@@ -34,48 +38,53 @@ class LobbyController(
 
     @PostMapping
     fun createLobby(
-        @RequestHeader("X-User-Id") userId: String,
        @Valid @RequestBody request: CreateLobbyRequest
-    ): LobbyResponse {
-        return lobbyService.createLobby(userId, request)
-            .toResponse()
+    ): AuthenticatedLobbyResponse {
+        return lobbyAuthenticationService.createAuthenticatedLobby(request)
     }
 
     @GetMapping("/{lobbyId}")
-    fun getLobby(@PathVariable lobbyId: String): LobbyResponse {
-        return lobbyService.getLobby(lobbyId).toResponse()
+    @SecurityRequirement(name = "bearerAuth")
+    fun getLobby(
+        @PathVariable lobbyId: String,
+        authentication: Authentication
+    ): LobbyResponse {
+        return lobbyService.getLobbyForUser(lobbyId, authentication.name).toResponse()
     }
     @PostMapping("/{lobbyId}/join")
     fun joinLobby(
         @PathVariable lobbyId: String,
         @Valid @RequestBody request: JoinLobbyRequest
-    ): LobbyResponse {
-        return lobbyService.joinLobby(lobbyId, request).toResponse()
+    ): AuthenticatedLobbyResponse {
+        return lobbyAuthenticationService.joinAuthenticatedLobby(lobbyId, request)
     }
 
     @PatchMapping("/{lobbyId}/settings")
+    @SecurityRequirement(name = "bearerAuth")
     fun updateLobbySettings(
         @PathVariable lobbyId: String,
-        @RequestHeader("X-User-Id") userId: String,
+        authentication: Authentication,
         @Valid @RequestBody request: UpdateLobbySettingsRequest
     ): LobbyResponse {
-        return lobbyService.updateLobbySettings(lobbyId, userId, request).toResponse()
+        return lobbyService.updateLobbySettings(lobbyId, authentication.name, request).toResponse()
     }
 
     @PostMapping("/{lobbyId}/start")
+    @SecurityRequirement(name = "bearerAuth")
     fun startLobby(
         @PathVariable lobbyId: String,
-        @RequestHeader("X-User-Id") userId: String
+        authentication: Authentication
     ): LobbyResponse {
-        return lobbyService.startLobby(lobbyId, userId).toResponse()
+        return lobbyService.startLobby(lobbyId, authentication.name).toResponse()
     }
 
     @PostMapping("/{lobbyId}/leave")
+    @SecurityRequirement(name = "bearerAuth")
     fun leaveLobby(
         @PathVariable lobbyId: String,
-        @RequestHeader("X-User-Id") userId: String,
+        authentication: Authentication,
         ): ResponseEntity<Any> {
-        val updatedLobby = lobbyService.leaveLobby(lobbyId, userId)
+        val updatedLobby = lobbyService.leaveLobby(lobbyId, authentication.name)
 
         return if (updatedLobby == null) {
             ResponseEntity.noContent().build()
@@ -85,27 +94,30 @@ class LobbyController(
     }
 
     @PostMapping("/{lobbyId}/ready")
+    @SecurityRequirement(name = "bearerAuth")
     fun readyLobby(
         @PathVariable lobbyId: String,
-        @RequestHeader("X-User-Id") userId: String,
+        authentication: Authentication,
     ): LobbyResponse {
-        return lobbyService.readyLobby(lobbyId, userId).toResponse()
+        return lobbyService.readyLobby(lobbyId, authentication.name).toResponse()
     }
 
     @PostMapping("/{lobbyId}/unready")
+    @SecurityRequirement(name = "bearerAuth")
     fun unreadyLobby(
         @PathVariable lobbyId: String,
-        @RequestHeader("X-User-Id") userId: String
+        authentication: Authentication
      ): LobbyResponse {
-        return lobbyService.unreadyLobby(lobbyId, userId).toResponse()
+        return lobbyService.unreadyLobby(lobbyId, authentication.name).toResponse()
     }
 
     @DeleteMapping("/{lobbyId}")
+    @SecurityRequirement(name = "bearerAuth")
     fun deleteLobby(
         @PathVariable lobbyId: String,
-        @RequestHeader("X-User-Id") userId: String
+        authentication: Authentication
     ): ResponseEntity<Unit> {
-        lobbyService.deleteLobby(lobbyId, userId)
+        lobbyService.deleteLobby(lobbyId, authentication.name)
         return ResponseEntity.noContent().build()
     }
 }
