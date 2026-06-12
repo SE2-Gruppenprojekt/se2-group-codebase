@@ -88,6 +88,43 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
+    fun `filter authenticates request when bearer scheme casing varies`() {
+        val filter = JwtAuthenticationFilter(jwtService, authenticationEntryPoint)
+        val request = MockHttpServletRequest().apply {
+            addHeader("Authorization", "bEaReR valid-token")
+        }
+        val response = MockHttpServletResponse()
+
+        `when`(jwtService.extractUserId("valid-token")).thenReturn("user-123")
+
+        filter.doFilter(request, response, filterChain)
+
+        verify(jwtService).extractUserId("valid-token")
+        verify(filterChain).doFilter(request, response)
+        verifyNoInteractions(authenticationEntryPoint)
+        assertEquals("user-123", SecurityContextHolder.getContext().authentication?.name)
+    }
+
+    @Test
+    fun `filter rejects bearer scheme without token`() {
+        val filter = JwtAuthenticationFilter(jwtService, authenticationEntryPoint)
+        val request = MockHttpServletRequest().apply {
+            addHeader("Authorization", "Bearer")
+        }
+        val response = MockHttpServletResponse()
+
+        filter.doFilter(request, response, filterChain)
+
+        verify(authenticationEntryPoint).commence(
+            same(request),
+            same(response),
+            any()
+        )
+        verify(filterChain, never()).doFilter(request, response)
+        verifyNoInteractions(jwtService)
+    }
+
+    @Test
     fun `filter clears security context and returns 401 when bearer token is invalid`() {
         val filter = JwtAuthenticationFilter(jwtService, authenticationEntryPoint)
         val request = MockHttpServletRequest().apply {
