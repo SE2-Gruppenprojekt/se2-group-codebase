@@ -75,10 +75,7 @@ class LobbyServiceJoinTest {
             )
         )
 
-        val request = JoinLobbyRequest(
-            userId = "player-2",
-            displayName = "Bob"
-        )
+        val request = JoinLobbyRequest(displayName = "Bob")
 
         `when`(lobbyRepository.findById("lobby-1"))
             .thenReturn(Optional.of(entity))
@@ -90,7 +87,7 @@ class LobbyServiceJoinTest {
                 runDeferredAction(it)
             }
 
-        val result = lobbyService.joinLobby("lobby-1", request)
+        val result = lobbyService.joinLobby("lobby-1", "player-2", request)
 
         assertEquals("lobby-1", result.lobbyId)
         assertEquals("host-1", result.hostUserId)
@@ -156,16 +153,13 @@ class LobbyServiceJoinTest {
             )
         )
 
-        val request = JoinLobbyRequest(
-            userId = "player-3",
-            displayName = "Charlie"
-        )
+        val request = JoinLobbyRequest(displayName = "Charlie")
 
         `when`(lobbyRepository.findById("lobby-1"))
             .thenReturn(Optional.of(entity))
 
         val exception = assertThrows<IllegalStateException> {
-            lobbyService.joinLobby("lobby-1", request)
+            lobbyService.joinLobby("lobby-1", "player-3", request)
         }
 
         assertEquals("Lobby is not open", exception.message)
@@ -198,16 +192,13 @@ class LobbyServiceJoinTest {
             )
         )
 
-        val request = JoinLobbyRequest(
-            userId = "player-3",
-            displayName = "Charlie"
-        )
+        val request = JoinLobbyRequest(displayName = "Charlie")
 
         `when`(lobbyRepository.findById("lobby-1"))
             .thenReturn(Optional.of(entity))
 
         val exception = assertThrows<IllegalStateException> {
-            lobbyService.joinLobby("lobby-1", request)
+            lobbyService.joinLobby("lobby-1", "player-3", request)
         }
 
         assertEquals("Lobby is full", exception.message)
@@ -240,16 +231,13 @@ class LobbyServiceJoinTest {
             )
         )
 
-        val request = JoinLobbyRequest(
-            userId = "player-2",
-            displayName = "Bob"
-        )
+        val request = JoinLobbyRequest(displayName = "Bob")
 
         `when`(lobbyRepository.findById("lobby-1"))
             .thenReturn(Optional.of(entity))
 
         val exception = assertThrows<IllegalStateException> {
-            lobbyService.joinLobby("lobby-1", request)
+            lobbyService.joinLobby("lobby-1", "player-2", request)
         }
 
         assertEquals("Player already in lobby", exception.message)
@@ -277,17 +265,14 @@ class LobbyServiceJoinTest {
             )
         )
 
-        val request = JoinLobbyRequest(
-            userId = "player-2",
-            displayName = "Bob"
-        )
+        val request = JoinLobbyRequest(displayName = "Bob")
 
         `when`(lobbyRepository.findById("lobby-1"))
             .thenReturn(Optional.of(entity))
         `when`(lobbyRepository.save(any(LobbyEntity::class.java)))
             .thenAnswer { it.arguments[0] as LobbyEntity }
 
-        lobbyService.joinLobby("lobby-1", request)
+        lobbyService.joinLobby("lobby-1", "player-2", request)
 
         val captor = ArgumentCaptor.forClass(LobbyEntity::class.java)
         verify(lobbyRepository).save(captor.capture())

@@ -1,8 +1,15 @@
 package at.se2group.backend.api
 
+import at.se2group.backend.security.JwtAuthenticationFilter
+import at.se2group.backend.security.JwtService
+import at.se2group.backend.security.RestAccessDeniedHandler
+import at.se2group.backend.security.RestAuthenticationEntryPoint
+import at.se2group.backend.security.SecurityConfig
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.context.annotation.Import
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 
@@ -26,10 +33,19 @@ import org.springframework.test.web.servlet.get
  * - the exact response shape remains stable for external callers
  */
 @WebMvcTest(RootController::class)
+@Import(
+    SecurityConfig::class,
+    RestAuthenticationEntryPoint::class,
+    RestAccessDeniedHandler::class,
+    JwtAuthenticationFilter::class
+)
 class RootControllerTest {
 
     @Autowired
     lateinit var mockMvc: MockMvc
+
+    @MockitoBean
+    lateinit var jwtService: JwtService
 
     @Test
     fun `root returns running service metadata`() {
