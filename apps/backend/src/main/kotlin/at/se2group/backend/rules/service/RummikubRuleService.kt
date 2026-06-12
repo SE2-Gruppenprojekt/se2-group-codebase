@@ -80,9 +80,11 @@ class RummikubRuleService(
             .validate(submittedDraft.boardSets)
             .violations
 
-        violations += firstMoveValidationService
-            .validate(confirmedGame, actingPlayer, submittedDraft)
-            .violations
+        if (confirmedGame.requireInitialMeld) {
+            violations += firstMoveValidationService
+                .validate(confirmedGame, actingPlayer, submittedDraft)
+                .violations
+        }
 
         return if (violations.isEmpty()) valid() else invalid(violations)
     }
