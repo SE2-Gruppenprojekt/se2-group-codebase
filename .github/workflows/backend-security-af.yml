@@ -76,19 +76,28 @@ jobs:
           SCAN_GAME_ID="$(echo "$FIXTURE_JSON" | jq -r '.gameId')"
           SCAN_HOST_USER_ID="$(echo "$FIXTURE_JSON" | jq -r '.hostUserId')"
           SCAN_GUEST_USER_ID="$(echo "$FIXTURE_JSON" | jq -r '.guestUserId')"
+          SCAN_HOST_ACCESS_TOKEN="$(echo "$FIXTURE_JSON" | jq -r '.hostAccessToken')"
+          SCAN_GUEST_ACCESS_TOKEN="$(echo "$FIXTURE_JSON" | jq -r '.guestAccessToken')"
 
-          for value in "$SCAN_LOBBY_ID" "$SCAN_GAME_ID" "$SCAN_HOST_USER_ID" "$SCAN_GUEST_USER_ID"; do
+          for value in "$SCAN_LOBBY_ID" "$SCAN_GAME_ID" "$SCAN_HOST_USER_ID" "$SCAN_GUEST_USER_ID" "$SCAN_HOST_ACCESS_TOKEN" "$SCAN_GUEST_ACCESS_TOKEN"; do
             if [ -z "$value" ] || [ "$value" = "null" ]; then
               echo "Scan fixture endpoint returned incomplete data"
               exit 1
             fi
           done
 
+          SCAN_HOST_AUTH_HEADER="Authorization:Bearer $SCAN_HOST_ACCESS_TOKEN"
+          SCAN_GUEST_AUTH_HEADER="Authorization:Bearer $SCAN_GUEST_ACCESS_TOKEN"
+
           {
             echo "SCAN_LOBBY_ID=$SCAN_LOBBY_ID"
             echo "SCAN_GAME_ID=$SCAN_GAME_ID"
             echo "SCAN_HOST_USER_ID=$SCAN_HOST_USER_ID"
             echo "SCAN_GUEST_USER_ID=$SCAN_GUEST_USER_ID"
+            echo "SCAN_HOST_ACCESS_TOKEN=$SCAN_HOST_ACCESS_TOKEN"
+            echo "SCAN_GUEST_ACCESS_TOKEN=$SCAN_GUEST_ACCESS_TOKEN"
+            echo "SCAN_HOST_AUTH_HEADER=$SCAN_HOST_AUTH_HEADER"
+            echo "SCAN_GUEST_AUTH_HEADER=$SCAN_GUEST_AUTH_HEADER"
           } >> "$GITHUB_ENV"
 
           sed \
@@ -96,6 +105,10 @@ jobs:
             -e "s/__SCAN_GAME_ID__/$SCAN_GAME_ID/g" \
             -e "s/__SCAN_HOST_USER_ID__/$SCAN_HOST_USER_ID/g" \
             -e "s/__SCAN_GUEST_USER_ID__/$SCAN_GUEST_USER_ID/g" \
+            -e "s/__SCAN_HOST_ACCESS_TOKEN__/$SCAN_HOST_ACCESS_TOKEN/g" \
+            -e "s/__SCAN_GUEST_ACCESS_TOKEN__/$SCAN_GUEST_ACCESS_TOKEN/g" \
+            -e "s|__SCAN_HOST_AUTH_HEADER__|$SCAN_HOST_AUTH_HEADER|g" \
+            -e "s|__SCAN_GUEST_AUTH_HEADER__|$SCAN_GUEST_AUTH_HEADER|g" \
             .github/zap/backend-automation-plan.yaml \
             > .github/zap/backend-automation-plan.generated.yaml
 
@@ -109,12 +122,16 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ -n "${SCAN_LOBBY_ID:-}" ] && [ -n "${SCAN_GAME_ID:-}" ] && [ -n "${SCAN_HOST_USER_ID:-}" ] && [ -n "${SCAN_GUEST_USER_ID:-}" ]; then
+          if [ -n "${SCAN_LOBBY_ID:-}" ] && [ -n "${SCAN_GAME_ID:-}" ] && [ -n "${SCAN_HOST_USER_ID:-}" ] && [ -n "${SCAN_GUEST_USER_ID:-}" ] && [ -n "${SCAN_HOST_AUTH_HEADER:-}" ] && [ -n "${SCAN_GUEST_AUTH_HEADER:-}" ]; then
             sed \
               -e "s/__SCAN_LOBBY_ID__/$SCAN_LOBBY_ID/g" \
               -e "s/__SCAN_GAME_ID__/$SCAN_GAME_ID/g" \
               -e "s/__SCAN_HOST_USER_ID__/$SCAN_HOST_USER_ID/g" \
               -e "s/__SCAN_GUEST_USER_ID__/$SCAN_GUEST_USER_ID/g" \
+              -e "s/__SCAN_HOST_ACCESS_TOKEN__/$SCAN_HOST_ACCESS_TOKEN/g" \
+              -e "s/__SCAN_GUEST_ACCESS_TOKEN__/$SCAN_GUEST_ACCESS_TOKEN/g" \
+              -e "s|__SCAN_HOST_AUTH_HEADER__|$SCAN_HOST_AUTH_HEADER|g" \
+              -e "s|__SCAN_GUEST_AUTH_HEADER__|$SCAN_GUEST_AUTH_HEADER|g" \
               .github/zap/backend-automation-plan.yaml \
               > .github/zap/backend-automation-plan.generated.yaml
           else
