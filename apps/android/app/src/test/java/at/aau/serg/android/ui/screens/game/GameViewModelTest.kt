@@ -2,6 +2,7 @@ package at.aau.serg.android.ui.screens.game
 
 import at.aau.serg.android.MainDispatcherRule
 import at.aau.serg.android.core.datastore.InMemoryProtoStore
+import at.aau.serg.android.core.datastore.user.UserStore
 import at.aau.serg.android.core.network.game.GameService
 import at.aau.serg.android.core.network.game.GameWebSocketService
 import at.aau.serg.android.core.network.mapper.toDomain
@@ -59,6 +60,7 @@ class GameViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var store: InMemoryProtoStore<User>
+    private lateinit var userStore: UserStore
     private lateinit var service: GameService
     private lateinit var socketService: GameWebSocketService
     private lateinit var viewmodel: GameViewModel
@@ -176,27 +178,28 @@ class GameViewModelTest {
     @Before
     fun setup() = runTest {
         store = InMemoryProtoStore(User.getDefaultInstance())
+        userStore = UserStore(store)
         service = mockk()
         socketService = mockk()
 
         coEvery { service.loadGame(any()) } returns fakeGameResponse
-        coEvery { service.drawTile(any(), any()) } returns fakeGameResponse
+        coEvery { service.drawTile(any()) } returns fakeGameResponse
         coEvery { socketService.subscribe(any()) } returns flow { }
 
-        viewmodel = GameViewModel(store, service, socketService)
+        viewmodel = GameViewModel(userStore, service, socketService)
 
         advanceUntilIdle()
     }
 
     @Test
     fun default_constructor_path_isCovered() = runTest {
-        val vm = LobbyCreateViewModel(store)
+        val vm = LobbyCreateViewModel(userStore)
         assertNotNull(vm)
     }
 
     @Test
     fun default_constructor_of_GameViewModel_isCovered() = runTest {
-        val vm = GameViewModel(store)
+        val vm = GameViewModel(userStore)
         assertNotNull(vm)
         advanceUntilIdle()
     }
@@ -397,7 +400,7 @@ class GameViewModelTest {
     @Test
     fun endTurn_sets_success_andClearsSelection() = runTest {
         setTestGameState()
-        coEvery { service.endTurn(any(), any(),any()) } just Runs
+        coEvery { service.endTurn(any(), any()) } returns fakeGameResponse
 
         viewmodel.onUIEvent(GameUIEvent.EndTurn)
         advanceUntilIdle()
@@ -412,7 +415,7 @@ class GameViewModelTest {
     @Test
     fun endTurn_emitsErrorState_onFailure() = runTest {
         setTestGameState()
-        coEvery { service.endTurn(any(), any(),any()) } throws RuntimeException()
+        coEvery { service.endTurn(any(), any()) } throws RuntimeException()
 
         viewmodel.onUIEvent(GameUIEvent.EndTurn)
 
@@ -437,7 +440,7 @@ class GameViewModelTest {
 
         val json = """{"errorCode":"INVALID_TURN_SUBMISSION","errorMessage":"Draft invalid","violations":[{"code":"RUN_NOT_CONSECUTIVE","message":"Not consecutive","boardSetId":"b1"},{"code":"INITIAL_MELD_TOO_SMALL","message":"Meld too small","boardSetId":null}]}"""
         val response = Response.error<Any>(409, json.toResponseBody("application/json".toMediaType()))
-        coEvery { service.endTurn(any(), any(), any()) } throws HttpException(response)
+        coEvery { service.endTurn(any(), any()) } throws HttpException(response)
 
         viewmodel.onUIEvent(GameUIEvent.EndTurn)
         advanceUntilIdle()
@@ -457,7 +460,7 @@ class GameViewModelTest {
                 ruleValidation = RuleValidationUiState(summaryMessage = "old error")
             )
         )
-        coEvery { service.endTurn(any(), any(), any()) } just Runs
+        coEvery { service.endTurn(any(), any()) } returns fakeGameResponse
 
         viewmodel.onUIEvent(GameUIEvent.EndTurn)
         advanceUntilIdle()
@@ -497,7 +500,7 @@ class GameViewModelTest {
                 } else p
             }
         )
-        coEvery { service.drawTile(any(), any()) } returns modifiedGameResponse
+        coEvery { service.drawTile(any()) } returns modifiedGameResponse
         viewmodel.onUIEvent(GameUIEvent.DrawTile)
         advanceUntilIdle()
 
@@ -520,7 +523,7 @@ class GameViewModelTest {
         ))
         val before = viewmodel.uiState.value.gameState
 
-        coEvery { service.drawTile(any(), any()) } returns fakeGameResponse
+        coEvery { service.drawTile(any()) } returns fakeGameResponse
         viewmodel.onUIEvent(GameUIEvent.DrawTile)
         advanceUntilIdle()
 
@@ -531,7 +534,7 @@ class GameViewModelTest {
     @Test
     fun drawTile_emitsErrorState_onFailure() = runTest {
         setTestGameState()
-        coEvery { service.drawTile(any(), any()) } throws RuntimeException("Failure")
+        coEvery { service.drawTile(any()) } throws RuntimeException("Failure")
 
         viewmodel.onUIEvent(GameUIEvent.DrawTile)
 
@@ -626,7 +629,7 @@ class GameViewModelTest {
 
     @Test
     fun sendTurnDraft_updateDraftWorkflowTest() = runTest {
-        coEvery { service.updateDraft(any(), any(), any()) } returns TurnDraftResponse(
+        coEvery { service.updateDraft(any(), any()) } returns TurnDraftResponse(
             gameId = "Game1",
             playerUserId = "Player1",
             draftBoard = emptyList(),
@@ -644,7 +647,7 @@ class GameViewModelTest {
 
     @Test
     fun sendTurnDraft_emitsErrorState_onFailure() = runTest {
-        coEvery { service.updateDraft(any(), any(), any()) } throws RuntimeException()
+        coEvery { service.updateDraft(any(), any()) } throws RuntimeException()
 
         viewmodel.sendTurnDraft()
 
@@ -659,7 +662,7 @@ class GameViewModelTest {
         viewmodel.setUiStateForTest(GameUiState(
             user = null
         ))
-        coEvery { service.updateDraft(any(), any(),any()) }
+        coEvery { service.updateDraft(any(), any()) }
 
         viewmodel.sendTurnDraft()
         advanceUntilIdle()

@@ -1,8 +1,10 @@
 package at.aau.serg.android.ui.screens.lobby.browse
 
 import at.aau.serg.android.MainDispatcherRule
-import at.aau.serg.android.core.datastore.ProtoStore
+import at.aau.serg.android.core.datastore.InMemoryProtoStore
+import at.aau.serg.android.core.datastore.user.UserStore
 import at.aau.serg.android.core.network.lobby.LobbyAPI
+import at.aau.serg.android.core.network.lobby.AuthenticatedLobbyResponse
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateEvent
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateViewModel
@@ -13,7 +15,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -33,13 +34,19 @@ class LobbyBrowseViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var api: LobbyAPI
-    private lateinit var userStore: ProtoStore<User>
+    private lateinit var userStore: UserStore
     private lateinit var viewModel: LobbyBrowseViewModel
 
     @Before
     fun setup() {
         api = mockk()
-        userStore = mockk()
+        userStore = UserStore(
+            InMemoryProtoStore(
+                User.newBuilder()
+                    .setDisplayName("Alice")
+                    .build()
+            )
+        )
         coEvery { api.getLobbies() } returns emptyList()
         viewModel = LobbyBrowseViewModel(userStore, api)
     }
@@ -117,8 +124,10 @@ class LobbyBrowseViewModelTest {
 
     @Test
     fun onJoinLobby_emitsNavigateToWaitingRoom() = runTest {
-        every { userStore.data } returns flowOf(User.getDefaultInstance())
-        coEvery { api.joinLobby(any(), any()) } returns mockk()
+        coEvery { api.joinLobby(any(), any()) } returns AuthenticatedLobbyResponse(
+            accessToken = "aaa.eyJzdWIiOiJ1c2VyLTEifQ.ccc",
+            lobby = mockk()
+        )
 
         val effectDeferred = async { viewModel.effects.first() }
         viewModel.onEvent(LobbyBrowseEvent.OnJoinLobby("ABC"))
@@ -128,30 +137,19 @@ class LobbyBrowseViewModelTest {
     }
 
     @Test
-    fun onJoinLobby_whenConflict409_emitsNavigateToWaitingRoom() = runTest {
+    fun onJoinLobby_whenConflict409_setsErrorState() = runTest {
         val errorResponse = Response.error<Any>(
             409,
             "".toResponseBody("application/json".toMediaTypeOrNull())
         )
         val httpException = HttpException(errorResponse)
 
-        every { userStore.data } returns flowOf(User.getDefaultInstance())
         coEvery { api.joinLobby(any(), any()) } throws httpException
-
-        val effectDeferred = async { viewModel.effects.first() }
 
         viewModel.onEvent(LobbyBrowseEvent.OnJoinLobby("ABC"))
         advanceUntilIdle()
 
-        assertTrue(
-            "LoadState should be Success even on 409",
-            viewModel.uiState.value.loadState is LoadState.Success
-        )
-
-        assertEquals(
-            LobbyBrowseEffect.NavigateToWaitingRoom("ABC"),
-            effectDeferred.await()
-        )
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
     }
 
     @Test

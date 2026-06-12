@@ -2,6 +2,7 @@ package at.aau.serg.android.ui.screens.settings
 
 import at.aau.serg.android.MainDispatcherRule
 import at.aau.serg.android.core.datastore.InMemoryProtoStore
+import at.aau.serg.android.core.datastore.user.UserStore
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.theme.ThemeState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,6 +23,7 @@ class SettingsViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var store: InMemoryProtoStore<User>
+    private lateinit var userStore: UserStore
     private lateinit var viewModel: SettingsViewModel
 
     @Before
@@ -32,7 +34,8 @@ class SettingsViewModelTest {
             .build()
 
         store = InMemoryProtoStore(user)
-        viewModel = SettingsViewModel(store)
+        userStore = UserStore(store)
+        viewModel = SettingsViewModel(userStore)
     }
 
     @Test

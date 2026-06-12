@@ -3,6 +3,7 @@ package at.aau.serg.android.ui.screens.lobby.waiting
 import app.cash.turbine.test
 import at.aau.serg.android.MainDispatcherRule
 import at.aau.serg.android.core.datastore.InMemoryProtoStore
+import at.aau.serg.android.core.datastore.user.UserStore
 import at.aau.serg.android.core.network.lobby.LobbyAPI
 import at.aau.serg.android.core.network.lobby.LobbyWebSocketService
 import at.aau.serg.android.core.network.mapper.toDomain
@@ -43,6 +44,7 @@ class LobbyWaitingViewModelTest {
     private lateinit var api: LobbyAPI
     private lateinit var service: LobbyWebSocketService
     private lateinit var store: InMemoryProtoStore<User>
+    private lateinit var userStore: UserStore
     private lateinit var viewModel: LobbyWaitingViewModel
 
     val fakeLobby = LobbyResponse(
@@ -85,7 +87,8 @@ class LobbyWaitingViewModelTest {
             store.save(user)
         }
 
-        viewModel = LobbyWaitingViewModel(store, api, service)
+        userStore = UserStore(store)
+        viewModel = LobbyWaitingViewModel(userStore, api, service)
     }
 
     @After
@@ -95,7 +98,7 @@ class LobbyWaitingViewModelTest {
 
     @Test
     fun default_constructor_path_isCovered() = runTest {
-        val vm = LobbyWaitingViewModel(store)
+        val vm = LobbyWaitingViewModel(userStore)
         assertNotNull(vm)
     }
 
@@ -135,7 +138,7 @@ class LobbyWaitingViewModelTest {
             lobby = fakeLobby.toDomain(),
             user = user
         ))
-        coEvery { api.startMatch(fakeLobby.hostUserId, fakeLobby.lobbyId) } returns Unit
+        coEvery { api.startMatch(fakeLobby.lobbyId) } returns fakeLobby
 
         val job = launch {
             val effect = viewModel.effects.first()
@@ -172,7 +175,7 @@ class LobbyWaitingViewModelTest {
             lobby = null,
             user = user
         ))
-        coEvery { api.startMatch("host", "lobby-123") } returns Unit
+        coEvery { api.startMatch("lobby-123") } returns fakeLobby
 
 
         viewModel.onEvent(LobbyWaitingEvent.onMatchStart)
@@ -191,7 +194,7 @@ class LobbyWaitingViewModelTest {
             lobby = fakeLobby.toDomain(),
             user = user
         ))
-        coEvery { api.startMatch(any(), any()) } throws RuntimeException("network error")
+        coEvery { api.startMatch(any()) } throws RuntimeException("network error")
 
         viewModel.onEvent(LobbyWaitingEvent.onMatchStart)
         advanceUntilIdle()
@@ -512,8 +515,8 @@ class LobbyWaitingViewModelTest {
         store.save(updatedUser)
         advanceUntilIdle()
 
-        coEvery { api.ready(any(), any()) } throws RuntimeException("network error")
-        coEvery { api.unready(any(), any()) } throws RuntimeException("network error")
+        coEvery { api.ready(any()) } throws RuntimeException("network error")
+        coEvery { api.unready(any()) } throws RuntimeException("network error")
 
         viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState(userId))
         advanceUntilIdle()
@@ -539,7 +542,7 @@ class LobbyWaitingViewModelTest {
         store.save(updatedUser)
         advanceUntilIdle()
 
-        coEvery { api.ready(userId, lobbyId) } returns Unit
+        coEvery { api.ready(lobbyId) } returns fakeLobby
 
         viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState(userId))
         advanceUntilIdle()
@@ -587,7 +590,7 @@ class LobbyWaitingViewModelTest {
         advanceUntilIdle()
 
 
-        coEvery { api.unready(userId, lobbyId) } returns Unit
+        coEvery { api.unready(lobbyId) } returns fakeLobby
 
         viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState(userId))
         advanceUntilIdle()
