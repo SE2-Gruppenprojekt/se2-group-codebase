@@ -143,6 +143,14 @@ class LobbyService(
         return requireLobbyEntity(lobbyId).toDomain()
     }
 
+    fun getLobbyForUser(lobbyId: String, userId: String): Lobby {
+        val lobby = getLobby(lobbyId)
+        if (lobby.players.none { it.userId == userId }) {
+            throw SecurityException("Only lobby participants can access this lobby")
+        }
+        return lobby
+    }
+
     /**
      * Adds a new player to an existing open lobby.
      *
@@ -157,7 +165,7 @@ class LobbyService(
      * player is already part of the lobby.
      */
     @Transactional
-    fun joinLobby(lobbyId: String, request: JoinLobbyRequest): Lobby {
+    fun joinLobby(lobbyId: String, userId: String, request: JoinLobbyRequest): Lobby {
         val lobbyEntity = requireLobbyEntity(lobbyId)
         val lobby = lobbyEntity.toDomain()
 
@@ -165,11 +173,11 @@ class LobbyService(
 
         check(lobby.players.size < lobby.settings.maxPlayers) { "Lobby is full" }
 
-        check(!(lobby.players.any { it.userId == request.userId })) { "Player already in lobby" }
+        check(!(lobby.players.any { it.userId == userId })) { "Player already in lobby" }
 
         val updatedLobby = lobby.copy(
             players = lobby.players + LobbyPlayer(
-                userId = request.userId,
+                userId = userId,
                 displayName = request.displayName,
                 isReady = false
             )
