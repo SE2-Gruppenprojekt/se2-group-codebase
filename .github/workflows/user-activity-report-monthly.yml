@@ -1,11 +1,7 @@
 name: Organization User Activity Report (Monthly)
 
 on:
-  # Manual trigger is useful for regenerating a monthly report on demand.
   workflow_dispatch:
-  # Run automatically on the 21st day of every month at 07:00 UTC. This
-  # matches the requested cadence starting from May 21 and then repeating on
-  # June 21, July 21, and so on.
   schedule:
     - cron: "0 7 21 * *"
 
@@ -17,8 +13,6 @@ permissions:
   contents: read
 
 env:
-  # This repository lives inside the target organization, so the repository
-  # owner is the correct organization name for the action input.
   TARGET_ORGANIZATION: ${{ github.repository_owner }}
 
 jobs:
@@ -31,25 +25,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Analyze organization user activity
-        id: analyze_user_activity
-        uses: peter-murray/inactive-users-action@v1
-        with:
-          # Personal access token stored as a GitHub secret. It must belong to a
-          # user who can read the organization and all repositories to analyze.
-          token: ${{ secrets.ORG_ACTIVITY_REPORT_TOKEN }}
-          # Use the current repository owner so the workflow stays portable
-          # across repositories inside the same GitHub organization.
-          organization: ${{ env.TARGET_ORGANIZATION }}
-          # Monthly report: include the last 30 days of activity leading into
-          # the scheduled run on the 21st of the month.
-          activity_days: 30
-          # The marketplace action does not expose per-metric feature flags.
-          # It always generates its full built-in activity dataset, so the
-          # only meaningful reporting knobs are time window, output location,
-          # and API retry behavior.
-          octokit_max_retries: 15
-          outputDir: reports
+      - name: Resolve monthly reporting window
+        run: |
+          set -euo pipefail
+          REPORT_UNTIL="$(date -u +%Y-%m-%d)T00:00:00Z"
+          REPORT_SINCE="$(date -u -d '30 days ago' +%Y-%m-%d)T00:00:00Z"
+          {
+            echo "REPORT_SINCE=$REPORT_SINCE"
+            echo "REPORT_UNTIL=$REPORT_UNTIL"
+          } >> "$GITHUB_ENV"
+
+      - name: Generate monthly organization activity report
+        env:
+          GH_TOKEN: ${{ secrets.ORG_ACTIVITY_REPORT_TOKEN }}
+        run: python3 .github/scripts/generate_org_user_activity.py
 
       - name: Publish report summary
         if: always()
@@ -58,24 +47,13 @@ jobs:
             echo "## Monthly Organization User Activity Report"
             echo
             echo "- Organization: $TARGET_ORGANIZATION"
-            echo "- Activity window: last 30 days"
-            echo "- Action metrics: full built-in activity dataset"
-            echo "- Octokit max retries: 15"
+            echo "- Date span: ${REPORT_SINCE:0:10} to ${REPORT_UNTIL:0:10}"
+            echo "- Data source: direct GitHub organization and repository API queries"
             echo
-            if [ -f "${{ steps.analyze_user_activity.outputs.report_csv }}" ]; then
-              echo "CSV report generated successfully."
-              echo
-              echo '```text'
-              head -n 20 "${{ steps.analyze_user_activity.outputs.report_csv }}"
-              echo '```'
+            if [ -f reports/organization_user_activity.md ]; then
+              head -n 120 reports/organization_user_activity.md
             else
-              echo "No CSV report was generated."
-            fi
-            echo
-            if [ -f "${{ steps.analyze_user_activity.outputs.report_json }}" ]; then
-              echo "JSON report generated successfully."
-            else
-              echo "No JSON report was generated."
+              echo "No markdown report was generated."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -86,5 +64,7 @@ jobs:
           name: organization-user-activity-report-monthly
           retention-days: 14
           path: |
-            ${{ steps.analyze_user_activity.outputs.report_csv }}
-            ${{ steps.analyze_user_activity.outputs.report_json }}
+            reports/organization_user_activity.csv
+            reports/organization_user_activity.json
+            reports/organization_repository_activity.csv
+            reports/organization_user_activity.md
