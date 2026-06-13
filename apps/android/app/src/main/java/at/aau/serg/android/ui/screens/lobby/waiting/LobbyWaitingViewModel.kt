@@ -14,16 +14,17 @@ import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.util.ErrorUiMapper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import shared.models.lobby.domain.Lobby
+import shared.models.lobby.domain.LobbyStatus
 import shared.models.lobby.event.LobbyEvent
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -36,8 +37,8 @@ class LobbyWaitingViewModel(
     private val _uiState = MutableStateFlow(LobbyWaitingUiState())
     val uiState: StateFlow<LobbyWaitingUiState> = _uiState.asStateFlow()
 
-    private val _effect = MutableSharedFlow<LobbyWaitingEffect>()
-    val effects: SharedFlow<LobbyWaitingEffect> = _effect.asSharedFlow()
+    private val _effect = Channel<LobbyWaitingEffect>(Channel.BUFFERED)
+    val effects: Flow<LobbyWaitingEffect> = _effect.receiveAsFlow()
 
     init {
         viewModelScope.launch {
@@ -69,16 +70,13 @@ class LobbyWaitingViewModel(
     internal fun handleLobbyEvent(event: LobbyEvent) {
         when (event) {
             is LobbyEvent.Deleted -> {
-                viewModelScope.launch {
-                    _effect.emit(LobbyWaitingEffect.NavigateBack)
-                }
+                _effect.trySend(LobbyWaitingEffect.NavigateBack)
             }
             is LobbyEvent.Started -> {
                 viewModelScope.launch {
                     try {
-                        _uiState.value.user ?: throw IllegalStateException("User must not be null when attempting to start a match.")
+                        _effect.trySend(LobbyWaitingEffect.NavigateToMatch(event.payload.matchId))
                         userStore.updateGameId(event.payload.matchId)
-                        _effect.emit(LobbyWaitingEffect.NavigateToMatch(event.payload.matchId))
                     } catch (e : Exception) {
                         val appError = ErrorUiMapper.map(e)
 
@@ -89,11 +87,28 @@ class LobbyWaitingViewModel(
                 }
             }
             is LobbyEvent.Updated -> {
-                val lobby = event.payload.lobby.toDomain()
+                applyLobbyState(event.payload.lobby.toDomain())
+            }
+        }
+    }
 
-                _uiState.update {
-                    it.copy(lobby = lobby)
-                }
+    private fun applyLobbyState(lobby: Lobby) {
+        val currentGameId = lobby.currentGameId
+        val shouldNavigateToMatch = lobby.status == LobbyStatus.IN_GAME &&
+            !currentGameId.isNullOrBlank() &&
+            _uiState.value.lobby?.currentGameId != currentGameId
+
+        _uiState.update {
+            it.copy(
+                lobby = lobby,
+                loadState = LoadState.Success
+            )
+        }
+
+        if (shouldNavigateToMatch) {
+            viewModelScope.launch {
+                _effect.trySend(LobbyWaitingEffect.NavigateToMatch(currentGameId))
+                userStore.updateGameId(currentGameId)
             }
         }
     }
@@ -103,8 +118,8 @@ class LobbyWaitingViewModel(
         try {
             when (event) {
                 is LobbyWaitingEvent.OnLoadLobby -> {
-                    loadLobby(event.lobbyId)
                     startSocket(event.lobbyId)
+                    loadLobby(event.lobbyId)
                 }
 
                 LobbyWaitingEvent.OnTurnTimerIncrease -> {
@@ -142,20 +157,19 @@ class LobbyWaitingViewModel(
                 LobbyWaitingEvent.onMatchStart -> {
                     val user = state.user ?: throw IllegalStateException("User must not be null when attempting to start a match.")
                     val lobby = state.lobby ?: throw IllegalStateException("Lobby must not be null when attempting to start a match.")
+                    check(lobby.status == LobbyStatus.OPEN) {
+                        "Match can only be started while the lobby is open"
+                    }
 
                     startMatch(lobby.lobbyId)
                 }
 
                 LobbyWaitingEvent.OnSettings -> {
-                    viewModelScope.launch {
-                        _effect.emit(LobbyWaitingEffect.NavigateToSettings)
-                    }
+                    _effect.trySend(LobbyWaitingEffect.NavigateToSettings)
                 }
 
                 LobbyWaitingEvent.OnBack -> {
-                    viewModelScope.launch {
-                        _effect.emit(LobbyWaitingEffect.NavigateBack)
-                    }
+                    _effect.trySend(LobbyWaitingEffect.NavigateBack)
                 }
 
                 is LobbyWaitingEvent.ToggleReadyState -> {
@@ -165,6 +179,9 @@ class LobbyWaitingViewModel(
 
                     val lobby = uiState.value.lobby
                         ?: throw IllegalStateException("Lobby must not be null when attempting ready change.")
+                    check(lobby.status == LobbyStatus.OPEN) {
+                        "You cannot change the ready status, while lobby is not open"
+                    }
                     val currentPlayer = lobby.players.find { it.userId == user.uid } ?: throw IllegalStateException("Player must be in lobby to attempt ready change.")
 
                     requestReadyChange(lobby.lobbyId, !currentPlayer.isReady)
@@ -187,21 +204,9 @@ class LobbyWaitingViewModel(
 
             try {
                 if (newReadyState) {
-                    val lobby = api.ready(lobbyId = lobbyId).toDomain()
-                    _uiState.update {
-                        it.copy(
-                            lobby = lobby,
-                            loadState = LoadState.Success
-                        )
-                    }
+                    applyLobbyState(api.ready(lobbyId = lobbyId).toDomain())
                 } else {
-                    val lobby = api.unready(lobbyId = lobbyId).toDomain()
-                    _uiState.update {
-                        it.copy(
-                            lobby = lobby,
-                            loadState = LoadState.Success
-                        )
-                    }
+                    applyLobbyState(api.unready(lobbyId = lobbyId).toDomain())
                 }
 
             } catch (e: Throwable) {
@@ -222,12 +227,8 @@ class LobbyWaitingViewModel(
 
             try {
                 val lobby: Lobby = api.getLobby(lobbyId).toDomain()
-
-                _uiState.update {
-                    it.copy(
-                        loadState = LoadState.Success,
-                        lobby = lobby,
-                    )
+                if (_uiState.value.lobby == null) {
+                    applyLobbyState(lobby)
                 }
             } catch (e: Throwable) {
                 val appError = NetworkErrorMapper.map(e)
@@ -246,10 +247,7 @@ class LobbyWaitingViewModel(
             }
 
             try {
-                api.startMatch(lobbyId)
-                _uiState.update {
-                    it.copy(loadState = LoadState.Success)
-                }
+                applyLobbyState(api.startMatch(lobbyId).toDomain())
             } catch (e: Throwable) {
                 val appError = NetworkErrorMapper.map(e)
 
