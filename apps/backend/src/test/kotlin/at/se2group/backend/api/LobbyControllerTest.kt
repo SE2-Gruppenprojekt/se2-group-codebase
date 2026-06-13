@@ -53,6 +53,15 @@ class LobbyControllerTest {
         settings = LobbySettings(4, false, true)
     )
 
+    private fun inGameLobby(gameId: String = "game-1"): Lobby = Lobby(
+        lobbyId = "123",
+        hostUserId = "user1",
+        players = listOf(LobbyPlayer("user1", "Stefan", false)),
+        status = LobbyStatus.IN_GAME,
+        settings = LobbySettings(4, false, true),
+        currentGameId = gameId
+    )
+
     @Test
     fun `createLobby should return authenticated response for valid request`() {
         val request = CreateLobbyRequest(displayName = "Stefan", maxPlayers = 4)
@@ -114,12 +123,28 @@ class LobbyControllerTest {
     @Test
     fun `getLobby should return 200 for participant`() {
         `when`(lobbyService.getLobbyForUser("123", "user1")).thenReturn(lobby())
+        `when`(lobbyService.findCurrentGameId("123")).thenReturn(null)
 
         mockMvc.get("/api/lobbies/123") {
             with(user("user1"))
         }.andExpect {
             status { isOk() }
             jsonPath("$.lobbyId") { value("123") }
+            jsonPath("$.currentGameId") { doesNotExist() }
+        }
+    }
+
+    @Test
+    fun `getLobby should include currentGameId when lobby is in game`() {
+        `when`(lobbyService.getLobbyForUser("123", "user1")).thenReturn(inGameLobby())
+        `when`(lobbyService.findCurrentGameId("123")).thenReturn("game-1")
+
+        mockMvc.get("/api/lobbies/123") {
+            with(user("user1"))
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.status") { value("IN_GAME") }
+            jsonPath("$.currentGameId") { value("game-1") }
         }
     }
 
@@ -146,6 +171,7 @@ class LobbyControllerTest {
     @Test
     fun `readyLobby should return 200`() {
         `when`(lobbyService.readyLobby(any(), any())).thenReturn(lobby())
+        `when`(lobbyService.findCurrentGameId("123")).thenReturn(null)
 
         mockMvc.post("/api/lobbies/123/ready") {
             with(user("user1"))
@@ -157,6 +183,7 @@ class LobbyControllerTest {
     @Test
     fun `unreadyLobby should return 200`() {
         `when`(lobbyService.unreadyLobby(any(), any())).thenReturn(lobby())
+        `when`(lobbyService.findCurrentGameId("123")).thenReturn(null)
 
         mockMvc.post("/api/lobbies/123/unready") {
             with(user("user1"))
@@ -167,12 +194,15 @@ class LobbyControllerTest {
 
     @Test
     fun `startLobby should return 200`() {
-        `when`(lobbyService.startLobby(any(), any())).thenReturn(lobby().copy(status = LobbyStatus.IN_GAME))
+        `when`(lobbyService.startLobby(any(), any())).thenReturn(inGameLobby())
+        `when`(lobbyService.findCurrentGameId("123")).thenReturn("game-1")
 
         mockMvc.post("/api/lobbies/123/start") {
             with(user("user1"))
         }.andExpect {
             status { isOk() }
+            jsonPath("$.status") { value("IN_GAME") }
+            jsonPath("$.currentGameId") { value("game-1") }
         }
     }
 
@@ -180,6 +210,7 @@ class LobbyControllerTest {
     fun `updateLobbySettings should return 200`() {
         `when`(lobbyService.updateLobbySettings(any(), any(), any()))
             .thenReturn(lobby())
+        `when`(lobbyService.findCurrentGameId("123")).thenReturn(null)
 
         mockMvc.patch("/api/lobbies/123/settings") {
             with(user("user1"))
@@ -195,6 +226,7 @@ class LobbyControllerTest {
     @Test
     fun `leaveLobby should return 200 when lobby remains`() {
         `when`(lobbyService.leaveLobby(any(), any())).thenReturn(lobby())
+        `when`(lobbyService.findCurrentGameId("123")).thenReturn(null)
 
         mockMvc.post("/api/lobbies/123/leave") {
             with(user("user1"))
