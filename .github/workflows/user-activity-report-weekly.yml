@@ -67,20 +67,10 @@ jobs:
             echo "- Date span: ${REPORT_SINCE:0:10} to ${REPORT_UNTIL:0:10}"
             echo "- Data source: direct GitHub organization and repository API queries"
             echo
-            if [ -f reports/organization_user_activity.csv ]; then
-              echo "CSV report generated successfully."
-              echo
-              echo '```text'
-              head -n 20 reports/organization_user_activity.csv
-              echo '```'
+            if [ -f reports/organization_user_activity.md ]; then
+              head -n 120 reports/organization_user_activity.md
             else
-              echo "No CSV report was generated."
-            fi
-            echo
-            if [ -f reports/organization_user_activity.json ]; then
-              echo "JSON report generated successfully."
-            else
-              echo "No JSON report was generated."
+              echo "No markdown report was generated."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -93,3 +83,5 @@ jobs:
           path: |
             reports/organization_user_activity.csv
             reports/organization_user_activity.json
+            reports/organization_repository_activity.csv
+            reports/organization_user_activity.md
