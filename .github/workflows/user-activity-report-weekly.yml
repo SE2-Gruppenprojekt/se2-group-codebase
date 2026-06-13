@@ -45,8 +45,8 @@ jobs:
           set -euo pipefail
 
           if [ "$GITHUB_EVENT_NAME" = "push" ] && [ "$GITHUB_REF_NAME" = "ci(workflow)(activity)/improve-activity-reporting" ]; then
-            REPORT_SINCE="2026-05-28T00:00:00Z"
-            REPORT_UNTIL="2026-06-04T00:00:00Z"
+            REPORT_SINCE="2026-05-21T00:00:00Z"
+            REPORT_UNTIL="2026-05-28T00:00:00Z"
           elif [ -n "${INPUT_REPORT_SINCE:-}" ] && [ -n "${INPUT_REPORT_UNTIL:-}" ]; then
             REPORT_SINCE="${INPUT_REPORT_SINCE}T00:00:00Z"
             REPORT_UNTIL="${INPUT_REPORT_UNTIL}T00:00:00Z"
