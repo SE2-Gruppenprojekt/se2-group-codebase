@@ -4,6 +4,7 @@ import at.se2group.backend.dto.LobbyDeletedEvent
 import at.se2group.backend.dto.LobbyStartedEvent
 import at.se2group.backend.dto.LobbyUpdatedEvent
 import at.se2group.backend.mapper.toResponse
+import at.se2group.backend.persistence.GameRepository
 import org.slf4j.LoggerFactory
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Service
@@ -29,11 +30,17 @@ import shared.models.lobby.domain.Lobby
  */
 @Service
 class LobbyBroadcastService(
-    private val messagingTemplate: SimpMessagingTemplate
+    private val messagingTemplate: SimpMessagingTemplate,
+    private val gameRepository: GameRepository
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     fun broadcastLobbyUpdated(lobby: Lobby) {
+        val currentGameId = if (lobby.status.name == "IN_GAME") {
+            gameRepository.findByLobbyId(lobby.lobbyId)?.gameId
+        } else {
+            null
+        }
         // Log before emission so lobby lifecycle transitions remain visible even if delivery is investigated later.
         logger.info(
             "Broadcasting lobby.updated to topic=/topic/lobbies/{} for lobbyId={} status={}",
@@ -43,7 +50,7 @@ class LobbyBroadcastService(
         )
         messagingTemplate.convertAndSend(
             "/topic/lobbies/${lobby.lobbyId}",
-            LobbyUpdatedEvent(lobby = lobby.toResponse())
+            LobbyUpdatedEvent(lobby = lobby.toResponse(currentGameId = currentGameId))
         )
     }
 

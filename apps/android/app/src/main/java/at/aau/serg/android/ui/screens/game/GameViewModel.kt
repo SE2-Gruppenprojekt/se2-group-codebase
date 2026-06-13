@@ -3,7 +3,7 @@ package at.aau.serg.android.ui.screens.game
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import at.aau.serg.android.core.datastore.ProtoStore
+import at.aau.serg.android.core.datastore.user.UserStore
 import at.aau.serg.android.core.errors.AppError
 import at.aau.serg.android.core.network.RetrofitProvider
 import at.aau.serg.android.core.network.ServiceLocator
@@ -13,7 +13,6 @@ import at.aau.serg.android.core.network.game.GameWebSocketService
 import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
 import at.aau.serg.android.core.network.mapper.toDomain
 import at.aau.serg.android.core.network.mapper.toRequest
-import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.util.ErrorUiMapper
 import kotlinx.coroutines.Job
@@ -36,7 +35,7 @@ import java.util.UUID
 
 
 class GameViewModel(
-    private val userStore: ProtoStore<User>,
+    private val userStore: UserStore,
     private val gameService: GameService = GameService(
         RetrofitProvider.retrofit.create(GameAPI::class.java)
     ),
@@ -323,7 +322,7 @@ class GameViewModel(
                 it.copy(loadState = LoadState.Loading)
             }
             try {
-                val gameState = gameService.drawTile(user.gameId, user.uid).toDomain()
+                val gameState = gameService.drawTile(user.gameId).toDomain()
                 val player = gameState.players.firstOrNull { it.userId == user.uid }
                 val newTile = player?.rackTiles?.lastOrNull()
                 applyGameState(gameState, false)
@@ -355,11 +354,11 @@ class GameViewModel(
                     boardSets = uiState.value.boardSets.map { it.toRequest() },
                     rackTiles = uiState.value.rackTiles.map { it.toRequest() }
                 )
-                gameService.endTurn(
+                val gameState = gameService.endTurn(
                     gameId = user.gameId,
-                    playerId = user.uid,
                     request = request
-                )
+                ).toDomain()
+                applyGameState(gameState, true)
                 _uiState.update {
                     it.copy(
                         selectedTiles = emptySet(),
@@ -415,7 +414,6 @@ class GameViewModel(
                 )
                 gameService.updateDraft(
                     gameId = user.gameId,
-                    playerId = user.uid,
                     request = request
                 )
                 _uiState.update { it.copy(loadState = LoadState.Success) }

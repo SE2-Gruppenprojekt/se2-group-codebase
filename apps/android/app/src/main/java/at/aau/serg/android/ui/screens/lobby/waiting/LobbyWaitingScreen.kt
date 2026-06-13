@@ -23,6 +23,7 @@ import at.aau.serg.android.ui.screens.lobby.waiting.components.WaitingScreenSett
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.theme.AccentPurple
 import at.aau.serg.android.ui.theme.appColors
+import shared.models.lobby.domain.LobbyStatus
 
 @Composable
 fun LobbyWaitingScreen(
@@ -115,8 +116,10 @@ fun LobbyWaitingScreenContent(
 
         // --- start button (just for host) ---
         if (uiState.lobby?.hostUserId == uiState.user?.uid) {
+            val canStart = uiState.lobby?.status == LobbyStatus.OPEN
             Button(
                 onClick = { onEvent(LobbyWaitingEvent.onMatchStart) },
+                enabled = canStart,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 14.dp)

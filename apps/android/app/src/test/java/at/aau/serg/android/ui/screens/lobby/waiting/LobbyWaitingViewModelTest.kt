@@ -3,6 +3,7 @@ package at.aau.serg.android.ui.screens.lobby.waiting
 import app.cash.turbine.test
 import at.aau.serg.android.MainDispatcherRule
 import at.aau.serg.android.core.datastore.InMemoryProtoStore
+import at.aau.serg.android.core.datastore.user.UserStore
 import at.aau.serg.android.core.network.lobby.LobbyAPI
 import at.aau.serg.android.core.network.lobby.LobbyWebSocketService
 import at.aau.serg.android.core.network.mapper.toDomain
@@ -11,6 +12,7 @@ import at.aau.serg.android.ui.state.LoadState
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -43,6 +45,7 @@ class LobbyWaitingViewModelTest {
     private lateinit var api: LobbyAPI
     private lateinit var service: LobbyWebSocketService
     private lateinit var store: InMemoryProtoStore<User>
+    private lateinit var userStore: UserStore
     private lateinit var viewModel: LobbyWaitingViewModel
 
     val fakeLobby = LobbyResponse(
@@ -85,7 +88,8 @@ class LobbyWaitingViewModelTest {
             store.save(user)
         }
 
-        viewModel = LobbyWaitingViewModel(store, api, service)
+        userStore = UserStore(store)
+        viewModel = LobbyWaitingViewModel(userStore, api, service)
     }
 
     @After
@@ -95,7 +99,7 @@ class LobbyWaitingViewModelTest {
 
     @Test
     fun default_constructor_path_isCovered() = runTest {
-        val vm = LobbyWaitingViewModel(store)
+        val vm = LobbyWaitingViewModel(userStore)
         assertNotNull(vm)
     }
 
@@ -135,7 +139,10 @@ class LobbyWaitingViewModelTest {
             lobby = fakeLobby.toDomain(),
             user = user
         ))
-        coEvery { api.startMatch(fakeLobby.hostUserId, fakeLobby.lobbyId) } returns Unit
+        coEvery { api.startMatch(fakeLobby.lobbyId) } returns fakeLobby.copy(
+            status = "IN_GAME",
+            currentGameId = "match-1"
+        )
 
         val job = launch {
             val effect = viewModel.effects.first()
@@ -172,7 +179,7 @@ class LobbyWaitingViewModelTest {
             lobby = null,
             user = user
         ))
-        coEvery { api.startMatch("host", "lobby-123") } returns Unit
+        coEvery { api.startMatch("lobby-123") } returns fakeLobby
 
 
         viewModel.onEvent(LobbyWaitingEvent.onMatchStart)
@@ -191,7 +198,7 @@ class LobbyWaitingViewModelTest {
             lobby = fakeLobby.toDomain(),
             user = user
         ))
-        coEvery { api.startMatch(any(), any()) } throws RuntimeException("network error")
+        coEvery { api.startMatch(any()) } throws RuntimeException("network error")
 
         viewModel.onEvent(LobbyWaitingEvent.onMatchStart)
         advanceUntilIdle()
@@ -461,7 +468,7 @@ class LobbyWaitingViewModelTest {
     }
 
     @Test
-    fun lobbyEventStarted_emits_ErrorState_if_player_null() = runTest {
+    fun lobbyEventStarted_navigates_even_when_user_is_null() = runTest {
         viewModel.setUiStateForTest(LobbyWaitingUiState(
             user = null
         ))
@@ -472,7 +479,8 @@ class LobbyWaitingViewModelTest {
         viewModel.handleLobbyEvent(LobbyEvent.Started(payload))
         advanceUntilIdle()
 
-        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
+        val effect = viewModel.effects.first()
+        assertTrue(effect is LobbyWaitingEffect.NavigateToMatch)
     }
 
     @Test
@@ -496,6 +504,26 @@ class LobbyWaitingViewModelTest {
     }
 
     @Test
+    fun socket_updated_navigates_when_match_id_is_present() = runTest {
+        val lobby = LobbyResponse(
+            lobbyId = "test123",
+            hostUserId = "user-1",
+            status = "IN_GAME",
+            players = emptyList(),
+            maxPlayers = 4,
+            isPrivate = false,
+            allowGuests = true,
+            currentGameId = "match-42"
+        )
+        val payload = LobbyUpdatedPayload(lobby = lobby)
+
+        viewModel.handleLobbyEvent(LobbyEvent.Updated(payload))
+
+        val effect = viewModel.effects.first()
+        assertTrue(effect is LobbyWaitingEffect.NavigateToMatch)
+    }
+
+    @Test
     fun toggle_ready_state_shows_error() = runTest {
         val userId = fakeLobby.hostUserId
         val payload = LobbyUpdatedPayload(
@@ -512,8 +540,8 @@ class LobbyWaitingViewModelTest {
         store.save(updatedUser)
         advanceUntilIdle()
 
-        coEvery { api.ready(any(), any()) } throws RuntimeException("network error")
-        coEvery { api.unready(any(), any()) } throws RuntimeException("network error")
+        coEvery { api.ready(any()) } throws RuntimeException("network error")
+        coEvery { api.unready(any()) } throws RuntimeException("network error")
 
         viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState(userId))
         advanceUntilIdle()
@@ -539,7 +567,7 @@ class LobbyWaitingViewModelTest {
         store.save(updatedUser)
         advanceUntilIdle()
 
-        coEvery { api.ready(userId, lobbyId) } returns Unit
+        coEvery { api.ready(lobbyId) } returns fakeLobby
 
         viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState(userId))
         advanceUntilIdle()
@@ -587,7 +615,7 @@ class LobbyWaitingViewModelTest {
         advanceUntilIdle()
 
 
-        coEvery { api.unready(userId, lobbyId) } returns Unit
+        coEvery { api.unready(lobbyId) } returns fakeLobby
 
         viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState(userId))
         advanceUntilIdle()
@@ -599,5 +627,56 @@ class LobbyWaitingViewModelTest {
     fun startSocket_cancels_existing_job_on_lobby_change() = runTest {
         viewModel.onEvent(LobbyWaitingEvent.OnLoadLobby("Lobby1"))
         viewModel.onEvent(LobbyWaitingEvent.OnLoadLobby("Lobby2"))
+    }
+
+    @Test
+    fun loadLobby_does_not_overwrite_newer_websocket_state() = runTest {
+        val initialLobby = LobbyResponse(
+            lobbyId = "lobby-123",
+            hostUserId = "user-1",
+            status = "OPEN",
+            players = listOf(
+                LobbyPlayerResponse(
+                    userId = "user-1",
+                    displayName = "Bob",
+                    isReady = false
+                )
+            ),
+            maxPlayers = 4,
+            isPrivate = false,
+            allowGuests = true
+        )
+        val updatedLobby = initialLobby.copy(
+            players = listOf(
+                LobbyPlayerResponse(
+                    userId = "user-1",
+                    displayName = "Bob",
+                    isReady = false
+                ),
+                LobbyPlayerResponse(
+                    userId = "user-2",
+                    displayName = "Alice",
+                    isReady = true
+                )
+            )
+        )
+        val testFlow = MutableSharedFlow<LobbyEvent>()
+
+        coEvery { service.subscribe("lobby-123") } returns testFlow
+        coEvery { api.getLobby("lobby-123") } coAnswers {
+            delay(100)
+            initialLobby
+        }
+
+        viewModel.onEvent(LobbyWaitingEvent.OnLoadLobby("lobby-123"))
+        runCurrent()
+
+        testFlow.emit(LobbyEvent.Updated(LobbyUpdatedPayload(updatedLobby)))
+        runCurrent()
+        advanceUntilIdle()
+
+        val players = viewModel.uiState.value.lobby?.players.orEmpty()
+        assertTrue(players.any { it.userId == "user-2" && it.isReady })
+        Assert.assertEquals(2, players.size)
     }
 }

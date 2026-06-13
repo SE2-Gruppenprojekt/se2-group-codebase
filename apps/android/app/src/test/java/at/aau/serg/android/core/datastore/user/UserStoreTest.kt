@@ -100,4 +100,38 @@ class UserStoreTest {
         userStore.save(user2)
         assertEquals("B", userStore.data.first().displayName)
     }
+
+    @Test
+    fun saveSession_updates_uid_displayName_and_accessToken() = runTest {
+        userStore.saveSession(
+            userId = "user-1",
+            displayName = "Alice",
+            accessToken = "token-123"
+        )
+
+        val stored = userStore.data.first()
+
+        assertEquals("user-1", stored.uid)
+        assertEquals("Alice", stored.displayName)
+        assertEquals("token-123", stored.accessToken)
+    }
+
+    @Test
+    fun updateGameId_preserves_session_fields() = runTest {
+        userStore.save(
+            User.newBuilder()
+                .setUid("user-1")
+                .setDisplayName("Alice")
+                .setAccessToken("token-123")
+                .build()
+        )
+
+        userStore.updateGameId("game-9")
+        val stored = userStore.data.first()
+
+        assertEquals("user-1", stored.uid)
+        assertEquals("Alice", stored.displayName)
+        assertEquals("token-123", stored.accessToken)
+        assertEquals("game-9", stored.gameId)
+    }
 }
