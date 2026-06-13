@@ -7,6 +7,7 @@ import shared.models.lobby.domain.LobbyStatus
 import at.se2group.backend.dto.LobbyDeletedEvent
 import at.se2group.backend.dto.LobbyStartedEvent
 import at.se2group.backend.dto.LobbyUpdatedEvent
+import at.se2group.backend.persistence.GameRepository
 import at.se2group.backend.service.LobbyBroadcastService
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
@@ -34,6 +35,9 @@ class LobbyBroadcastServiceTest {
 
     @Mock
     lateinit var messagingTemplate: SimpMessagingTemplate
+
+    @Mock
+    lateinit var gameRepository: GameRepository
 
     @InjectMocks
     lateinit var lobbyBroadcastService: LobbyBroadcastService
