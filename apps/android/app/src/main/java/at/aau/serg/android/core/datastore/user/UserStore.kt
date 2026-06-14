@@ -35,6 +35,7 @@ class UserStore(
             current.toBuilder()
                 .setUid(userId)
                 .setDisplayName(displayName.trim())
+                .setGameId("")
                 .setAccessToken(accessToken)
                 .build()
         )
@@ -50,7 +51,14 @@ class UserStore(
     }
 
     suspend fun clearSession() {
-        wipe()
+        val current = data.first()
+        save(
+            current.toBuilder()
+                .setUid("")
+                .setGameId("")
+                .setAccessToken("")
+                .build()
+        )
     }
 
     suspend fun updateDisplayName(rawName: String): Boolean {

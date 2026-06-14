@@ -103,6 +103,12 @@ class UserStoreTest {
 
     @Test
     fun saveSession_updates_uid_displayName_and_accessToken() = runTest {
+        userStore.save(
+            User.newBuilder()
+                .setGameId("stale-game")
+                .build()
+        )
+
         userStore.saveSession(
             userId = "user-1",
             displayName = "Alice",
@@ -114,6 +120,7 @@ class UserStoreTest {
         assertEquals("user-1", stored.uid)
         assertEquals("Alice", stored.displayName)
         assertEquals("token-123", stored.accessToken)
+        assertEquals("", stored.gameId)
     }
 
     @Test
@@ -149,11 +156,22 @@ class UserStoreTest {
     }
 
     @Test
-    fun clearSession_resetsUser() = runTest {
-        userStore.saveSession("user-1", "Alice", "token-123")
+    fun clearSession_clears_only_session_fields() = runTest {
+        userStore.save(
+            User.newBuilder()
+                .setUid("user-1")
+                .setDisplayName("Alice")
+                .setAccessToken("token-123")
+                .setGameId("game-9")
+                .build()
+        )
 
         userStore.clearSession()
 
-        assertEquals(User.getDefaultInstance(), userStore.data.first())
+        val stored = userStore.data.first()
+        assertEquals("", stored.uid)
+        assertEquals("Alice", stored.displayName)
+        assertEquals("", stored.accessToken)
+        assertEquals("", stored.gameId)
     }
 }

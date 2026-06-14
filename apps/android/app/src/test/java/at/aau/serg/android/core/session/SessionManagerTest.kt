@@ -37,7 +37,11 @@ class SessionManagerTest {
             advanceUntilIdle()
 
             awaitItem()
-            assertEquals(User.getDefaultInstance(), store.data.first())
+            val stored = store.data.first()
+            assertEquals("", stored.uid)
+            assertEquals("Alice", stored.displayName)
+            assertEquals("", stored.accessToken)
+            assertEquals("", stored.gameId)
             cancelAndIgnoreRemainingEvents()
         }
     }
