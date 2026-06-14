@@ -180,7 +180,12 @@ class LobbyWaitingViewModel(
                 }
 
                 LobbyWaitingEvent.OnBack -> {
-                    _effect.trySend(LobbyWaitingEffect.NavigateBack)
+                    val lobby = state.lobby
+                    if (lobby == null || lobby.status != LobbyStatus.OPEN) {
+                        _effect.trySend(LobbyWaitingEffect.NavigateBack)
+                    } else {
+                        leaveLobby(lobby.lobbyId)
+                    }
                 }
 
                 is LobbyWaitingEvent.ToggleReadyState -> {
@@ -259,6 +264,28 @@ class LobbyWaitingViewModel(
 
             try {
                 applyLobbyState(api.startMatch(lobbyId).toDomain())
+            } catch (e: Throwable) {
+                val appError = NetworkErrorMapper.map(e)
+
+                _uiState.update {
+                    it.copy(loadState = LoadState.Error(appError))
+                }
+            }
+        }
+    }
+
+    private fun leaveLobby(lobbyId: String) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(loadState = LoadState.Loading)
+            }
+
+            try {
+                api.leaveLobby(lobbyId)
+                _uiState.update {
+                    it.copy(loadState = LoadState.Success)
+                }
+                _effect.trySend(LobbyWaitingEffect.NavigateBack)
             } catch (e: Throwable) {
                 val appError = NetworkErrorMapper.map(e)
 

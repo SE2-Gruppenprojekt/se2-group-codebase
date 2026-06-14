@@ -242,6 +242,12 @@ class LobbyWaitingViewModelTest {
 
     @Test
     fun back_emits_effect() = runTest {
+        viewModel.setUiStateForTest(
+            LobbyWaitingUiState(
+                lobby = null
+            )
+        )
+
         viewModel.onEvent(LobbyWaitingEvent.OnBack)
 
         val effect = viewModel.effects.first()
@@ -256,6 +262,52 @@ class LobbyWaitingViewModelTest {
         val effect = viewModel.effects.first()
 
         assertTrue(effect is LobbyWaitingEffect.NavigateToSettings)
+    }
+
+    @Test
+    fun back_leaves_open_lobby_then_navigates_back() = runTest {
+        viewModel.setUiStateForTest(
+            LobbyWaitingUiState(
+                lobby = fakeLobby.toDomain()
+            )
+        )
+        coEvery { api.leaveLobby(fakeLobby.lobbyId) } returns Unit
+
+        viewModel.onEvent(LobbyWaitingEvent.OnBack)
+        advanceUntilIdle()
+
+        val effect = viewModel.effects.first()
+        assertTrue(effect is LobbyWaitingEffect.NavigateBack)
+    }
+
+    @Test
+    fun back_sets_error_when_leave_fails() = runTest {
+        viewModel.setUiStateForTest(
+            LobbyWaitingUiState(
+                lobby = fakeLobby.toDomain()
+            )
+        )
+        coEvery { api.leaveLobby(fakeLobby.lobbyId) } throws RuntimeException("network error")
+
+        viewModel.onEvent(LobbyWaitingEvent.OnBack)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun back_in_non_open_lobby_navigates_without_leave() = runTest {
+        viewModel.setUiStateForTest(
+            LobbyWaitingUiState(
+                lobby = fakeLobby.copy(status = "IN_GAME").toDomain()
+            )
+        )
+
+        viewModel.onEvent(LobbyWaitingEvent.OnBack)
+        advanceUntilIdle()
+
+        val effect = viewModel.effects.first()
+        assertTrue(effect is LobbyWaitingEffect.NavigateBack)
     }
 
 
