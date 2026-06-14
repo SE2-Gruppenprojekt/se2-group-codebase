@@ -18,7 +18,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import at.aau.serg.android.core.datastore.DataStoreProvider
-import at.aau.serg.android.core.datastore.user.UserStore
+import at.aau.serg.android.core.datastore.ProtoStore
 import at.aau.serg.android.core.network.ServiceLocator
 import at.aau.serg.android.datastore.proto.User
 import kotlinx.coroutines.flow.map
@@ -34,7 +34,7 @@ fun AppNavHost(
     navController: NavHostController,
     context: Context,
     innerPadding: PaddingValues = PaddingValues(),
-    userStore: UserStore
+    userStore: ProtoStore<User>
 ) {
     val dataStoreProvider = remember {
         DataStoreProvider.getInstance(context)
