@@ -11,7 +11,6 @@ import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingEvent
 import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingTestTags
 import at.aau.serg.android.ui.theme.appColors
 import shared.models.lobby.domain.Lobby
-import shared.models.lobby.domain.LobbyStatus
 import shared.models.lobby.domain.LobbyPlayer
 
 
@@ -30,7 +29,6 @@ fun WaitingScreenPlayerSection(
     val w = appColors().waiting
 
     if (fetchedLobby != null) {
-        val lobbyIsOpen = fetchedLobby.status == LobbyStatus.OPEN
         players.forEachIndexed { index, player ->
             val isSelf = player.userId == localId
             PlayerItem(
@@ -43,7 +41,7 @@ fun WaitingScreenPlayerSection(
                 backgroundColor = if (isSelf) w.selfPlayerBg else w.activePlayerBg,
                 primaryTextColor = primaryTextColor,
                 secondaryTextColor = secondaryTextColor,
-                onClick = if (isSelf && lobbyIsOpen) { { onEvent(LobbyWaitingEvent.ToggleReadyState(player.userId)) } } else null,
+                onClick = if (isSelf) { { onEvent(LobbyWaitingEvent.ToggleReadyState(player.userId)) } } else null,
                 testTag = LobbyWaitingTestTags.Players.ready_tag(player.userId)
             )
         }

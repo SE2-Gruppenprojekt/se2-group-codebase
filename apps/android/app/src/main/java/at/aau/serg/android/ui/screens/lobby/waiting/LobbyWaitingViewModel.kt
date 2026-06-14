@@ -93,6 +93,17 @@ class LobbyWaitingViewModel(
     }
 
     private fun applyLobbyState(lobby: Lobby) {
+        if (lobby.status == LobbyStatus.CLOSED) {
+            _uiState.update {
+                it.copy(
+                    lobby = lobby,
+                    loadState = LoadState.Success
+                )
+            }
+            _effect.trySend(LobbyWaitingEffect.NavigateBack)
+            return
+        }
+
         val currentGameId = lobby.currentGameId
         val shouldNavigateToMatch = lobby.status == LobbyStatus.IN_GAME &&
             !currentGameId.isNullOrBlank() &&

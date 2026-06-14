@@ -581,6 +581,25 @@ class LobbyWaitingViewModelTest {
     }
 
     @Test
+    fun socket_updated_closed_lobby_navigates_back() = runTest {
+        val lobby = LobbyResponse(
+            lobbyId = "test123",
+            hostUserId = "user-1",
+            status = "CLOSED",
+            players = emptyList(),
+            maxPlayers = 4,
+            isPrivate = false,
+            allowGuests = true
+        )
+        val payload = LobbyUpdatedPayload(lobby = lobby)
+
+        viewModel.handleLobbyEvent(LobbyEvent.Updated(payload))
+
+        val effect = viewModel.effects.first()
+        assertTrue(effect is LobbyWaitingEffect.NavigateBack)
+    }
+
+    @Test
     fun toggle_ready_state_shows_error() = runTest {
         val userId = fakeLobby.hostUserId
         val payload = LobbyUpdatedPayload(
