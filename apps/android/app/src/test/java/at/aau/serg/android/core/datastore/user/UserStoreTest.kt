@@ -134,4 +134,26 @@ class UserStoreTest {
         assertEquals("token-123", stored.accessToken)
         assertEquals("game-9", stored.gameId)
     }
+
+    @Test
+    fun currentAccessToken_returnsNull_whenTokenBlank() {
+        assertNull(userStore.currentAccessToken())
+    }
+
+    @Test
+    fun currentAccessToken_returnsToken_whenPresent() = runTest {
+        userStore.saveSession("user-1", " Alice ", "token-123")
+
+        assertEquals("token-123", userStore.currentAccessToken())
+        assertEquals("Alice", userStore.data.first().displayName)
+    }
+
+    @Test
+    fun clearSession_resetsUser() = runTest {
+        userStore.saveSession("user-1", "Alice", "token-123")
+
+        userStore.clearSession()
+
+        assertEquals(User.getDefaultInstance(), userStore.data.first())
+    }
 }

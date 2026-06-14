@@ -10,12 +10,14 @@ import at.aau.serg.android.core.network.mapper.toDomain
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.state.LoadState
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -23,6 +25,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -439,6 +442,46 @@ class LobbyWaitingViewModelTest {
     }
 
     @Test
+    fun socket_started_updatesUserStoreGameId() = runTest {
+        val payload = LobbyStartedPayload(
+            lobbyId = "lobby-1",
+            matchId = "match-1"
+        )
+
+        viewModel.handleLobbyEvent(LobbyEvent.Started(payload))
+        advanceUntilIdle()
+
+        assertEquals("match-1", store.data.first().gameId)
+    }
+
+    @Test
+    fun socket_started_setsError_whenGameIdUpdateFails() = runTest {
+        val mockedUserStore = mockk<UserStore>()
+        every { mockedUserStore.data } returns flowOf(
+            User.newBuilder()
+                .setUid("user-1")
+                .setDisplayName("Alice")
+                .build()
+        )
+        coEvery { mockedUserStore.updateGameId(any()) } throws RuntimeException("boom")
+
+        val vm = LobbyWaitingViewModel(mockedUserStore, api, service)
+        advanceUntilIdle()
+
+        vm.handleLobbyEvent(
+            LobbyEvent.Started(
+                LobbyStartedPayload(
+                    lobbyId = "lobby-1",
+                    matchId = "match-1"
+                )
+            )
+        )
+        advanceUntilIdle()
+
+        assertTrue(vm.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
     fun startSocket_collects_events_on_success() = runTest {
         val testFlow = MutableSharedFlow<LobbyEvent>()
         coEvery { service.subscribe("lobby_123") } returns testFlow
@@ -465,6 +508,20 @@ class LobbyWaitingViewModelTest {
         viewModel.startSocket("lobby_123")
         advanceUntilIdle()
         assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun startSocket_collects_updated_event_into_ui_state() = runTest {
+        val lobby = fakeLobby.copy(status = "OPEN")
+        coEvery { service.subscribe("lobby-123") } returns flowOf(
+            LobbyEvent.Updated(LobbyUpdatedPayload(lobby))
+        )
+
+        viewModel.startSocket("lobby-123")
+        advanceUntilIdle()
+
+        assertEquals("lobby-123", viewModel.uiState.value.lobby?.lobbyId)
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Success)
     }
 
     @Test
@@ -678,5 +735,43 @@ class LobbyWaitingViewModelTest {
         val players = viewModel.uiState.value.lobby?.players.orEmpty()
         assertTrue(players.any { it.userId == "user-2" && it.isReady })
         Assert.assertEquals(2, players.size)
+    }
+
+    @Test
+    fun toggleReadyState_setsError_whenLobbyNotOpen() = runTest {
+        val user = User.newBuilder()
+            .setUid("user-1")
+            .setDisplayName("Alice")
+            .build()
+        viewModel.setUiStateForTest(
+            LobbyWaitingUiState(
+                user = user,
+                lobby = fakeLobby.copy(status = "IN_GAME").toDomain()
+            )
+        )
+
+        viewModel.onEvent(LobbyWaitingEvent.ToggleReadyState("user-1"))
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun startMatch_setsError_whenLobbyNotOpen() = runTest {
+        val user = User.newBuilder()
+            .setUid(fakeLobby.hostUserId)
+            .setDisplayName("Alice")
+            .build()
+        viewModel.setUiStateForTest(
+            LobbyWaitingUiState(
+                user = user,
+                lobby = fakeLobby.copy(status = "IN_GAME").toDomain()
+            )
+        )
+
+        viewModel.onEvent(LobbyWaitingEvent.onMatchStart)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.loadState is LoadState.Error)
     }
 }
