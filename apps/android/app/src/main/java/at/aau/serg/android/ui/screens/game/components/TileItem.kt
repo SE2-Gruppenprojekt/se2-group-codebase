@@ -23,6 +23,8 @@ import shared.models.game.domain.JokerTile
 import shared.models.game.domain.NumberedTile
 import shared.models.game.domain.Tile
 
+private val JokerBackground = Color(0xFF5B5B5B)
+
 @Composable
 fun TileItem(
     tile: Tile,
@@ -46,7 +48,10 @@ fun TileItem(
                 }
             }
             .background(
-                color = Color(tile.color.colorInt)
+                color = when (tile) {
+                    is JokerTile -> JokerBackground
+                    else -> Color(tile.color.colorInt)
+                }
             )
             .border(
                 width = if (selected) 3.dp else 0.dp,
@@ -55,12 +60,14 @@ fun TileItem(
             ),
         contentAlignment = Alignment.Center
     ) {
+        val label = when (tile) {
+            is NumberedTile -> tile.number.toString()
+            is JokerTile -> "J"
+        }
+
         Box {
             Text(
-                text = when (tile) {
-                    is NumberedTile -> tile.number.toString()
-                    is JokerTile -> "0"
-                },
+                text = label,
                 color = Color.Black,
                 fontWeight = FontWeight.Black,
                 fontSize = (size * 0.35f).sp,
@@ -73,10 +80,7 @@ fun TileItem(
             )
 
             Text(
-                text = when (tile) {
-                    is NumberedTile -> tile.number.toString()
-                    is JokerTile -> "0"
-                },
+                text = label,
                 color = Color.White,
                 fontWeight = FontWeight.Black,
                 fontSize = (size * 0.35f).sp
