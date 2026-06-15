@@ -50,19 +50,6 @@ fun GameScreen(
                 }
             }
         )
-
-        // DEBUG ONLY — remove before release
-        val firstPlayerId = uiState.gameState?.players?.firstOrNull()?.userId
-        if (firstPlayerId != null) {
-            androidx.compose.material3.TextButton(
-                onClick = { viewModel.handleFinishedGame(firstPlayerId) },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 56.dp, end = 56.dp)
-            ) {
-                Text("🏁", fontSize = 20.sp)
-            }
-        }
     }
 }
 
