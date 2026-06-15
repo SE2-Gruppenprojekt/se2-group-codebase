@@ -7,7 +7,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
-import junit.framework.TestCase.assertFalse
+import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.Test
 import shared.models.game.domain.BoardSet
@@ -105,7 +105,8 @@ class TileRowTest {
         }
         composeRule.onRoot().assertIsDisplayed()
     }
-// --- joker rendering ---
+
+    // --- joker rendering ---
 
     @Test
     fun tileRow_renders_jokerTile_withStarIcon_notZero() {

@@ -27,7 +27,7 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import at.aau.serg.android.ui.util.jokerDisplayResolver
+import at.aau.serg.android.ui.screens.game.util.jokerDisplayResolver
 import shared.models.game.domain.BoardSet
 import shared.models.game.domain.JokerTile
 import shared.models.game.domain.NumberedTile
@@ -44,22 +44,20 @@ fun TileItem(
     modifier: Modifier = Modifier,
     boardSet: BoardSet? = null,
 ) {
-
-    val isJokerTile = tile is JokerTile
     val shape = RoundedCornerShape(10.dp)
+    val isJoker = tile is JokerTile
     val baseColor = Color(tile.color.colorInt)
     val glowColor = lerp(baseColor, Color.White, 0.6f)
 
-        val borderColor = when {
-        selected -> Color.White
-        isJokerTile -> glowColor
-        else -> Color.Transparent
-    }
-
-    val borderWith = when {
+    val borderWidth = when {
         selected -> 3.dp
-        isJokerTile -> 2.dp
+        isJoker -> 2.dp
         else -> 0.dp
+    }
+    val borderColor = when {
+        selected -> Color.White
+        isJoker -> glowColor
+        else -> Color.Transparent
     }
 
     Box(
@@ -67,14 +65,14 @@ fun TileItem(
             .width(size.dp)
             .height((size * 1.4f).dp)
             .then(
-                if (isJokerTile){
+                if (isJoker) {
                     Modifier.shadow(
                         elevation = 16.dp,
                         shape = shape,
                         ambientColor = glowColor,
                         spotColor = glowColor
                     )
-                }else{
+                } else {
                     Modifier
                 }
             )
@@ -87,22 +85,16 @@ fun TileItem(
                 }
             }
             .background(
-                brush = if (isJokerTile){
+                brush = if (isJoker) {
                     Brush.verticalGradient(listOf(glowColor, baseColor))
-                }else {
+                } else {
                     Brush.verticalGradient(listOf(baseColor, baseColor))
                 }
-
             )
-            .border(
-                width = borderWith,
-                color = borderColor,
-                shape = shape
-            ),
+            .border(width = borderWidth, color = borderColor, shape = shape),
         contentAlignment = Alignment.Center
     ) {
-
-        if (isJokerTile) {
+        if (isJoker) {
             Icon(
                 imageVector = Icons.Filled.Star,
                 contentDescription = "Joker",
