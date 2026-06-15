@@ -70,11 +70,13 @@ class LobbyWaitingViewModel(
     internal fun handleLobbyEvent(event: LobbyEvent) {
         when (event) {
             is LobbyEvent.Deleted -> {
+                stopSocket()
                 _effect.trySend(LobbyWaitingEffect.NavigateBack)
             }
             is LobbyEvent.Started -> {
                 viewModelScope.launch {
                     try {
+                        stopSocket()
                         _effect.trySend(LobbyWaitingEffect.NavigateToMatch(event.payload.matchId))
                         userStore.updateGameId(event.payload.matchId)
                     } catch (e : Exception) {
@@ -100,6 +102,7 @@ class LobbyWaitingViewModel(
                     loadState = LoadState.Success
                 )
             }
+            stopSocket()
             _effect.trySend(LobbyWaitingEffect.NavigateBack)
             return
         }
@@ -118,6 +121,7 @@ class LobbyWaitingViewModel(
 
         if (shouldNavigateToMatch) {
             viewModelScope.launch {
+                stopSocket()
                 _effect.trySend(LobbyWaitingEffect.NavigateToMatch(currentGameId))
                 userStore.updateGameId(currentGameId)
             }
@@ -182,6 +186,7 @@ class LobbyWaitingViewModel(
                 LobbyWaitingEvent.OnBack -> {
                     val lobby = state.lobby
                     if (lobby == null || lobby.status != LobbyStatus.OPEN) {
+                        stopSocket()
                         _effect.trySend(LobbyWaitingEffect.NavigateBack)
                     } else {
                         leaveLobby(lobby.lobbyId)
@@ -285,6 +290,7 @@ class LobbyWaitingViewModel(
                 _uiState.update {
                     it.copy(loadState = LoadState.Success)
                 }
+                stopSocket()
                 _effect.trySend(LobbyWaitingEffect.NavigateBack)
             } catch (e: Throwable) {
                 val appError = NetworkErrorMapper.map(e)
@@ -294,6 +300,16 @@ class LobbyWaitingViewModel(
                 }
             }
         }
+    }
+
+    private fun stopSocket() {
+        socketJob?.cancel()
+        socketJob = null
+    }
+
+    override fun onCleared() {
+        stopSocket()
+        super.onCleared()
     }
 
     @VisibleForTesting

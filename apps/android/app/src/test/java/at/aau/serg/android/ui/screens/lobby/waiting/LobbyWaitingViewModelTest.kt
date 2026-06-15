@@ -633,6 +633,29 @@ class LobbyWaitingViewModelTest {
     }
 
     @Test
+    fun socket_updated_same_match_id_does_not_emit_duplicate_navigation() = runTest {
+        viewModel.setUiStateForTest(
+            LobbyWaitingUiState(
+                lobby = fakeLobby.copy(
+                    status = "IN_GAME",
+                    currentGameId = "match-42"
+                ).toDomain()
+            )
+        )
+        val payload = LobbyUpdatedPayload(
+            lobby = fakeLobby.copy(
+                status = "IN_GAME",
+                currentGameId = "match-42"
+            )
+        )
+
+        viewModel.effects.test {
+            viewModel.handleLobbyEvent(LobbyEvent.Updated(payload))
+            expectNoEvents()
+        }
+    }
+
+    @Test
     fun socket_updated_closed_lobby_navigates_back() = runTest {
         val lobby = LobbyResponse(
             lobbyId = "test123",
