@@ -24,7 +24,7 @@ fun resolveDisplayedJokerLabel(boardSet: BoardSet?, tile: Tile): String {
         BoardSetType.UNRESOLVED -> null
     }
 
-    return inferred?.toString() ?: "J"
+    return if (inferred != null) inferred.toString() else "J"
 }
 
 private fun inferRunJokerValue(boardSet: BoardSet): Int? {

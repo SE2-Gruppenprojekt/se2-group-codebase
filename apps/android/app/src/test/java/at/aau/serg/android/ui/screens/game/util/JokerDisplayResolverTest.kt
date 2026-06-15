@@ -73,6 +73,64 @@ class JokerDisplayResolverTest {
     }
 
     @Test
+    fun `joker alone with single numbered tile in run falls back to J`() {
+        val joker = JokerTile("j1", TileColor.RED)
+        val boardSet = BoardSet(
+            boardSetId = "set1",
+            type = BoardSetType.RUN,
+            tiles = listOf(NumberedTile("t1", TileColor.RED, 5), joker)
+        )
+
+        assertEquals("J", resolveDisplayedJokerLabel(boardSet, joker))
+    }
+
+    @Test
+    fun `joker extends run at lower end when already at upper bound`() {
+        val joker = JokerTile("j1", TileColor.RED)
+        val boardSet = BoardSet(
+            boardSetId = "set1",
+            type = BoardSetType.RUN,
+            tiles = listOf(
+                NumberedTile("t1", TileColor.RED, 11),
+                NumberedTile("t2", TileColor.RED, 12),
+                NumberedTile("t3", TileColor.RED, 13),
+                joker
+            )
+        )
+
+        assertEquals("10", resolveDisplayedJokerLabel(boardSet, joker))
+    }
+
+    @Test
+    fun `joker in full-range run falls back to J`() {
+        val joker = JokerTile("j1", TileColor.RED)
+        val numberedTiles = (1..13).map { NumberedTile("t$it", TileColor.RED, it) }
+        val boardSet = BoardSet(
+            boardSetId = "set1",
+            type = BoardSetType.RUN,
+            tiles = numberedTiles + joker
+        )
+
+        assertEquals("J", resolveDisplayedJokerLabel(boardSet, joker))
+    }
+
+    @Test
+    fun `ambiguous group with two jokers falls back to J`() {
+        val joker = JokerTile("j1", TileColor.RED)
+        val boardSet = BoardSet(
+            boardSetId = "set1",
+            type = BoardSetType.GROUP,
+            tiles = listOf(
+                joker,
+                JokerTile("j2", TileColor.RED),
+                NumberedTile("t1", TileColor.BLUE, 9)
+            )
+        )
+
+        assertEquals("J", resolveDisplayedJokerLabel(boardSet, joker))
+    }
+
+    @Test
     fun `joker in group takes the shared number`() {
         val joker = JokerTile("j1", TileColor.RED)
         val boardSet = BoardSet(
