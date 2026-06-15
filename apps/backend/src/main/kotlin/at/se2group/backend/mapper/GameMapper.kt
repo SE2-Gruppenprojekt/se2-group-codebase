@@ -14,6 +14,12 @@ import at.se2group.backend.persistence.BoardSetEntity
 import at.se2group.backend.persistence.GameEntity
 import at.se2group.backend.persistence.GamePlayerEntity
 import at.se2group.backend.persistence.TileEmbeddable
+import shared.models.game.domain.GamePlayerMetrics
+import shared.models.game.response.GamePlayerMetricsResponse
+
+/**
+ * Mapping extensions between persistence entities, domain models and API response models.
+ */
 
 fun GameEntity.toDomain(): ConfirmedGame =
     ConfirmedGame(
@@ -26,7 +32,9 @@ fun GameEntity.toDomain(): ConfirmedGame =
         status = status,
         createdAt = createdAt,
         startedAt = startedAt,
-        finishedAt = finishedAt
+        finishedAt = finishedAt,
+        totalTurnsCompleted = totalTurnsCompleted,
+        winnerUserId = winnerUserId
     )
 
 fun ConfirmedGame.toEntity(): GameEntity {
@@ -38,7 +46,9 @@ fun ConfirmedGame.toEntity(): GameEntity {
         createdAt = createdAt,
         startedAt = startedAt,
         finishedAt = finishedAt,
-        drawPile = drawPile.map { it.toEmbeddable() }.toMutableList()
+        drawPile = drawPile.map { it.toEmbeddable() }.toMutableList(),
+        totalTurnsCompleted = totalTurnsCompleted,
+        winnerUserId = winnerUserId
     )
 
     gameEntity.players = players.map { it.toEntity(gameEntity) }.toMutableList()
@@ -55,7 +65,17 @@ fun GamePlayerEntity.toDomain(): GamePlayer =
         rackTiles = rackTiles.map { it.toDomain() },
         hasCompletedInitialMeld = hasCompletedInitialMeld,
         score = score,
-        joinedAt = joinedAt
+        joinedAt = joinedAt,
+        metrics = GamePlayerMetrics(
+            turnsCompleted = turnsCompleted,
+            tilesPlayed = tilesPlayed,
+            meldsCreated = meldsCreated,
+            pointsPlayed = pointsPlayed,
+            tilesRemainingAtEnd = tilesRemainingAtEnd,
+            penaltyPointsAtEnd = penaltyPointsAtEnd,
+            winner = winner,
+            finishPosition = finishPosition
+        )
     )
 
 fun GamePlayer.toEntity(game: GameEntity): GamePlayerEntity =
@@ -67,7 +87,15 @@ fun GamePlayer.toEntity(game: GameEntity): GamePlayerEntity =
         rackTiles = rackTiles.map { it.toEmbeddable() }.toMutableList(),
         hasCompletedInitialMeld = hasCompletedInitialMeld,
         score = score,
-        joinedAt = joinedAt
+        joinedAt = joinedAt,
+        turnsCompleted = metrics.turnsCompleted,
+        tilesPlayed = metrics.tilesPlayed,
+        meldsCreated = metrics.meldsCreated,
+        pointsPlayed = metrics.pointsPlayed,
+        tilesRemainingAtEnd = metrics.tilesRemainingAtEnd,
+        penaltyPointsAtEnd = metrics.penaltyPointsAtEnd,
+        winner = metrics.winner,
+        finishPosition = metrics.finishPosition
     )
 
 fun BoardSetEntity.toDomain(): BoardSet =
@@ -127,7 +155,9 @@ fun ConfirmedGame.toResponse(): GameResponse =
         status = status.name,
         createdAt = createdAt.toString(),
         startedAt = startedAt?.toString(),
-        finishedAt = finishedAt?.toString()
+        finishedAt = finishedAt?.toString(),
+        totalTurnsCompleted = totalTurnsCompleted,
+        winnerUserId = winnerUserId
     )
 
 fun GamePlayer.toResponse(): GamePlayerResponse =
@@ -138,7 +168,8 @@ fun GamePlayer.toResponse(): GamePlayerResponse =
         rackTiles = rackTiles.map { it.toResponse() },
         hasCompletedInitialMeld = hasCompletedInitialMeld,
         score = score,
-        joinedAt = joinedAt.toString()
+        joinedAt = joinedAt.toString(),
+        metrics = metrics.toResponse()
     )
 
 fun BoardSet.toResponse(): BoardSetResponse =
@@ -163,3 +194,15 @@ fun Tile.toResponse(): TileResponse =
             isJoker = false
         )
     }
+
+fun GamePlayerMetrics.toResponse(): GamePlayerMetricsResponse =
+    GamePlayerMetricsResponse(
+        turnsCompleted = turnsCompleted,
+        tilesPlayed = tilesPlayed,
+        meldsCreated = meldsCreated,
+        pointsPlayed = pointsPlayed,
+        tilesRemainingAtEnd = tilesRemainingAtEnd,
+        penaltyPointsAtEnd = penaltyPointsAtEnd,
+        winner = winner,
+        finishPosition = finishPosition
+    )

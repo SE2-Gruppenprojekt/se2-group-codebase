@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNull
 import shared.models.game.response.BoardSetResponse
+import shared.models.game.response.GamePlayerMetricsResponse
 import shared.models.game.response.GamePlayerResponse
 import shared.models.game.response.GameResponse
 import shared.models.game.response.TileResponse
@@ -75,7 +76,17 @@ class GameDtoTest {
             ),
             hasCompletedInitialMeld = true,
             score = 25,
-            joinedAt = joinedAt.toString()
+            joinedAt = joinedAt.toString(),
+            metrics = GamePlayerMetricsResponse(
+                turnsCompleted = 2,
+                tilesPlayed = 5,
+                meldsCreated = 1,
+                pointsPlayed = 21,
+                tilesRemainingAtEnd = null,
+                penaltyPointsAtEnd = null,
+                winner = false,
+                finishPosition = null
+            )
         )
 
         assertEquals("user-1", dto.userId)
@@ -85,6 +96,14 @@ class GameDtoTest {
         assertEquals(true, dto.hasCompletedInitialMeld)
         assertEquals(25, dto.score)
         assertEquals(joinedAt.toString(), dto.joinedAt)
+        assertEquals(2, dto.metrics.turnsCompleted)
+        assertEquals(5, dto.metrics.tilesPlayed)
+        assertEquals(1, dto.metrics.meldsCreated)
+        assertEquals(21, dto.metrics.pointsPlayed)
+        assertNull(dto.metrics.tilesRemainingAtEnd)
+        assertNull(dto.metrics.penaltyPointsAtEnd)
+        assertEquals(false, dto.metrics.winner)
+        assertNull(dto.metrics.finishPosition)
     }
 
     @Test
@@ -103,7 +122,17 @@ class GameDtoTest {
                     rackTiles = listOf(TileResponse("tile-8", "BLUE", 3, false)),
                     hasCompletedInitialMeld = false,
                     score = 10,
-                    joinedAt = Instant.parse("2026-04-27T17:55:00Z").toString()
+                    joinedAt = Instant.parse("2026-04-27T17:55:00Z").toString(),
+                    metrics = GamePlayerMetricsResponse(
+                        turnsCompleted = 1,
+                        tilesPlayed = 3,
+                        meldsCreated = 1,
+                        pointsPlayed = 18,
+                        tilesRemainingAtEnd = null,
+                        penaltyPointsAtEnd = null,
+                        winner = false,
+                        finishPosition = null
+                    )
                 )
             ),
             board = listOf(
@@ -129,7 +158,9 @@ class GameDtoTest {
             status = "ACTIVE",
             createdAt = createdAt.toString(),
             startedAt = startedAt.toString(),
-            finishedAt = null
+            finishedAt = null,
+            totalTurnsCompleted = 4,
+            winnerUserId = null
         )
 
         assertEquals("game-1", dto.gameId)
@@ -146,6 +177,10 @@ class GameDtoTest {
         assertNull(dto.finishedAt)
         assertNull(dto.turnDeadline)
         assertNull(dto.remainingTurnSeconds)
+        assertEquals(4, dto.totalTurnsCompleted)
+        assertNull(dto.winnerUserId)
+        assertEquals(1, dto.players[0].metrics.turnsCompleted)
+        assertEquals(3, dto.players[0].metrics.tilesPlayed)
     }
 
     @Test

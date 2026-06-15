@@ -12,7 +12,9 @@ data class ConfirmedGame(
     val status: GameStatus = GameStatus.WAITING,
     val createdAt: Instant = Instant.now(),
     val startedAt: Instant? = null,
-    val finishedAt: Instant? = null
+    val finishedAt: Instant? = null,
+    val totalTurnsCompleted: Int = 0,
+    val winnerUserId: String? = null
 ) {
     init {
         require(gameId.isNotBlank()) { "gameId must not be blank" }

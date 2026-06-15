@@ -7,5 +7,6 @@ data class GamePlayerResponse(
     val rackTiles: List<TileResponse>,
     val hasCompletedInitialMeld: Boolean,
     val score: Int,
-    val joinedAt: String
+    val joinedAt: String,
+    val metrics: GamePlayerMetricsResponse
 )
