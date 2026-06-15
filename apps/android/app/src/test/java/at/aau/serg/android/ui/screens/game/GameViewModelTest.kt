@@ -18,9 +18,11 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.HttpException
 import retrofit2.Response
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -591,14 +593,68 @@ class GameViewModelTest {
 
     @Test
     fun loadGame_updatesGameState() = runTest {
-        setTestGameState()
-        val state = viewmodel.uiState.value
+        val user = User.newBuilder()
+            .setUid("User123")
+            .setDisplayName("Alice")
+            .setGameId("g1")
+            .build()
+        store.save(user)
+        advanceUntilIdle()
+
+        viewmodel.setUiStateForTest(GameUiState(user = user))
 
         coEvery { service.loadGame(any()) } returns fakeGameResponse
         viewmodel.onUIEvent(GameUIEvent.OnLoadGame("g1"))
         advanceUntilIdle()
 
-        assertNotEquals(state.gameState, viewmodel.uiState.value.gameState)
+        assertEquals(fakeGameResponse.toDomain(), viewmodel.uiState.value.gameState)
+    }
+
+    @Test
+    fun loadGame_does_not_overwrite_newer_socket_state() = runTest {
+        val socketGame = fakeGameResponse.copy(
+            players = fakeGameResponse.players + GamePlayerResponse(
+                userId = "OtherPlayer",
+                displayName = "Other",
+                turnOrder = 1,
+                rackTiles = emptyList(),
+                metrics = GamePlayerMetricsResponse(
+                    turnsCompleted = 0,
+                    tilesPlayed = 0,
+                    meldsCreated = 0,
+                    pointsPlayed = 0,
+                    tilesRemainingAtEnd = null,
+                    penaltyPointsAtEnd = null,
+                    winner = false,
+                    finishPosition = null
+                ),
+                hasCompletedInitialMeld = false,
+                score = 0,
+                joinedAt = "2026-01-01T00:00:00Z"
+            ),
+            currentPlayerUserId = "OtherPlayer"
+        )
+        coEvery { socketService.subscribe("g1") } returns flowOf(
+            GameEvent.Updated(GameUpdatedEvent(gameId = "g1", game = socketGame))
+        )
+        coEvery { service.loadGame("g1") } coAnswers {
+            delay(100)
+            fakeGameResponse
+        }
+
+        val user = User.newBuilder()
+            .setUid("User123")
+            .setDisplayName("Alice")
+            .setGameId("g1")
+            .build()
+        store.save(user)
+        advanceUntilIdle()
+
+        viewmodel.onUIEvent(GameUIEvent.OnLoadGame("g1"))
+        runCurrent()
+        advanceUntilIdle()
+
+        assertEquals("OtherPlayer", viewmodel.uiState.value.gameState?.currentPlayerUserId)
     }
 
     @Test
@@ -907,18 +963,18 @@ class GameViewModelTest {
     }
 
     @Test
-    fun handleGameSocketEvent_does_not_updateGameState_if_not_active() {
+    fun handleGameSocketEvent_updatesGameState_if_not_active() {
         setTestGameState()
 
         viewmodel.handleGameSocketEvent(
             GameEvent.Updated(GameUpdatedEvent(gameId = "Game123", game = fakeGameResponse))
         )
 
-        assertNotEquals(fakeGameResponse.toDomain(), viewmodel.uiState.value.gameState)
+        assertEquals(fakeGameResponse.toDomain(), viewmodel.uiState.value.gameState)
     }
 
     @Test
-    fun handleGameSocketEvent_does_updateGameState_if_active() = runTest {
+    fun handleGameSocketEvent_updatesGameState_if_active() = runTest {
         val user = User.newBuilder()
             .setUid("1")
             .setDisplayName("Bob")

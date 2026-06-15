@@ -133,6 +133,7 @@ class GameViewModel(
                 }
                 is GameUIEvent.MoveTiles -> moveTiles(event.rowId)
                 is GameUIEvent.OnLoadGame -> {
+                    startSocket(event.gameId)
                     loadGame(event.gameId)
                 }
                 is GameUIEvent.OnTileSelected -> {
@@ -170,11 +171,12 @@ class GameViewModel(
             }
             try {
                 val gameState = gameService.loadGame(gameId).toDomain()
-                applyGameState(gameState, true)
+                if (_uiState.value.gameState == null) {
+                    applyGameState(gameState, true)
+                }
                 _uiState.update {
                     it.copy(loadState = LoadState.Success)
                 }
-                startSocket(gameId)
             } catch (e: Throwable) {
                 val appError = NetworkErrorMapper.map(e)
 
@@ -467,8 +469,8 @@ class GameViewModel(
                 }
 
                 is GameEvent.Updated -> {
-                    if (!_uiState.value.isActivePlayer)
-                        applyGameState(event.payload.game.toDomain(), true)
+                    applyGameState(event.payload.game.toDomain(), true)
+                    _uiState.update { it.copy(loadState = LoadState.Success) }
                 }
 
             }
