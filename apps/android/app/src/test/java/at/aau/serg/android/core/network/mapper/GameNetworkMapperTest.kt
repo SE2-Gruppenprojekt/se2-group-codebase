@@ -11,10 +11,21 @@ import shared.models.game.response.GamePlayerResponse
 import shared.models.game.response.GameResponse
 import shared.models.game.response.TileResponse
 import shared.models.game.response.BoardSetResponse
+import shared.models.game.response.GamePlayerMetricsResponse
 import java.time.Instant
 
 class GameNetworkMapperTest {
     private val fakeDate: String = "2025-01-01T10:00:00Z"
+    private val fakeMetrics = GamePlayerMetricsResponse(
+        turnsCompleted = 0,
+        tilesPlayed = 0,
+        meldsCreated = 0,
+        pointsPlayed = 0,
+        tilesRemainingAtEnd = null,
+        penaltyPointsAtEnd = null,
+        winner = false,
+        finishPosition = null
+    )
 
     @Test
     fun numberedTile_to_tileRequest() {
@@ -104,7 +115,8 @@ class GameNetworkMapperTest {
             rackTiles = listOf(TileResponse("t1", "RED", 5, false)),
             hasCompletedInitialMeld = true,
             score = 100,
-            joinedAt = now
+            joinedAt = now,
+            metrics = fakeMetrics
         )
 
         val domain = response.toDomain()
@@ -129,7 +141,9 @@ class GameNetworkMapperTest {
                     rackTiles = emptyList(),
                     hasCompletedInitialMeld = false,
                     score = 0,
-                    joinedAt = fakeDate
+                    joinedAt = fakeDate,
+                    metrics = fakeMetrics
+
                 )
             ),
             drawPile = emptyList(),
@@ -148,7 +162,9 @@ class GameNetworkMapperTest {
             drawPileCount = 0,
             currentTurnPlayerId = "u1",
             turnDeadline = fakeDate,
-            remainingTurnSeconds = 0
+            remainingTurnSeconds = 0,
+            totalTurnsCompleted = 0,
+            winnerUserId = null
         )
 
         val domain = response.toDomain()
@@ -174,7 +190,8 @@ class GameNetworkMapperTest {
                     rackTiles = emptyList(),
                     hasCompletedInitialMeld = false,
                     score = 0,
-                    joinedAt = fakeDate
+                    joinedAt = fakeDate,
+                    metrics = fakeMetrics
                 )
             ),
             drawPile = emptyList(),
@@ -187,7 +204,9 @@ class GameNetworkMapperTest {
             drawPileCount = 0,
             currentTurnPlayerId = "u1",
             turnDeadline = "null",
-            remainingTurnSeconds = 0
+            remainingTurnSeconds = 0,
+            totalTurnsCompleted = 0,
+            winnerUserId = null
         )
 
         val domain = response.toDomain()

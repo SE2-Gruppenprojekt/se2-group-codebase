@@ -1,6 +1,5 @@
 package at.aau.serg.android.ui.screens.game.util
 
-import at.aau.serg.android.ui.util.jokerDisplayResolver
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import shared.models.game.domain.BoardSet
