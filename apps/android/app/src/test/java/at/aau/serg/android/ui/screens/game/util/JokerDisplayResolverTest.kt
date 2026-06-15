@@ -1,4 +1,4 @@
-package at.aau.serg.android.ui.screens.game.components
+package at.aau.serg.android.ui.screens.game.util
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import at.aau.serg.android.ui.screens.game.util.resolveDisplayedJokerLabel
 import shared.models.game.domain.BoardSet
 import shared.models.game.domain.JokerTile
 import shared.models.game.domain.NumberedTile

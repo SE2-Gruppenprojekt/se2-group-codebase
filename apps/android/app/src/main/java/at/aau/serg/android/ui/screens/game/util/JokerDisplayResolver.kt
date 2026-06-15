@@ -1,4 +1,4 @@
-package at.aau.serg.android.ui.screens.game.components
+package at.aau.serg.android.ui.screens.game.util
 
 import shared.models.game.domain.BoardSet
 import shared.models.game.domain.BoardSetType
