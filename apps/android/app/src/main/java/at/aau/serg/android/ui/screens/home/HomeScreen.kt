@@ -258,19 +258,6 @@ fun HomeScreenContent(
                     )
                 }
             }
-
-            // level info
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = "Level 12",
-                    color = c.home.playerLevel,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "850 XP",
-                    color = c.home.xp
-                )
-            }
         }
     }
 }
