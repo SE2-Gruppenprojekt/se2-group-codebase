@@ -3,9 +3,13 @@ package at.aau.serg.android.ui.screens.game.components
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onRoot
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import shared.models.game.domain.JokerTile
 import shared.models.game.domain.NumberedTile
 import shared.models.game.domain.TileColor
 
@@ -97,5 +101,23 @@ class TileRowTest {
             )
         }
         composeRule.onRoot().assertIsDisplayed()
+    }
+
+    // --- joker rendering ---
+
+    @Test
+    fun tileRow_renders_jokerTile_withJLabel_notZero() {
+        val jokerTiles = listOf(JokerTile("j1", TileColor.RED))
+        composeRule.setContent {
+            TileRow(
+                onEvent = {},
+                tiles = jokerTiles,
+                tileSize = 44,
+                selectedTiles = emptySet(),
+                borderColor = Color.Gray
+            )
+        }
+        assertTrue(composeRule.onAllNodesWithText("J").fetchSemanticsNodes().isNotEmpty())
+        assertFalse(composeRule.onAllNodesWithText("0").fetchSemanticsNodes().isNotEmpty())
     }
 }
