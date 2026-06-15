@@ -57,6 +57,22 @@ class JokerDisplayResolverTest {
     }
 
     @Test
+    fun `joker with ambiguous gap in run falls back to J`() {
+        val joker = JokerTile("j1", TileColor.RED)
+        val boardSet = BoardSet(
+            boardSetId = "set1",
+            type = BoardSetType.RUN,
+            tiles = listOf(
+                NumberedTile("t1", TileColor.RED, 5),
+                NumberedTile("t2", TileColor.RED, 9),
+                joker
+            )
+        )
+
+        assertEquals("J", resolveDisplayedJokerLabel(boardSet, joker))
+    }
+
+    @Test
     fun `joker in group takes the shared number`() {
         val joker = JokerTile("j1", TileColor.RED)
         val boardSet = BoardSet(
