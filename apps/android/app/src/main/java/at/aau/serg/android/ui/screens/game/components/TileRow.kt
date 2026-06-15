@@ -15,10 +15,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.screens.game.GameUIEvent
+import shared.models.game.domain.BoardSet
 import shared.models.game.domain.Tile
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import sh.calvin.reorderable.*
-import shared.models.game.domain.BoardSet
 
 
 @Composable

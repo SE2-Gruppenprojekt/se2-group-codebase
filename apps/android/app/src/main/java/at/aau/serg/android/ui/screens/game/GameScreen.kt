@@ -159,7 +159,7 @@ fun GameScreenContent(
                                     selectedTiles = uiState.selectedTiles,
                                     selectedRow = uiState.activeSelectionRow,
                                     rowId = boardSet.boardSetId,
-                                    boardSet = boardSet
+                                    boardSet = boardSet,
                                 )
 
                                 if (isInvalid) {

@@ -7,11 +7,11 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import shared.models.game.domain.*
+import shared.models.game.response.GamePlayerMetricsResponse
 import shared.models.game.response.GamePlayerResponse
 import shared.models.game.response.GameResponse
 import shared.models.game.response.TileResponse
 import shared.models.game.response.BoardSetResponse
-import shared.models.game.response.GamePlayerMetricsResponse
 import java.time.Instant
 
 class GameNetworkMapperTest {
@@ -143,7 +143,6 @@ class GameNetworkMapperTest {
                     score = 0,
                     joinedAt = fakeDate,
                     metrics = fakeMetrics
-
                 )
             ),
             drawPile = emptyList(),

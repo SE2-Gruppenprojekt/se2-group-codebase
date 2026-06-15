@@ -93,7 +93,7 @@ class GameWebSocketServiceTest {
                 "status": "ACTIVE",
                 "createdAt": "2026-01-01T00:00:00Z",
                 "startedAt": null,
-                "finishedAt": null
+                "finishedAt": null,
                 "totalTurnsCompleted": 0,
                 "winnerUserId": null
               }
