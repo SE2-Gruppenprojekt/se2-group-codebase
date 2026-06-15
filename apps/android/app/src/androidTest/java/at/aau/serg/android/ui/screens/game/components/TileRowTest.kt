@@ -3,9 +3,16 @@ package at.aau.serg.android.ui.screens.game.components
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import junit.framework.TestCase.assertFalse
 import org.junit.Rule
 import org.junit.Test
+import shared.models.game.domain.BoardSet
+import shared.models.game.domain.BoardSetType
+import shared.models.game.domain.JokerTile
 import shared.models.game.domain.NumberedTile
 import shared.models.game.domain.TileColor
 
@@ -97,5 +104,48 @@ class TileRowTest {
             )
         }
         composeRule.onRoot().assertIsDisplayed()
+    }
+// --- joker rendering ---
+
+    @Test
+    fun tileRow_renders_jokerTile_withStarIcon_notZero() {
+        val jokerTiles = listOf(JokerTile("j1", TileColor.RED))
+        composeRule.setContent {
+            TileRow(
+                onEvent = {},
+                tiles = jokerTiles,
+                tileSize = 44,
+                selectedTiles = emptySet(),
+                borderColor = Color.Gray
+            )
+        }
+        composeRule.onNodeWithContentDescription("Joker").assertIsDisplayed()
+        assertFalse(composeRule.onAllNodesWithText("0").fetchSemanticsNodes().isNotEmpty())
+    }
+
+    @Test
+    fun tileRow_renders_jokerTile_withInferredLabel_inRun() {
+        val joker = JokerTile("j1", TileColor.RED)
+        val boardSet = BoardSet(
+            boardSetId = "set1",
+            type = BoardSetType.RUN,
+            tiles = listOf(
+                NumberedTile("t1", TileColor.RED, 5),
+                joker,
+                NumberedTile("t2", TileColor.RED, 7)
+            )
+        )
+        composeRule.setContent {
+            TileRow(
+                onEvent = {},
+                tiles = boardSet.tiles,
+                tileSize = 44,
+                selectedTiles = emptySet(),
+                borderColor = Color.Gray,
+                boardSet = boardSet
+            )
+        }
+        composeRule.onNodeWithContentDescription("Joker").assertIsDisplayed()
+        composeRule.onNodeWithText("6").assertIsDisplayed()
     }
 }

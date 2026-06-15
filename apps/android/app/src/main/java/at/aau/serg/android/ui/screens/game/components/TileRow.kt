@@ -18,6 +18,7 @@ import at.aau.serg.android.ui.screens.game.GameUIEvent
 import shared.models.game.domain.Tile
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import sh.calvin.reorderable.*
+import shared.models.game.domain.BoardSet
 
 
 @Composable
@@ -28,7 +29,8 @@ fun TileRow(
     selectedTiles: Set<Tile>,
     selectedRow: String? = null,
     borderColor: Color? = null,
-    rowId: String? = null
+    rowId: String? = null,
+    boardSet: BoardSet? = null
 ) {
     val lazyListState = rememberLazyListState()
     val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
@@ -67,6 +69,7 @@ fun TileRow(
                     size = tileSize,
                     selected = it in selectedTiles,
                     moveHack = selectedTiles.isNotEmpty() && rowId != selectedRow,
+                    boardSet = boardSet,
                     onSelectedChange = { selected ->
                         onEvent(GameUIEvent.OnTileSelected(it, selected, rowId))
                     },
