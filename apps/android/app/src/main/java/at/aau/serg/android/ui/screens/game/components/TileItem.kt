@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import shared.models.game.domain.BoardSet
 import shared.models.game.domain.JokerTile
 import shared.models.game.domain.NumberedTile
 import shared.models.game.domain.Tile
@@ -34,6 +35,7 @@ fun TileItem(
     onSelectedChange: (Boolean) -> Unit,
     onMoveRequest: () -> Unit,
     modifier: Modifier = Modifier,
+    boardSet: BoardSet? = null,
 ) {
     Box(
         modifier = modifier
@@ -62,7 +64,7 @@ fun TileItem(
     ) {
         val label = when (tile) {
             is NumberedTile -> tile.number.toString()
-            is JokerTile -> "J"
+            is JokerTile -> resolveDisplayedJokerLabel(boardSet, tile)
         }
 
         Box {
