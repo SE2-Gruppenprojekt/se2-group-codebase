@@ -36,7 +36,7 @@ class TileRowTest {
                 tiles = tiles,
                 tileSize = 44,
                 selectedTiles = emptySet(),
-                borderColor = Color.Gray
+                config = TileRowConfig(borderColor = Color.Gray)
             )
         }
         composeRule.onRoot().assertIsDisplayed()
@@ -50,7 +50,6 @@ class TileRowTest {
                 tiles = tiles,
                 tileSize = 44,
                 selectedTiles = emptySet(),
-                borderColor = null
             )
         }
         composeRule.onRoot().assertIsDisplayed()
@@ -67,9 +66,11 @@ class TileRowTest {
                 tiles = tiles,
                 tileSize = 44,
                 selectedTiles = setOf(selected),
-                borderColor = Color.Blue,
-                rowId = "row1",
-                selectedRow = "row2"      // moveHack = true
+                config = TileRowConfig(
+                    borderColor = Color.Blue,
+                    rowId = "row1",
+                    selectedRow = "row2"      // moveHack = true
+                )
             )
         }
         composeRule.onRoot().assertIsDisplayed()
@@ -84,9 +85,11 @@ class TileRowTest {
                 tiles = tiles,
                 tileSize = 44,
                 selectedTiles = setOf(selected),
-                borderColor = Color.Blue,
-                rowId = "row1",
-                selectedRow = "row1"      // moveHack = false
+                config = TileRowConfig(
+                    borderColor = Color.Blue,
+                    rowId = "row1",
+                    selectedRow = "row1"      // moveHack = false
+                )
             )
         }
         composeRule.onRoot().assertIsDisplayed()
@@ -100,7 +103,6 @@ class TileRowTest {
                 tiles = emptyList(),
                 tileSize = 44,
                 selectedTiles = emptySet(),
-                borderColor = null
             )
         }
         composeRule.onRoot().assertIsDisplayed()
@@ -117,7 +119,7 @@ class TileRowTest {
                 tiles = jokerTiles,
                 tileSize = 44,
                 selectedTiles = emptySet(),
-                borderColor = Color.Gray
+                config = TileRowConfig(borderColor = Color.Gray)
             )
         }
         composeRule.onNodeWithContentDescription("Joker").assertIsDisplayed()
@@ -142,8 +144,10 @@ class TileRowTest {
                 tiles = boardSet.tiles,
                 tileSize = 44,
                 selectedTiles = emptySet(),
-                borderColor = Color.Gray,
-                boardSet = boardSet
+                config = TileRowConfig(
+                    borderColor = Color.Gray,
+                    boardSet = boardSet
+                )
             )
         }
         composeRule.onNodeWithContentDescription("Joker").assertIsDisplayed()
