@@ -60,7 +60,9 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle
 
       - name: Run frontend tests
-        run: ./gradlew :apps:android:app:testDebugUnitTest jacocoTestReport
+        run: ./gradlew :apps:android:app:testDebugUnitTest jacocoTestReport -Dorg.gradle.java.installations.auto-download=false
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
 
       - name: Run frontend Sonar analysis
         uses: SonarSource/sonarqube-scan-action@v6
