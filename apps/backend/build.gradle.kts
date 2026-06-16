@@ -18,9 +18,9 @@ java {
 }
 
 kotlin {
-    jvmToolchain(
-        libs.versions.jvmTarget.get().toInt()
-    )
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(libs.versions.jvmTarget.get().toInt()))
+    }
 }
 
 
