@@ -28,7 +28,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import at.aau.serg.android.ui.screens.game.util.resolveDisplayedJokerLabel
-import shared.models.game.domain.BoardSet
 import shared.models.game.domain.JokerTile
 import shared.models.game.domain.NumberedTile
 import shared.models.game.domain.Tile
@@ -36,14 +35,15 @@ import shared.models.game.domain.Tile
 @Composable
 fun TileItem(
     tile: Tile,
-    size: Int,
-    selected: Boolean,
-    moveHack: Boolean,
+    config: TileItemConfig,
     onSelectedChange: (Boolean) -> Unit,
     onMoveRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    boardSet: BoardSet? = null,
 ) {
+    val size = config.size
+    val selected = config.selected
+    val moveHack = config.moveHack
+    val boardSet = config.boardSet
     val shape = RoundedCornerShape(10.dp)
     val isJoker = tile is JokerTile
     val baseColor = Color(tile.color.colorInt)
