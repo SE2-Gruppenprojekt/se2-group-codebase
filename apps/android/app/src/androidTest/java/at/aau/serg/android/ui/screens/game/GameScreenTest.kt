@@ -13,7 +13,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import at.aau.serg.android.core.errors.ApiRuleViolation
-import at.aau.serg.android.ui.screens.game.components.TileItem
 import at.aau.serg.android.ui.theme.ThemeState
 import io.mockk.every
 import io.mockk.mockk
@@ -26,7 +25,6 @@ import org.junit.Test
 import shared.models.game.domain.BoardSet
 import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.GamePlayer
-import shared.models.game.domain.JokerTile
 import shared.models.game.domain.NumberedTile
 import shared.models.game.domain.TileColor
 

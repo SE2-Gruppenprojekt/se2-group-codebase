@@ -14,14 +14,14 @@ class JokerDisplayResolverTest {
     fun `non joker tile returns empty label`() {
         val tile = NumberedTile("t1", TileColor.RED, 5)
 
-        assertEquals("", jokerDisplayResolver(boardSet = null, tile = tile))
+        assertEquals("", resolveDisplayedJokerLabel(boardSet = null, tile = tile))
     }
 
     @Test
     fun `joker without board set falls back to J`() {
         val tile = JokerTile("j1", TileColor.RED)
 
-        assertEquals("J", jokerDisplayResolver(boardSet = null, tile = tile))
+        assertEquals("J", resolveDisplayedJokerLabel(boardSet = null, tile = tile))
     }
 
     @Test
@@ -37,7 +37,7 @@ class JokerDisplayResolverTest {
             )
         )
 
-        assertEquals("6", jokerDisplayResolver(boardSet, joker))
+        assertEquals("6", resolveDisplayedJokerLabel(boardSet, joker))
     }
 
     @Test
@@ -53,7 +53,7 @@ class JokerDisplayResolverTest {
             )
         )
 
-        assertEquals("7", jokerDisplayResolver(boardSet, joker))
+        assertEquals("7", resolveDisplayedJokerLabel(boardSet, joker))
     }
 
     @Test
@@ -69,7 +69,7 @@ class JokerDisplayResolverTest {
             )
         )
 
-        assertEquals("J", jokerDisplayResolver(boardSet, joker))
+        assertEquals("J", resolveDisplayedJokerLabel(boardSet, joker))
     }
 
     @Test
@@ -81,7 +81,7 @@ class JokerDisplayResolverTest {
             tiles = listOf(NumberedTile("t1", TileColor.RED, 5), joker)
         )
 
-        assertEquals("J", jokerDisplayResolver(boardSet, joker))
+        assertEquals("J", resolveDisplayedJokerLabel(boardSet, joker))
     }
 
     @Test
@@ -98,7 +98,7 @@ class JokerDisplayResolverTest {
             )
         )
 
-        assertEquals("10", jokerDisplayResolver(boardSet, joker))
+        assertEquals("10", resolveDisplayedJokerLabel(boardSet, joker))
     }
 
     @Test
@@ -111,7 +111,7 @@ class JokerDisplayResolverTest {
             tiles = numberedTiles + joker
         )
 
-        assertEquals("J", jokerDisplayResolver(boardSet, joker))
+        assertEquals("J", resolveDisplayedJokerLabel(boardSet, joker))
     }
 
     @Test
@@ -127,7 +127,7 @@ class JokerDisplayResolverTest {
             )
         )
 
-        assertEquals("J", jokerDisplayResolver(boardSet, joker))
+        assertEquals("J", resolveDisplayedJokerLabel(boardSet, joker))
     }
 
     @Test
@@ -143,7 +143,7 @@ class JokerDisplayResolverTest {
             )
         )
 
-        assertEquals("9", jokerDisplayResolver(boardSet, joker))
+        assertEquals("9", resolveDisplayedJokerLabel(boardSet, joker))
     }
 
     @Test
@@ -155,7 +155,7 @@ class JokerDisplayResolverTest {
             tiles = listOf(joker, NumberedTile("t1", TileColor.RED, 5))
         )
 
-        assertEquals("J", jokerDisplayResolver(boardSet, joker))
+        assertEquals("J", resolveDisplayedJokerLabel(boardSet, joker))
     }
 
     @Test
@@ -171,6 +171,6 @@ class JokerDisplayResolverTest {
             )
         )
 
-        assertEquals("J", jokerDisplayResolver(boardSet, joker))
+        assertEquals("J", resolveDisplayedJokerLabel(boardSet, joker))
     }
 }

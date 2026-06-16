@@ -9,7 +9,12 @@ import shared.models.game.domain.Tile
 private const val MIN_TILE_NUMBER = 1
 private const val MAX_TILE_NUMBER = 13
 
-fun jokerDisplayResolver(boardSet: BoardSet?, tile: Tile): String {
+/**
+ * Best-effort label for a joker tile based on its surrounding board set.
+ * Falls back to "J" whenever the effective value can't be inferred unambiguously.
+ * Returns "" for non-joker tiles.
+ */
+fun resolveDisplayedJokerLabel(boardSet: BoardSet?, tile: Tile): String {
     if (tile !is JokerTile) return ""
     if (boardSet == null) return "J"
 
