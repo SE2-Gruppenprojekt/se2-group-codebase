@@ -517,7 +517,8 @@ class GameViewModel(
         }
     }
 
-    private fun startTimer() {
+    @VisibleForTesting
+    internal fun startTimer() {
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
             while (true) {
