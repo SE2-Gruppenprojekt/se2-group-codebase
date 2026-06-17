@@ -1,5 +1,8 @@
 package at.aau.serg.android.ui.screens.game
 
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,6 +34,7 @@ import at.aau.serg.android.ui.screens.game.components.TileRow
 import at.aau.serg.android.ui.screens.game.components.TileRowPlaceholder
 import at.aau.serg.android.ui.theme.NotReadyRed
 import at.aau.serg.android.ui.theme.appColors
+import at.aau.serg.android.ui.util.ShakeDetector
 
 @Composable
 fun GameScreen(
@@ -57,6 +62,19 @@ fun GameScreenContent(
     onEvent: (GameUIEvent) -> Unit
 ) {
     val c = appColors()
+
+    val context = LocalContext.current
+    val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+
+    DisposableEffect(Unit) {
+        val detector = ShakeDetector { onEvent(GameUIEvent.ToggleXRAY) }
+        sensorManager.registerListener(detector, accelerometer, SensorManager.SENSOR_DELAY_UI)
+
+        onDispose {
+            sensorManager.unregisterListener(detector)
+        }
+    }
 
     Box(
         Modifier
