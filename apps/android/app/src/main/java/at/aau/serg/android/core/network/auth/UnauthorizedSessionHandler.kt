@@ -1,5 +1,5 @@
 package at.aau.serg.android.core.network.auth
 
-interface UnauthorizedSessionHandler {
+fun interface UnauthorizedSessionHandler {
     fun onUnauthorized()
 }
