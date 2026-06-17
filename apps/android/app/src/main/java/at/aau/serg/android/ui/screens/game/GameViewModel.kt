@@ -481,8 +481,17 @@ class GameViewModel(
 
                 is GameEvent.Updated -> {
                     val game = event.payload.game.toDomain()
-                    applyGameState(game, true)
-                    if (game.status != GameStatus.FINISHED) {
+                    if (game.status == GameStatus.FINISHED) {
+                        applyGameState(game, true)
+                        handlePlayerFinished(
+                            game,
+                            isGameOver = true,
+                            navigateToResult = lastShownFinishCount == 0
+                        )
+                    } else {
+                        if (!_uiState.value.isActivePlayer) {
+                            applyGameState(game, true)
+                        }
                         val currentUserId = _uiState.value.user?.uid
                         val currentPlayerJustFinished = lastShownFinishCount == 0 &&
                             game.players.firstOrNull { it.userId == currentUserId }
