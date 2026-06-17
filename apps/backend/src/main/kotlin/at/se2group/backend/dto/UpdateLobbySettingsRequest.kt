@@ -9,5 +9,6 @@ data class UpdateLobbySettingsRequest(
     val maxPlayers: Int,
 
     val isPrivate: Boolean,
-    val allowGuests: Boolean
+    val allowGuests: Boolean,
+    val requireInitialMeld: Boolean
 )

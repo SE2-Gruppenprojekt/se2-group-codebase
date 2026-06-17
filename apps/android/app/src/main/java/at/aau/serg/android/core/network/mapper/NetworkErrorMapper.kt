@@ -44,6 +44,7 @@ object NetworkErrorMapper {
 
         return when (e.code()) {
             400 -> AppError.Rest.BadRequest
+            401 -> AppError.Rest.Unauthorized
             403 -> AppError.Rest.Forbidden
             404 -> AppError.Rest.NotFound
             409 -> AppError.Rest.Conflict

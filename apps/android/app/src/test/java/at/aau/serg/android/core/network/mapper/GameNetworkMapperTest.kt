@@ -16,15 +16,15 @@ import java.time.Instant
 
 class GameNetworkMapperTest {
     private val fakeDate: String = "2025-01-01T10:00:00Z"
-    private val fakeMetricsResponse = GamePlayerMetricsResponse(
-        turnsCompleted = 3,
-        tilesPlayed = 9,
-        meldsCreated = 2,
-        pointsPlayed = 45,
-        tilesRemainingAtEnd = 1,
-        penaltyPointsAtEnd = 0,
-        winner = true,
-        finishPosition = 1
+    private val emptyMetrics = GamePlayerMetricsResponse(
+        turnsCompleted = 0,
+        tilesPlayed = 0,
+        meldsCreated = 0,
+        pointsPlayed = 0,
+        tilesRemainingAtEnd = null,
+        penaltyPointsAtEnd = null,
+        winner = false,
+        finishPosition = null
     )
 
     @Test
@@ -116,7 +116,7 @@ class GameNetworkMapperTest {
             hasCompletedInitialMeld = true,
             score = 100,
             joinedAt = now,
-            metrics = fakeMetricsResponse
+            metrics = emptyMetrics
         )
 
         val domain = response.toDomain()
@@ -150,7 +150,7 @@ class GameNetworkMapperTest {
                     hasCompletedInitialMeld = false,
                     score = 0,
                     joinedAt = fakeDate,
-                    metrics = fakeMetricsResponse
+                    metrics = emptyMetrics
                 )
             ),
             drawPile = emptyList(),
@@ -170,8 +170,9 @@ class GameNetworkMapperTest {
             currentTurnPlayerId = "u1",
             turnDeadline = fakeDate,
             remainingTurnSeconds = 0,
-            totalTurnsCompleted = 5,
-            winnerUserId = "u1"
+            totalTurnsCompleted = 0,
+            requireInitialMeld = false,
+            winnerUserId = null
         )
 
         val domain = response.toDomain()
@@ -200,7 +201,7 @@ class GameNetworkMapperTest {
                     hasCompletedInitialMeld = false,
                     score = 0,
                     joinedAt = fakeDate,
-                    metrics = fakeMetricsResponse
+                    metrics = emptyMetrics
                 )
             ),
             drawPile = emptyList(),
@@ -215,6 +216,7 @@ class GameNetworkMapperTest {
             turnDeadline = "null",
             remainingTurnSeconds = 0,
             totalTurnsCompleted = 0,
+            requireInitialMeld = false,
             winnerUserId = null
         )
 

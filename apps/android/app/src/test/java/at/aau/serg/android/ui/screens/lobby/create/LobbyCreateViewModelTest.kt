@@ -1,8 +1,10 @@
 package at.aau.serg.android.ui.screens.lobby.create
 
 import at.aau.serg.android.MainDispatcherRule
-import at.aau.serg.android.core.datastore.ProtoStore
+import at.aau.serg.android.core.datastore.InMemoryProtoStore
+import at.aau.serg.android.core.datastore.user.UserStore
 import at.aau.serg.android.core.network.lobby.LobbyAPI
+import at.aau.serg.android.core.network.lobby.AuthenticatedLobbyResponse
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.state.LoadState
 import io.mockk.coEvery
@@ -26,7 +28,7 @@ class LobbyCreateViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var userStore: ProtoStore<User>
+    private lateinit var userStore: UserStore
     private lateinit var api: LobbyAPI
     private lateinit var viewModel: LobbyCreateViewModel
 
@@ -39,17 +41,7 @@ class LobbyCreateViewModelTest {
             .setDisplayName("Alice")
             .build()
 
-        userStore = object : ProtoStore<User> {
-            override val data = MutableStateFlow(user)
-
-            override suspend fun save(value: User) {
-                data.value = value
-            }
-
-            override suspend fun wipe() {
-                data.value = User.getDefaultInstance()
-            }
-        }
+        userStore = UserStore(InMemoryProtoStore(user))
 
         api = mockk()
 
@@ -130,12 +122,10 @@ class LobbyCreateViewModelTest {
             isPrivate = false,
             allowGuests = true
         )
-        coEvery {
-            api.createLobby(
-                any(),
-                any()
-            )
-        } returns fakeLobby
+        coEvery { api.createLobby(any()) } returns AuthenticatedLobbyResponse(
+            accessToken = "aaa.eyJzdWIiOiJ1c2VyLTEifQ.ccc",
+            lobby = fakeLobby
+        )
 
         viewModel.onEvent (LobbyCreateEvent.CreateLobby)
         advanceUntilIdle()
@@ -145,7 +135,7 @@ class LobbyCreateViewModelTest {
 
     @Test
     fun createLobby_emitsErrorState_onFailure() = runTest {
-        coEvery { api.createLobby(any(), any()) } throws RuntimeException("Failure")
+        coEvery { api.createLobby(any()) } throws RuntimeException("Failure")
 
         viewModel.onEvent(LobbyCreateEvent.CreateLobby)
 
@@ -168,7 +158,10 @@ class LobbyCreateViewModelTest {
             allowGuests = true
         )
 
-        coEvery { api.createLobby(any(), any()) } returns fakeLobby
+        coEvery { api.createLobby(any()) } returns AuthenticatedLobbyResponse(
+            accessToken = "aaa.eyJzdWIiOiJ1c2VyLTEifQ.ccc",
+            lobby = fakeLobby
+        )
 
         viewModel.onEvent(LobbyCreateEvent.CreateLobby)
 

@@ -52,7 +52,6 @@ fun NavGraphBuilder.homeGraph(
 
         composable(Routes.HOME_SCREEN) {
             val userStore = remember { provider.getStore<User>() }
-
             val vm: HomeViewModel = viewModel(
                 factory = GenericViewModelFactory { HomeViewModel(userStore) }
             )
@@ -77,9 +76,8 @@ fun NavGraphBuilder.homeGraph(
 
         composable(Routes.SETTINGS) {
             val userStore = remember { provider.getStore<User>() }
-
             val vm: SettingsViewModel = viewModel(
-                factory = GenericViewModelFactory { SettingsViewModel(userStore as UserStore) }
+                factory = GenericViewModelFactory { SettingsViewModel(userStore) }
             )
 
             LaunchedEffect(Unit) {
@@ -105,7 +103,6 @@ fun NavGraphBuilder.homeGraph(
 
         composable(Routes.CHANGE_USERNAME) {
             val userStore = remember { provider.getStore<User>() }
-
             val vm: AuthViewModel = viewModel(
                 factory = GenericViewModelFactory { AuthViewModel(userStore) }
             )
@@ -129,21 +126,12 @@ fun NavGraphBuilder.homeGraph(
             AuthScreen(viewModel = vm)
         }
 
-        navigation(
-            startDestination = "${Routes.GAME}/{gameId}",
-            route = Routes.GAME_FLOW
-        ) {
-            composable("${Routes.GAME}/{gameId}") { backStackEntry ->
-                val gameId = backStackEntry.arguments?.getString("gameId")!!
-                val userStore = remember { provider.getStore<User>() }
-
-                val parentEntry = remember(backStackEntry) {
-                    navController.getBackStackEntry(Routes.GAME_FLOW)
-                }
-                val vm: GameViewModel = viewModel(
-                    parentEntry,
-                    factory = GenericViewModelFactory { GameViewModel(userStore) }
-                )
+        composable("${Routes.GAME}/{gameId}") {
+            val gameId = it.arguments?.getString("gameId")!!
+            val userStore = remember { provider.getStore<User>() }
+            val vm: GameViewModel = viewModel(
+                factory = GenericViewModelFactory { GameViewModel(userStore) }
+            )
 
                 LaunchedEffect(gameId) {
                     vm.onUIEvent(GameUIEvent.OnLoadGame(gameId))
@@ -202,7 +190,6 @@ fun NavGraphBuilder.homeGraph(
 
         composable(Routes.CREATE_LOBBY_FANCY) {
             val userStore = remember { provider.getStore<User>() }
-
             val vm: LobbyCreateViewModel = viewModel(
                 factory = GenericViewModelFactory { LobbyCreateViewModel(userStore) }
             )
@@ -253,9 +240,8 @@ fun NavGraphBuilder.homeGraph(
         composable("${Routes.WAITING_ROOM}/{lobbyId}") {
             val lobbyId = it.arguments?.getString("lobbyId")!!
             val userStore = remember { provider.getStore<User>() }
-
             val vm: LobbyWaitingViewModel = viewModel(
-                factory = GenericViewModelFactory { LobbyWaitingViewModel(userStore) }
+                factory = GenericViewModelFactory { LobbyWaitingViewModel(userStore as UserStore) }
             )
 
             LaunchedEffect(lobbyId) {

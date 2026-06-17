@@ -143,6 +143,7 @@ class GameViewModel(
                 }
                 is GameUIEvent.MoveTiles -> moveTiles(event.rowId)
                 is GameUIEvent.OnLoadGame -> {
+                    startSocket(event.gameId)
                     loadGame(event.gameId)
                 }
                 is GameUIEvent.OnTileSelected -> {
@@ -180,12 +181,12 @@ class GameViewModel(
             }
             try {
                 val gameState = gameService.loadGame(gameId).toDomain()
-                applyGameState(gameState, true)
+                if (_uiState.value.gameState == null) {
+                    applyGameState(gameState, true)
+                }
                 _uiState.update {
                     it.copy(loadState = LoadState.Success)
                 }
-                startTimer()
-                startSocket(gameId)
             } catch (e: Throwable) {
                 val appError = NetworkErrorMapper.map(e)
 
@@ -333,7 +334,7 @@ class GameViewModel(
                 it.copy(loadState = LoadState.Loading)
             }
             try {
-                val gameState = gameService.drawTile(user.gameId, user.uid).toDomain()
+                val gameState = gameService.drawTile(user.gameId).toDomain()
                 val player = gameState.players.firstOrNull { it.userId == user.uid }
                 val newTile = player?.rackTiles?.lastOrNull()
                 applyGameState(gameState, false)
@@ -365,11 +366,11 @@ class GameViewModel(
                     boardSets = uiState.value.boardSets.map { it.toRequest() },
                     rackTiles = uiState.value.rackTiles.map { it.toRequest() }
                 )
-                gameService.endTurn(
+                val gameState = gameService.endTurn(
                     gameId = user.gameId,
-                    playerId = user.uid,
                     request = request
-                )
+                ).toDomain()
+                applyGameState(gameState, true)
                 _uiState.update {
                     it.copy(
                         selectedTiles = emptySet(),
@@ -425,7 +426,6 @@ class GameViewModel(
                 )
                 gameService.updateDraft(
                     gameId = user.gameId,
-                    playerId = user.uid,
                     request = request
                 )
                 _uiState.update { it.copy(loadState = LoadState.Success) }
@@ -447,8 +447,8 @@ class GameViewModel(
                         ?: throw IllegalStateException("User must not be null when DraftUpdated received.")
                     if (user.uid == event.payload.playerId) return
 
-                    _uiState.update {
-                        it.copy(boardSets = event.payload.draft.draftBoard.map { it.toDomain() })
+                    _uiState.update { state ->
+                        state.copy(boardSets = event.payload.draft.draftBoard.map { it.toDomain() })
                     }
                 }
 

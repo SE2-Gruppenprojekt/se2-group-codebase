@@ -83,6 +83,10 @@ class LobbyService(
             .map { it.toDomain() }
     }
 
+    fun findCurrentGameId(lobbyId: String): String? {
+        return gameRepository.findByLobbyId(lobbyId)?.gameId
+    }
+
     /**
      * Creates a new lobby with the requesting user as host and first player.
      *
@@ -117,7 +121,8 @@ class LobbyService(
             settings = LobbySettings(
                 maxPlayers = request.maxPlayers,
                 isPrivate = request.isPrivate,
-                allowGuests = request.allowGuests
+                allowGuests = request.allowGuests,
+                requireInitialMeld = request.requireInitialMeld
             )
         )
 
@@ -143,6 +148,14 @@ class LobbyService(
         return requireLobbyEntity(lobbyId).toDomain()
     }
 
+    fun getLobbyForUser(lobbyId: String, userId: String): Lobby {
+        val lobby = getLobby(lobbyId)
+        if (lobby.players.none { it.userId == userId }) {
+            throw SecurityException("Only lobby participants can access this lobby")
+        }
+        return lobby
+    }
+
     /**
      * Adds a new player to an existing open lobby.
      *
@@ -157,7 +170,7 @@ class LobbyService(
      * player is already part of the lobby.
      */
     @Transactional
-    fun joinLobby(lobbyId: String, request: JoinLobbyRequest): Lobby {
+    fun joinLobby(lobbyId: String, userId: String, request: JoinLobbyRequest): Lobby {
         val lobbyEntity = requireLobbyEntity(lobbyId)
         val lobby = lobbyEntity.toDomain()
 
@@ -165,11 +178,11 @@ class LobbyService(
 
         check(lobby.players.size < lobby.settings.maxPlayers) { "Lobby is full" }
 
-        check(!(lobby.players.any { it.userId == request.userId })) { "Player already in lobby" }
+        check(!(lobby.players.any { it.userId == userId })) { "Player already in lobby" }
 
         val updatedLobby = lobby.copy(
             players = lobby.players + LobbyPlayer(
-                userId = request.userId,
+                userId = userId,
                 displayName = request.displayName,
                 isReady = false
             )
@@ -218,7 +231,8 @@ class LobbyService(
             settings = LobbySettings(
                 maxPlayers = request.maxPlayers,
                 isPrivate = request.isPrivate,
-                allowGuests = request.allowGuests
+                allowGuests = request.allowGuests,
+                requireInitialMeld = request.requireInitialMeld
             )
         )
 
@@ -274,6 +288,7 @@ class LobbyService(
         val savedGame = gameRepository.save(gameStart.confirmedGame.toEntity()).toDomain()
 
         afterCommitExecutor.execute {
+            lobbyBroadcastService.broadcastLobbyUpdated(saved)
             gameBroadcastService.broadcastGameUpdated(savedGame)
 
             gameStart.turnDraft?.let { initialDraft ->

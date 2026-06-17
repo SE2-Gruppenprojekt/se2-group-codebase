@@ -25,8 +25,10 @@ fun LobbyEntity.toDomain(): Lobby =
         settings = LobbySettings(
             maxPlayers = maxPlayers,
             isPrivate = isPrivate,
-            allowGuests = allowGuests
-        )
+            allowGuests = allowGuests,
+            requireInitialMeld = requireInitialMeld
+        ),
+        currentGameId = null
     )
 
 fun Lobby.toEntity(existing: LobbyEntity? = null): LobbyEntity =
@@ -59,7 +61,7 @@ fun Lobby.toListItemResponse(): LobbyListItemResponse =
         isPrivate = settings.isPrivate
     )
 
-fun Lobby.toResponse(): LobbyResponse =
+fun Lobby.toResponse(currentGameId: String? = this.currentGameId): LobbyResponse =
     LobbyResponse(
         lobbyId = lobbyId,
         hostUserId = hostUserId,
@@ -67,6 +69,8 @@ fun Lobby.toResponse(): LobbyResponse =
         maxPlayers = settings.maxPlayers,
         isPrivate = settings.isPrivate,
         allowGuests = settings.allowGuests,
+        requireInitialMeld = settings.requireInitialMeld,
+        currentGameId = currentGameId,
         players = players.map {
             LobbyPlayerResponse(
                 userId = it.userId,

@@ -7,5 +7,7 @@ data class LobbyResponse(
     val players: List<LobbyPlayerResponse>,
     val maxPlayers: Int,
     val isPrivate: Boolean,
-    val allowGuests: Boolean
+    val allowGuests: Boolean,
+    val requireInitialMeld: Boolean = true,
+    val currentGameId: String? = null
 )
