@@ -216,7 +216,12 @@ class LobbyControllerTest {
             with(user("user1"))
             contentType = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(
-                UpdateLobbySettingsRequest(maxPlayers = 4, isPrivate = false, allowGuests = true)
+                UpdateLobbySettingsRequest(
+                    maxPlayers = 4,
+                    isPrivate = false,
+                    allowGuests = true,
+                    requireInitialMeld = true
+                )
             )
         }.andExpect {
             status { isOk() }

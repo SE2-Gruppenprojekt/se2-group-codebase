@@ -38,6 +38,9 @@ class LobbyEntity(
     @Column(name = "created_at", nullable = false)
     var createdAt: Instant = Instant.now(),
 
+    @Column(name = "require_initial_meld", nullable = false)
+    var requireInitialMeld: Boolean = true,
+
     @ElementCollection
     @CollectionTable(name = "lobby_players", joinColumns = [JoinColumn(name = "lobby_id")])
     var players: MutableList<LobbyPlayerEmbeddable> = mutableListOf()

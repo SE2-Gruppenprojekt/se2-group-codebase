@@ -133,7 +133,8 @@ class SecurityScanFixtureService(
                     userId = SCAN_HOST_USER_ID,
                     displayName = "Scan Host",
                     turnOrder = 0,
-                    rackTiles = hostRack
+                    rackTiles = hostRack,
+                    hasCompletedInitialMeld = true
                 ),
                 GamePlayer(
                     userId = SCAN_GUEST_USER_ID,
