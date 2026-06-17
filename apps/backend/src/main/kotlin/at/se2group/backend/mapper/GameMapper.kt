@@ -34,6 +34,7 @@ fun GameEntity.toDomain(): ConfirmedGame =
         startedAt = startedAt,
         finishedAt = finishedAt,
         totalTurnsCompleted = totalTurnsCompleted,
+        requireInitialMeld = false,
         winnerUserId = winnerUserId
     )
 
@@ -157,6 +158,7 @@ fun ConfirmedGame.toResponse(): GameResponse =
         startedAt = startedAt?.toString(),
         finishedAt = finishedAt?.toString(),
         totalTurnsCompleted = totalTurnsCompleted,
+        requireInitialMeld = requireInitialMeld,
         winnerUserId = winnerUserId
     )
 
