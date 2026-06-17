@@ -10,20 +10,19 @@ class ShakeDetector(
 
     private var lastTime = 0L
     private val shakeThreshold = 20f
-    private val SHAKE_INTERVAL = 800
+    private val shakeInterval = 800
 
-    override fun onSensorChanged(event: SensorEvent) {
-        val x = event.values[0]
-        val y = event.values[1]
-        val z = event.values[2]
-
+    fun handleValues(x: Float, y: Float, z: Float, now: Long = System.currentTimeMillis()) {
         val acceleration = kotlin.math.sqrt(x * x + y * y + z * z)
 
-        val now = System.currentTimeMillis()
-        if (acceleration > shakeThreshold && now - lastTime > SHAKE_INTERVAL) {
+        if (acceleration > shakeThreshold && now - lastTime > shakeInterval) {
             lastTime = now
             onShake()
         }
+    }
+
+    override fun onSensorChanged(event: SensorEvent) {
+        handleValues(event.values[0], event.values[1], event.values[2])
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
