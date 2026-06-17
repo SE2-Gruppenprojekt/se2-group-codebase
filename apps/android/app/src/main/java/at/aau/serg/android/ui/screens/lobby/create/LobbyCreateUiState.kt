@@ -10,5 +10,5 @@ data class LobbyCreateUiState(
     val startingTiles: Int = 14,
     val winScore: Int = 500,
     val quickMode: Boolean = false,
-    val requireInitialMeld: Boolean = true,
+    val requireInitialMeld: Boolean = false,
 )

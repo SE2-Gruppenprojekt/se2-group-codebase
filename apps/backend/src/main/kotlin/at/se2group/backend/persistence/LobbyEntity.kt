@@ -39,7 +39,7 @@ class LobbyEntity(
     var createdAt: Instant = Instant.now(),
 
     @Column(name = "require_initial_meld", nullable = false)
-    var requireInitialMeld: Boolean = true,
+    var requireInitialMeld: Boolean = false,
 
     @ElementCollection
     @CollectionTable(name = "lobby_players", joinColumns = [JoinColumn(name = "lobby_id")])
