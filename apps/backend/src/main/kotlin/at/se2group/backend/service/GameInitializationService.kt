@@ -67,7 +67,8 @@ class GameInitializationService(
             boardSets = emptyList(),
             drawPile = tileShuffleService.createDrawPile(shuffledTiles, playersWithHands),
             currentPlayerUserId = firstPlayer.userId,
-            status = GameStatus.ACTIVE
+            status = GameStatus.ACTIVE,
+            requireInitialMeld = lobby.settings.requireInitialMeld
         )
         val draft = TurnDraft(
             gameId = confirmedGame.gameId,
