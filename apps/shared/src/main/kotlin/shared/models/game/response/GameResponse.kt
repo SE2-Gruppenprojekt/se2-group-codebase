@@ -12,6 +12,7 @@ data class GameResponse(
     val turnDeadline: String?,
     val remainingTurnSeconds: Int?,
     val status: String,
+    val requireInitialMeld: Boolean,
     val createdAt: String,
     val startedAt: String?,
     val finishedAt: String?,

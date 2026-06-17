@@ -37,7 +37,8 @@ import shared.models.game.validation.invalid
 @Service
 class RummikubRuleService(
     private val tileConservationService: TileConservationService,
-    private val boardValidationService: BoardValidationService
+    private val boardValidationService: BoardValidationService,
+    private val firstMoveValidationService: FirstMoveValidationService
 ) {
 
     /**
@@ -67,6 +68,8 @@ class RummikubRuleService(
         actingPlayerUserId: String,
         submittedDraft: TurnDraft
     ): ValidationResult {
+        val actingPlayer = confirmedGame.players.first  { it.userId == actingPlayerUserId }
+
         val violations = mutableListOf<RuleViolation>()
 
         violations += tileConservationService
@@ -76,6 +79,12 @@ class RummikubRuleService(
         violations += boardValidationService
             .validate(submittedDraft.boardSets)
             .violations
+
+        if (confirmedGame.requireInitialMeld) {
+            violations += firstMoveValidationService
+                .validate(confirmedGame, actingPlayer, submittedDraft)
+                .violations
+        }
 
         return if (violations.isEmpty()) valid() else invalid(violations)
     }
