@@ -83,6 +83,10 @@ class LobbyService(
             .map { it.toDomain() }
     }
 
+    fun findCurrentGameId(lobbyId: String): String? {
+        return gameRepository.findByLobbyId(lobbyId)?.gameId
+    }
+
     /**
      * Creates a new lobby with the requesting user as host and first player.
      *
@@ -282,6 +286,7 @@ class LobbyService(
         val savedGame = gameRepository.save(gameStart.confirmedGame.toEntity()).toDomain()
 
         afterCommitExecutor.execute {
+            lobbyBroadcastService.broadcastLobbyUpdated(saved)
             gameBroadcastService.broadcastGameUpdated(savedGame)
 
             gameStart.turnDraft?.let { initialDraft ->

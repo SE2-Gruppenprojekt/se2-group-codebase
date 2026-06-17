@@ -100,4 +100,78 @@ class UserStoreTest {
         userStore.save(user2)
         assertEquals("B", userStore.data.first().displayName)
     }
+
+    @Test
+    fun saveSession_updates_uid_displayName_and_accessToken() = runTest {
+        userStore.save(
+            User.newBuilder()
+                .setGameId("stale-game")
+                .build()
+        )
+
+        userStore.saveSession(
+            userId = "user-1",
+            displayName = "Alice",
+            accessToken = "token-123"
+        )
+
+        val stored = userStore.data.first()
+
+        assertEquals("user-1", stored.uid)
+        assertEquals("Alice", stored.displayName)
+        assertEquals("token-123", stored.accessToken)
+        assertEquals("", stored.gameId)
+    }
+
+    @Test
+    fun updateGameId_preserves_session_fields() = runTest {
+        userStore.save(
+            User.newBuilder()
+                .setUid("user-1")
+                .setDisplayName("Alice")
+                .setAccessToken("token-123")
+                .build()
+        )
+
+        userStore.updateGameId("game-9")
+        val stored = userStore.data.first()
+
+        assertEquals("user-1", stored.uid)
+        assertEquals("Alice", stored.displayName)
+        assertEquals("token-123", stored.accessToken)
+        assertEquals("game-9", stored.gameId)
+    }
+
+    @Test
+    fun currentAccessToken_returnsNull_whenTokenBlank() {
+        assertNull(userStore.currentAccessToken())
+    }
+
+    @Test
+    fun currentAccessToken_returnsToken_whenPresent() = runTest {
+        userStore.saveSession("user-1", " Alice ", "token-123")
+
+        assertEquals("token-123", userStore.currentAccessToken())
+        assertEquals("Alice", userStore.data.first().displayName)
+    }
+
+    @Test
+    fun clearSession_clears_only_session_fields() = runTest {
+        userStore.save(
+            User.newBuilder()
+                .setUid("user-1")
+                .setDisplayName("Alice")
+                .setAccessToken("token-123")
+                .setGameId("game-9")
+                .build()
+        )
+
+        userStore.clearSession()
+
+        val stored = userStore.data.first()
+        assertEquals("", stored.uid)
+        assertEquals("Alice", stored.displayName)
+        assertEquals("", stored.accessToken)
+        assertEquals("", stored.gameId)
+    }
 }

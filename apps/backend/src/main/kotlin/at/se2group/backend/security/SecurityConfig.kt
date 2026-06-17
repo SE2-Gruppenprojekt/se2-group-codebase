@@ -44,6 +44,7 @@ class SecurityConfig(
                 it.requestMatchers("/actuator/health").permitAll()
                 it.requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
                 it.requestMatchers("/internal/security/**").permitAll()
+                it.requestMatchers("/ws/**").permitAll()
                 it.requestMatchers(HttpMethod.GET, "/api/leaderboard").permitAll()
                 it.requestMatchers(HttpMethod.GET, "/api/lobbies").permitAll()
                 it.requestMatchers(HttpMethod.POST, "/api/lobbies").permitAll()

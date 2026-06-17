@@ -2,7 +2,6 @@ package at.aau.serg.android.core.network.lobby
 
 import retrofit2.http.Body
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
 import shared.models.lobby.request.*
@@ -14,9 +13,8 @@ interface LobbyAPI {
 
     @POST("lobbies")
     suspend fun createLobby(
-        @Header("X-User-Id") userId: String,
         @Body request: CreateLobbyRequest
-    ): LobbyResponse
+    ): AuthenticatedLobbyResponse
 
     @GET("lobbies/{lobbyId}")
     suspend fun getLobby(
@@ -27,29 +25,25 @@ interface LobbyAPI {
     suspend fun joinLobby(
         @Path("lobbyId") lobbyId: String,
         @Body request: JoinLobbyRequest
-    ): LobbyResponse
+    ): AuthenticatedLobbyResponse
 
     @POST("lobbies/{lobbyId}/leave")
     suspend fun leaveLobby(
-        @Header("X-User-Id") userId: String,
         @Path("lobbyId") lobbyId: String
     )
 
     @POST("lobbies/{lobbyId}/ready")
     suspend fun ready(
-        @Header("X-User-Id") userId: String,
         @Path("lobbyId") lobbyId: String
-    )
+    ): LobbyResponse
 
     @POST("lobbies/{lobbyId}/unready")
     suspend fun unready(
-        @Header("X-User-Id") userId: String,
         @Path("lobbyId") lobbyId: String
-    )
+    ): LobbyResponse
 
     @POST("lobbies/{lobbyId}/start")
     suspend fun startMatch(
-        @Header("X-User-Id") userId: String,
         @Path("lobbyId") lobbyId: String
-    )
+    ): LobbyResponse
 }

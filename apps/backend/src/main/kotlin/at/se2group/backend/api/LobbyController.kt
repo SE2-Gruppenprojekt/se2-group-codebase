@@ -30,6 +30,9 @@ class LobbyController(
     private val lobbyAuthenticationService: LobbyAuthenticationService
 ) {
 
+    private fun currentGameIdFor(lobbyId: String): String? =
+        lobbyService.findCurrentGameId(lobbyId)
+
     @GetMapping
     fun listLobbies(): List<LobbyListItemResponse> {
         return lobbyService.listOpenLobbies()
@@ -49,7 +52,8 @@ class LobbyController(
         @PathVariable lobbyId: String,
         authentication: Authentication
     ): LobbyResponse {
-        return lobbyService.getLobbyForUser(lobbyId, authentication.name).toResponse()
+        return lobbyService.getLobbyForUser(lobbyId, authentication.name)
+            .toResponse(currentGameId = currentGameIdFor(lobbyId))
     }
     @PostMapping("/{lobbyId}/join")
     fun joinLobby(
@@ -66,7 +70,8 @@ class LobbyController(
         authentication: Authentication,
         @Valid @RequestBody request: UpdateLobbySettingsRequest
     ): LobbyResponse {
-        return lobbyService.updateLobbySettings(lobbyId, authentication.name, request).toResponse()
+        return lobbyService.updateLobbySettings(lobbyId, authentication.name, request)
+            .toResponse(currentGameId = currentGameIdFor(lobbyId))
     }
 
     @PostMapping("/{lobbyId}/start")
@@ -75,7 +80,8 @@ class LobbyController(
         @PathVariable lobbyId: String,
         authentication: Authentication
     ): LobbyResponse {
-        return lobbyService.startLobby(lobbyId, authentication.name).toResponse()
+        return lobbyService.startLobby(lobbyId, authentication.name)
+            .toResponse(currentGameId = currentGameIdFor(lobbyId))
     }
 
     @PostMapping("/{lobbyId}/leave")
@@ -89,7 +95,7 @@ class LobbyController(
         return if (updatedLobby == null) {
             ResponseEntity.noContent().build()
         } else {
-            ResponseEntity.ok(updatedLobby.toResponse())
+            ResponseEntity.ok(updatedLobby.toResponse(currentGameId = currentGameIdFor(updatedLobby.lobbyId)))
         }
     }
 
@@ -99,7 +105,8 @@ class LobbyController(
         @PathVariable lobbyId: String,
         authentication: Authentication,
     ): LobbyResponse {
-        return lobbyService.readyLobby(lobbyId, authentication.name).toResponse()
+        return lobbyService.readyLobby(lobbyId, authentication.name)
+            .toResponse(currentGameId = currentGameIdFor(lobbyId))
     }
 
     @PostMapping("/{lobbyId}/unready")
@@ -108,7 +115,8 @@ class LobbyController(
         @PathVariable lobbyId: String,
         authentication: Authentication
      ): LobbyResponse {
-        return lobbyService.unreadyLobby(lobbyId, authentication.name).toResponse()
+        return lobbyService.unreadyLobby(lobbyId, authentication.name)
+            .toResponse(currentGameId = currentGameIdFor(lobbyId))
     }
 
     @DeleteMapping("/{lobbyId}")

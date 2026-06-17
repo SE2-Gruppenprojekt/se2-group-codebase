@@ -2,7 +2,6 @@ package at.aau.serg.android.core.network.game
 
 import retrofit2.http.Body
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -25,20 +24,17 @@ interface GameAPI {
     @PUT("games/{gameId}/draft")
     suspend fun updateDraft(
         @Path("gameId") gameId: String,
-        @Header("X-User-Id") userId: String,
         @Body request: UpdateDraftRequest
     ): TurnDraftResponse
 
     @POST("games/{gameId}/draw")
     suspend fun drawTile(
-        @Path("gameId") gameId: String,
-        @Header("X-User-Id") userId: String
+        @Path("gameId") gameId: String
     ): GameResponse
 
     @POST("games/{gameId}/end-turn")
     suspend fun endTurn(
         @Path("gameId") gameId: String,
-        @Header("X-User-Id") userId: String,
         @Body request: EndTurnRequest
-    )
+    ): GameResponse
 }

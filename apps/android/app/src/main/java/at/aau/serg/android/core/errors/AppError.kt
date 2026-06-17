@@ -13,6 +13,7 @@ sealed class AppError {
         data object Network : Rest()
         data object Server : Rest()
         data object BadRequest : Rest()
+        data object Unauthorized : Rest()
         data object Forbidden : Rest()
         data object NotFound : Rest()
         data object Conflict : Rest()
@@ -45,6 +46,7 @@ sealed class AppError {
             Rest.Network,
             Rest.Server,
             Rest.BadRequest,
+            Rest.Unauthorized,
             Rest.Forbidden,
             Rest.NotFound,
             Rest.Conflict,
@@ -54,4 +56,3 @@ sealed class AppError {
         )
     }
 }
-
