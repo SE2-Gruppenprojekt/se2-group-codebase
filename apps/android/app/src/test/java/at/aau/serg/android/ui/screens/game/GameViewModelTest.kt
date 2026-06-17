@@ -9,14 +9,8 @@ import at.aau.serg.android.core.network.mapper.toDomain
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateViewModel
 import at.aau.serg.android.ui.state.LoadState
-import io.mockk.Runs
 import io.mockk.coEvery
-import io.mockk.just
 import io.mockk.mockk
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.ResponseBody.Companion.toResponseBody
-import retrofit2.HttpException
-import retrofit2.Response
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -26,6 +20,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -35,6 +31,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import retrofit2.HttpException
+import retrofit2.Response
 import shared.models.game.domain.BoardSet
 import shared.models.game.domain.BoardSetType
 import shared.models.game.domain.ConfirmedGame
@@ -167,14 +165,42 @@ class GameViewModelTest {
     }
 
     private fun setPlayerTurnInactive() {
-        val user = User.newBuilder()
-            .setUid("1")
-            .setDisplayName("Max")
+        val initialUser = User.newBuilder()
+            .setUid("User123")
+            .setDisplayName("Alice")
+            .setGameId("Game123")
             .build()
-        viewmodel.setUiStateForTest(GameUiState(
-            user = user,
-            gameState = fakeGameResponse.toDomain(),
-        ))
+
+        viewmodel.setUiStateForTest(
+            GameUiState(
+                user = initialUser,
+                rackTiles = fakeRack,
+                boardSets = fakeBoard,
+                gameState = ConfirmedGame(
+                    players = listOf(
+                        GamePlayer(
+                            userId = initialUser.uid,
+                            displayName = initialUser.displayName,
+                            turnOrder = 0,
+                            rackTiles = fakeRack,
+                        ),
+                        GamePlayer(
+                            userId = "FakeUser1",
+                            displayName = "Fake",
+                            turnOrder = 1,
+                            rackTiles = listOf(
+                                NumberedTile("x4", TileColor.BLACK, 1),
+                            ),
+                        )
+                    ),
+                    boardSets = fakeBoard,
+                    gameId = initialUser.gameId,
+                    lobbyId = "Lobby123",
+                    currentPlayerUserId = "FakeUser1"
+                ),
+                isActivePlayer = false
+            )
+        )
     }
 
     @Before
@@ -402,7 +428,14 @@ class GameViewModelTest {
     @Test
     fun endTurn_sets_success_andClearsSelection() = runTest {
         setTestGameState()
+        val user = User.newBuilder()
+            .setUid("FakeUser1")
+            .setDisplayName("Bob")
+            .build()
+        store.save(user)
+        advanceUntilIdle()
         coEvery { service.endTurn(any(), any()) } returns fakeGameResponse
+
 
         viewmodel.onUIEvent(GameUIEvent.EndTurn)
         advanceUntilIdle()
@@ -457,6 +490,12 @@ class GameViewModelTest {
     @Test
     fun endTurn_clearsRuleValidation_onSuccess() = runTest {
         setTestGameState()
+        val user = User.newBuilder()
+            .setUid("FakeUser1")
+            .setDisplayName("Bob")
+            .build()
+        store.save(user)
+        advanceUntilIdle()
         viewmodel.setUiStateForTest(
             viewmodel.uiState.value.copy(
                 ruleValidation = RuleValidationUiState(summaryMessage = "old error")
@@ -1172,5 +1211,53 @@ class GameViewModelTest {
 
         testFlow.emit(mockEvent)
         runCurrent()
+    }
+
+    @Test
+    fun toggleXRAY_changes_rack_if_not_active() = runTest {
+        setPlayerTurnInactive()
+
+        val rack = viewmodel.uiState.value.rackTiles
+        val state = viewmodel.uiState.value.cheatXRAY
+        viewmodel.onUIEvent(GameUIEvent.ToggleXRAY)
+
+        assertNotEquals(rack, viewmodel.uiState.value.rackTiles)
+        assertNotEquals(state, viewmodel.uiState.value.cheatXRAY)
+
+        viewmodel.onUIEvent(GameUIEvent.ToggleXRAY)
+
+        assertEquals(rack, viewmodel.uiState.value.rackTiles)
+        assertEquals(state, viewmodel.uiState.value.cheatXRAY)
+    }
+
+    @Test
+    fun toggleXRAY_leaves_rack_if_active() = runTest {
+        setTestGameState()
+
+        val rack = viewmodel.uiState.value.rackTiles
+        val state = viewmodel.uiState.value.cheatXRAY
+        viewmodel.onUIEvent(GameUIEvent.ToggleXRAY)
+
+        assertEquals(rack, viewmodel.uiState.value.rackTiles)
+        assertNotEquals(state, viewmodel.uiState.value.cheatXRAY)
+    }
+
+    @Test
+    fun toggleXRAY_withNullGameState_sets_loadState_error() = runTest {
+        viewmodel.setUiStateForTest(GameUiState(
+            gameState = null,
+        ))
+        viewmodel.onUIEvent(GameUIEvent.ToggleXRAY)
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun toggleXRAY_withNullUser_sets_loadState_error() = runTest {
+        viewmodel.setUiStateForTest(GameUiState(
+            gameState = fakeGameResponse.toDomain(),
+            user = null
+        ))
+        viewmodel.onUIEvent(GameUIEvent.ToggleXRAY)
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
     }
 }
