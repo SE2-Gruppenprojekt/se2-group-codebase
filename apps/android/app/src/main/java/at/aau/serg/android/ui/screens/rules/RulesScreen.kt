@@ -301,6 +301,8 @@ fun RulesScreenContent(
                 }
             }
 
+            Spacer(modifier = Modifier.height(24.dp))
+
             // Cheat banner
             Column(
                 modifier = Modifier
