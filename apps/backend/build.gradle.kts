@@ -28,6 +28,7 @@ dependencies {
     implementation(projects.apps.shared)
     implementation(libs.spring.boot.starter.web)
     implementation(libs.spring.boot.starter.actuator)
+    implementation("org.springframework.boot:spring-boot-starter-security")
     implementation(libs.jackson.module.kotlin)
     implementation(libs.kotlin.reflect)
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-api:2.8.5")
@@ -35,9 +36,11 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     runtimeOnly("com.h2database:h2")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("com.auth0:java-jwt:4.4.0")
 
 
     testImplementation(libs.spring.boot.starter.test)
+    testImplementation("org.springframework.security:spring-security-test")
 }
 
 tasks.withType<Test> {

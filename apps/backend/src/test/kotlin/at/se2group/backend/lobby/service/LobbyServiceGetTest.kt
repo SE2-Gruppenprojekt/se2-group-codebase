@@ -2,6 +2,7 @@ package at.se2group.backend.lobby.service
 
 import shared.models.lobby.domain.LobbyStatus
 import at.se2group.backend.persistence.GameRepository
+import at.se2group.backend.persistence.GameEntity
 import at.se2group.backend.persistence.LobbyEntity
 import at.se2group.backend.persistence.LobbyPlayerEmbeddable
 import at.se2group.backend.persistence.LobbyRepository
@@ -99,5 +100,55 @@ class LobbyServiceGetTest {
 
         verify(lobbyRepository).findById("missing-lobby")
         verifyNoInteractions(lobbyBroadcastService)
+    }
+
+    @Test
+    fun `getLobbyForUser rejects non participant access`() {
+        val entity = LobbyEntity(
+            lobbyId = "lobby-1",
+            hostUserId = "host-1",
+            status = LobbyStatus.OPEN,
+            maxPlayers = 4,
+            isPrivate = false,
+            allowGuests = true,
+            players = mutableListOf(
+                LobbyPlayerEmbeddable(
+                    userId = "host-1",
+                    displayName = "Alice",
+                    isReady = false,
+                )
+            )
+        )
+
+        Mockito.`when`(lobbyRepository.findById("lobby-1"))
+            .thenReturn(Optional.of(entity))
+
+        val exception = assertThrows<SecurityException> {
+            lobbyService.getLobbyForUser("lobby-1", "outsider")
+        }
+
+        assertEquals("Only lobby participants can access this lobby", exception.message)
+    }
+
+    @Test
+    fun `findCurrentGameId returns game id when one exists for lobby`() {
+        Mockito.`when`(gameRepository.findByLobbyId("lobby-1"))
+            .thenReturn(GameEntity(gameId = "game-1", lobbyId = "lobby-1"))
+
+        val result = lobbyService.findCurrentGameId("lobby-1")
+
+        assertEquals("game-1", result)
+        verify(gameRepository).findByLobbyId("lobby-1")
+    }
+
+    @Test
+    fun `findCurrentGameId returns null when no game exists for lobby`() {
+        Mockito.`when`(gameRepository.findByLobbyId("lobby-1"))
+            .thenReturn(null)
+
+        val result = lobbyService.findCurrentGameId("lobby-1")
+
+        assertEquals(null, result)
+        verify(gameRepository).findByLobbyId("lobby-1")
     }
 }

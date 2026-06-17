@@ -15,6 +15,7 @@ object ErrorUiMapper {
             AppError.Rest.Network -> "Network error"
             AppError.Rest.Server -> "Server error"
             AppError.Rest.BadRequest -> "Bad request"
+            AppError.Rest.Unauthorized -> "Session expired. Please join a lobby again."
             AppError.Rest.Forbidden -> "Access denied"
             AppError.Rest.NotFound -> "Resource not found"
             AppError.Rest.Conflict -> "Conflict"

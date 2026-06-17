@@ -1,5 +1,6 @@
 package at.se2group.backend.api
 
+import at.se2group.backend.security.JwtService
 import at.se2group.backend.service.SecurityScanFixtureService
 import io.swagger.v3.oas.annotations.Hidden
 import org.springframework.beans.factory.annotation.Value
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController
 )
 class SecurityScanFixtureController(
     private val securityScanFixtureService: SecurityScanFixtureService,
+    private val jwtService: JwtService,
     @Value("\${app.scan-fixture.secret:}") private val expectedSecret: String
 ) {
 
@@ -37,7 +39,9 @@ class SecurityScanFixtureController(
             hostUserId = state.hostUserId,
             guestUserId = state.guestUserId,
             gameId = state.gameId,
-            draftOwnerUserId = state.draftOwnerUserId
+            draftOwnerUserId = state.draftOwnerUserId,
+            hostAccessToken = jwtService.issueAccessToken(state.hostUserId),
+            guestAccessToken = jwtService.issueAccessToken(state.guestUserId)
         )
     }
 }
@@ -47,5 +51,7 @@ data class SecurityScanFixtureResponse(
     val hostUserId: String,
     val guestUserId: String,
     val gameId: String,
-    val draftOwnerUserId: String
+    val draftOwnerUserId: String,
+    val hostAccessToken: String,
+    val guestAccessToken: String
 )

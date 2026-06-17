@@ -81,4 +81,36 @@ class GameServiceGetTest {
         assertEquals("Game not found", exception.message)
         verify(gameRepository).findById("missing-game")
     }
+
+    @Test
+    fun `getGameForUser rejects non participant access`() {
+        val entity = GameEntity(
+            gameId = "game-1",
+            lobbyId = "lobby-1",
+            currentPlayerUserId = "user-1",
+            status = GameStatus.ACTIVE,
+            createdAt = Instant.parse("2026-04-27T18:00:00Z")
+        )
+
+        entity.players = mutableListOf(
+            GamePlayerEntity(
+                game = entity,
+                userId = "user-1",
+                displayName = "Alice",
+                turnOrder = 0,
+                rackTiles = mutableListOf(),
+                hasCompletedInitialMeld = false,
+                score = 0,
+                joinedAt = Instant.parse("2026-04-27T17:55:00Z")
+            )
+        )
+
+        `when`(gameRepository.findById("game-1")).thenReturn(Optional.of(entity))
+
+        val exception = assertThrows<SecurityException> {
+            gameService.getGameForUser("game-1", "outsider")
+        }
+
+        assertEquals("Only game participants can access this game", exception.message)
+    }
 }

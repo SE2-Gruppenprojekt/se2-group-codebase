@@ -20,34 +20,28 @@ class GameService(
 
     suspend fun updateDraft(
         gameId: String,
-        playerId: String,
         request: UpdateDraftRequest
     ): TurnDraftResponse {
         return api.updateDraft(
             gameId,
-            playerId,
             request
         )
     }
 
     suspend fun drawTile(
-        gameId: String,
-        playerId: String
+        gameId: String
     ): GameResponse {
         return api.drawTile(
-            gameId,
-            playerId
+            gameId
         )
     }
 
     suspend fun endTurn(
         gameId: String,
-        playerId: String,
         request: EndTurnRequest
-    ) {
-        api.endTurn(
+    ): GameResponse {
+        return api.endTurn(
             gameId,
-            playerId,
             request
         )
     }
