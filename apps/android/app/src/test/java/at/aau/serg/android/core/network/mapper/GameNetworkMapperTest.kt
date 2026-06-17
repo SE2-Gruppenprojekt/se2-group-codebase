@@ -163,8 +163,8 @@ class GameNetworkMapperTest {
             turnDeadline = fakeDate,
             remainingTurnSeconds = 0,
             totalTurnsCompleted = 0,
-            winnerUserId = null,
-            requireInitialMeld = true
+            requireInitialMeld = false,
+            winnerUserId = null
         )
 
         val domain = response.toDomain()
@@ -206,8 +206,8 @@ class GameNetworkMapperTest {
             turnDeadline = "null",
             remainingTurnSeconds = 0,
             totalTurnsCompleted = 0,
-            winnerUserId = null,
-            requireInitialMeld = true
+            requireInitialMeld = false,
+            winnerUserId = null
         )
 
         val domain = response.toDomain()
