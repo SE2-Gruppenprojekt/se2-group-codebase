@@ -163,6 +163,7 @@ class GameNetworkMapperTest {
             turnDeadline = fakeDate,
             remainingTurnSeconds = 0,
             totalTurnsCompleted = 0,
+            requireInitialMeld = false,
             winnerUserId = null
         )
 
@@ -205,6 +206,7 @@ class GameNetworkMapperTest {
             turnDeadline = "null",
             remainingTurnSeconds = 0,
             totalTurnsCompleted = 0,
+            requireInitialMeld = false,
             winnerUserId = null
         )
 
