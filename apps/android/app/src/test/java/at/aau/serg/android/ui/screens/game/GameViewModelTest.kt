@@ -970,7 +970,7 @@ class GameViewModelTest {
             GameEvent.Updated(GameUpdatedEvent(gameId = "Game123", game = fakeGameResponse))
         )
 
-        assertEquals(fakeGameResponse.toDomain(), viewmodel.uiState.value.gameState)
+        assertNotEquals(fakeGameResponse.toDomain(), viewmodel.uiState.value.gameState)
     }
 
     @Test

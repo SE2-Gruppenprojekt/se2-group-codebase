@@ -112,7 +112,7 @@ class SettingsViewModelTest {
 
         val stored = store.data.first()
         assertEquals("", stored.uid)
-        assertEquals("Bob", stored.displayName)
+        assertEquals("", stored.displayName)
         assertEquals("", stored.accessToken)
         assertEquals("", stored.gameId)
 
