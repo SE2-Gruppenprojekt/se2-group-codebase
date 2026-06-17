@@ -15,7 +15,6 @@ data class ConfirmedGame(
     val startedAt: Instant? = null,
     val finishedAt: Instant? = null,
     val totalTurnsCompleted: Int = 0,
-    val requireInitialMeld: Boolean = false,
     val winnerUserId: String? = null
 ) {
     init {

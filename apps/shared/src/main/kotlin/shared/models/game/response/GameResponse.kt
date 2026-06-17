@@ -17,6 +17,5 @@ data class GameResponse(
     val startedAt: String?,
     val finishedAt: String?,
     val totalTurnsCompleted: Int,
-    val requireInitialMeld: Boolean = false,
     val winnerUserId: String?
 )
