@@ -41,6 +41,11 @@ class NetworkErrorMapperTest {
     }
 
     @Test
+    fun map_returnsUnauthorized_for401() {
+        assertEquals(AppError.Rest.Unauthorized, NetworkErrorMapper.map(httpException(401, "{}")))
+    }
+
+    @Test
     fun map_handles_null_response_object() {
         // This targets the very first ?. in the chain: e.response()?.
         val ex = mockk<HttpException>()

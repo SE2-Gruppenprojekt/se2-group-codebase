@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import shared.validation.user.DisplayNameValidator
@@ -61,10 +62,11 @@ class AuthViewModel(
                 if (!state.validation.isValid) return
 
                 viewModelScope.launch {
-                    val uid = state.uid.ifBlank { UUID.randomUUID().toString() }
+                    val currentUser = userStore.data.first()
+                    val uid = state.uid.ifBlank { currentUser.uid.ifBlank { UUID.randomUUID().toString() } }
 
                     userStore.save(
-                        User.newBuilder()
+                        currentUser.toBuilder()
                             .setUid(uid)
                             .setDisplayName(state.username)
                             .build()

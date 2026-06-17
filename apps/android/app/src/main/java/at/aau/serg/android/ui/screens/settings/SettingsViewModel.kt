@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
-    private val userStore: ProtoStore<User>
+    private val userStore: ProtoStore<User>,
 ) : ViewModel() {
 
     val user = userStore.data.stateIn(

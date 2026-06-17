@@ -16,7 +16,7 @@ import java.time.Instant
 
 class GameNetworkMapperTest {
     private val fakeDate: String = "2025-01-01T10:00:00Z"
-    private val fakeMetrics = GamePlayerMetricsResponse(
+    private val emptyMetrics = GamePlayerMetricsResponse(
         turnsCompleted = 0,
         tilesPlayed = 0,
         meldsCreated = 0,
@@ -116,7 +116,7 @@ class GameNetworkMapperTest {
             hasCompletedInitialMeld = true,
             score = 100,
             joinedAt = now,
-            metrics = fakeMetrics
+            metrics = emptyMetrics
         )
 
         val domain = response.toDomain()
@@ -142,7 +142,7 @@ class GameNetworkMapperTest {
                     hasCompletedInitialMeld = false,
                     score = 0,
                     joinedAt = fakeDate,
-                    metrics = fakeMetrics
+                    metrics = emptyMetrics
                 )
             ),
             drawPile = emptyList(),
@@ -190,7 +190,7 @@ class GameNetworkMapperTest {
                     hasCompletedInitialMeld = false,
                     score = 0,
                     joinedAt = fakeDate,
-                    metrics = fakeMetrics
+                    metrics = emptyMetrics
                 )
             ),
             drawPile = emptyList(),

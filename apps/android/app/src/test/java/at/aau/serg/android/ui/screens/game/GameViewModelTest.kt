@@ -2,6 +2,7 @@ package at.aau.serg.android.ui.screens.game
 
 import at.aau.serg.android.MainDispatcherRule
 import at.aau.serg.android.core.datastore.InMemoryProtoStore
+import at.aau.serg.android.core.datastore.user.UserStore
 import at.aau.serg.android.core.network.game.GameService
 import at.aau.serg.android.core.network.game.GameWebSocketService
 import at.aau.serg.android.core.network.mapper.toDomain
@@ -17,9 +18,11 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.HttpException
 import retrofit2.Response
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -59,6 +62,7 @@ class GameViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var store: InMemoryProtoStore<User>
+    private lateinit var userStore: UserStore
     private lateinit var service: GameService
     private lateinit var socketService: GameWebSocketService
     private lateinit var viewmodel: GameViewModel
@@ -90,6 +94,17 @@ class GameViewModelTest {
         ),
     )
 
+    private val emptyMetrics = GamePlayerMetricsResponse(
+        turnsCompleted = 0,
+        tilesPlayed = 0,
+        meldsCreated = 0,
+        pointsPlayed = 0,
+        tilesRemainingAtEnd = null,
+        penaltyPointsAtEnd = null,
+        winner = false,
+        finishPosition = null
+    )
+
     private val fakeGameResponse: GameResponse = GameResponse(
         gameId = "FakeGame1",
         lobbyId = "FakeLobby1",
@@ -102,16 +117,7 @@ class GameViewModelTest {
                 hasCompletedInitialMeld = false,
                 score = 0,
                 joinedAt = "2026-05-08T10:00:00Z",
-                metrics = GamePlayerMetricsResponse(
-                    turnsCompleted = 0,
-                    tilesPlayed = 0,
-                    meldsCreated = 0,
-                    pointsPlayed = 0,
-                    tilesRemainingAtEnd = null,
-                    penaltyPointsAtEnd = null,
-                    winner = false,
-                    finishPosition = null
-                )
+                metrics = emptyMetrics
             )
         ),
         board = emptyList(),
@@ -174,27 +180,28 @@ class GameViewModelTest {
     @Before
     fun setup() = runTest {
         store = InMemoryProtoStore(User.getDefaultInstance())
+        userStore = UserStore(store)
         service = mockk()
         socketService = mockk()
 
         coEvery { service.loadGame(any()) } returns fakeGameResponse
-        coEvery { service.drawTile(any(), any()) } returns fakeGameResponse
+        coEvery { service.drawTile(any()) } returns fakeGameResponse
         coEvery { socketService.subscribe(any()) } returns flow { }
 
-        viewmodel = GameViewModel(store, service, socketService)
+        viewmodel = GameViewModel(userStore, service, socketService)
 
         advanceUntilIdle()
     }
 
     @Test
     fun default_constructor_path_isCovered() = runTest {
-        val vm = LobbyCreateViewModel(store)
+        val vm = LobbyCreateViewModel(userStore)
         assertNotNull(vm)
     }
 
     @Test
     fun default_constructor_of_GameViewModel_isCovered() = runTest {
-        val vm = GameViewModel(store)
+        val vm = GameViewModel(userStore)
         assertNotNull(vm)
         advanceUntilIdle()
     }
@@ -395,7 +402,7 @@ class GameViewModelTest {
     @Test
     fun endTurn_sets_success_andClearsSelection() = runTest {
         setTestGameState()
-        coEvery { service.endTurn(any(), any(),any()) } just Runs
+        coEvery { service.endTurn(any(), any()) } returns fakeGameResponse
 
         viewmodel.onUIEvent(GameUIEvent.EndTurn)
         advanceUntilIdle()
@@ -410,7 +417,7 @@ class GameViewModelTest {
     @Test
     fun endTurn_emitsErrorState_onFailure() = runTest {
         setTestGameState()
-        coEvery { service.endTurn(any(), any(),any()) } throws RuntimeException()
+        coEvery { service.endTurn(any(), any()) } throws RuntimeException()
 
         viewmodel.onUIEvent(GameUIEvent.EndTurn)
 
@@ -435,7 +442,7 @@ class GameViewModelTest {
 
         val json = """{"errorCode":"INVALID_TURN_SUBMISSION","errorMessage":"Draft invalid","violations":[{"code":"RUN_NOT_CONSECUTIVE","message":"Not consecutive","boardSetId":"b1"},{"code":"INITIAL_MELD_TOO_SMALL","message":"Meld too small","boardSetId":null}]}"""
         val response = Response.error<Any>(409, json.toResponseBody("application/json".toMediaType()))
-        coEvery { service.endTurn(any(), any(), any()) } throws HttpException(response)
+        coEvery { service.endTurn(any(), any()) } throws HttpException(response)
 
         viewmodel.onUIEvent(GameUIEvent.EndTurn)
         advanceUntilIdle()
@@ -455,7 +462,7 @@ class GameViewModelTest {
                 ruleValidation = RuleValidationUiState(summaryMessage = "old error")
             )
         )
-        coEvery { service.endTurn(any(), any(), any()) } just Runs
+        coEvery { service.endTurn(any(), any()) } returns fakeGameResponse
 
         viewmodel.onUIEvent(GameUIEvent.EndTurn)
         advanceUntilIdle()
@@ -495,7 +502,7 @@ class GameViewModelTest {
                 } else p
             }
         )
-        coEvery { service.drawTile(any(), any()) } returns modifiedGameResponse
+        coEvery { service.drawTile(any()) } returns modifiedGameResponse
         viewmodel.onUIEvent(GameUIEvent.DrawTile)
         advanceUntilIdle()
 
@@ -518,7 +525,7 @@ class GameViewModelTest {
         ))
         val before = viewmodel.uiState.value.gameState
 
-        coEvery { service.drawTile(any(), any()) } returns fakeGameResponse
+        coEvery { service.drawTile(any()) } returns fakeGameResponse
         viewmodel.onUIEvent(GameUIEvent.DrawTile)
         advanceUntilIdle()
 
@@ -529,7 +536,7 @@ class GameViewModelTest {
     @Test
     fun drawTile_emitsErrorState_onFailure() = runTest {
         setTestGameState()
-        coEvery { service.drawTile(any(), any()) } throws RuntimeException("Failure")
+        coEvery { service.drawTile(any()) } throws RuntimeException("Failure")
 
         viewmodel.onUIEvent(GameUIEvent.DrawTile)
 
@@ -586,14 +593,68 @@ class GameViewModelTest {
 
     @Test
     fun loadGame_updatesGameState() = runTest {
-        setTestGameState()
-        val state = viewmodel.uiState.value
+        val user = User.newBuilder()
+            .setUid("User123")
+            .setDisplayName("Alice")
+            .setGameId("g1")
+            .build()
+        store.save(user)
+        advanceUntilIdle()
+
+        viewmodel.setUiStateForTest(GameUiState(user = user))
 
         coEvery { service.loadGame(any()) } returns fakeGameResponse
         viewmodel.onUIEvent(GameUIEvent.OnLoadGame("g1"))
         advanceUntilIdle()
 
-        assertNotEquals(state.gameState, viewmodel.uiState.value.gameState)
+        assertEquals(fakeGameResponse.toDomain(), viewmodel.uiState.value.gameState)
+    }
+
+    @Test
+    fun loadGame_does_not_overwrite_newer_socket_state() = runTest {
+        val socketGame = fakeGameResponse.copy(
+            players = fakeGameResponse.players + GamePlayerResponse(
+                userId = "OtherPlayer",
+                displayName = "Other",
+                turnOrder = 1,
+                rackTiles = emptyList(),
+                metrics = GamePlayerMetricsResponse(
+                    turnsCompleted = 0,
+                    tilesPlayed = 0,
+                    meldsCreated = 0,
+                    pointsPlayed = 0,
+                    tilesRemainingAtEnd = null,
+                    penaltyPointsAtEnd = null,
+                    winner = false,
+                    finishPosition = null
+                ),
+                hasCompletedInitialMeld = false,
+                score = 0,
+                joinedAt = "2026-01-01T00:00:00Z"
+            ),
+            currentPlayerUserId = "OtherPlayer"
+        )
+        coEvery { socketService.subscribe("g1") } returns flowOf(
+            GameEvent.Updated(GameUpdatedEvent(gameId = "g1", game = socketGame))
+        )
+        coEvery { service.loadGame("g1") } coAnswers {
+            delay(100)
+            fakeGameResponse
+        }
+
+        val user = User.newBuilder()
+            .setUid("User123")
+            .setDisplayName("Alice")
+            .setGameId("g1")
+            .build()
+        store.save(user)
+        advanceUntilIdle()
+
+        viewmodel.onUIEvent(GameUIEvent.OnLoadGame("g1"))
+        runCurrent()
+        advanceUntilIdle()
+
+        assertEquals("OtherPlayer", viewmodel.uiState.value.gameState?.currentPlayerUserId)
     }
 
     @Test
@@ -624,7 +685,7 @@ class GameViewModelTest {
 
     @Test
     fun sendTurnDraft_updateDraftWorkflowTest() = runTest {
-        coEvery { service.updateDraft(any(), any(), any()) } returns TurnDraftResponse(
+        coEvery { service.updateDraft(any(), any()) } returns TurnDraftResponse(
             gameId = "Game1",
             playerUserId = "Player1",
             draftBoard = emptyList(),
@@ -642,7 +703,7 @@ class GameViewModelTest {
 
     @Test
     fun sendTurnDraft_emitsErrorState_onFailure() = runTest {
-        coEvery { service.updateDraft(any(), any(), any()) } throws RuntimeException()
+        coEvery { service.updateDraft(any(), any()) } throws RuntimeException()
 
         viewmodel.sendTurnDraft()
 
@@ -657,7 +718,7 @@ class GameViewModelTest {
         viewmodel.setUiStateForTest(GameUiState(
             user = null
         ))
-        coEvery { service.updateDraft(any(), any(),any()) }
+        coEvery { service.updateDraft(any(), any()) }
 
         viewmodel.sendTurnDraft()
         advanceUntilIdle()
@@ -902,7 +963,7 @@ class GameViewModelTest {
     }
 
     @Test
-    fun handleGameSocketEvent_does_not_updateGameState_if_not_active() {
+    fun handleGameSocketEvent_updatesGameState_if_not_active() {
         setTestGameState()
 
         viewmodel.handleGameSocketEvent(
@@ -913,7 +974,7 @@ class GameViewModelTest {
     }
 
     @Test
-    fun handleGameSocketEvent_does_updateGameState_if_active() = runTest {
+    fun handleGameSocketEvent_updatesGameState_if_active() = runTest {
         val user = User.newBuilder()
             .setUid("1")
             .setDisplayName("Bob")

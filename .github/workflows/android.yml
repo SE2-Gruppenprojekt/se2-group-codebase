@@ -59,8 +59,11 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
           restore-keys: ${{ runner.os }}-gradle
 
-      - name: Run frontend tests
-        run: ./gradlew :apps:android:app:testDebugUnitTest jacocoTestReport
+      - name: Run frontend debug tests
+        run: ./gradlew clean :apps:android:app:testDebugUnitTest
+
+      - name: Run frontend release coverage task
+        run: ./gradlew :apps:android:app:testReleaseUnitTest :apps:android:app:jacocoTestReport
 
       - name: Run frontend Sonar analysis
         uses: SonarSource/sonarqube-scan-action@v6

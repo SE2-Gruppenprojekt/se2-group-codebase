@@ -20,5 +20,6 @@ fun LobbyResponse.toDomain(): Lobby =
             maxPlayers = maxPlayers,
             isPrivate = isPrivate,
             allowGuests = allowGuests
-        )
+        ),
+        currentGameId = currentGameId
     )
