@@ -44,12 +44,12 @@ class GameServiceTest {
 
         coEvery {
             api.updateDraft(
-                "game123", "player1", request
+                "game123", request
             )
         } returns expected
 
         val result = service.updateDraft(
-            "game123", "player1", request
+            "game123", request
         )
 
         assertEquals(expected, result)
@@ -60,14 +60,10 @@ class GameServiceTest {
         val expected = mockk<GameResponse>()
 
         coEvery {
-            api.drawTile(
-                "game123", "player1"
-            )
+            api.drawTile("game123")
         } returns expected
 
-        val result = service.drawTile(
-            "game123", "player1"
-        )
+        val result = service.drawTile("game123")
 
         assertEquals(expected, result)
     }
@@ -75,22 +71,17 @@ class GameServiceTest {
     @Test
     fun endTurn_callsApi() = runBlocking {
         val request = mockk<EndTurnRequest>()
+        val expected = mockk<GameResponse>()
 
         coEvery {
             api.endTurn(
                 "game123",
-                "player1",
                 request
             )
-        } returns Unit
+        } returns expected
 
-        service.endTurn(
-            "game123",
-            "player1",
-            request
-        )
+        assertEquals(expected, service.endTurn("game123", request))
     }
 
 
 }
-

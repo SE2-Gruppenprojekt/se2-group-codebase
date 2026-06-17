@@ -69,6 +69,14 @@ class GameService(
             .toDomain()
     }
 
+    fun getGameForUser(gameId: String, userId: String): ConfirmedGame {
+        val game = getGame(gameId)
+        if (game.players.none { it.userId == userId }) {
+            throw SecurityException("Only game participants can access this game")
+        }
+        return game
+    }
+
     fun nextPlayerId(game: ConfirmedGame): String{
         val sorted = game.players.sortedBy { it.turnOrder }
         val currentIndex = sorted.indexOfFirst { it.userId == game.currentPlayerUserId }

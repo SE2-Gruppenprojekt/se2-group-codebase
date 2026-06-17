@@ -16,7 +16,11 @@ import java.time.Instant
 
 class GameNetworkMapperTest {
     private val fakeDate: String = "2025-01-01T10:00:00Z"
+<<<<<<< joker-integration-frontend
     private val fakeMetrics = GamePlayerMetricsResponse(
+=======
+    private val emptyMetrics = GamePlayerMetricsResponse(
+>>>>>>> main
         turnsCompleted = 0,
         tilesPlayed = 0,
         meldsCreated = 0,
@@ -116,7 +120,11 @@ class GameNetworkMapperTest {
             hasCompletedInitialMeld = true,
             score = 100,
             joinedAt = now,
+<<<<<<< joker-integration-frontend
             metrics = fakeMetrics
+=======
+            metrics = emptyMetrics
+>>>>>>> main
         )
 
         val domain = response.toDomain()
@@ -142,7 +150,11 @@ class GameNetworkMapperTest {
                     hasCompletedInitialMeld = false,
                     score = 0,
                     joinedAt = fakeDate,
+<<<<<<< joker-integration-frontend
                     metrics = fakeMetrics
+=======
+                    metrics = emptyMetrics
+>>>>>>> main
                 )
             ),
             drawPile = emptyList(),
@@ -190,7 +202,11 @@ class GameNetworkMapperTest {
                     hasCompletedInitialMeld = false,
                     score = 0,
                     joinedAt = fakeDate,
+<<<<<<< joker-integration-frontend
                     metrics = fakeMetrics
+=======
+                    metrics = emptyMetrics
+>>>>>>> main
                 )
             ),
             drawPile = emptyList(),

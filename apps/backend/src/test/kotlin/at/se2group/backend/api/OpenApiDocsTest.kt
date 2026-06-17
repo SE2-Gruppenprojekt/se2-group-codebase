@@ -48,6 +48,9 @@ class OpenApiDocsTest {
                 jsonPath("$['paths']['/api/lobbies/{lobbyId}']") { exists() }
                 jsonPath("$['paths']['/api/lobbies/{lobbyId}/settings']") { exists() }
                 jsonPath("$['paths']['/api/lobbies/{lobbyId}/join']") { exists() }
+                jsonPath("$['components']['securitySchemes']['bearerAuth']['type']") { value("http") }
+                jsonPath("$['components']['securitySchemes']['bearerAuth']['scheme']") { value("bearer") }
+                jsonPath("$['components']['securitySchemes']['bearerAuth']['bearerFormat']") { value("JWT") }
                 jsonPath("$['paths']['/internal/security/scan-fixture']") { doesNotExist() }
                 header { string("Content-Type", org.hamcrest.Matchers.containsString("application/json")) }
                 header { string("X-Content-Type-Options", "nosniff") }

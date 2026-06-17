@@ -31,6 +31,7 @@ fun WaitingScreenPlayerSection(
     if (fetchedLobby != null) {
         players.forEachIndexed { index, player ->
             val isSelf = player.userId == localId
+            val canToggleReady = isSelf && !isLoading
             PlayerItem(
                 name = player.displayName,
                 subtitle = if (player.isReady) "Ready" else "Not ready",
@@ -41,7 +42,11 @@ fun WaitingScreenPlayerSection(
                 backgroundColor = if (isSelf) w.selfPlayerBg else w.activePlayerBg,
                 primaryTextColor = primaryTextColor,
                 secondaryTextColor = secondaryTextColor,
-                onClick = if (isSelf) { { onEvent(LobbyWaitingEvent.ToggleReadyState(player.userId)) } } else null,
+                onClick = if (canToggleReady) {
+                    { onEvent(LobbyWaitingEvent.ToggleReadyState(player.userId)) }
+                } else {
+                    null
+                },
                 testTag = LobbyWaitingTestTags.Players.ready_tag(player.userId)
             )
         }
