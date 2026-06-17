@@ -14,15 +14,15 @@ import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.util.ErrorUiMapper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import shared.models.lobby.domain.Lobby
 import shared.models.lobby.domain.LobbyStatus
 import shared.models.lobby.event.LobbyEvent
@@ -70,13 +70,11 @@ class LobbyWaitingViewModel(
     internal fun handleLobbyEvent(event: LobbyEvent) {
         when (event) {
             is LobbyEvent.Deleted -> {
-                stopSocket()
                 _effect.trySend(LobbyWaitingEffect.NavigateBack)
             }
             is LobbyEvent.Started -> {
                 viewModelScope.launch {
                     try {
-                        stopSocket()
                         _effect.trySend(LobbyWaitingEffect.NavigateToMatch(event.payload.matchId))
                         userStore.updateGameId(event.payload.matchId)
                     } catch (e : Exception) {
@@ -102,7 +100,6 @@ class LobbyWaitingViewModel(
                     loadState = LoadState.Success
                 )
             }
-            stopSocket()
             _effect.trySend(LobbyWaitingEffect.NavigateBack)
             return
         }
@@ -121,7 +118,6 @@ class LobbyWaitingViewModel(
 
         if (shouldNavigateToMatch) {
             viewModelScope.launch {
-                stopSocket()
                 _effect.trySend(LobbyWaitingEffect.NavigateToMatch(currentGameId))
                 userStore.updateGameId(currentGameId)
             }
@@ -170,7 +166,6 @@ class LobbyWaitingViewModel(
                 }
 
                 LobbyWaitingEvent.onMatchStart -> {
-                    val user = state.user ?: throw IllegalStateException("User must not be null when attempting to start a match.")
                     val lobby = state.lobby ?: throw IllegalStateException("Lobby must not be null when attempting to start a match.")
                     check(lobby.status == LobbyStatus.OPEN) {
                         "Match can only be started while the lobby is open"
@@ -186,7 +181,6 @@ class LobbyWaitingViewModel(
                 LobbyWaitingEvent.OnBack -> {
                     val lobby = state.lobby
                     if (lobby == null || lobby.status != LobbyStatus.OPEN) {
-                        stopSocket()
                         _effect.trySend(LobbyWaitingEffect.NavigateBack)
                     } else {
                         leaveLobby(lobby.lobbyId)
@@ -225,11 +219,13 @@ class LobbyWaitingViewModel(
 
             try {
                 if (newReadyState) {
-                    applyLobbyState(api.ready(lobbyId = lobbyId).toDomain())
+                    api.ready(lobbyId = lobbyId).toDomain()
                 } else {
-                    applyLobbyState(api.unready(lobbyId = lobbyId).toDomain())
+                    api.unready(lobbyId = lobbyId).toDomain()
                 }
-
+                _uiState.update {
+                    it.copy(loadState = LoadState.Success)
+                }
             } catch (e: Throwable) {
                 val appError = NetworkErrorMapper.map(e)
 
@@ -268,7 +264,10 @@ class LobbyWaitingViewModel(
             }
 
             try {
-                applyLobbyState(api.startMatch(lobbyId).toDomain())
+                api.startMatch(lobbyId).toDomain()
+                _uiState.update {
+                    it.copy(loadState = LoadState.Success)
+                }
             } catch (e: Throwable) {
                 val appError = NetworkErrorMapper.map(e)
 
@@ -290,7 +289,6 @@ class LobbyWaitingViewModel(
                 _uiState.update {
                     it.copy(loadState = LoadState.Success)
                 }
-                stopSocket()
                 _effect.trySend(LobbyWaitingEffect.NavigateBack)
             } catch (e: Throwable) {
                 val appError = NetworkErrorMapper.map(e)
@@ -300,16 +298,6 @@ class LobbyWaitingViewModel(
                 }
             }
         }
-    }
-
-    private fun stopSocket() {
-        socketJob?.cancel()
-        socketJob = null
-    }
-
-    override fun onCleared() {
-        stopSocket()
-        super.onCleared()
     }
 
     @VisibleForTesting
