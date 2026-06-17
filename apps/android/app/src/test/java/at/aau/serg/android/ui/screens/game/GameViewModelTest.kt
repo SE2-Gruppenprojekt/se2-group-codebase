@@ -1179,10 +1179,11 @@ class GameViewModelTest {
     // --- handleFinishedGame ---
 
     @Test
-    fun handleFinishedGame_populatesGameResult() {
+    fun handlePlayerFinished_populatesGameResult() {
         setTestGameState()
+        val game = viewmodel.uiState.value.gameState!!
 
-        viewmodel.handleFinishedGame("User123")
+        viewmodel.handlePlayerFinished(game, isGameOver = true, overrideWinnerId = "User123")
 
         val result = viewmodel.uiState.value.gameResult
         assertNotNull(result)
@@ -1191,23 +1192,21 @@ class GameViewModelTest {
     }
 
     @Test
-    fun handleFinishedGame_sortsByScoreDescending() {
+    fun handlePlayerFinished_sortsByScoreDescending() {
         val user = User.newBuilder().setUid("u1").setDisplayName("Alice").setGameId("g1").build()
-        viewmodel.setUiStateForTest(GameUiState(
-            user = user,
-            gameState = ConfirmedGame(
-                gameId = "g1",
-                lobbyId = "l1",
-                players = listOf(
-                    GamePlayer(userId = "u1", displayName = "Alice", turnOrder = 0, score = 50),
-                    GamePlayer(userId = "u2", displayName = "Bob",   turnOrder = 1, score = 120),
-                    GamePlayer(userId = "u3", displayName = "Carol", turnOrder = 2, score = 80)
-                ),
-                currentPlayerUserId = "u1"
-            )
-        ))
+        val game = ConfirmedGame(
+            gameId = "g1",
+            lobbyId = "l1",
+            players = listOf(
+                GamePlayer(userId = "u1", displayName = "Alice", turnOrder = 0, score = 50),
+                GamePlayer(userId = "u2", displayName = "Bob",   turnOrder = 1, score = 120),
+                GamePlayer(userId = "u3", displayName = "Carol", turnOrder = 2, score = 80)
+            ),
+            currentPlayerUserId = "u1"
+        )
+        viewmodel.setUiStateForTest(GameUiState(user = user, gameState = game))
 
-        viewmodel.handleFinishedGame("u2")
+        viewmodel.handlePlayerFinished(game, isGameOver = true, overrideWinnerId = "u2")
 
         val players = viewmodel.uiState.value.gameResult?.players
         assertNotNull(players)
@@ -1220,45 +1219,44 @@ class GameViewModelTest {
     }
 
     @Test
-    fun handleFinishedGame_deduplicationGuard_preventsDoubleEmit() = runTest {
+    fun handlePlayerFinished_navigateToResult_false_doesNotEmitEffect() = runTest {
         setTestGameState()
+        val game = viewmodel.uiState.value.gameState!!
 
-        // collector must be registered before the emission — SharedFlow has no replay buffer
         val collected = mutableListOf<GameEffect>()
         val collectJob = launch { viewmodel.effects.collect { collected.add(it) } }
         runCurrent()
 
-        viewmodel.handleFinishedGame("User123")
-        viewmodel.handleFinishedGame("User123")
+        viewmodel.handlePlayerFinished(game, isGameOver = false, navigateToResult = false)
         runCurrent()
 
         collectJob.cancel()
-        assertEquals(1, collected.size)
-        assertEquals(GameEffect.NavigateToResult, collected.first())
+        assertTrue(collected.isEmpty())
     }
 
     @Test
-    fun handleFinishedGame_emitsNavigateToResultEffect() = runTest {
+    fun handlePlayerFinished_emitsNavigateToResultEffect() = runTest {
         setTestGameState()
+        val game = viewmodel.uiState.value.gameState!!
 
-        // collector must be registered before the emission — SharedFlow has no replay buffer
         val effectDeferred = async { viewmodel.effects.first() }
         runCurrent()
 
-        viewmodel.handleFinishedGame("User123")
+        viewmodel.handlePlayerFinished(game, isGameOver = true, overrideWinnerId = "User123")
         runCurrent()
 
         assertEquals(GameEffect.NavigateToResult, effectDeferred.await())
     }
 
     @Test
-    fun handleFinishedGame_capturesMatchDuration() {
+    fun handlePlayerFinished_capturesMatchDuration() {
         setTestGameState()
         viewmodel.setUiStateForTest(
             viewmodel.uiState.value.copy(elapsedSeconds = 125)
         )
+        val game = viewmodel.uiState.value.gameState!!
 
-        viewmodel.handleFinishedGame("User123")
+        viewmodel.handlePlayerFinished(game, isGameOver = true, overrideWinnerId = "User123")
 
         assertEquals("2:05", viewmodel.uiState.value.gameResult?.matchDuration)
     }
