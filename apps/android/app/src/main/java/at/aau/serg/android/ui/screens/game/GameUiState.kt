@@ -23,5 +23,6 @@ data class GameUiState(
     val gameState: ConfirmedGame? = null,
     val winnerUserId: String? = null,
     val isActivePlayer: Boolean = false,
-    val ruleValidation: RuleValidationUiState = RuleValidationUiState()
+    val ruleValidation: RuleValidationUiState = RuleValidationUiState(),
+    val cheatXRAY: Boolean = false
 )
