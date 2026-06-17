@@ -126,12 +126,14 @@ fun NavGraphBuilder.homeGraph(
             AuthScreen(viewModel = vm)
         }
 
-        composable("${Routes.GAME}/{gameId}") {
-            val gameId = it.arguments?.getString("gameId")!!
-            val userStore = remember { provider.getStore<User>() }
-            val vm: GameViewModel = viewModel(
-                factory = GenericViewModelFactory { GameViewModel(userStore) }
-            )
+        navigation(startDestination = "${Routes.GAME}/{gameId}", route = Routes.GAME_FLOW) {
+
+            composable("${Routes.GAME}/{gameId}") {
+                val gameId = it.arguments?.getString("gameId")!!
+                val userStore = remember { provider.getStore<User>() }
+                val vm: GameViewModel = viewModel(
+                    factory = GenericViewModelFactory { GameViewModel(userStore) }
+                )
 
                 LaunchedEffect(gameId) {
                     vm.onUIEvent(GameUIEvent.OnLoadGame(gameId))
