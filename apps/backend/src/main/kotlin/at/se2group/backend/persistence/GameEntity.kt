@@ -41,7 +41,7 @@ class GameEntity(
     var status: GameStatus = GameStatus.WAITING,
 
     @Column(name ="require_initial_meld", nullable = false)
-    var requireInitialMeld: Boolean = false,
+    var requireInitialMeld: Boolean = true,
 
     @Column(name = "created_at", nullable = false)
     var createdAt: Instant = Instant.now(),

@@ -10,7 +10,7 @@ data class ConfirmedGame(
     val drawPile: List<Tile> = emptyList(),
     val currentPlayerUserId: String,
     val status: GameStatus = GameStatus.WAITING,
-    val requireInitialMeld: Boolean = false,
+    val requireInitialMeld: Boolean = true,
     val createdAt: Instant = Instant.now(),
     val startedAt: Instant? = null,
     val finishedAt: Instant? = null,

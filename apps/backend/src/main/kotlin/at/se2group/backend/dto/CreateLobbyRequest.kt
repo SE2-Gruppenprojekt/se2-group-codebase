@@ -13,6 +13,6 @@ val maxPlayers: Int = 4,
 
 val isPrivate: Boolean = false,
 val allowGuests: Boolean = true,
-val requireInitialMeld: Boolean = false
+val requireInitialMeld: Boolean = true
 
 )
