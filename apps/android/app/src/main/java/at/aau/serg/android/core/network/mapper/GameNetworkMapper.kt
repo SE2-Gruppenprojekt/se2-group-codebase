@@ -88,7 +88,6 @@ fun GameResponse.toDomain(): ConfirmedGame {
         status = GameStatus.valueOf(status),
         createdAt = Instant.parse(createdAt),
         startedAt = startedAt?.takeIf { it != "null" }?.let { Instant.parse(it) },
-        finishedAt = finishedAt?.takeIf { it != "null" }?.let { Instant.parse(it) },
-        requireInitialMeld = requireInitialMeld
+        finishedAt = finishedAt?.takeIf { it != "null" }?.let { Instant.parse(it) }
     )
 }
