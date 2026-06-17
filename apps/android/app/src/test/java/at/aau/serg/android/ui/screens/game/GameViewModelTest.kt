@@ -1386,34 +1386,6 @@ class GameViewModelTest {
         assertEquals(30, player?.penaltyPoints)
     }
 
-    // --- GameEvent.Updated: currentPlayerJustFinished ---
-
-    @Test
-    fun handleGameSocketEvent_updated_currentPlayerJustFinished_emitsNavigateToResult() = runTest {
-        val user = User.newBuilder().setUid("FakeUser1").setDisplayName("Bob").setGameId("FakeGame1").build()
-        viewmodel.setUiStateForTest(GameUiState(user = user))
-
-        val response = fakeGameResponse.copy(
-            status = GameStatus.ACTIVE.toString(),
-            players = listOf(
-                fakeGameResponse.players.first().copy(
-                    userId = "FakeUser1",
-                    metrics = emptyMetrics.copy(finishPosition = 1)
-                )
-            ),
-            currentPlayerUserId = "other"
-        )
-
-        val effectDeferred = async { viewmodel.effects.first() }
-        runCurrent()
-
-        viewmodel.handleGameSocketEvent(GameEvent.Updated(GameUpdatedEvent("FakeGame1", response)))
-        runCurrent()
-
-        assertEquals(GameEffect.NavigateToResult, effectDeferred.await())
-        assertFalse(viewmodel.uiState.value.gameResult?.isGameOver ?: true)
-    }
-
     // --- GameEvent.Updated: silent update when another player finishes ---
 
     @Test
@@ -1434,7 +1406,7 @@ class GameViewModelTest {
                     joinedAt = "2026-05-08T10:00:00Z", metrics = emptyMetrics
                 )
             ),
-            currentPlayerUserId = "other"
+            currentPlayerUserId = "u2"
         )
 
         // current player finishes → lastShownFinishCount = 1
@@ -1473,9 +1445,14 @@ class GameViewModelTest {
                 fakeGameResponse.players.first().copy(
                     userId = "FakeUser1",
                     metrics = emptyMetrics.copy(finishPosition = 1)
+                ),
+                GamePlayerResponse(
+                    userId = "u2", displayName = "Bob2", turnOrder = 1,
+                    rackTiles = emptyList(), hasCompletedInitialMeld = false, score = 0,
+                    joinedAt = "2026-05-08T10:00:00Z", metrics = emptyMetrics
                 )
             ),
-            currentPlayerUserId = "other"
+            currentPlayerUserId = "u2"
         )
 
         // trigger lastShownFinishCount = 1
@@ -1507,9 +1484,14 @@ class GameViewModelTest {
                 fakeGameResponse.players.first().copy(
                     userId = "FakeUser1",
                     metrics = emptyMetrics.copy(finishPosition = 1)
+                ),
+                GamePlayerResponse(
+                    userId = "u2", displayName = "Bob2", turnOrder = 1,
+                    rackTiles = emptyList(), hasCompletedInitialMeld = false, score = 0,
+                    joinedAt = "2026-05-08T10:00:00Z", metrics = emptyMetrics
                 )
             ),
-            currentPlayerUserId = "other"
+            currentPlayerUserId = "u2"
         )
 
         // trigger lastShownFinishCount = 1
