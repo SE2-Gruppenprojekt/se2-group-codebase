@@ -7,5 +7,6 @@ data class Lobby(
     val hostUserId: String,
     val players: List<LobbyPlayer>,
     val status: LobbyStatus,
-    val settings: LobbySettings
+    val settings: LobbySettings,
+    val currentGameId: String? = null
 )

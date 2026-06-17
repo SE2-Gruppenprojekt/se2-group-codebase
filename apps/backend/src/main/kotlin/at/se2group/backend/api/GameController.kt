@@ -6,18 +6,19 @@ import at.se2group.backend.service.GameService
 import at.se2group.backend.service.TurnDraftService
 import at.se2group.backend.service.DrawTileService
 import at.se2group.backend.service.EndTurnService
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.PostMapping
 import shared.models.game.request.UpdateDraftRequest
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import shared.models.game.response.TurnDraftResponse
 import shared.models.game.request.EndTurnRequest
 import jakarta.validation.Valid
+import org.springframework.security.core.Authentication
 
 @RestController
 @RequestMapping("/api/games")
@@ -28,42 +29,50 @@ class GameController(
     private val endTurnService: EndTurnService
 ) {
     @GetMapping("/{gameId}")
-    fun getGame(@PathVariable gameId: String): GameResponse {
-        return gameService.getGame(gameId).toResponse()
+    @SecurityRequirement(name = "bearerAuth")
+    fun getGame(
+        @PathVariable gameId: String,
+        authentication: Authentication
+    ): GameResponse {
+        return gameService.getGameForUser(gameId, authentication.name).toResponse()
     }
 
     @PutMapping("/{gameId}/draft")
+    @SecurityRequirement(name = "bearerAuth")
     fun updateDraft(
         @PathVariable gameId: String,
-        @RequestHeader("X-User-Id") userId: String,
+        authentication: Authentication,
         @Valid @RequestBody request: UpdateDraftRequest
     ): TurnDraftResponse {
 
-        return turnDraftService.updateDraft(gameId, userId, request).toResponse()
+        return turnDraftService.updateDraft(gameId, authentication.name, request).toResponse()
     }
 
     @PostMapping("/{gameId}/draw")
+    @SecurityRequirement(name = "bearerAuth")
     fun drawTile(
         @PathVariable gameId: String,
-        @RequestHeader("X-User-Id") userId: String
+        authentication: Authentication
     ): GameResponse {
-        return drawTileService.drawTile(gameId, userId).toResponse()
+        return drawTileService.drawTile(gameId, authentication.name).toResponse()
     }
 
     @PostMapping("/{gameId}/end-turn")
+    @SecurityRequirement(name = "bearerAuth")
     fun endTurn(
         @PathVariable gameId: String,
-        @RequestHeader("X-User-Id") userId: String,
+        authentication: Authentication,
         @Valid @RequestBody request: EndTurnRequest
     ): GameResponse {
-        return endTurnService.endTurn(gameId, userId, request).toResponse()
+        return endTurnService.endTurn(gameId, authentication.name, request).toResponse()
     }
 
     @PostMapping("/{gameId}/reset-draft")
+    @SecurityRequirement(name = "bearerAuth")
     fun resetDraft(
         @PathVariable gameId: String,
-        @RequestHeader("X-User-Id") userId: String
+        authentication: Authentication
     ): TurnDraftResponse {
-        return turnDraftService.resetDraft(gameId,userId).toResponse()
+        return turnDraftService.resetDraft(gameId,authentication.name).toResponse()
     }
 }

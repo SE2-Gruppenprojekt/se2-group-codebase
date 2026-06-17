@@ -6,6 +6,11 @@ server:
   port: 8080
 
 app:
+  auth:
+    jwt:
+      issuer: ${APP_AUTH_JWT_ISSUER:se2-group-backend}
+      secret: ${APP_AUTH_JWT_SECRET:change-me-in-production-change-me-in-production}
+      access-token-ttl-seconds: ${APP_AUTH_JWT_ACCESS_TOKEN_TTL_SECONDS:86400}
   scan-fixture:
     enabled: ${APP_SCAN_FIXTURE_ENABLED:false}
     secret: ${APP_SCAN_FIXTURE_SECRET:}

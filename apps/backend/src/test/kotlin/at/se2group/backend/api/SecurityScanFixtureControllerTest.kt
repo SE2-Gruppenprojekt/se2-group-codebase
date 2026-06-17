@@ -70,6 +70,8 @@ class SecurityScanFixtureControllerTest {
                 jsonPath("$.guestUserId") { value(SecurityScanFixtureService.SCAN_GUEST_USER_ID) }
                 jsonPath("$.gameId") { value(SecurityScanFixtureService.SCAN_GAME_ID) }
                 jsonPath("$.draftOwnerUserId") { value(SecurityScanFixtureService.SCAN_HOST_USER_ID) }
+                jsonPath("$.hostAccessToken") { isNotEmpty() }
+                jsonPath("$.guestAccessToken") { isNotEmpty() }
             }
 
         assertTrue(lobbyRepository.findById(SecurityScanFixtureService.SCAN_OPEN_LOBBY_ID).isPresent)

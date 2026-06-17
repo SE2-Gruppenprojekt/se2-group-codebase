@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import at.aau.serg.android.core.datastore.ProtoStore
 import at.aau.serg.android.core.network.RetrofitProvider
+import at.aau.serg.android.core.network.auth.JwtSubjectDecoder
 import at.aau.serg.android.core.network.lobby.LobbyAPI
 import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
 import at.aau.serg.android.core.network.mapper.toDomain
@@ -38,15 +39,24 @@ class LobbyCreateViewModel(
         val state = _uiState.value
 
         try {
-            val lobby = api.createLobby(
-                user.uid,
+            val response = api.createLobby(
                 CreateLobbyRequest(
                     displayName = user.displayName,
                     maxPlayers = state.maxPlayers,
                     isPrivate = state.isPrivate,
                     allowGuests = true
                 )
-            ).toDomain()
+            )
+
+            val currentUser = userStore.data.first()
+            userStore.save(
+                currentUser.toBuilder()
+                    .setUid(JwtSubjectDecoder.decodeSubject(response.accessToken))
+                    .setAccessToken(response.accessToken)
+                    .build()
+            )
+
+            val lobby = response.lobby.toDomain()
 
             _uiState.update {
                 it.copy(loadState = LoadState.Success)

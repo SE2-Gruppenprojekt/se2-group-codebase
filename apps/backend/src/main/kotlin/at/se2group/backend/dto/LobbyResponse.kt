@@ -9,4 +9,5 @@ data class LobbyResponse(
     val isPrivate: Boolean,
     val allowGuests: Boolean,
     val requireInitialMeld: Boolean
+    val currentGameId: String? = null
 )

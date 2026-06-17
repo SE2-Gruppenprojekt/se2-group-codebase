@@ -49,10 +49,6 @@ android {
     }
 
     buildTypes {
-        debug {
-            enableUnitTestCoverage = true
-            enableAndroidTestCoverage = true
-        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -117,7 +113,7 @@ protobuf {
 
 tasks.register<JacocoReport>("jacocoTestReport") {
 
-    dependsOn("testReleaseUnitTest")
+    dependsOn("testDebugUnitTest")
 
     reports {
         xml.required.set(true)
@@ -161,13 +157,13 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     )
 
     val kotlinClasses = fileTree(
-        "${layout.buildDirectory.get()}/tmp/kotlin-classes/release"
+        "${layout.buildDirectory.get()}/tmp/kotlin-classes/debug"
     ) {
         exclude(excludes)
     }
 
     val javaClasses = fileTree(
-        "${layout.buildDirectory.get()}/intermediates/javac/release"
+        "${layout.buildDirectory.get()}/intermediates/javac/debug"
     ) {
         exclude(excludes)
     }
@@ -186,7 +182,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     executionData.setFrom(
         fileTree(layout.buildDirectory.get()) {
             include(
-                "jacoco/testReleaseUnitTest.exec"
+                "jacoco/testDebugUnitTest.exec"
             )
         }
     )
@@ -202,6 +198,7 @@ sonar {
         property("sonar.tests", "src/test/java, src/androidTest/java")
         property("sonar.java.binaries", "build/tmp/kotlin-classes/debug")
         property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/jacoco.xml")
+        property("sonar.coverage.exclusions", "**/MainActivity.kt")
 
         property(
             "sonar.coverage.exclusions",
@@ -269,6 +266,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.turbine)
+    testImplementation("org.robolectric:robolectric:4.13")
 
     // Android UI Testing (instrumentation)
     androidTestImplementation(libs.androidx.junit)
