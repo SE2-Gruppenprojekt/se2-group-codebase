@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.MiscellaneousServices
 import androidx.compose.material.icons.filled.PanTool
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -299,6 +300,48 @@ fun RulesScreenContent(
                     )
                 }
             }
+
+            // Cheat banner
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(
+                                SettingsIconRedTint.copy(alpha = 0.18f),
+                                AccentPurple.copy(alpha = 0.10f)
+                            )
+                        )
+                    )
+                    .padding(horizontal = 20.dp, vertical = 18.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.PhoneAndroid,
+                        contentDescription = null,
+                        tint = SettingsIconRedTint,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "CHEAT",
+                        color = SettingsIconRedTint,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 18.sp,
+                        letterSpacing = 4.sp
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Shake to reveal opponents' tiles",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = c.settings.secondaryText
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
         }
 
         // ready to play action
