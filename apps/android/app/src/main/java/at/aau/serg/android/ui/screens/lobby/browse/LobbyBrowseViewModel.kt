@@ -2,11 +2,12 @@ package at.aau.serg.android.ui.screens.lobby.browse
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import at.aau.serg.android.core.datastore.user.UserStore
-import at.aau.serg.android.core.network.auth.JwtSubjectDecoder
+import at.aau.serg.android.core.datastore.ProtoStore
 import at.aau.serg.android.core.network.RetrofitProvider
+import at.aau.serg.android.core.network.auth.JwtSubjectDecoder
 import at.aau.serg.android.core.network.lobby.LobbyAPI
 import at.aau.serg.android.core.network.mapper.NetworkErrorMapper
+import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.state.LoadState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +19,7 @@ import kotlinx.coroutines.launch
 import shared.models.lobby.request.JoinLobbyRequest
 
 class LobbyBrowseViewModel(
-    private val userStore: UserStore,
+    private val userStore: ProtoStore<User>,
     private val api: LobbyAPI = RetrofitProvider.retrofit.create(LobbyAPI::class.java)
 ) : ViewModel() {
 
@@ -94,10 +95,12 @@ class LobbyBrowseViewModel(
             )
             val response = api.joinLobby(lobbyId, request)
 
-            userStore.saveSession(
-                userId = JwtSubjectDecoder.decodeSubject(response.accessToken),
-                displayName = user.displayName,
-                accessToken = response.accessToken
+            val currentUser = userStore.data.first()
+            userStore.save(
+                currentUser.toBuilder()
+                    .setUid(JwtSubjectDecoder.decodeSubject(response.accessToken))
+                    .setAccessToken(response.accessToken)
+                    .build()
             )
 
             _uiState.update {

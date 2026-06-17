@@ -2,7 +2,7 @@ package at.aau.serg.android.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import at.aau.serg.android.core.datastore.user.UserStore
+import at.aau.serg.android.core.datastore.ProtoStore
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.theme.ThemeState
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
-    private val userStore: UserStore
+    private val userStore: ProtoStore<User>,
 ) : ViewModel() {
 
     val user = userStore.data.stateIn(
@@ -42,7 +42,7 @@ class SettingsViewModel(
 
             SettingsEvent.OnLogout -> {
                 viewModelScope.launch {
-                    userStore.clearSession()
+                    userStore.wipe()
                     _effects.emit(SettingsEffect.Logout)
                 }
             }
