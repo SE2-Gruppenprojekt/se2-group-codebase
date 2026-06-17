@@ -32,7 +32,8 @@ data class GameResultUiModel(
     val players: List<GameResultPlayerSummary>,
     val matchDuration: String = "0:00",
     val totalTurns: Int = 0,
-    val finishedTimestamp: String? = null
+    val finishedTimestamp: String? = null,
+    val isGameOver: Boolean = true
 )
 
 data class GameUiState(

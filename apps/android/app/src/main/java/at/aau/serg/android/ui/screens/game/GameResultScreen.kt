@@ -64,6 +64,7 @@ fun GameResultScreen(
     val players = gameResult?.players.orEmpty()
     val winnerUserId = gameResult?.winnerUserId.orEmpty()
     val matchDuration = gameResult?.matchDuration ?: "0:00"
+    val isGameOver = gameResult?.isGameOver != false
     val currentPlayer = players.firstOrNull { it.userId == currentUserId }
     val isWinner = currentUserId != null && currentUserId == winnerUserId
     val finishedCount = players.count { !it.isStillPlaying }
@@ -126,7 +127,10 @@ fun GameResultScreen(
                         tint = Color.White,
                         modifier = Modifier.size(13.dp)
                     )
-                    Text("GAME OVER", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        if (isGameOver) "GAME OVER" else "IN PROGRESS",
+                        color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold
+                    )
                 }
             }
 
@@ -143,7 +147,12 @@ fun GameResultScreen(
             Spacer(Modifier.height(12.dp))
 
             Text(
-                text = if (isWinner) "YOU WIN!" else "YOU FINISHED",
+                text = when {
+                    isGameOver && isWinner -> "YOU WIN!"
+                    isGameOver -> "YOU FINISHED"
+                    currentPlayer?.isStillPlaying == false -> "YOU FINISHED!"
+                    else -> "PLAYER FINISHED"
+                },
                 fontSize = 34.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = Color.White,
@@ -241,7 +250,7 @@ fun GameResultScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(
-                onClick = onNavigateHome, // TODO: wire to "Next Round" when backend supports it
+                onClick = onNavigateHome,
                 modifier = Modifier
                     .weight(1f)
                     .height(52.dp)
