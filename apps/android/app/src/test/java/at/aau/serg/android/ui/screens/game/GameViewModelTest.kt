@@ -117,20 +117,7 @@ class GameViewModelTest {
                 hasCompletedInitialMeld = false,
                 score = 0,
                 joinedAt = "2026-05-08T10:00:00Z",
-<<<<<<< joker-integration-frontend
-                metrics = GamePlayerMetricsResponse(
-                    turnsCompleted = 0,
-                    tilesPlayed = 0,
-                    meldsCreated = 0,
-                    pointsPlayed = 0,
-                    tilesRemainingAtEnd = null,
-                    penaltyPointsAtEnd = null,
-                    winner = false,
-                    finishPosition = null
-                )
-=======
                 metrics = emptyMetrics
->>>>>>> main
             )
         ),
         board = emptyList(),
