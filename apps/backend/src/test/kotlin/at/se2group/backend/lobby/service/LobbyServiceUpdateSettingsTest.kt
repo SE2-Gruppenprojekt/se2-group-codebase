@@ -85,7 +85,7 @@ class LobbyServiceUpdateSettingsTest {
                 runDeferredAction(it)
             }
 
-        val request = UpdateLobbySettingsRequest(maxPlayers = 3, isPrivate = true, allowGuests = false)
+        val request = UpdateLobbySettingsRequest(maxPlayers = 3, isPrivate = true, allowGuests = false, requireInitialMeld = true)
         val result = lobbyService.updateLobbySettings("lobby-1", "host-1", request)
 
         assertEquals("lobby-1", result.lobbyId)
@@ -126,7 +126,7 @@ class LobbyServiceUpdateSettingsTest {
         )
         `when`(lobbyRepository.findById("lobby-1")).thenReturn(Optional.of(entity))
 
-        val request = UpdateLobbySettingsRequest(maxPlayers = 3, isPrivate = true, allowGuests = false)
+        val request = UpdateLobbySettingsRequest(maxPlayers = 3, isPrivate = true, allowGuests = false, requireInitialMeld = true)
         val exception = assertThrows<SecurityException> {
             lobbyService.updateLobbySettings("lobby-1", "player-2",request)
         }
@@ -153,7 +153,7 @@ class LobbyServiceUpdateSettingsTest {
         )
         `when`(lobbyRepository.findById("lobby-1")).thenReturn(Optional.of(entity))
 
-        val request = UpdateLobbySettingsRequest(maxPlayers = 3, isPrivate = true, allowGuests = false)
+        val request = UpdateLobbySettingsRequest(maxPlayers = 3, isPrivate = true, allowGuests = false, requireInitialMeld = true)
         val exception = assertThrows<IllegalStateException> {
             lobbyService.updateLobbySettings("lobby-1", "host-1",request)
         }
@@ -182,7 +182,7 @@ class LobbyServiceUpdateSettingsTest {
         )
         `when`(lobbyRepository.findById("lobby-1")).thenReturn(Optional.of(entity))
 
-        val request = UpdateLobbySettingsRequest(maxPlayers = 2, isPrivate = true, allowGuests = false)
+        val request = UpdateLobbySettingsRequest(maxPlayers = 2, isPrivate = true, allowGuests = false, requireInitialMeld = true)
         val exception = assertThrows<IllegalArgumentException> {
             lobbyService.updateLobbySettings("lobby-1", "host-1",request)
         }

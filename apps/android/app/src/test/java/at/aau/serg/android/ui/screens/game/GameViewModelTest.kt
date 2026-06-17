@@ -130,6 +130,7 @@ class GameViewModelTest {
         startedAt = "2026-05-08T10:00:00Z",
         finishedAt = "2026-05-08T10:00:00Z",
         totalTurnsCompleted = 0,
+        requireInitialMeld = false,
         winnerUserId = null
     )
 

@@ -31,6 +31,7 @@ import at.aau.serg.android.ui.screens.game.components.BoardSetValidationMessage
 import at.aau.serg.android.ui.screens.game.components.GlobalValidationBanner
 import at.aau.serg.android.ui.screens.game.components.PlayerChip
 import at.aau.serg.android.ui.screens.game.components.TileRow
+import at.aau.serg.android.ui.screens.game.components.TileRowConfig
 import at.aau.serg.android.ui.screens.game.components.TileRowPlaceholder
 import at.aau.serg.android.ui.theme.NotReadyRed
 import at.aau.serg.android.ui.theme.appColors
@@ -173,10 +174,13 @@ fun GameScreenContent(
                                     onEvent,
                                     tiles = boardSet.tiles,
                                     tileSize = 60,
-                                    borderColor = if (isInvalid) NotReadyRed else c.game.boardBorder,
                                     selectedTiles = uiState.selectedTiles,
-                                    selectedRow = uiState.activeSelectionRow,
-                                    rowId = boardSet.boardSetId,
+                                    config = TileRowConfig(
+                                        borderColor = if (isInvalid) NotReadyRed else c.game.boardBorder,
+                                        selectedRow = uiState.activeSelectionRow,
+                                        rowId = boardSet.boardSetId,
+                                        boardSet = boardSet,
+                                    ),
                                 )
 
                                 if (isInvalid) {
@@ -213,10 +217,11 @@ fun GameScreenContent(
                                 onEvent,
                                 tiles = uiState.rackTiles,
                                 tileSize = 44,
-                                borderColor = c.game.boardBorder,
                                 selectedTiles = uiState.selectedTiles,
-                                selectedRow = uiState.activeSelectionRow,
-                                rowId = null
+                                config = TileRowConfig(
+                                    borderColor = c.game.boardBorder,
+                                    selectedRow = uiState.activeSelectionRow,
+                                ),
                             )
 
                             Spacer(Modifier.height(14.dp))

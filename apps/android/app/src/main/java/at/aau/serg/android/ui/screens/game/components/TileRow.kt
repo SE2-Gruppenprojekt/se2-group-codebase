@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.screens.game.GameUIEvent
@@ -26,10 +25,12 @@ fun TileRow(
     tiles: List<Tile>,
     tileSize: Int,
     selectedTiles: Set<Tile>,
-    selectedRow: String? = null,
-    borderColor: Color? = null,
-    rowId: String? = null
+    config: TileRowConfig = TileRowConfig(),
 ) {
+    val selectedRow = config.selectedRow
+    val borderColor = config.borderColor
+    val rowId = config.rowId
+    val boardSet = config.boardSet
     val lazyListState = rememberLazyListState()
     val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
         onEvent(GameUIEvent.MoveInSameRow(rowId, from.index, to.index))
@@ -64,9 +65,12 @@ fun TileRow(
 
                 TileItem(
                     tile = it,
-                    size = tileSize,
-                    selected = it in selectedTiles,
-                    moveHack = selectedTiles.isNotEmpty() && rowId != selectedRow,
+                    config = TileItemConfig(
+                        size = tileSize,
+                        selected = it in selectedTiles,
+                        moveHack = selectedTiles.isNotEmpty() && rowId != selectedRow,
+                        boardSet = boardSet,
+                    ),
                     onSelectedChange = { selected ->
                         onEvent(GameUIEvent.OnTileSelected(it, selected, rowId))
                     },

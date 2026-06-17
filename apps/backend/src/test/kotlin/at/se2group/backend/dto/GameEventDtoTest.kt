@@ -49,6 +49,7 @@ class GameEventDtoTest {
                 turnDeadline = null,
                 remainingTurnSeconds = null,
                 status = "ACTIVE",
+                requireInitialMeld = true,
                 createdAt = Instant.parse("2026-05-08T10:00:00Z").toString(),
                 startedAt = null,
                 finishedAt = null,
