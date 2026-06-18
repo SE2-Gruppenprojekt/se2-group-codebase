@@ -8,10 +8,12 @@ import shared.models.game.domain.BoardSet
 import shared.models.game.domain.BoardSetType
 import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.GamePlayer
+import shared.models.game.domain.GamePlayerMetrics
 import shared.models.game.domain.GameStatus
 import shared.models.game.domain.TileColor
 import shared.models.game.request.TileRequest
 import shared.models.game.response.BoardSetResponse
+import shared.models.game.response.GamePlayerMetricsResponse
 import shared.models.game.response.GamePlayerResponse
 import shared.models.game.response.GameResponse
 import shared.models.game.response.TileResponse
@@ -65,6 +67,19 @@ fun TileResponse.toDomain(): Tile {
     }
 }
 
+fun GamePlayerMetricsResponse.toDomain(): GamePlayerMetrics {
+    return GamePlayerMetrics(
+        turnsCompleted = turnsCompleted,
+        tilesPlayed = tilesPlayed,
+        meldsCreated = meldsCreated,
+        pointsPlayed = pointsPlayed,
+        tilesRemainingAtEnd = tilesRemainingAtEnd,
+        penaltyPointsAtEnd = penaltyPointsAtEnd,
+        winner = winner,
+        finishPosition = finishPosition
+    )
+}
+
 fun GamePlayerResponse.toDomain(): GamePlayer {
     return GamePlayer(
         userId = userId,
@@ -73,7 +88,8 @@ fun GamePlayerResponse.toDomain(): GamePlayer {
         rackTiles = rackTiles.map { it.toDomain() },
         hasCompletedInitialMeld = hasCompletedInitialMeld,
         score = score,
-        joinedAt = Instant.parse(joinedAt)
+        joinedAt = Instant.parse(joinedAt),
+        metrics = metrics.toDomain()
     )
 }
 
@@ -88,6 +104,8 @@ fun GameResponse.toDomain(): ConfirmedGame {
         status = GameStatus.valueOf(status),
         createdAt = Instant.parse(createdAt),
         startedAt = startedAt?.takeIf { it != "null" }?.let { Instant.parse(it) },
-        finishedAt = finishedAt?.takeIf { it != "null" }?.let { Instant.parse(it) }
+        finishedAt = finishedAt?.takeIf { it != "null" }?.let { Instant.parse(it) },
+        totalTurnsCompleted = totalTurnsCompleted,
+        winnerUserId = winnerUserId
     )
 }
