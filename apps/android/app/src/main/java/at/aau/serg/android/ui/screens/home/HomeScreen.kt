@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
@@ -47,6 +48,7 @@ import at.aau.serg.android.ui.theme.AccentPurple
 import at.aau.serg.android.ui.theme.HomeCreateBrushEnd
 import at.aau.serg.android.ui.theme.HomeCreateBrushStart
 import at.aau.serg.android.ui.theme.HomeIconGradientEnd
+import at.aau.serg.android.ui.theme.HomeRulesButtonColor
 import at.aau.serg.android.ui.theme.appColors
 import at.aau.serg.android.ui.util.ErrorUiMapper
 
@@ -195,6 +197,22 @@ fun HomeScreenContent(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // game rules action
+            HomeActionButton(
+                text = "Game Rules",
+                onClick = { onEvent(HomeEvent.OnRules) },
+                icon = { tint ->
+                    Icon(Icons.AutoMirrored.Filled.MenuBook, null, tint = tint, modifier = Modifier.size(22.dp))
+                },
+                containerBrush = Brush.horizontalGradient(
+                    colors = listOf(HomeRulesButtonColor, HomeRulesButtonColor)
+                ),
+                contentColor = c.home.buttonText,
+                modifier = Modifier.testTag(HomeTestTags.ACTION_RULES)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             // settings action
             HomeActionButton(
                 text = "Settings",
@@ -257,19 +275,6 @@ fun HomeScreenContent(
                         color = c.home.xp
                     )
                 }
-            }
-
-            // level info
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = "Level 12",
-                    color = c.home.playerLevel,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "850 XP",
-                    color = c.home.xp
-                )
             }
         }
     }

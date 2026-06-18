@@ -17,6 +17,7 @@ object Routes {
     const val HOME_SCREEN = "home"
     const val SETTINGS = "settings"
     const val LEADERBOARD = "leaderboard"
+    const val RULES = "rules"
 
     // lobby
     const val LOBBY = "lobby"
@@ -26,6 +27,8 @@ object Routes {
     const val WAITING_ROOM = "waitingRoom"
 
     // game
+    const val GAME_FLOW = "game_flow"
     const val GAME = "game"
+    const val GAME_RESULT = "game_result"
     // End of HOME_GRAPH
 }

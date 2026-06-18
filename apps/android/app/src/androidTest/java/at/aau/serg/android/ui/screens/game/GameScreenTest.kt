@@ -108,7 +108,7 @@ class GameScreenTest {
             .assertExists()
 
         composeRule
-            .onNodeWithText("3:45")
+            .onNodeWithText("0:00")
             .assertExists()
 
         composeRule

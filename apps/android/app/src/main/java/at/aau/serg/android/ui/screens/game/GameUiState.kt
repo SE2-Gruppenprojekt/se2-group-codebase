@@ -13,6 +13,29 @@ data class RuleValidationUiState(
     val summaryMessage: String? = null
 )
 
+data class GameResultPlayerSummary(
+    val userId: String,
+    val displayName: String,
+    val score: Int,
+    val finishPosition: Int = 0,
+    val tilesPlayed: Int = 0,
+    val meldsCreated: Int = 0,
+    val turnsCompleted: Int = 0,
+    val pointsFromTiles: Int = 0,
+    val remainingTiles: Int = 0,
+    val penaltyPoints: Int = 0,
+    val isStillPlaying: Boolean = false
+)
+
+data class GameResultUiModel(
+    val winnerUserId: String,
+    val players: List<GameResultPlayerSummary>,
+    val matchDuration: String = "0:00",
+    val totalTurns: Int = 0,
+    val finishedTimestamp: String? = null,
+    val isGameOver: Boolean = true
+)
+
 data class GameUiState(
     val loadState: LoadState = LoadState.Success,
     val user: User? = null,
@@ -21,8 +44,9 @@ data class GameUiState(
     val selectedTiles: Set<Tile> = emptySet(),
     val activeSelectionRow: String? = null,
     val gameState: ConfirmedGame? = null,
-    val winnerUserId: String? = null,
     val isActivePlayer: Boolean = false,
     val ruleValidation: RuleValidationUiState = RuleValidationUiState(),
     val cheatXRAY: Boolean = false
+    val gameResult: GameResultUiModel? = null,
+    val elapsedSeconds: Int = 0
 )
