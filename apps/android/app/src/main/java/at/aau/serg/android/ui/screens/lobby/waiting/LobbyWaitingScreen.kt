@@ -5,11 +5,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -96,6 +102,44 @@ fun LobbyWaitingScreenContent(
                 secondaryTextColor = c.screen.secondaryText,
             )
 
+            Spacer(Modifier.height(20.dp))
+
+            uiState.lobby?.settings?.let { settings ->
+                Text(
+                    text = "GAME INFO",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = c.screen.secondaryText,
+                    modifier = Modifier.padding(start = 4.dp, bottom = 10.dp)
+                )
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = c.screen.card),
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+                        GameInfoRow(
+                            icon = Icons.Filled.Person,
+                            label = "Max Players",
+                            value = settings.maxPlayers.toString(),
+                            textColor = c.screen.primaryText,
+                            secondaryColor = c.screen.secondaryText
+                        )
+                        HorizontalDivider(color = c.screen.secondaryText.copy(alpha = 0.1f))
+                        GameInfoRow(
+                            icon = if (settings.isPrivate) Icons.Filled.Lock else Icons.Filled.Public,
+                            label = "Lobby",
+                            value = if (settings.isPrivate) "Private" else "Public",
+                            textColor = c.screen.primaryText,
+                            secondaryColor = c.screen.secondaryText
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+
         }
 
         // --- start button (just for host) ---
@@ -122,5 +166,29 @@ fun LobbyWaitingScreenContent(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun GameInfoRow(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    textColor: Color,
+    secondaryColor: Color
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = secondaryColor, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(10.dp))
+            Text(label, color = textColor, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+        }
+        Text(value, color = secondaryColor, style = MaterialTheme.typography.bodyMedium)
     }
 }

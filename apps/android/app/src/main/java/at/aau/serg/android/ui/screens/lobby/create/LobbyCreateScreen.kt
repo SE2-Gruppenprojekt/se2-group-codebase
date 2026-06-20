@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import at.aau.serg.android.ui.components.TopBar
 import at.aau.serg.android.ui.screens.lobby.create.components.LargeSelectableBox
@@ -93,14 +94,14 @@ fun LobbyCreateScreenContent(
                 settingsButtonModifier = Modifier.testTag(LobbyCreateTestTags.SETTINGS_BUTTON)
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             SectionTitle(
                 icon = { Icon(Icons.Filled.Groups, null, tint = AccentPurple.copy(alpha = 0.61f)) },
                 title = "Maximum Players"
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -110,31 +111,30 @@ fun LobbyCreateScreenContent(
                     SelectableBox(
                         text = count.toString(),
                         selected = uiState.maxPlayers == count,
-                        onClick = {
-                            onEvent(LobbyCreateEvent.SetMaxPlayers(count))
-                                  },
+                        onClick = { onEvent(LobbyCreateEvent.SetMaxPlayers(count)) },
                         modifier = Modifier
                             .weight(1f)
-                            .height(40.dp)
+                            .height(52.dp)
                             .testTag("${LobbyCreateTestTags.MaxPlayers.OPTION_PREFIX}_$count"),
                         cardColor = c.screen.card,
                         selectedColor = c.screen.selectedBox,
                         borderColor = c.screen.cardBorder,
                         selectedBorder = c.screen.selectedBorder,
                         textColor = c.screen.primaryText,
-                        selectedTextColor = Color.White
+                        selectedTextColor = Color.White,
+                        textStyle = MaterialTheme.typography.titleMedium.copy(fontSize = 20.sp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             SectionTitle(
                 icon = { Icon(Icons.Filled.Lock, null, tint = AccentPurple.copy(alpha = 0.62f)) },
                 title = "Privacy"
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -144,13 +144,11 @@ fun LobbyCreateScreenContent(
                     title = "Public",
                     icon = { tint -> Icon(Icons.Filled.Public, null, tint = tint) },
                     selected = !uiState.isPrivate,
-                    onClick = {
-                        onEvent(LobbyCreateEvent.SetIsPrivate(false))
-                              },
+                    onClick = { onEvent(LobbyCreateEvent.SetIsPrivate(false)) },
                     modifier = Modifier
                         .testTag(LobbyCreateTestTags.PRIVACY_PUBLIC)
                         .weight(1f)
-                        .height(72.dp),
+                        .height(110.dp),
                     cardColor = c.screen.card,
                     selectedColor = c.screen.selectedBox,
                     borderColor = c.screen.cardBorder,
@@ -163,13 +161,11 @@ fun LobbyCreateScreenContent(
                     title = "Private",
                     icon = { tint -> Icon(Icons.Filled.Lock, null, tint = tint) },
                     selected = uiState.isPrivate,
-                    onClick = {
-                        onEvent(LobbyCreateEvent.SetIsPrivate(true))
-                              },
+                    onClick = { onEvent(LobbyCreateEvent.SetIsPrivate(true)) },
                     modifier = Modifier
                         .testTag(LobbyCreateTestTags.PRIVACY_PRIVATE)
                         .weight(1f)
-                        .height(72.dp),
+                        .height(110.dp),
                     cardColor = c.screen.card,
                     selectedColor = c.screen.selectedBox,
                     borderColor = c.screen.cardBorder,
@@ -179,25 +175,21 @@ fun LobbyCreateScreenContent(
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             SectionTitle(
                 icon = { Icon(Icons.Filled.Timer, null, tint = AccentPurple) },
                 title = "Game Settings"
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             NumericSettingRow(
                 icon = { Icon(Icons.Filled.Groups, null, tint = c.screen.primaryText) },
                 title = "Starting Tiles",
                 value = uiState.startingTiles.toString(),
-                onMinus = {
-                    onEvent(LobbyCreateEvent.ChangeStartingTiles(-10))
-                          },
-                onPlus = {
-                    onEvent(LobbyCreateEvent.ChangeStartingTiles(10))
-                         },
+                onMinus = { onEvent(LobbyCreateEvent.ChangeStartingTiles(-10)) },
+                onPlus = { onEvent(LobbyCreateEvent.ChangeStartingTiles(10)) },
                 modifier = Modifier
                     .testTag(LobbyCreateTestTags.STARTING_TILES_ROW)
                     .padding(bottom = 4.dp),
@@ -209,7 +201,7 @@ fun LobbyCreateScreenContent(
                 plusTag = LobbyCreateTestTags.STARTING_TILES_PLUS,
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
         }
 

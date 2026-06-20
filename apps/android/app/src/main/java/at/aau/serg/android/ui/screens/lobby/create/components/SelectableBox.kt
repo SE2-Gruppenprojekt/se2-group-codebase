@@ -10,6 +10,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,7 +29,8 @@ fun SelectableBox(
     borderColor: Color,
     selectedBorder: Color,
     textColor: Color,
-    selectedTextColor: Color
+    selectedTextColor: Color,
+    textStyle: TextStyle? = null
 ) {
     Card(
         modifier = modifier
@@ -51,7 +53,7 @@ fun SelectableBox(
             Text(
                 text = text,
                 color = if (selected) selectedTextColor else textColor,
-                style = MaterialTheme.typography.titleSmall,
+                style = textStyle ?: MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold
             )
         }
