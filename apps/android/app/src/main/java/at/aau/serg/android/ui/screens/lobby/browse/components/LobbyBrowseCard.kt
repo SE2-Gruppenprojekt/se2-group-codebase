@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.Button
@@ -43,7 +44,9 @@ fun LobbyBrowseCard(
     onJoinLobby: (String) -> Unit
 ) {
     val accentColor = lobby.accentColor
-    val subtleCardColor = accentColor.copy(alpha = 0.14f).compositeOver(cardColor)
+    val cardAlpha = if (lobby.isOpen) 0.14f else 0.05f
+    val borderAlpha = if (lobby.isOpen) 0.95f else 0.30f
+    val subtleCardColor = accentColor.copy(alpha = cardAlpha).compositeOver(cardColor)
     val disabledButtonColor = appColors().screen.disabledButton
     val buttonColor = if (lobby.isOpen) accentColor else disabledButtonColor
     val buttonText = if (lobby.isOpen) "Join" else "Full"
@@ -53,7 +56,7 @@ fun LobbyBrowseCard(
             .fillMaxWidth()
             .border(
                 width = 1.5.dp,
-                color = accentColor.copy(alpha = 0.95f),
+                color = accentColor.copy(alpha = borderAlpha),
                 shape = RoundedCornerShape(20.dp)
             ),
         colors = CardDefaults.cardColors(containerColor = subtleCardColor),
@@ -67,22 +70,33 @@ fun LobbyBrowseCard(
             verticalAlignment = Alignment.Top
         ) {
             Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.Center
+                modifier = Modifier
+                    .weight(1f)
+                    .height(72.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "#${lobby.lobbyId}",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = primaryText
-                )
+                Column {
+                    Text(
+                        text = "#${lobby.lobbyId}",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = primaryText
+                    )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
 
-                BadgeChip(
-                    text = if (lobby.isOpen) "OPEN" else "FULL",
-                    backgroundColor = accentColor,
-                    textColor = Color.White
+                    BadgeChip(
+                        text = if (lobby.isOpen) "OPEN" else "FULL",
+                        backgroundColor = accentColor,
+                        textColor = Color.White
+                    )
+                }
+
+                Icon(
+                    imageVector = Icons.Filled.Casino,
+                    contentDescription = null,
+                    tint = accentColor.copy(alpha = 0.6f),
+                    modifier = Modifier.size(16.dp)
                 )
             }
 
