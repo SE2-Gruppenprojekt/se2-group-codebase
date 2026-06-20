@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import at.aau.serg.android.ui.theme.AccentBlue
+import at.aau.serg.android.ui.theme.AccentPurple
 import at.aau.serg.android.ui.theme.NotReadyRed
 import at.aau.serg.android.ui.theme.ReadyGreen
 
@@ -44,7 +45,7 @@ fun PlayerItem(
     val avatarBackground = if (isPlaceholder) {
         secondaryTextColor.copy(alpha = 0.16f)
     } else {
-        AccentBlue
+        borderColor
     }
 
     val avatarIconTint = if (isPlaceholder) {
@@ -109,7 +110,7 @@ fun PlayerItem(
                     )
 
                     if (isHost) {
-                        HostBadge()
+                        HostBadge(color = borderColor)
                     }
                 }
 
@@ -160,18 +161,18 @@ fun PlayerItem(
 }
 
 @Composable
-fun HostBadge() {
+fun HostBadge(color: Color = AccentPurple) {
     Box(
         modifier = Modifier
             .background(
-                color = AccentBlue.copy(alpha = 0.18f),
+                color = color.copy(alpha = 0.18f),
                 shape = RoundedCornerShape(10.dp)
             )
             .padding(horizontal = 8.dp, vertical = 3.dp)
     ) {
         Text(
             text = "HOST",
-            color = AccentBlue,
+            color = color,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold
         )
