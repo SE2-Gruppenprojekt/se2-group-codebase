@@ -153,7 +153,7 @@ fun GameScreenContent(
                                 tooltip = {
                                     RichTooltip(
                                         title = { Text("Cheat XRAY") },
-                                        text = { Text("Actively revealing opponent tiles when it's their turn.") }
+                                        text = { Text("Actively reveals opponent tiles when it's their turn.") }
                                     )
                                 },
                                 state = rememberTooltipState()
