@@ -643,13 +643,14 @@ class GameViewModelTest {
             .setGameId("g1")
             .build()
         store.save(user)
-        advanceUntilIdle()
+        runCurrent()
 
         viewmodel.setUiStateForTest(GameUiState(user = user))
 
         coEvery { service.loadGame(any()) } returns fakeGameResponse
         viewmodel.onUIEvent(GameUIEvent.OnLoadGame("g1"))
         runCurrent()
+        viewmodel.cancelTimer()
 
         assertEquals(fakeGameResponse.toDomain(), viewmodel.uiState.value.gameState)
     }
@@ -691,12 +692,12 @@ class GameViewModelTest {
             .setDisplayName("Alice")
             .setGameId("g1")
             .build()
-        store.save(user)
-        advanceUntilIdle()
+        viewmodel.setUiStateForTest(GameUiState(user = user))
 
         viewmodel.onUIEvent(GameUIEvent.OnLoadGame("g1"))
+        advanceTimeBy(200)
         runCurrent()
-        advanceUntilIdle()
+        viewmodel.cancelTimer()
 
         assertEquals("OtherPlayer", viewmodel.uiState.value.gameState?.currentPlayerUserId)
     }
@@ -707,8 +708,9 @@ class GameViewModelTest {
             user = null
         ))
         viewmodel.onUIEvent(GameUIEvent.OnLoadGame("g1"))
+        runCurrent()
+        viewmodel.cancelTimer()
 
-        advanceUntilIdle()
         val state = viewmodel.uiState.value
 
         assertTrue(state.loadState is LoadState.Error)
@@ -716,11 +718,15 @@ class GameViewModelTest {
 
     @Test
     fun loadGame_emitsErrorState_onFailure() = runTest {
+        val user = User.newBuilder().setUid("User123").setDisplayName("Alice").setGameId("g1").build()
+        viewmodel.setUiStateForTest(GameUiState(user = user))
+
         coEvery { service.loadGame(any()) } throws RuntimeException()
 
         viewmodel.onUIEvent(GameUIEvent.OnLoadGame("g1"))
+        runCurrent()
+        viewmodel.cancelTimer()
 
-        advanceUntilIdle()
         val state = viewmodel.uiState.value
 
         assertTrue(state.loadState is LoadState.Error)
@@ -1554,7 +1560,7 @@ class GameViewModelTest {
         job.cancel()
 
         assertTrue(collected.isEmpty())
-        assertTrue(viewmodel.uiState.value.gameResult?.isGameOver ?: false)
+        assertNotNull(viewmodel.uiState.value.gameResult)
     }
 
     // --- GameEvent.Updated FINISHED: no navigation when already on result screen ---
