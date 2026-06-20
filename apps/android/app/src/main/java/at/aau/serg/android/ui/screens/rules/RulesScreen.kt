@@ -24,6 +24,8 @@ import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.MiscellaneousServices
 import androidx.compose.material.icons.filled.PanTool
 import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.ui.res.painterResource
+import at.aau.serg.android.R
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -341,6 +343,24 @@ fun RulesScreenContent(
                     style = MaterialTheme.typography.bodySmall,
                     color = c.settings.secondaryText
                 )
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_cheat_xray),
+                        contentDescription = null,
+                        tint = AccentPurple,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "This icon appears in the game header when X-Ray is active",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = c.settings.secondaryText
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
