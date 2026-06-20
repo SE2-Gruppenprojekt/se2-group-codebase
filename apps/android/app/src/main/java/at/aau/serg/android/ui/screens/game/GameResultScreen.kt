@@ -58,7 +58,6 @@ fun GameResultScreen(
     gameResult: GameResultUiModel?,
     currentUserId: String? = null,
     onNavigateHome: () -> Unit = {},
-    onNextRound: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val players = gameResult?.players.orEmpty()

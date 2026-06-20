@@ -52,7 +52,7 @@ class GameViewModel(
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState
 
-    private val _effect = MutableSharedFlow<GameEffect>()
+    private val _effect = MutableSharedFlow<GameEffect>(extraBufferCapacity = 1)
     val effects: SharedFlow<GameEffect> = _effect.asSharedFlow()
 
     init {
