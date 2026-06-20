@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
@@ -135,6 +136,19 @@ fun GameScreenContent(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        // DEBUG: skip to result screen
+                        IconButton(
+                            onClick = { onEvent(GameUIEvent.DebugNavigateToResult) },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                Icons.Filled.Flag,
+                                contentDescription = "Debug: go to result",
+                                tint = NotReadyRed,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
                         // Timer
                         val m = uiState.elapsedSeconds / 60
                         val s = uiState.elapsedSeconds % 60
