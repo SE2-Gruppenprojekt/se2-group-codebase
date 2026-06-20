@@ -266,7 +266,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.turbine)
-    testImplementation("org.robolectric:robolectric:4.13")
+    testImplementation(libs.robolectric)
 
     // Android UI Testing (instrumentation)
     androidTestImplementation(libs.androidx.junit)

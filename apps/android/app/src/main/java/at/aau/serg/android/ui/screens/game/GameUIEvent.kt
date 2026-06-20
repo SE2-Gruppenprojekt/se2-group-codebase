@@ -8,6 +8,9 @@ sealed interface GameUIEvent {
     object AddRow : GameUIEvent
     object DrawTile : GameUIEvent
     object ResetSelection : GameUIEvent
+    object ToggleXRAY : GameUIEvent {
+        override val requiresActivePlayer = false
+    }
     data class MoveTiles(val rowId: String?) : GameUIEvent
     data class MoveInSameRow(val rowId: String?, val from: Int, val to: Int) : GameUIEvent
     data class OnTileSelected(val tile: Tile, val selected: Boolean, val rowId: String?) : GameUIEvent

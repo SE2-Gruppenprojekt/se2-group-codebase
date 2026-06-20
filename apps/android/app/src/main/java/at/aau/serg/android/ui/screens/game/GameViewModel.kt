@@ -96,6 +96,9 @@ class GameViewModel(
                 isActivePlayer = game.currentPlayerUserId == user.uid
             )
         }
+        if (!_uiState.value.isActivePlayer) {
+            executeXRAY(_uiState.value.cheatXRAY)
+        }
 
         // finish detection handled in GameEvent.Updated / GameEvent.Ended
     }
@@ -131,6 +134,14 @@ class GameViewModel(
                     drawTile()
                 GameUIEvent.EndTurn ->
                     endTurn()
+                is GameUIEvent.ToggleXRAY -> {
+                    _uiState.update { state ->
+                        if (!state.isActivePlayer) {
+                            executeXRAY(!state.cheatXRAY)
+                        }
+                        state.copy(cheatXRAY = !state.cheatXRAY)
+                    }
+                }
                 is GameUIEvent.MoveInSameRow -> {
                     moveInSameRow(
                         srcRowId = event.rowId,
@@ -514,6 +525,21 @@ class GameViewModel(
         } catch (e: Exception) {
             val appError = ErrorUiMapper.map(e)
             _uiState.update { it.copy(loadState = LoadState.Error(appError)) }
+        }
+    }
+
+    fun executeXRAY(newState: Boolean) {
+        _uiState.update { state ->
+            val gameState = state.gameState ?: throw IllegalStateException("GameState can't be null when cheating.")
+            val user = state.user ?: throw IllegalStateException("User can't be null while using XRAY.")
+
+            val activePlayerId = if (newState) gameState.currentPlayerUserId else user.uid
+            val player = gameState.players.firstOrNull { it.userId == activePlayerId }
+                ?: throw IllegalStateException("ActivePlayer has to be in game in order for the XRAY to work.")
+
+            state.copy(
+                rackTiles = player.rackTiles
+            )
         }
     }
 
