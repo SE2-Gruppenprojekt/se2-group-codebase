@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,6 +38,7 @@ import at.aau.serg.android.ui.screens.game.components.TileRowPlaceholder
 import at.aau.serg.android.ui.theme.NotReadyRed
 import at.aau.serg.android.ui.theme.appColors
 import at.aau.serg.android.ui.util.ShakeDetector
+import at.aau.serg.android.R
 
 @Composable
 fun GameScreen(
@@ -59,6 +62,7 @@ fun GameScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameScreenContent(
     uiState: GameUiState,
@@ -96,20 +100,71 @@ fun GameScreenContent(
                     .padding(top = 12.dp)
                     .testTag(GameTestTags.HEADER)
             ) {
-                Box(Modifier.fillMaxWidth()) {
-                    BackButton(onBack = { onEvent(GameUIEvent.OnBack) })
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    // Back button (left)
+                    BackButton(
+                        onBack = { onEvent(GameUIEvent.OnBack) },
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    )
 
-                    Column(Modifier.align(Alignment.Center)) {
-                        Text("Game #4821", fontWeight = FontWeight.Bold)
-                        Text("Round 2 of 3", fontSize = 12.sp)
+                    // Center title
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            "Game #4821",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "Round 2 of 3",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
 
-                    Row(Modifier.align(Alignment.CenterEnd)) {
+                    // Right side controls
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Timer
                         val m = uiState.elapsedSeconds / 60
                         val s = uiState.elapsedSeconds % 60
-                        Text("%d:%02d".format(m, s))
-                        IconButton(onClick = { onEvent(GameUIEvent.OnSettings) }) {
-                            Icon(Icons.Default.Settings, null)
+                        Text(
+                            "%d:%02d".format(m, s),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+
+                        // Visual indicator for XRAY cheat
+                        if (uiState.cheatXRAY) {
+                            TooltipBox(
+                                positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                                    positioning = TooltipAnchorPosition.Above,
+                                    spacingBetweenTooltipAndAnchor = 8.dp
+                                ),
+                                tooltip = {
+                                    RichTooltip(
+                                        title = { Text("Cheat XRAY") },
+                                        text = { Text("Actively revealing opponent tiles when it's their turn.") }
+                                    )
+                                },
+                                state = rememberTooltipState()
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_cheat_xray),
+                                    contentDescription = "XRAY info",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
                         }
                     }
                 }
