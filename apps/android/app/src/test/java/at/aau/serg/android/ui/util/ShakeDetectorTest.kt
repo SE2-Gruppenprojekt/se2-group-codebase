@@ -25,4 +25,14 @@ class ShakeDetectorTest {
         detector.handleValues(5f, 5f, 5f, now = 0L)
         assertEquals(0, count)
     }
+
+    @Test
+    fun shakeWithinCooldownDoesNotTriggerAgain() {
+        var count = 0
+        val detector = ShakeDetector { count++ }
+
+        detector.handleValues(30f, 0f, 0f, now = 1000L)
+        detector.handleValues(30f, 0f, 0f, now = 1500L) // just 500ms later - under 800ms cooldown
+        assertEquals(1, count)
+    }
 }
