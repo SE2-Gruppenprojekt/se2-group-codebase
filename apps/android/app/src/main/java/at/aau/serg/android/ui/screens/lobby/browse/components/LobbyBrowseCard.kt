@@ -15,8 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.Style
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -49,8 +47,6 @@ fun LobbyBrowseCard(
     val disabledButtonColor = appColors().screen.disabledButton
     val buttonColor = if (lobby.isOpen) accentColor else disabledButtonColor
     val buttonText = if (lobby.isOpen) "Join" else "Full"
-    val metaColor = secondaryText.copy(alpha = 0.75f)
-
     Card(
         modifier = Modifier
             .testTag("${LobbyBrowseTestTags.LobbyItem.CARD_PREFIX}_${lobby.lobbyId}")
@@ -71,57 +67,23 @@ fun LobbyBrowseCard(
             verticalAlignment = Alignment.Top
         ) {
             Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(78.dp),
-                verticalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
             ) {
-                Column {
-                    Text(
-                        text = "#${lobby.lobbyId}",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = primaryText
-                    )
+                Text(
+                    text = "#${lobby.lobbyId}",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = primaryText
+                )
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
-                    BadgeChip(
-                        text = if (lobby.isOpen) "OPEN" else "FULL",
-                        backgroundColor = accentColor,
-                        textColor = Color.White
-                    )
-                }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.Timer,
-                        contentDescription = null,
-                        tint = metaColor,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${lobby.turnTimerSeconds}s",
-                        color = metaColor,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Icon(
-                        imageVector = Icons.Filled.Style,
-                        contentDescription = null,
-                        tint = metaColor,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${lobby.startingCards} cards",
-                        color = metaColor,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
+                BadgeChip(
+                    text = if (lobby.isOpen) "OPEN" else "FULL",
+                    backgroundColor = accentColor,
+                    textColor = Color.White
+                )
             }
 
             Spacer(modifier = Modifier.width(12.dp))
