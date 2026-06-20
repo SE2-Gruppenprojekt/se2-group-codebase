@@ -19,7 +19,6 @@ import at.aau.serg.android.ui.components.TopBar
 import at.aau.serg.android.ui.screens.lobby.waiting.components.LobbyUiState.lobbyName
 import at.aau.serg.android.ui.screens.lobby.waiting.components.WaitingScreenPlayerSection
 import at.aau.serg.android.ui.screens.lobby.waiting.components.WaitingScreenRoomCard
-import at.aau.serg.android.ui.screens.lobby.waiting.components.WaitingScreenSettingsSection
 import at.aau.serg.android.ui.state.LoadState
 import at.aau.serg.android.ui.theme.AccentPurple
 import at.aau.serg.android.ui.theme.appColors
@@ -97,21 +96,6 @@ fun LobbyWaitingScreenContent(
                 secondaryTextColor = c.screen.secondaryText,
             )
 
-            Spacer(Modifier.height(18.dp))
-
-            WaitingScreenSettingsSection(
-                turnTimer = uiState.turnTimer,
-                startingCards = uiState.startingCards,
-                stackEnabled = uiState.stackEnabled,
-                onTurnTimerMinus = { onEvent(LobbyWaitingEvent.OnTurnTimerDecrease) },
-                onTurnTimerPlus = { onEvent(LobbyWaitingEvent.OnTurnTimerIncrease) },
-                onStartingCardsMinus = { onEvent(LobbyWaitingEvent.OnStartingCardsDecrease) },
-                onStartingCardsPlus = { onEvent(LobbyWaitingEvent.OnStartingCardsIncrease) },
-                onStackToggle = { onEvent(LobbyWaitingEvent.OnStackToggle(it)) },
-                cardColor = c.screen.card,
-                primaryTextColor = c.screen.primaryText,
-                buttonColor = c.screen.actionButton
-            )
         }
 
         // --- start button (just for host) ---
