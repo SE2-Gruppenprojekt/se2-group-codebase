@@ -138,7 +138,11 @@ fun NavGraphBuilder.homeGraph(
             composable("${Routes.GAME}/{gameId}") {
                 val gameId = it.arguments?.getString("gameId")!!
                 val userStore = remember { provider.getStore<User>() }
+                val parentEntry = remember(it) {
+                    navController.getBackStackEntry(Routes.GAME_FLOW)
+                }
                 val vm: GameViewModel = viewModel(
+                    parentEntry,
                     factory = GenericViewModelFactory { GameViewModel(userStore) }
                 )
 
