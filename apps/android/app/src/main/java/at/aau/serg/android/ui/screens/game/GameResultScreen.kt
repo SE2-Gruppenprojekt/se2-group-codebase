@@ -231,11 +231,7 @@ fun GameResultScreen(
                     value = "${currentPlayer.meldsCreated}",
                     modifier = Modifier.weight(1f)
                 )
-                ResultStatBox(
-                    label = "Avg Turn",
-                    value = "0:00",
-                    modifier = Modifier.weight(1f)
-                )
+
             }
         }
 
