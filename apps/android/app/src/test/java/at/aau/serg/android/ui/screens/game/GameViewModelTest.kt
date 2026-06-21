@@ -1625,4 +1625,68 @@ class GameViewModelTest {
         assertNotEquals(m1, m2)
         assertEquals("u1", m2.winnerUserId)
     }
+
+    // --- DebugNavigateToResult ---
+
+    @Test
+    fun debugNavigateToResult_requiresActivePlayer_isFalse() {
+        assertFalse(GameUIEvent.DebugNavigateToResult.requiresActivePlayer)
+    }
+
+    @Test
+    fun debugNavigateToResult_withGameState_navigatesToResult() = runTest {
+        val user = User.newBuilder().setUid("u1").setDisplayName("Alice").setGameId("g1").build()
+        setTestGameState()
+
+        val collected = mutableListOf<GameEffect>()
+        val job = launch { viewmodel.effects.collect { collected.add(it) } }
+        runCurrent()
+
+        viewmodel.onUIEvent(GameUIEvent.DebugNavigateToResult)
+        runCurrent()
+        job.cancel()
+
+        assertTrue(collected.contains(GameEffect.NavigateToResult))
+        assertNotNull(viewmodel.uiState.value.gameResult)
+        assertTrue(viewmodel.uiState.value.gameResult!!.isGameOver)
+    }
+
+    @Test
+    fun debugNavigateToResult_withoutGameState_usesDummyData() = runTest {
+        val user = User.newBuilder().setUid("u1").setDisplayName("Alice").setGameId("g1").build()
+        viewmodel.setUiStateForTest(GameUiState(user = user, gameState = null))
+
+        val collected = mutableListOf<GameEffect>()
+        val job = launch { viewmodel.effects.collect { collected.add(it) } }
+        runCurrent()
+
+        viewmodel.onUIEvent(GameUIEvent.DebugNavigateToResult)
+        runCurrent()
+        job.cancel()
+
+        assertTrue(collected.contains(GameEffect.NavigateToResult))
+        val result = viewmodel.uiState.value.gameResult
+        assertNotNull(result)
+        assertTrue(result!!.isGameOver)
+        assertEquals("u1", result.winnerUserId)
+        assertEquals(1, result.players.size)
+    }
+
+    @Test
+    fun debugNavigateToResult_withoutGameStateAndNoUser_usesDummyDataEmpty() = runTest {
+        viewmodel.setUiStateForTest(GameUiState(user = null, gameState = null))
+
+        val collected = mutableListOf<GameEffect>()
+        val job = launch { viewmodel.effects.collect { collected.add(it) } }
+        runCurrent()
+
+        viewmodel.onUIEvent(GameUIEvent.DebugNavigateToResult)
+        runCurrent()
+        job.cancel()
+
+        assertTrue(collected.contains(GameEffect.NavigateToResult))
+        val result = viewmodel.uiState.value.gameResult
+        assertNotNull(result)
+        assertTrue(result!!.players.isEmpty())
+    }
 }
