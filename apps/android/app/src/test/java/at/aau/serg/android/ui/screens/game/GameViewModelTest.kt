@@ -1635,7 +1635,6 @@ class GameViewModelTest {
 
     @Test
     fun debugNavigateToResult_withGameState_navigatesToResult() = runTest {
-        val user = User.newBuilder().setUid("u1").setDisplayName("Alice").setGameId("g1").build()
         setTestGameState()
 
         val collected = mutableListOf<GameEffect>()

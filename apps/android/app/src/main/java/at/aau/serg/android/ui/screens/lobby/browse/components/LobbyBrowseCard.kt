@@ -40,7 +40,6 @@ fun LobbyBrowseCard(
     lobby: LobbyBrowseItem,
     cardColor: Color,
     primaryText: Color,
-    secondaryText: Color,
     onJoinLobby: (String) -> Unit
 ) {
     val accentColor = lobby.accentColor

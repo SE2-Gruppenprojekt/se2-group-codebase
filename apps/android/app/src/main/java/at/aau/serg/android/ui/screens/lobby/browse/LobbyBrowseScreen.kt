@@ -209,7 +209,6 @@ fun LobbyBrowseScreenContent(
                     lobby = lobby,
                     cardColor = c.screen.card,
                     primaryText = c.screen.primaryText,
-                    secondaryText = c.screen.secondaryText,
                     onJoinLobby = { onEvent(LobbyBrowseEvent.OnJoinLobby(it)) }
                 )
             }
