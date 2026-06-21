@@ -4,7 +4,7 @@ import at.aau.serg.android.ui.state.LoadState
 
 data class LobbyCreateUiState(
     val loadState: LoadState = LoadState.Success,
-    val maxPlayers: Int = 1,
+    val maxPlayers: Int = 2,
     val isPrivate: Boolean = false,
     val turnTimer: Int = 60,
     val startingTiles: Int = 14,

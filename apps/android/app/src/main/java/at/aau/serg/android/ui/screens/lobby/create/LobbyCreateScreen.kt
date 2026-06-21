@@ -107,7 +107,7 @@ fun LobbyCreateScreenContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                listOf(1, 2, 3, 4).forEach { count ->
+                listOf(2, 3, 4).forEach { count ->
                     SelectableBox(
                         text = count.toString(),
                         selected = uiState.maxPlayers == count,

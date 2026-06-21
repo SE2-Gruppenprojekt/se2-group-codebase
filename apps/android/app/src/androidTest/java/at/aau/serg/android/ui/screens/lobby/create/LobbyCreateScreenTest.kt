@@ -28,7 +28,7 @@ class LobbyCreateScreenTest {
             LobbyCreateScreenContent(
                 uiState = LobbyCreateUiState(
                     isPrivate = false,
-                    maxPlayers = 6,
+                    maxPlayers = 4,
                     turnTimer = 60,
                     startingTiles = 100,
                     winScore = 1000,
@@ -40,7 +40,7 @@ class LobbyCreateScreenTest {
                     when (event) {
                         LobbyCreateEvent.OnBack -> onBack()
                         LobbyCreateEvent.OnSettings -> onSettings()
-                        LobbyCreateEvent.CreateLobby -> onCreateLobby(6, false)
+                        LobbyCreateEvent.CreateLobby -> onCreateLobby(4, false)
                         else -> {}
                     }
                 }
@@ -72,7 +72,7 @@ class LobbyCreateScreenTest {
     fun displaysAllPlayerOptions() {
         setScreen()
 
-        listOf(2, 4, 6, 8).forEach { count ->
+        listOf(2, 3, 4).forEach { count ->
             composeRule
                 .onNodeWithTag("${LobbyCreateTestTags.MaxPlayers.OPTION_PREFIX}_$count")
                 .assertIsDisplayed()
