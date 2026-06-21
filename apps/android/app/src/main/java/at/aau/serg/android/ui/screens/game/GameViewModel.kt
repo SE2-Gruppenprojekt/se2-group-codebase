@@ -229,6 +229,9 @@ class GameViewModel(
                 it.copy(loadState = LoadState.Loading)
             }
             try {
+                if (_uiState.value.user == null) {
+                    throw IllegalStateException("User must not be null when loading game.")
+                }
                 val gameState = gameService.loadGame(gameId).toDomain()
                 if (_uiState.value.gameState == null) {
                     applyGameState(gameState, true)
