@@ -504,10 +504,11 @@ class GameViewModel(
 
                 is GameEvent.Ended -> {
                     if (gameEndHandled) return
-                    val gameId = _uiState.value.gameState?.gameId ?: return
+                    val fallback = _uiState.value.gameState
+                        ?: throw IllegalStateException("GameState must not be null when GameEnded received.")
                     viewModelScope.launch {
                         try {
-                            val freshGame = gameService.loadGame(gameId).toDomain()
+                            val freshGame = gameService.loadGame(fallback.gameId).toDomain()
                             applyGameState(freshGame, true)
                             handlePlayerFinished(
                                 freshGame,
@@ -516,7 +517,6 @@ class GameViewModel(
                                 navigateToResult = true
                             )
                         } catch (e: Throwable) {
-                            val fallback = _uiState.value.gameState ?: return@launch
                             handlePlayerFinished(
                                 fallback,
                                 isGameOver = true,
