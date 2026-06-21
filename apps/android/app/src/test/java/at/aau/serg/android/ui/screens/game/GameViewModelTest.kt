@@ -210,7 +210,12 @@ class GameViewModelTest {
 
     @Before
     fun setup() = runTest {
-        store = InMemoryProtoStore(User.getDefaultInstance())
+        val initialUser = User.newBuilder()
+            .setUid("FakeUser1")
+            .setDisplayName("Alice")
+            .setGameId("FakeGame1")
+            .build()
+        store = InMemoryProtoStore(initialUser)
         userStore = UserStore(store)
         service = mockk()
         socketService = mockk()
@@ -239,7 +244,12 @@ class GameViewModelTest {
 
     @Test
     fun init_loadsUser() = runTest {
-        assertEquals(viewmodel.uiState.value.user, User.getDefaultInstance())
+        val initialUser = User.newBuilder()
+            .setUid("FakeUser1")
+            .setDisplayName("Alice")
+            .setGameId("FakeGame1")
+            .build()
+        assertEquals(viewmodel.uiState.value.user, initialUser)
         val user = User.newBuilder()
             .setUid("1")
             .setDisplayName("Bob")
@@ -628,7 +638,9 @@ class GameViewModelTest {
     }
 
     @Test(expected = IllegalStateException::class)
-    fun resetSelection_throws_if_gameState_is_null() {
+    fun resetSelection_throws_if_gameState_is_null() = runTest {
+        advanceUntilIdle()
+        setTestGameState()
         viewmodel.setUiStateForTest(GameUiState(
             gameState = null
         ))
@@ -703,17 +715,32 @@ class GameViewModelTest {
     }
 
     @Test
-    fun loadGame_emitsErrorState_if_user_null() = runTest {
-        viewmodel.setUiStateForTest(GameUiState(
-            user = null
-        ))
+    fun loadGame_suspendsUntilUserLoaded() = runTest {
+        viewmodel.setUiStateForTest(GameUiState(user = null))
+
         viewmodel.onUIEvent(GameUIEvent.OnLoadGame("g1"))
+
+        // Let the event start
         runCurrent()
+
+        advanceTimeBy(5000)
+
+        assertTrue(viewmodel.uiState.value.elapsedSeconds == 0)
+
+        val user = User.newBuilder()
+            .setUid("FakeUser1")
+            .setDisplayName("Alice")
+            .setGameId("FakeGame1")
+            .build()
+        val old = viewmodel.uiState.value
+        viewmodel.setUiStateForTest(old.copy(user = user))
+
+
+        runCurrent()
+        advanceTimeBy(5000)
+
+        assertTrue(viewmodel.uiState.value.elapsedSeconds != 0)
         viewmodel.cancelTimer()
-
-        val state = viewmodel.uiState.value
-
-        assertTrue(state.loadState is LoadState.Error)
     }
 
     @Test

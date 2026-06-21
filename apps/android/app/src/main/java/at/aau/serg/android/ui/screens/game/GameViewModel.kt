@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import shared.models.game.domain.BoardSet
@@ -62,6 +63,7 @@ class GameViewModel(
             }
         }
     }
+
 
     @VisibleForTesting
     internal fun startSocket(gameId: String) {
@@ -152,9 +154,15 @@ class GameViewModel(
                 }
                 is GameUIEvent.MoveTiles -> moveTiles(event.rowId)
                 is GameUIEvent.OnLoadGame -> {
-                    startSocket(event.gameId)
-                    loadGame(event.gameId)
-                    startTimer()
+                    viewModelScope.launch {
+                        if (_uiState.value.user == null) {
+                            _uiState.first { it.user != null }
+                        }
+
+                        startSocket(event.gameId)
+                        loadGame(event.gameId)
+                        startTimer()
+                    }
                 }
                 is GameUIEvent.OnTileSelected -> {
                     onTileSelected(
