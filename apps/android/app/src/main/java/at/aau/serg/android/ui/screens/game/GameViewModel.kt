@@ -229,9 +229,7 @@ class GameViewModel(
                 it.copy(loadState = LoadState.Loading)
             }
             try {
-                if (_uiState.value.user == null) {
-                    throw IllegalStateException("User must not be null when loading game.")
-                }
+                checkNotNull(_uiState.value.user) { "User must not be null when loading game." }
                 val gameState = gameService.loadGame(gameId).toDomain()
                 if (_uiState.value.gameState == null) {
                     applyGameState(gameState, true)
@@ -647,7 +645,7 @@ class GameViewModel(
                 turnsCompleted = it.metrics.turnsCompleted,
                 pointsFromTiles = it.metrics.pointsPlayed,
                 penaltyPoints = it.metrics.penaltyPointsAtEnd ?: 0,
-                isStillPlaying = if (isGameOver) false else it.metrics.finishPosition == null
+                isStillPlaying = !isGameOver && it.metrics.finishPosition == null
             )
         }
 
