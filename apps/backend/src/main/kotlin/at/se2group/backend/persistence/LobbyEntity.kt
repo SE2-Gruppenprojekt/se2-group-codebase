@@ -35,6 +35,9 @@ class LobbyEntity(
     @Column(name = "allow_guests", nullable = false)
     var allowGuests: Boolean = true,
 
+    @Column(name = "starting_tiles", nullable = false)
+    var startingTiles: Int = 14,
+
     @Column(name = "created_at", nullable = false)
     var createdAt: Instant = Instant.now(),
 

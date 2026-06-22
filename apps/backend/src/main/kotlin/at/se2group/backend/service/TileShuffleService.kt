@@ -24,13 +24,6 @@ class TileShuffleService {
     /**
      * Internal constants used by [TileShuffleService].
      */
-    companion object {
-        /**
-         * Number of tiles each player receives at the start of a game.
-         */
-        private const val HAND_SIZE = 14
-    }
-
     /**
      * Returns a shuffled copy of the provided tile list.
      *
@@ -49,7 +42,7 @@ class TileShuffleService {
      * Distributes starting hands to all provided players.
      *
      * Tiles are assigned in order from the provided tile list. Each player
-     * receives exactly [HAND_SIZE] consecutive tiles, and the returned player
+     * receives exactly [handSize] consecutive tiles, and the returned player
      * list preserves the original player order.
      *
      * This method does not shuffle tiles itself, so callers are expected to pass
@@ -60,21 +53,26 @@ class TileShuffleService {
      * @return a new player list where each player contains their assigned rack
      * tiles.
      * @throws IllegalArgumentException if there are not enough tiles available to
-     * distribute [HAND_SIZE] tiles to every player.
+     * distribute [handSize] tiles to every player.
      */
     fun distributedHands(
         players: List<GamePlayer>,
-        tiles: List<Tile>
+        tiles: List<Tile>,
+        handSize: Int
     ): List<GamePlayer> {
-        val requiredTiles = players.size * HAND_SIZE
+        require(handSize > 0) {
+            "handSize must be greater than 0"
+        }
+
+        val requiredTiles = players.size * handSize
         // Fail early if the provided tile pool cannot cover all starting hands.
         require(tiles.size >= requiredTiles) {
-            "Not enough tiles to distribute $HAND_SIZE tiles to ${players.size} players"
+            "Not enough tiles to distribute $handSize tiles to ${players.size} players"
         }
 
         return players.mapIndexed { index, player ->
-            val handStart = index * HAND_SIZE
-            player.copy(rackTiles = tiles.subList(handStart, handStart + HAND_SIZE))
+            val handStart = index * handSize
+            player.copy(rackTiles = tiles.subList(handStart, handStart + handSize))
         }
     }
 
