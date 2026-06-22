@@ -143,6 +143,7 @@ class EndTurnService(
         confirmedGame: ConfirmedGame,
         draft: TurnDraft
     ): ConfirmedGame {
+        val drawnTile = draft.drawnTile
         val updatedPlayers = confirmedGame.players.map { player ->
             if (player.userId == draft.playerUserId) {
                 player.copy(rackTiles = draft.rackTiles)
@@ -154,8 +155,8 @@ class EndTurnService(
         return confirmedGame.copy(
             players = updatedPlayers,
             boardSets = draft.boardSets,
-            drawPile = if (draft.drawnTile != null) {
-                confirmedGame.drawPile.filterNot { it.tileId == draft.drawnTile.tileId }
+            drawPile = if (drawnTile != null) {
+                confirmedGame.drawPile.filterNot { it.tileId == drawnTile.tileId }
             } else {
                 confirmedGame.drawPile
             }
