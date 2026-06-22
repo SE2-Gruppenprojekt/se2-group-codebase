@@ -203,6 +203,43 @@ class EndTurnServiceTest {
     }
 
     @Test
+    fun `auto draws tile on pass turn when player has not drawn yet`() {
+        val game = gameEntity(
+            user1Rack = mutableListOf(tile("old-rack-tile")),
+            user2Rack = mutableListOf(tile("user-2-rack")),
+            drawPile = mutableListOf(tile("draw-top"), tile("draw-next"))
+        )
+
+        whenever(gameRepository.findById("game-1"))
+            .thenReturn(Optional.of(game))
+
+        whenever(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(draftEntity())
+
+        whenever(rummikubRuleService.validateSubmittedDraft(any(), any(), any()))
+            .thenReturn(valid())
+
+        whenever(gameRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+
+        whenever(turnDraftRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+
+        val result = endTurnService.endTurn(
+            gameId = "game-1",
+            userId = "user-1",
+            request = EndTurnRequest(
+                boardSets = emptyList(),
+                rackTiles = listOf(TileRequest("old-rack-tile", "RED", 5, false))
+            )
+        )
+
+        val actingPlayer = result.players.first { it.userId == "user-1" }
+        assertEquals(listOf("old-rack-tile", "draw-top"), actingPlayer.rackTiles.map { it.tileId })
+        assertEquals(listOf("draw-next"), result.drawPile.map { it.tileId })
+    }
+
+    @Test
     fun `commits valid joker containing submitted draft`() {
         val realRuleService = RummikubRuleService(
             TileConservationService(),
@@ -453,6 +490,7 @@ class EndTurnServiceTest {
         status: GameStatus = GameStatus.ACTIVE,
         user1Rack: MutableList<TileEmbeddable> = mutableListOf(),
         user2Rack: MutableList<TileEmbeddable> = mutableListOf(),
+        drawPile: MutableList<TileEmbeddable> = mutableListOf(),
         hasCompletedInitialMeld: Boolean = false
     ): GameEntity {
         val game = GameEntity(
@@ -460,7 +498,8 @@ class EndTurnServiceTest {
             lobbyId = "lobby-1",
             currentPlayerUserId = currentPlayerUserId,
             status = status,
-            createdAt = Instant.parse("2026-04-27T18:00:00Z")
+            createdAt = Instant.parse("2026-04-27T18:00:00Z"),
+            drawPile = drawPile
         )
 
         game.players = mutableListOf(
