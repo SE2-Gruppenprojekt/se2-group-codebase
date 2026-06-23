@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.GameStatus
+import shared.models.game.domain.Tile
 import shared.models.game.domain.TurnDraft
 import shared.models.game.request.EndTurnRequest
 import java.time.Instant
@@ -75,7 +76,14 @@ class EndTurnService(
             throw InvalidTurnSubmissionException(validation)
         }
 
-        val committedGame = commitDraftToConfirmedGame(game, submittedDraft)
+        val persistedDraft = draftEntity.toDomain()
+        val finalizedDraft = maybeAutoDrawTile(
+            confirmedGame = game,
+            persistedDraft = persistedDraft,
+            submittedDraft = submittedDraft
+        )
+
+        val committedGame = commitDraftToConfirmedGame(game, finalizedDraft)
             .applyInitialMeldCompletion(userId)
 
         // Turn metrics are recorded before potential game finalization so the
@@ -135,6 +143,7 @@ class EndTurnService(
         confirmedGame: ConfirmedGame,
         draft: TurnDraft
     ): ConfirmedGame {
+        val drawnTile = draft.drawnTile
         val updatedPlayers = confirmedGame.players.map { player ->
             if (player.userId == draft.playerUserId) {
                 player.copy(rackTiles = draft.rackTiles)
@@ -145,8 +154,44 @@ class EndTurnService(
 
         return confirmedGame.copy(
             players = updatedPlayers,
-            boardSets = draft.boardSets
+            boardSets = draft.boardSets,
+            drawPile = if (drawnTile != null) {
+                confirmedGame.drawPile.filterNot { it.tileId == drawnTile.tileId }
+            } else {
+                confirmedGame.drawPile
+            }
         )
+    }
+
+    private fun maybeAutoDrawTile(
+        confirmedGame: ConfirmedGame,
+        persistedDraft: TurnDraft,
+        submittedDraft: TurnDraft
+    ): TurnDraft {
+        if (persistedDraft.drawnTile != null) {
+            return submittedDraft
+        }
+
+        if (!isPassTurnWithoutDraw(confirmedGame, submittedDraft)) {
+            return submittedDraft
+        }
+
+        val tileToDraw = confirmedGame.drawPile.firstOrNull() ?: return submittedDraft
+
+        return submittedDraft.copy(
+            rackTiles = submittedDraft.rackTiles + tileToDraw,
+            drawnTile = tileToDraw
+        )
+    }
+
+    private fun isPassTurnWithoutDraw(
+        confirmedGame: ConfirmedGame,
+        submittedDraft: TurnDraft
+    ): Boolean {
+        val actingPlayer = confirmedGame.players.first { it.userId == submittedDraft.playerUserId }
+
+        return submittedDraft.boardSets == confirmedGame.boardSets &&
+            submittedDraft.rackTiles == actingPlayer.rackTiles
     }
 
     /**

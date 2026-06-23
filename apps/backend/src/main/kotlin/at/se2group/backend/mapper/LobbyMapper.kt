@@ -26,7 +26,8 @@ fun LobbyEntity.toDomain(): Lobby =
             maxPlayers = maxPlayers,
             isPrivate = isPrivate,
             allowGuests = allowGuests,
-            requireInitialMeld = requireInitialMeld
+            requireInitialMeld = requireInitialMeld,
+            startingTiles = startingTiles
         ),
         currentGameId = null
     )
@@ -39,6 +40,8 @@ fun Lobby.toEntity(existing: LobbyEntity? = null): LobbyEntity =
         maxPlayers = settings.maxPlayers,
         isPrivate = settings.isPrivate,
         allowGuests = settings.allowGuests,
+        requireInitialMeld = settings.requireInitialMeld,
+        startingTiles = settings.startingTiles,
         createdAt = existing?.createdAt ?: Instant.now(),
         players = players.map {
             val existingPlayer = existing?.players?.firstOrNull { persisted -> persisted.userId == it.userId }
@@ -70,6 +73,7 @@ fun Lobby.toResponse(currentGameId: String? = this.currentGameId): LobbyResponse
         isPrivate = settings.isPrivate,
         allowGuests = settings.allowGuests,
         requireInitialMeld = settings.requireInitialMeld,
+        startingTiles = settings.startingTiles,
         currentGameId = currentGameId,
         players = players.map {
             LobbyPlayerResponse(

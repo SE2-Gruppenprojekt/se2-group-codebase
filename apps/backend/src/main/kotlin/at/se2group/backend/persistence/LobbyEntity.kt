@@ -41,6 +41,9 @@ class LobbyEntity(
     @Column(name = "require_initial_meld", nullable = false)
     var requireInitialMeld: Boolean = false,
 
+    @Column(name = "starting_tiles", nullable = false)
+    var startingTiles: Int = 14,
+
     @ElementCollection
     @CollectionTable(name = "lobby_players", joinColumns = [JoinColumn(name = "lobby_id")])
     var players: MutableList<LobbyPlayerEmbeddable> = mutableListOf()
