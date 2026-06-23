@@ -39,7 +39,7 @@ class LobbyEntity(
     var createdAt: Instant = Instant.now(),
 
     @Column(name = "require_initial_meld", nullable = false)
-    var requireInitialMeld: Boolean = true,
+    var requireInitialMeld: Boolean = false,
 
     @Column(name = "starting_tiles", nullable = false)
     var startingTiles: Int = 14,
