@@ -125,6 +125,14 @@ class GameNetworkMapperTest {
         assertEquals("Player 1", domain.displayName)
         assertEquals(100, domain.score)
         assertEquals(Instant.parse(now), domain.joinedAt)
+        assertEquals(0, domain.metrics.turnsCompleted)
+        assertEquals(0, domain.metrics.tilesPlayed)
+        assertEquals(0, domain.metrics.meldsCreated)
+        assertEquals(0, domain.metrics.pointsPlayed)
+        assertNull(domain.metrics.tilesRemainingAtEnd)
+        assertNull(domain.metrics.penaltyPointsAtEnd)
+        assertFalse(domain.metrics.winner)
+        assertNull(domain.metrics.finishPosition)
     }
 
     @Test
@@ -175,6 +183,8 @@ class GameNetworkMapperTest {
         assertNull(domain.finishedAt)
         assertEquals(1, domain.boardSets.size)
         assertEquals("b1", domain.boardSets[0].boardSetId)
+        assertEquals(0, domain.totalTurnsCompleted)
+        assertNull(domain.winnerUserId)
     }
 
     @Test

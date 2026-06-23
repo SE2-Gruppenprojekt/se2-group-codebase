@@ -1,6 +1,8 @@
 package at.aau.serg.android.ui.navigation
 
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
@@ -17,6 +19,7 @@ import at.aau.serg.android.ui.screens.auth.AuthMode
 import at.aau.serg.android.ui.screens.auth.AuthScreen
 import at.aau.serg.android.ui.screens.auth.AuthViewModel
 import at.aau.serg.android.ui.screens.game.GameEffect
+import at.aau.serg.android.ui.screens.game.GameResultScreen
 import at.aau.serg.android.ui.screens.game.GameScreen
 import at.aau.serg.android.ui.screens.game.GameUIEvent
 import at.aau.serg.android.ui.screens.game.GameViewModel
@@ -130,30 +133,68 @@ fun NavGraphBuilder.homeGraph(
             AuthScreen(viewModel = vm)
         }
 
-        composable("${Routes.GAME}/{gameId}") {
-            val gameId = it.arguments?.getString("gameId")!!
-            val userStore = remember { provider.getStore<User>() }
-            val vm: GameViewModel = viewModel(
-                factory = GenericViewModelFactory { GameViewModel(userStore) }
-            )
+        navigation(startDestination = "${Routes.GAME}/{gameId}", route = Routes.GAME_FLOW) {
 
-            LaunchedEffect(gameId) {
-                vm.onUIEvent(GameUIEvent.OnLoadGame(gameId))
-            }
+            composable("${Routes.GAME}/{gameId}") {
+                val gameId = it.arguments?.getString("gameId")!!
+                val userStore = remember { provider.getStore<User>() }
+                val vm: GameViewModel = viewModel(
+                    factory = GenericViewModelFactory { GameViewModel(userStore) }
+                )
 
-            LaunchedEffect(Unit) {
-                vm.effects.collect { effect ->
-                    when (effect) {
-                        GameEffect.NavigateToSettings ->
-                            navController.navigate(Routes.SETTINGS)
+                LaunchedEffect(gameId) {
+                    vm.onUIEvent(GameUIEvent.OnLoadGame(gameId))
+                }
 
-                        GameEffect.NavigateBack ->
-                            navController.popBackStack()
+                LaunchedEffect(Unit) {
+                    vm.effects.collect { effect ->
+                        when (effect) {
+                            GameEffect.NavigateToSettings ->
+                                navController.navigate(Routes.SETTINGS)
+
+                            GameEffect.NavigateBack ->
+                                navController.popBackStack()
+
+                            GameEffect.NavigateToResult ->
+                                navController.navigate(Routes.GAME_RESULT)
+                        }
                     }
                 }
+
+                GameScreen(viewModel = vm)
             }
 
-            GameScreen(viewModel = vm)
+            composable(Routes.GAME_RESULT) { backStackEntry ->
+                val userStore = remember { provider.getStore<User>() }
+
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(Routes.GAME_FLOW)
+                }
+                val vm: GameViewModel = viewModel(
+                    parentEntry,
+                    factory = GenericViewModelFactory { GameViewModel(userStore) }
+                )
+                val uiState by vm.uiState.collectAsState()
+
+                val lobbyId = uiState.gameState?.lobbyId
+
+                GameResultScreen(
+                    gameResult = uiState.gameResult,
+                    currentUserId = uiState.user?.uid,
+                    onNavigateHome = {
+                        navController.navigate(Routes.HOME_SCREEN) {
+                            popUpTo(Routes.HOME_SCREEN) { inclusive = true }
+                        }
+                    },
+                    onNextRound = if (lobbyId != null) {
+                        {
+                            navController.navigate("${Routes.WAITING_ROOM}/$lobbyId") {
+                                popUpTo(Routes.HOME_SCREEN) { inclusive = false }
+                            }
+                        }
+                    } else null
+                )
+            }
         }
 
         composable(Routes.CREATE_LOBBY_FANCY) {
@@ -233,5 +274,6 @@ fun NavGraphBuilder.homeGraph(
 
             LobbyWaitingScreen(viewModel = vm)
         }
+
     }
 }

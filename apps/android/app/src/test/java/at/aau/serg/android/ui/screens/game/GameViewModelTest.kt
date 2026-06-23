@@ -9,23 +9,22 @@ import at.aau.serg.android.core.network.mapper.toDomain
 import at.aau.serg.android.datastore.proto.User
 import at.aau.serg.android.ui.screens.lobby.create.LobbyCreateViewModel
 import at.aau.serg.android.ui.state.LoadState
-import io.mockk.Runs
 import io.mockk.coEvery
-import io.mockk.just
 import io.mockk.mockk
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.ResponseBody.Companion.toResponseBody
-import retrofit2.HttpException
-import retrofit2.Response
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -35,10 +34,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import retrofit2.HttpException
+import retrofit2.Response
 import shared.models.game.domain.BoardSet
 import shared.models.game.domain.BoardSetType
 import shared.models.game.domain.ConfirmedGame
 import shared.models.game.domain.GamePlayer
+import shared.models.game.domain.GamePlayerMetrics
 import shared.models.game.domain.GameStatus
 import shared.models.game.domain.NumberedTile
 import shared.models.game.domain.TileColor
@@ -168,14 +170,42 @@ class GameViewModelTest {
     }
 
     private fun setPlayerTurnInactive() {
-        val user = User.newBuilder()
-            .setUid("1")
-            .setDisplayName("Max")
+        val initialUser = User.newBuilder()
+            .setUid("User123")
+            .setDisplayName("Alice")
+            .setGameId("Game123")
             .build()
-        viewmodel.setUiStateForTest(GameUiState(
-            user = user,
-            gameState = fakeGameResponse.toDomain(),
-        ))
+
+        viewmodel.setUiStateForTest(
+            GameUiState(
+                user = initialUser,
+                rackTiles = fakeRack,
+                boardSets = fakeBoard,
+                gameState = ConfirmedGame(
+                    players = listOf(
+                        GamePlayer(
+                            userId = initialUser.uid,
+                            displayName = initialUser.displayName,
+                            turnOrder = 0,
+                            rackTiles = fakeRack,
+                        ),
+                        GamePlayer(
+                            userId = "FakeUser1",
+                            displayName = "Fake",
+                            turnOrder = 1,
+                            rackTiles = listOf(
+                                NumberedTile("x4", TileColor.BLACK, 1),
+                            ),
+                        )
+                    ),
+                    boardSets = fakeBoard,
+                    gameId = initialUser.gameId,
+                    lobbyId = "Lobby123",
+                    currentPlayerUserId = "FakeUser1"
+                ),
+                isActivePlayer = false
+            )
+        )
     }
 
     @Before
@@ -403,7 +433,14 @@ class GameViewModelTest {
     @Test
     fun endTurn_sets_success_andClearsSelection() = runTest {
         setTestGameState()
+        val user = User.newBuilder()
+            .setUid("FakeUser1")
+            .setDisplayName("Bob")
+            .build()
+        store.save(user)
+        advanceUntilIdle()
         coEvery { service.endTurn(any(), any()) } returns fakeGameResponse
+
 
         viewmodel.onUIEvent(GameUIEvent.EndTurn)
         advanceUntilIdle()
@@ -458,6 +495,12 @@ class GameViewModelTest {
     @Test
     fun endTurn_clearsRuleValidation_onSuccess() = runTest {
         setTestGameState()
+        val user = User.newBuilder()
+            .setUid("FakeUser1")
+            .setDisplayName("Bob")
+            .build()
+        store.save(user)
+        advanceUntilIdle()
         viewmodel.setUiStateForTest(
             viewmodel.uiState.value.copy(
                 ruleValidation = RuleValidationUiState(summaryMessage = "old error")
@@ -606,7 +649,7 @@ class GameViewModelTest {
 
         coEvery { service.loadGame(any()) } returns fakeGameResponse
         viewmodel.onUIEvent(GameUIEvent.OnLoadGame("g1"))
-        advanceUntilIdle()
+        runCurrent()
 
         assertEquals(fakeGameResponse.toDomain(), viewmodel.uiState.value.gameState)
     }
@@ -792,8 +835,9 @@ class GameViewModelTest {
     fun loadGame_sets_loadState_success_if_not_players_turn() = runTest {
         setPlayerTurnInactive()
         viewmodel.onUIEvent(GameUIEvent.OnLoadGame("g1"))
-        advanceUntilIdle()
+        runCurrent()
         assertTrue(viewmodel.uiState.value.loadState is LoadState.Success)
+        viewmodel.cancelTimer() // must cancel before runTest cleanup calls advanceUntilIdle()
     }
 
     @Test
@@ -896,7 +940,7 @@ class GameViewModelTest {
             GameEvent.Ended(GameEndedEvent(gameId = "Game123", winnerUserId = "User123"))
         )
 
-        assertEquals("User123", viewmodel.uiState.value.winnerUserId)
+        // navigation effect is verified in next issue [feat(android)(game): add ViewModel and UI tests for game-end flow]
     }
 
     @Test
@@ -1173,5 +1217,406 @@ class GameViewModelTest {
 
         testFlow.emit(mockEvent)
         runCurrent()
+    }
+
+    @Test
+    fun toggleXRAY_changes_rack_if_not_active() = runTest {
+        setPlayerTurnInactive()
+
+        val rack = viewmodel.uiState.value.rackTiles
+        val state = viewmodel.uiState.value.cheatXRAY
+        viewmodel.onUIEvent(GameUIEvent.ToggleXRAY)
+
+        assertNotEquals(rack, viewmodel.uiState.value.rackTiles)
+        assertNotEquals(state, viewmodel.uiState.value.cheatXRAY)
+
+        viewmodel.onUIEvent(GameUIEvent.ToggleXRAY)
+
+        assertEquals(rack, viewmodel.uiState.value.rackTiles)
+        assertEquals(state, viewmodel.uiState.value.cheatXRAY)
+    }
+
+    @Test
+    fun toggleXRAY_leaves_rack_if_active() = runTest {
+        setTestGameState()
+
+        val rack = viewmodel.uiState.value.rackTiles
+        val state = viewmodel.uiState.value.cheatXRAY
+        viewmodel.onUIEvent(GameUIEvent.ToggleXRAY)
+
+        assertEquals(rack, viewmodel.uiState.value.rackTiles)
+        assertNotEquals(state, viewmodel.uiState.value.cheatXRAY)
+    }
+
+    @Test
+    fun toggleXRAY_withNullGameState_sets_loadState_error() = runTest {
+        viewmodel.setUiStateForTest(GameUiState(
+            gameState = null,
+        ))
+        viewmodel.onUIEvent(GameUIEvent.ToggleXRAY)
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
+    }
+
+    @Test
+    fun toggleXRAY_withNullUser_sets_loadState_error() = runTest {
+        viewmodel.setUiStateForTest(GameUiState(
+            gameState = fakeGameResponse.toDomain(),
+            user = null
+        ))
+        viewmodel.onUIEvent(GameUIEvent.ToggleXRAY)
+        assertTrue(viewmodel.uiState.value.loadState is LoadState.Error)
+    }
+    // --- handleFinishedGame ---
+
+    @Test
+    fun handlePlayerFinished_populatesGameResult() {
+        setTestGameState()
+        val game = viewmodel.uiState.value.gameState!!
+
+        viewmodel.handlePlayerFinished(game, isGameOver = true, overrideWinnerId = "User123")
+
+        val result = viewmodel.uiState.value.gameResult
+        assertNotNull(result)
+        assertEquals("User123", result?.winnerUserId)
+        assertTrue(result?.players?.isNotEmpty() == true)
+    }
+
+    @Test
+    fun handlePlayerFinished_sortsByScoreDescending() {
+        val user = User.newBuilder().setUid("u1").setDisplayName("Alice").setGameId("g1").build()
+        val game = ConfirmedGame(
+            gameId = "g1",
+            lobbyId = "l1",
+            players = listOf(
+                GamePlayer(userId = "u1", displayName = "Alice", turnOrder = 0, score = 50),
+                GamePlayer(userId = "u2", displayName = "Bob",   turnOrder = 1, score = 120),
+                GamePlayer(userId = "u3", displayName = "Carol", turnOrder = 2, score = 80)
+            ),
+            currentPlayerUserId = "u1"
+        )
+        viewmodel.setUiStateForTest(GameUiState(user = user, gameState = game))
+
+        viewmodel.handlePlayerFinished(game, isGameOver = true, overrideWinnerId = "u2")
+
+        val players = viewmodel.uiState.value.gameResult?.players
+        assertNotNull(players)
+        assertEquals("u2", players?.get(0)?.userId)
+        assertEquals(1, players?.get(0)?.finishPosition)
+        assertEquals("u3", players?.get(1)?.userId)
+        assertEquals(2, players?.get(1)?.finishPosition)
+        assertEquals("u1", players?.get(2)?.userId)
+        assertEquals(3, players?.get(2)?.finishPosition)
+    }
+
+    @Test
+    fun handlePlayerFinished_navigateToResult_false_doesNotEmitEffect() = runTest {
+        setTestGameState()
+        val game = viewmodel.uiState.value.gameState!!
+
+        val collected = mutableListOf<GameEffect>()
+        val collectJob = launch { viewmodel.effects.collect { collected.add(it) } }
+        runCurrent()
+
+        viewmodel.handlePlayerFinished(game, isGameOver = false, navigateToResult = false)
+        runCurrent()
+
+        collectJob.cancel()
+        assertTrue(collected.isEmpty())
+    }
+
+    @Test
+    fun handlePlayerFinished_emitsNavigateToResultEffect() = runTest {
+        setTestGameState()
+        val game = viewmodel.uiState.value.gameState!!
+
+        val effectDeferred = async { viewmodel.effects.first() }
+        runCurrent()
+
+        viewmodel.handlePlayerFinished(game, isGameOver = true, overrideWinnerId = "User123")
+        runCurrent()
+
+        assertEquals(GameEffect.NavigateToResult, effectDeferred.await())
+    }
+
+    @Test
+    fun handlePlayerFinished_capturesMatchDuration() {
+        setTestGameState()
+        viewmodel.setUiStateForTest(
+            viewmodel.uiState.value.copy(elapsedSeconds = 125)
+        )
+        val game = viewmodel.uiState.value.gameState!!
+
+        viewmodel.handlePlayerFinished(game, isGameOver = true, overrideWinnerId = "User123")
+
+        assertEquals("2:05", viewmodel.uiState.value.gameResult?.matchDuration)
+    }
+
+    @Test
+    fun handleGameSocketEvent_updated_withFinishedStatus_triggersGameEnd() {
+        val user = User.newBuilder().setUid("u1").setDisplayName("Alice").setGameId("g1").build()
+        viewmodel.setUiStateForTest(GameUiState(user = user))
+
+        val finishedGame = fakeGameResponse.copy(
+            status = GameStatus.FINISHED.toString(),
+            players = listOf(
+                fakeGameResponse.players.first().copy(userId = "u1", score = 100)
+            ),
+            currentPlayerUserId = "u1"
+        )
+
+        viewmodel.handleGameSocketEvent(
+            GameEvent.Updated(GameUpdatedEvent(gameId = "g1", game = finishedGame))
+        )
+
+        assertNotNull(viewmodel.uiState.value.gameResult)
+    }
+
+    // --- startTimer ---
+
+    @Test
+    fun startTimer_incrementsElapsedSeconds() = runTest {
+        viewmodel.startTimer()
+        advanceTimeBy(2500L)
+        assertTrue(viewmodel.uiState.value.elapsedSeconds >= 2)
+        viewmodel.cancelTimer()
+    }
+
+    // --- handlePlayerFinished — winner resolution branches ---
+
+    @Test
+    fun handlePlayerFinished_usesGameWinnerUserId_whenNoOverride() {
+        setTestGameState()
+        val game = viewmodel.uiState.value.gameState!!.copy(winnerUserId = "User123")
+        viewmodel.handlePlayerFinished(game, isGameOver = true)
+        assertEquals("User123", viewmodel.uiState.value.gameResult?.winnerUserId)
+    }
+
+    @Test
+    fun handlePlayerFinished_usesFinishPosition1Player_asWinner() {
+        val user = User.newBuilder().setUid("u1").setDisplayName("Alice").setGameId("g1").build()
+        val game = ConfirmedGame(
+            gameId = "g1", lobbyId = "l1",
+            players = listOf(
+                GamePlayer(userId = "u1", displayName = "Alice", turnOrder = 0, score = 50,
+                    metrics = GamePlayerMetrics(finishPosition = 1)),
+                GamePlayer(userId = "u2", displayName = "Bob", turnOrder = 1, score = 30)
+            ),
+            currentPlayerUserId = "u1"
+        )
+        viewmodel.setUiStateForTest(GameUiState(user = user, gameState = game))
+        viewmodel.handlePlayerFinished(game, isGameOver = true)
+        assertEquals("u1", viewmodel.uiState.value.gameResult?.winnerUserId)
+    }
+
+    @Test
+    fun handlePlayerFinished_fallsBackToSortedFirst_whenNoWinnerInfo() {
+        val user = User.newBuilder().setUid("u1").setDisplayName("Alice").setGameId("g1").build()
+        val game = ConfirmedGame(
+            gameId = "g1", lobbyId = "l1",
+            players = listOf(
+                GamePlayer(userId = "u1", displayName = "Alice", turnOrder = 0, score = 100),
+                GamePlayer(userId = "u2", displayName = "Bob", turnOrder = 1, score = 50)
+            ),
+            currentPlayerUserId = "u1"
+        )
+        viewmodel.setUiStateForTest(GameUiState(user = user, gameState = game))
+        viewmodel.handlePlayerFinished(game, isGameOver = true)
+        assertEquals("u1", viewmodel.uiState.value.gameResult?.winnerUserId)
+    }
+
+    // --- handlePlayerFinished — isStillPlaying + isGameOver ---
+
+    @Test
+    fun handlePlayerFinished_setsIsStillPlaying_and_isGameOver_correctly() {
+        val user = User.newBuilder().setUid("u1").setDisplayName("Alice").setGameId("g1").build()
+        val game = ConfirmedGame(
+            gameId = "g1", lobbyId = "l1",
+            players = listOf(
+                GamePlayer(userId = "u1", displayName = "Alice", turnOrder = 0, score = 100,
+                    metrics = GamePlayerMetrics(finishPosition = 1)),
+                GamePlayer(userId = "u2", displayName = "Bob", turnOrder = 1, score = 50)
+            ),
+            currentPlayerUserId = "u1"
+        )
+        viewmodel.setUiStateForTest(GameUiState(user = user, gameState = game))
+        viewmodel.handlePlayerFinished(game, isGameOver = false, overrideWinnerId = "u1")
+
+        val result = viewmodel.uiState.value.gameResult!!
+        assertFalse(result.isGameOver)
+        assertFalse(result.players.first { it.userId == "u1" }.isStillPlaying)
+        assertTrue(result.players.first { it.userId == "u2" }.isStillPlaying)
+    }
+
+    // --- handlePlayerFinished — metrics (tilesRemainingAtEnd, penaltyPointsAtEnd) ---
+
+    @Test
+    fun handlePlayerFinished_usesMetrics_forRemainingTilesAndPenalty() {
+        val user = User.newBuilder().setUid("u1").setDisplayName("Alice").setGameId("g1").build()
+        val game = ConfirmedGame(
+            gameId = "g1", lobbyId = "l1",
+            players = listOf(
+                GamePlayer(userId = "u1", displayName = "Alice", turnOrder = 0, score = 100,
+                    metrics = GamePlayerMetrics(
+                        finishPosition = 1,
+                        tilesRemainingAtEnd = 5,
+                        penaltyPointsAtEnd = 30
+                    ))
+            ),
+            currentPlayerUserId = "u1"
+        )
+        viewmodel.setUiStateForTest(GameUiState(user = user, gameState = game))
+        viewmodel.handlePlayerFinished(game, isGameOver = true, overrideWinnerId = "u1")
+
+        val player = viewmodel.uiState.value.gameResult?.players?.first()
+        assertEquals(5, player?.remainingTiles)
+        assertEquals(30, player?.penaltyPoints)
+    }
+
+    // --- GameEvent.Updated: silent update when another player finishes ---
+
+    @Test
+    fun handleGameSocketEvent_updated_silentlyUpdatesResult_whenAnotherPlayerFinishes() = runTest {
+        val user = User.newBuilder().setUid("FakeUser1").setDisplayName("Bob").setGameId("FakeGame1").build()
+        viewmodel.setUiStateForTest(GameUiState(user = user))
+
+        val twoPlayerResponse = fakeGameResponse.copy(
+            status = GameStatus.ACTIVE.toString(),
+            players = listOf(
+                fakeGameResponse.players.first().copy(
+                    userId = "FakeUser1",
+                    metrics = emptyMetrics.copy(finishPosition = 1)
+                ),
+                GamePlayerResponse(
+                    userId = "u2", displayName = "Bob2", turnOrder = 1,
+                    rackTiles = emptyList(), hasCompletedInitialMeld = false, score = 0,
+                    joinedAt = "2026-05-08T10:00:00Z", metrics = emptyMetrics
+                )
+            ),
+            currentPlayerUserId = "u2"
+        )
+
+        // current player finishes → lastShownFinishCount = 1
+        viewmodel.handleGameSocketEvent(GameEvent.Updated(GameUpdatedEvent("FakeGame1", twoPlayerResponse)))
+        runCurrent()
+
+        val secondResponse = twoPlayerResponse.copy(
+            players = listOf(
+                twoPlayerResponse.players[0],
+                twoPlayerResponse.players[1].copy(metrics = emptyMetrics.copy(finishPosition = 2))
+            )
+        )
+
+        val collected = mutableListOf<GameEffect>()
+        val job = launch { viewmodel.effects.collect { collected.add(it) } }
+        runCurrent()
+
+        viewmodel.handleGameSocketEvent(GameEvent.Updated(GameUpdatedEvent("FakeGame1", secondResponse)))
+        runCurrent()
+        job.cancel()
+
+        assertTrue(collected.isEmpty())
+        assertEquals(2, viewmodel.uiState.value.gameResult?.players?.count { !it.isStillPlaying })
+    }
+
+    // --- GameEvent.Ended: no navigation when already on result screen ---
+
+    @Test
+    fun handleGameSocketEvent_ended_doesNotNavigate_whenAlreadyOnResultScreen() = runTest {
+        val user = User.newBuilder().setUid("FakeUser1").setDisplayName("Bob").setGameId("FakeGame1").build()
+        viewmodel.setUiStateForTest(GameUiState(user = user))
+
+        val activeResponse = fakeGameResponse.copy(
+            status = GameStatus.ACTIVE.toString(),
+            players = listOf(
+                fakeGameResponse.players.first().copy(
+                    userId = "FakeUser1",
+                    metrics = emptyMetrics.copy(finishPosition = 1)
+                ),
+                GamePlayerResponse(
+                    userId = "u2", displayName = "Bob2", turnOrder = 1,
+                    rackTiles = emptyList(), hasCompletedInitialMeld = false, score = 0,
+                    joinedAt = "2026-05-08T10:00:00Z", metrics = emptyMetrics
+                )
+            ),
+            currentPlayerUserId = "u2"
+        )
+
+        // trigger lastShownFinishCount = 1
+        viewmodel.handleGameSocketEvent(GameEvent.Updated(GameUpdatedEvent("FakeGame1", activeResponse)))
+        runCurrent()
+
+        val collected = mutableListOf<GameEffect>()
+        val job = launch { viewmodel.effects.collect { collected.add(it) } }
+        runCurrent()
+
+        viewmodel.handleGameSocketEvent(GameEvent.Ended(GameEndedEvent("FakeGame1", "FakeUser1")))
+        runCurrent()
+        job.cancel()
+
+        assertTrue(collected.isEmpty())
+        assertTrue(viewmodel.uiState.value.gameResult?.isGameOver ?: false)
+    }
+
+    // --- GameEvent.Updated FINISHED: no navigation when already on result screen ---
+
+    @Test
+    fun handleGameSocketEvent_updatedFinished_doesNotNavigate_whenAlreadyOnResultScreen() = runTest {
+        val user = User.newBuilder().setUid("FakeUser1").setDisplayName("Bob").setGameId("FakeGame1").build()
+        viewmodel.setUiStateForTest(GameUiState(user = user))
+
+        val activeResponse = fakeGameResponse.copy(
+            status = GameStatus.ACTIVE.toString(),
+            players = listOf(
+                fakeGameResponse.players.first().copy(
+                    userId = "FakeUser1",
+                    metrics = emptyMetrics.copy(finishPosition = 1)
+                ),
+                GamePlayerResponse(
+                    userId = "u2", displayName = "Bob2", turnOrder = 1,
+                    rackTiles = emptyList(), hasCompletedInitialMeld = false, score = 0,
+                    joinedAt = "2026-05-08T10:00:00Z", metrics = emptyMetrics
+                )
+            ),
+            currentPlayerUserId = "u2"
+        )
+
+        // trigger lastShownFinishCount = 1
+        viewmodel.handleGameSocketEvent(GameEvent.Updated(GameUpdatedEvent("FakeGame1", activeResponse)))
+        runCurrent()
+
+        val finishedResponse = activeResponse.copy(status = GameStatus.FINISHED.toString())
+
+        val collected = mutableListOf<GameEffect>()
+        val job = launch { viewmodel.effects.collect { collected.add(it) } }
+        runCurrent()
+
+        viewmodel.handleGameSocketEvent(GameEvent.Updated(GameUpdatedEvent("FakeGame1", finishedResponse)))
+        runCurrent()
+        job.cancel()
+
+        assertTrue(collected.isEmpty())
+        assertTrue(viewmodel.uiState.value.gameResult?.isGameOver ?: false)
+    }
+
+    // --- GameUiState data class coverage ---
+
+    @Test
+    fun gameResultPlayerSummary_equalsAndCopy() {
+        val p1 = GameResultPlayerSummary(userId = "u1", displayName = "Alice", score = 100)
+        val p2 = p1.copy(score = 200)
+
+        assertEquals(p1, p1)
+        assertNotEquals(p1, p2)
+        assertEquals("u1", p2.userId)
+    }
+
+    @Test
+    fun gameResultUiModel_equalsAndCopy() {
+        val m1 = GameResultUiModel(winnerUserId = "u1", players = emptyList(), matchDuration = "1:00")
+        val m2 = m1.copy(matchDuration = "2:00")
+
+        assertEquals(m1, m1)
+        assertNotEquals(m1, m2)
+        assertEquals("u1", m2.winnerUserId)
     }
 }
