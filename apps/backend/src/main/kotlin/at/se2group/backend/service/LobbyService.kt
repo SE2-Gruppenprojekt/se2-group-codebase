@@ -122,7 +122,8 @@ class LobbyService(
                 maxPlayers = request.maxPlayers,
                 isPrivate = request.isPrivate,
                 allowGuests = request.allowGuests,
-                requireInitialMeld = request.requireInitialMeld
+                requireInitialMeld = request.requireInitialMeld,
+                startingTiles = request.startingTiles
             )
         )
 

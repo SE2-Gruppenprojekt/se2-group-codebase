@@ -32,7 +32,7 @@ class TileShuffleServiceTest {
         )
         val tiles = createNumberedTiles(1, 28)
 
-        val result = tileShuffleService.distributedHands(players, tiles)
+        val result = tileShuffleService.distributedHands(players, tiles, 14)
 
         assertEquals(2, result.size)
         assertIterableEquals(tiles.subList(0, 14), result[0].rackTiles)
@@ -50,7 +50,7 @@ class TileShuffleServiceTest {
         val tiles = createNumberedTiles(1, 27)
 
         val exception = assertThrows<IllegalArgumentException> {
-            tileShuffleService.distributedHands(players, tiles)
+            tileShuffleService.distributedHands(players, tiles, 14)
         }
 
         assertEquals("Not enough tiles to distribute 14 tiles to 2 players", exception.message)

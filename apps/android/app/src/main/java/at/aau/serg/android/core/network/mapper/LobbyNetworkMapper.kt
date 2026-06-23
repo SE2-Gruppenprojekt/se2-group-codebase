@@ -19,7 +19,9 @@ fun LobbyResponse.toDomain(): Lobby =
         settings = LobbySettings(
             maxPlayers = maxPlayers,
             isPrivate = isPrivate,
-            allowGuests = allowGuests
+            allowGuests = allowGuests,
+            requireInitialMeld = requireInitialMeld,
+            startingTiles = startingTiles
         ),
         currentGameId = currentGameId
     )

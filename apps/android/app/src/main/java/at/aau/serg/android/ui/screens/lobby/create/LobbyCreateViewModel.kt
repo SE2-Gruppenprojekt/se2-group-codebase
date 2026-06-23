@@ -44,7 +44,9 @@ class LobbyCreateViewModel(
                     displayName = user.displayName,
                     maxPlayers = state.maxPlayers,
                     isPrivate = state.isPrivate,
-                    allowGuests = true
+                    allowGuests = true,
+                    requireInitialMeld = state.requireInitialMeld,
+                    startingTiles = state.startingTiles
                 )
             )
 

@@ -57,7 +57,8 @@ class GameInitializationService(
         val shuffledTiles = tileShuffleService.shuffleTiles(tilePoolGenerationService.createTilePool())
         val playersWithHands = tileShuffleService.distributedHands(
             lobby.toGamePlayers(),
-            shuffledTiles
+            shuffledTiles,
+            lobby.settings.startingTiles
         )
         val firstPlayer = playersWithHands.firstByTurnOrder()
         val confirmedGame = ConfirmedGame(
