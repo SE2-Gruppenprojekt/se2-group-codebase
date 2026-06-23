@@ -188,8 +188,8 @@ fun LobbyCreateScreenContent(
                 icon = { Icon(Icons.Filled.Groups, null, tint = c.screen.primaryText) },
                 title = "Starting Tiles",
                 value = uiState.startingTiles.toString(),
-                onMinus = { onEvent(LobbyCreateEvent.ChangeStartingTiles(-10)) },
-                onPlus = { onEvent(LobbyCreateEvent.ChangeStartingTiles(10)) },
+                onMinus = { onEvent(LobbyCreateEvent.ChangeStartingTiles(-1)) },
+                onPlus = { onEvent(LobbyCreateEvent.ChangeStartingTiles(1)) },
                 modifier = Modifier
                     .testTag(LobbyCreateTestTags.STARTING_TILES_ROW)
                     .padding(bottom = 4.dp),
