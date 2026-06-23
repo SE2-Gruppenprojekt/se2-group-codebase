@@ -80,11 +80,7 @@ class RummikubRuleService(
             .validate(submittedDraft.boardSets)
             .violations
 
-        if (confirmedGame.requireInitialMeld) {
-            violations += firstMoveValidationService
-                .validate(confirmedGame, actingPlayer, submittedDraft)
-                .violations
-        }
+        // Temporarily disabled: initial meld should not block turn submission in the backend.
 
         return if (violations.isEmpty()) valid() else invalid(violations)
     }
