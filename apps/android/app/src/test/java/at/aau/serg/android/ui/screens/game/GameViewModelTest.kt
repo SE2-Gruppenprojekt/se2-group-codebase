@@ -56,6 +56,7 @@ import shared.models.game.response.GamePlayerResponse
 import shared.models.game.response.GameResponse
 import shared.models.game.response.TileResponse
 import shared.models.game.response.TurnDraftResponse
+import java.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class GameViewModelTest {
@@ -162,7 +163,9 @@ class GameViewModelTest {
                     boardSets = fakeBoard,
                     gameId = initialUser.gameId,
                     lobbyId = "Lobby123",
-                    currentPlayerUserId = initialUser.uid
+                    currentPlayerUserId = initialUser.uid,
+                    createdAt = Instant.parse("2026-05-08T10:00:00Z"),
+                    finishedAt = Instant.parse("2026-05-08T10:10:00Z"),
                 ),
                 isActivePlayer = true
             )
@@ -1375,14 +1378,22 @@ class GameViewModelTest {
     @Test
     fun handlePlayerFinished_capturesMatchDuration() {
         setTestGameState()
-        viewmodel.setUiStateForTest(
-            viewmodel.uiState.value.copy(elapsedSeconds = 125)
-        )
         val game = viewmodel.uiState.value.gameState!!
 
         viewmodel.handlePlayerFinished(game, isGameOver = true, overrideWinnerId = "FakeUser1")
 
-        assertEquals("2:05", viewmodel.uiState.value.gameResult?.matchDuration)
+        assertEquals("10:00", viewmodel.uiState.value.gameResult?.matchDuration)
+    }
+
+    @Test
+    fun handlePlayerFinished_setsMatchDuration_onfinishedAtNull() {
+        setTestGameState()
+        val game = viewmodel.uiState.value.gameState!!.copy(
+            finishedAt = null
+        )
+        viewmodel.handlePlayerFinished(game, isGameOver = true, overrideWinnerId = "FakeUser1")
+
+        assertEquals("0:00", viewmodel.uiState.value.gameResult?.matchDuration)
     }
 
     @Test

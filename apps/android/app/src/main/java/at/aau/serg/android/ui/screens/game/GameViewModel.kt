@@ -35,6 +35,7 @@ import shared.models.game.domain.Tile
 import shared.models.game.event.GameEvent
 import shared.models.game.request.EndTurnRequest
 import shared.models.game.request.UpdateDraftRequest
+import java.time.Duration
 import java.util.UUID
 
 
@@ -638,7 +639,15 @@ class GameViewModel(
         overrideWinnerId: String? = null,
         navigateToResult: Boolean = true
     ) {
-        val matchDuration = formatElapsed(_uiState.value.elapsedSeconds)
+        //val matchDuration = formatElapsed(_uiState.value.elapsedSeconds)
+        val matchDuration = if (game.finishedAt != null) {
+            val duration = Duration.between(game.createdAt, game.finishedAt)
+            val durationSeconds = duration.toMillis() / 1000
+            formatElapsed(durationSeconds.toInt())
+        } else {
+            formatElapsed(0)
+        }
+
         val sorted = game.players
             .sortedWith(compareBy({ it.metrics.finishPosition ?: Int.MAX_VALUE }, { -it.score }))
         val players = sorted.mapIndexed { index, it ->
