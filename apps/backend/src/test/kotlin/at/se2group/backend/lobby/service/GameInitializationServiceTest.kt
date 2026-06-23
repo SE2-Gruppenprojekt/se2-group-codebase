@@ -17,6 +17,7 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.mock
+import java.time.Instant
 
 @ExtendWith(MockitoExtension::class)
 class GameInitializationServiceTest {
@@ -63,6 +64,7 @@ class GameInitializationServiceTest {
         assertEquals("lobby-1", result.confirmedGame.lobbyId)
         assertEquals(GameStatus.ACTIVE, result.confirmedGame.status)
         assertTrue(result.confirmedGame.gameId.isNotBlank())
+        assertTrue(result.confirmedGame.createdAt <= Instant.now())
         assertEquals(2, result.confirmedGame.players.size)
         assertEquals(12, result.confirmedGame.drawPile.size)
         assertTrue(
