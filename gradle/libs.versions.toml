@@ -5,7 +5,7 @@ targetSdk = "36"
 jvmTarget = "17"
 
 # Build Tools
-agp = "8.3.2"
+agp = "8.9.1"
 kotlin = "2.3.10"
 
 # Spring Boot (Backend)
