@@ -10,6 +10,7 @@ import java.util.UUID
 import at.se2group.backend.persistence.TurnDraftRepository
 import at.se2group.backend.persistence.TurnDraftEntity
 import shared.models.lobby.domain.Lobby
+import java.time.Instant
 
 /**
  * Service responsible for creating the initial confirmedGame state from a lobby that has already been
@@ -57,9 +58,11 @@ class GameInitializationService(
         val shuffledTiles = tileShuffleService.shuffleTiles(tilePoolGenerationService.createTilePool())
         val playersWithHands = tileShuffleService.distributedHands(
             lobby.toGamePlayers(),
-            shuffledTiles
+            shuffledTiles,
+            lobby.settings.startingTiles
         )
         val firstPlayer = playersWithHands.firstByTurnOrder()
+        val createdAt = Instant.now()
         val confirmedGame = ConfirmedGame(
             gameId = UUID.randomUUID().toString(),
             lobbyId = lobby.lobbyId,
@@ -68,7 +71,8 @@ class GameInitializationService(
             drawPile = tileShuffleService.createDrawPile(shuffledTiles, playersWithHands),
             currentPlayerUserId = firstPlayer.userId,
             status = GameStatus.ACTIVE,
-            requireInitialMeld = lobby.settings.requireInitialMeld
+            requireInitialMeld = lobby.settings.requireInitialMeld,
+            createdAt = createdAt
         )
         val draft = TurnDraft(
             gameId = confirmedGame.gameId,

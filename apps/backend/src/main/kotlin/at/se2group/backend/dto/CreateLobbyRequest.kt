@@ -13,6 +13,9 @@ val maxPlayers: Int = 4,
 
 val isPrivate: Boolean = false,
 val allowGuests: Boolean = true,
-val requireInitialMeld: Boolean = true
+val requireInitialMeld: Boolean = false,
+
+@field:Min(1, message = "startingTiles must be at least 1")
+val startingTiles: Int = 14
 
 )
