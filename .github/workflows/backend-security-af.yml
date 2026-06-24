@@ -148,11 +148,34 @@ jobs:
           ZAP_SCAN_FIXTURE_SECRET: ${{ secrets.ZAP_SCAN_FIXTURE_SECRET }}
         run: |
           set -euo pipefail
+          delete_url="$BACKEND_BASE_URL/internal/security/scan-fixture"
+          response_file="$(mktemp)"
 
-          curl -fsS \
-            -X DELETE "$BACKEND_BASE_URL/internal/security/scan-fixture" \
-            -H "X-Scan-Secret: $ZAP_SCAN_FIXTURE_SECRET" \
-            >/dev/null
+          for attempt in 1 2 3; do
+            status_code="$(
+              curl -sS \
+                -o "$response_file" \
+                -w "%{http_code}" \
+                -X DELETE "$delete_url" \
+                -H "X-Scan-Secret: $ZAP_SCAN_FIXTURE_SECRET" \
+                || true
+            )"
+
+            if [ "$status_code" = "204" ] || [ "$status_code" = "404" ]; then
+              echo "Scan fixture cleanup finished with HTTP $status_code"
+              exit 0
+            fi
+
+            echo "Scan fixture cleanup attempt $attempt returned HTTP $status_code"
+            if [ -s "$response_file" ]; then
+              cat "$response_file"
+              echo
+            fi
+
+            sleep 5
+          done
+
+          echo "Warning: scan fixture cleanup did not complete successfully. Continuing so teardown does not fail the whole scan workflow."
 
       - name: Publish AF summary
         if: always()
