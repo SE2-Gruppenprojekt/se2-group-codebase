@@ -190,9 +190,11 @@ class EndTurnService(
     ): Boolean {
         val actingPlayer = confirmedGame.players.first { it.userId == submittedDraft.playerUserId }
 
-        return submittedDraft.boardSets == confirmedGame.boardSets &&
-            submittedDraft.rackTiles == actingPlayer.rackTiles
+        return submittedDraft.rackTiles.toTileMultiset() == actingPlayer.rackTiles.toTileMultiset()
     }
+
+    private fun List<Tile>.toTileMultiset(): Map<String, Int> =
+        groupingBy { it.tileId }.eachCount()
 
     /**
      * Marks the game as finished when the acting player has emptied their rack.
