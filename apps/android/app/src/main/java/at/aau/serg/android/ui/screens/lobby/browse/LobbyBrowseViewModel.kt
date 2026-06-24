@@ -65,7 +65,8 @@ class LobbyBrowseViewModel(
         }
 
         try {
-            val lobbies = api.getLobbies().map { it.toUi() }
+            val lobbies = api.getLobbies().mapIndexedNotNull { index, item -> item.toUiOrNull(index) }
+                .reversed()
 
             _uiState.update {
                 it.copy(

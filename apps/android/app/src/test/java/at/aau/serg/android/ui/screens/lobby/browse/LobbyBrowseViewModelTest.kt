@@ -82,7 +82,7 @@ class LobbyBrowseViewModelTest {
     fun init_loads_lobbies_successfully() = runTest {
         coEvery { api.getLobbies() } returns listOf(
             LobbyListItemResponse(
-                lobbyId = "ABC",
+                lobbyId = "123456",
                 hostUserId = "host",
                 status = "OPEN",
                 currentPlayerCount = 1,
@@ -97,7 +97,7 @@ class LobbyBrowseViewModelTest {
         val state = viewModel.uiState.value
         assertEquals(LoadState.Success, state.loadState)
         assertEquals(1, state.lobbies.size)
-        assertEquals("ABC", state.lobbies.first().lobbyId)
+        assertEquals("123456", state.lobbies.first().lobbyId)
     }
 
     // --- load lobbies error ---

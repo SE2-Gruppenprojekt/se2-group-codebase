@@ -69,13 +69,13 @@ val DisabledButtonDark = Color(0xFF555A6E)
 val DisabledButtonLight = Color(0xFFD7DCE5)
 
 // Lobby waiting room player colors
-val WaitingActivePlayerBgDark = Color(0xFF1F356A)
-val WaitingSecondPlayerBgDark = Color(0xFF1E3A2D)
-val WaitingSecondPlayerBorderDark = Color(0xFF2BC46D)
-val WaitingActivePlayerBgLight = Color(0xFFEAF1FF)
-val WaitingActivePlayerBorderLight = Color(0xFF4C84FF)
-val WaitingSecondPlayerBgLight = Color(0xFFEAFBF1)
-val WaitingSecondPlayerBorderLight = Color(0xFF20C76F)
+val WaitingActivePlayerBgDark = Color(0xFF1A2340)
+val WaitingSecondPlayerBgDark = Color(0xFF2A1A55)
+val WaitingSecondPlayerBorderDark = Color(0xFF9D3CFF)
+val WaitingActivePlayerBgLight = Color(0xFFECF2FF)
+val WaitingActivePlayerBorderLight = Color(0xFF4F8DFF)
+val WaitingSecondPlayerBgLight = Color(0xFFF3EBFF)
+val WaitingSecondPlayerBorderLight = Color(0xFF9D3CFF)
 
 // Lobby create — selection state
 val LobbySelectedDark = Color(0xFF7C3AED)

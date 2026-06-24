@@ -41,6 +41,7 @@ import at.aau.serg.android.ui.theme.AuthButtonGradientStart
 import at.aau.serg.android.ui.theme.AuthDarkBorderPurple
 import at.aau.serg.android.ui.theme.SettingsIconRedTint
 import at.aau.serg.android.ui.theme.ThemeState
+import androidx.compose.material3.MaterialTheme
 import at.aau.serg.android.ui.theme.appColors
 
 
@@ -55,7 +56,7 @@ fun SettingsScreen(
 fun SettingsScreenContent(
     onEvent: (SettingsEvent) -> Unit
 ) {
-    val c = appColors()
+    val c = MaterialTheme.appColors
     val darkMode = ThemeState.isDarkMode.value
 
     Column(

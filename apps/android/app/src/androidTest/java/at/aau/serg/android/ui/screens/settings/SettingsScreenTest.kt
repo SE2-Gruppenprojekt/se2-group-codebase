@@ -41,13 +41,7 @@ class SettingsScreenTest {
 
     @Test
     fun buttons_trigger_events() {
-        val events = mutableListOf<SettingsEvent>()
-
-        composeRule.setContent {
-            SettingsScreenContent(
-                onEvent = { events.add(it) }
-            )
-        }
+        setContent()
 
         click(SettingsTestTags.BACK_BUTTON)
         click(SettingsTestTags.CHANGE_USERNAME_BUTTON)
@@ -62,13 +56,7 @@ class SettingsScreenTest {
 
     @Test
     fun darkModeSwitch_emits_toggle_event() {
-        val events = mutableListOf<SettingsEvent>()
-
-        composeRule.setContent {
-            SettingsScreenContent(
-                onEvent = { events.add(it) }
-            )
-        }
+        setContent()
 
         click(SettingsTestTags.DARK_MODE_SWITCH)
 

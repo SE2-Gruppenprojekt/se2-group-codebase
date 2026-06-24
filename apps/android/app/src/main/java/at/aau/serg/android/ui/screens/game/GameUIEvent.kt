@@ -24,4 +24,7 @@ sealed interface GameUIEvent {
     data object OnBack : GameUIEvent {
         override val requiresActivePlayer = false
     }
+    data object DebugNavigateToResult : GameUIEvent {
+        override val requiresActivePlayer = false
+    }
 }

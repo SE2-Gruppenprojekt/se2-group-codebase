@@ -54,7 +54,7 @@ fun SettingRow(
     onMinus: () -> Unit,
     onPlus: () -> Unit
 ) {
-    val buttonColor = appColors().screen.actionButton
+    val buttonColor = MaterialTheme.appColors.screen.actionButton
 
     Row(
         modifier = Modifier
