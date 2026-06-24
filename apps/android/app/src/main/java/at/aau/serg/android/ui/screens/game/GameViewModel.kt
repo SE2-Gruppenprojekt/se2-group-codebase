@@ -639,7 +639,6 @@ class GameViewModel(
         overrideWinnerId: String? = null,
         navigateToResult: Boolean = true
     ) {
-        //val matchDuration = formatElapsed(_uiState.value.elapsedSeconds)
         val matchDuration = if (game.finishedAt != null) {
             val duration = Duration.between(game.createdAt, game.finishedAt)
             val durationSeconds = duration.toMillis() / 1000
