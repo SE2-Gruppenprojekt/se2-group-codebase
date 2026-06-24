@@ -289,5 +289,29 @@ class RummikubRuleServiceTest {
 
     }
 
+    @Test
+    fun `returns invalid when submitted draft removes confirmed board tile into rack`() {
+        val boardTile = NumberedTile("board-1", TileColor.RED, 7)
+        val game = confirmedGame.copy(
+            players = listOf(player.copy(rackTiles = emptyList(), hasCompletedInitialMeld = true)),
+            boardSets = listOf(BoardSet(boardSetId = "set-1", tiles = listOf(boardTile)))
+        )
+        val draft = TurnDraft(
+            gameId = "game-1",
+            playerUserId = "user-1",
+            boardSets = emptyList(),
+            rackTiles = listOf(boardTile)
+        )
+
+        val result = realRuleService.validateSubmittedDraft(
+            confirmedGame = game,
+            actingPlayerUserId = "user-1",
+            submittedDraft = draft
+        )
+
+        assertFalse(result.isValid)
+        assertTrue(result.violations.any { it.code == "BOARD_TILE_REMOVAL" })
+    }
+
 
 }

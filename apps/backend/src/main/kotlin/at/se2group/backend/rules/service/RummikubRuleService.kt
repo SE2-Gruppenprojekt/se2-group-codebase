@@ -3,6 +3,7 @@ package at.se2group.backend.rules.service
 import at.se2group.backend.service.TileConservationService
 import org.springframework.stereotype.Service
 import shared.models.game.domain.ConfirmedGame
+import shared.models.game.domain.Tile
 import shared.models.game.domain.TurnDraft
 import shared.models.game.validation.RuleViolation
 import shared.models.game.validation.ValidationResult
@@ -80,8 +81,41 @@ class RummikubRuleService(
             .validate(submittedDraft.boardSets)
             .violations
 
+        violations += validateConfirmedBoardTilesRemainOnBoard(
+            confirmedGame = confirmedGame,
+            submittedDraft = submittedDraft
+        )
+
         // Temporarily disabled: initial meld should not block turn submission in the backend.
 
         return if (violations.isEmpty()) valid() else invalid(violations)
+    }
+
+    private fun validateConfirmedBoardTilesRemainOnBoard(
+        confirmedGame: ConfirmedGame,
+        submittedDraft: TurnDraft
+    ): List<RuleViolation> {
+        val confirmedBoardTileIds = confirmedGame.boardSets
+            .flatMap { it.tiles }
+            .map(Tile::tileId)
+            .toSet()
+
+        val submittedBoardTileIds = submittedDraft.boardSets
+            .flatMap { it.tiles }
+            .map(Tile::tileId)
+            .toSet()
+
+        val removedBoardTileIds = confirmedBoardTileIds - submittedBoardTileIds
+        if (removedBoardTileIds.isEmpty()) {
+            return emptyList()
+        }
+
+        return listOf(
+            RuleViolation(
+                code = "BOARD_TILE_REMOVAL",
+                message = "Tiles already on the board must remain on the board at end of turn",
+                tileIds = removedBoardTileIds.toList()
+            )
+        )
     }
 }
