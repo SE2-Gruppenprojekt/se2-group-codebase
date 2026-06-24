@@ -79,7 +79,7 @@ fun AuthScreenContent(
     val validation = uiState.validation
 
     val isValid = validation.isValid
-    val colors = appColors().auth
+    val colors = MaterialTheme.appColors.auth
 
     val titleGradient = Brush.horizontalGradient(listOf(AuthGradientStart, AuthGradientEnd))
     val buttonGradient = Brush.horizontalGradient(listOf(AuthButtonGradientStart, AuthButtonGradientEnd))

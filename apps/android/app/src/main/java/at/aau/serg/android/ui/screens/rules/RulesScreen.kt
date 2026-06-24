@@ -65,7 +65,7 @@ fun RulesScreen(
 fun RulesScreenContent(
     onBack: () -> Unit
 ) {
-    val c = appColors()
+    val c = MaterialTheme.appColors
 
     Column(
         modifier = Modifier
@@ -351,7 +351,7 @@ private fun RuleSetCard(
     tiles: List<RuleTileData>,
     showAddTile: Boolean
 ) {
-    val c = appColors()
+    val c = MaterialTheme.appColors
 
     Column(
         modifier = Modifier
@@ -451,7 +451,7 @@ private fun RuleItemCard(
     title: String,
     description: String
 ) {
-    val c = appColors()
+    val c = MaterialTheme.appColors
 
     Row(
         modifier = Modifier
@@ -495,7 +495,7 @@ private fun RulesSectionHeader(
     iconBg: Color,
     title: String
 ) {
-    val c = appColors()
+    val c = MaterialTheme.appColors
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(

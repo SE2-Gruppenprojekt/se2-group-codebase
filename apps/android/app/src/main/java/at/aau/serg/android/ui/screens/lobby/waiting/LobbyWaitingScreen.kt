@@ -48,7 +48,7 @@ fun LobbyWaitingScreenContent(
     onEvent: (LobbyWaitingEvent) -> Unit
 ) {
     val scrollState = rememberScrollState()
-    val c = appColors()
+    val c = MaterialTheme.appColors
     val context = LocalContext.current
 
     val players = uiState.lobby?.players ?: emptyList()

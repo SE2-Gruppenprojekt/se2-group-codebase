@@ -65,7 +65,7 @@ fun LobbyBrowseScreenContent(
     uiState: LobbyBrowseUiState,
     onEvent: (LobbyBrowseEvent) -> Unit
 ) {
-    val c = appColors()
+    val c = MaterialTheme.appColors
 
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(c.screen.bgTop, c.screen.bgBottom)

@@ -64,7 +64,7 @@ fun LobbyCreateScreenContent(
     uiState: LobbyCreateUiState,
     onEvent: (LobbyCreateEvent) -> Unit
 ) {
-    val c = appColors()
+    val c = MaterialTheme.appColors
 
     Column(
         modifier = Modifier

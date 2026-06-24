@@ -38,9 +38,9 @@ import at.aau.serg.android.ui.screens.game.components.TileRow
 import at.aau.serg.android.ui.screens.game.components.TileRowConfig
 import at.aau.serg.android.ui.screens.game.components.TileRowPlaceholder
 import at.aau.serg.android.ui.theme.NotReadyRed
-import at.aau.serg.android.ui.theme.appColors
 import at.aau.serg.android.ui.util.ShakeDetector
 import at.aau.serg.android.R
+import at.aau.serg.android.ui.theme.appColors
 
 @Composable
 fun GameScreen(
@@ -70,7 +70,7 @@ fun GameScreenContent(
     uiState: GameUiState,
     onEvent: (GameUIEvent) -> Unit
 ) {
-    val c = appColors()
+    val c = MaterialTheme.appColors
 
     val context = LocalContext.current
     val activity = context as? Activity

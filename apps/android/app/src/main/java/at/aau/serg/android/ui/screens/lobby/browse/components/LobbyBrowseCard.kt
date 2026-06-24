@@ -46,7 +46,7 @@ fun LobbyBrowseCard(
     val cardAlpha = if (lobby.isOpen) 0.14f else 0.05f
     val borderAlpha = if (lobby.isOpen) 0.95f else 0.30f
     val subtleCardColor = accentColor.copy(alpha = cardAlpha).compositeOver(cardColor)
-    val disabledButtonColor = appColors().screen.disabledButton
+    val disabledButtonColor = MaterialTheme.appColors.screen.disabledButton
     val buttonColor = if (lobby.isOpen) accentColor else disabledButtonColor
     val buttonText = if (lobby.isOpen) "Join" else "Full"
     Card(
