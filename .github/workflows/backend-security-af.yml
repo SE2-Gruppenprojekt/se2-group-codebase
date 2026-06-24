@@ -142,6 +142,18 @@ jobs:
         if: always()
         run: ruby .github/scripts/generate_zap_af_endpoint_coverage.rb .github/zap/backend-automation-plan.generated.yaml zap-af-report.json zap-af-endpoint-coverage.md
 
+      - name: Delete dynamic scan fixture state
+        if: always()
+        env:
+          ZAP_SCAN_FIXTURE_SECRET: ${{ secrets.ZAP_SCAN_FIXTURE_SECRET }}
+        run: |
+          set -euo pipefail
+
+          curl -fsS \
+            -X DELETE "$BACKEND_BASE_URL/internal/security/scan-fixture" \
+            -H "X-Scan-Secret: $ZAP_SCAN_FIXTURE_SECRET" \
+            >/dev/null
+
       - name: Publish AF summary
         if: always()
         run: |

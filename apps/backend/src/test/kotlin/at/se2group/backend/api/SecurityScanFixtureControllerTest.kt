@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.post
 import org.springframework.transaction.annotation.Transactional
 
@@ -59,6 +60,18 @@ class SecurityScanFixtureControllerTest {
     }
 
     @Test
+    fun `delete returns 403 when scan secret header is wrong`() {
+        mockMvc.delete("/internal/security/scan-fixture") {
+            header("X-Scan-Secret", "wrong-secret")
+        }
+            .andExpect {
+                status { isForbidden() }
+                jsonPath("$.errorCode") { value("FORBIDDEN") }
+                jsonPath("$.errorMessage") { value("Invalid scan fixture secret") }
+            }
+    }
+
+    @Test
     fun `returns fixture ids when scan secret is valid`() {
         mockMvc.post("/internal/security/scan-fixture") {
             header("X-Scan-Secret", "test-scan-secret")
@@ -78,5 +91,27 @@ class SecurityScanFixtureControllerTest {
         assertTrue(lobbyRepository.findById(SecurityScanFixtureService.SCAN_ACTIVE_LOBBY_ID).isPresent)
         assertTrue(gameRepository.findById(SecurityScanFixtureService.SCAN_GAME_ID).isPresent)
         assertTrue(turnDraftRepository.findById(SecurityScanFixtureService.SCAN_GAME_ID).isPresent)
+    }
+
+    @Test
+    fun `deletes fixture state when scan secret is valid`() {
+        mockMvc.post("/internal/security/scan-fixture") {
+            header("X-Scan-Secret", "test-scan-secret")
+        }
+            .andExpect {
+                status { isOk() }
+            }
+
+        mockMvc.delete("/internal/security/scan-fixture") {
+            header("X-Scan-Secret", "test-scan-secret")
+        }
+            .andExpect {
+                status { isNoContent() }
+            }
+
+        assertTrue(lobbyRepository.findById(SecurityScanFixtureService.SCAN_OPEN_LOBBY_ID).isEmpty)
+        assertTrue(lobbyRepository.findById(SecurityScanFixtureService.SCAN_ACTIVE_LOBBY_ID).isEmpty)
+        assertTrue(gameRepository.findById(SecurityScanFixtureService.SCAN_GAME_ID).isEmpty)
+        assertTrue(turnDraftRepository.findById(SecurityScanFixtureService.SCAN_GAME_ID).isEmpty)
     }
 }
