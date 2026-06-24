@@ -293,14 +293,22 @@ class RummikubRuleServiceTest {
     fun `returns invalid when submitted draft removes confirmed board tile into rack`() {
         val boardTile = NumberedTile("board-1", TileColor.RED, 7)
         val game = confirmedGame.copy(
-            players = listOf(player.copy(rackTiles = emptyList(), hasCompletedInitialMeld = true)),
+            players = listOf(
+                player.copy(
+                    rackTiles = listOf(NumberedTile("rack-1", TileColor.BLUE, 3)),
+                    hasCompletedInitialMeld = true
+                )
+            ),
             boardSets = listOf(BoardSet(boardSetId = "set-1", tiles = listOf(boardTile)))
         )
         val draft = TurnDraft(
             gameId = "game-1",
             playerUserId = "user-1",
             boardSets = emptyList(),
-            rackTiles = listOf(boardTile)
+            rackTiles = listOf(
+                NumberedTile("rack-1", TileColor.BLUE, 3),
+                boardTile
+            )
         )
 
         val result = realRuleService.validateSubmittedDraft(
@@ -311,6 +319,45 @@ class RummikubRuleServiceTest {
 
         assertFalse(result.isValid)
         assertTrue(result.violations.any { it.code == "BOARD_TILE_REMOVAL" })
+    }
+
+    @Test
+    fun `allows taking confirmed board tile into rack when player still ends with fewer rack tiles`() {
+        val boardTile = NumberedTile("board-1", TileColor.RED, 7)
+        val rackTile1 = NumberedTile("rack-1", TileColor.BLUE, 3)
+        val rackTile2 = NumberedTile("rack-2", TileColor.BLUE, 4)
+        val rackTile3 = NumberedTile("rack-3", TileColor.BLUE, 5)
+        val rackTile4 = NumberedTile("rack-4", TileColor.BLACK, 11)
+
+        val game = confirmedGame.copy(
+            players = listOf(
+                player.copy(
+                    rackTiles = listOf(rackTile1, rackTile2, rackTile3, rackTile4),
+                    hasCompletedInitialMeld = true
+                )
+            ),
+            boardSets = listOf(BoardSet(boardSetId = "set-1", tiles = listOf(boardTile)))
+        )
+        val draft = TurnDraft(
+            gameId = "game-1",
+            playerUserId = "user-1",
+            boardSets = listOf(
+                BoardSet(
+                    boardSetId = "set-2",
+                    tiles = listOf(rackTile1, rackTile2, rackTile3)
+                )
+            ),
+            rackTiles = listOf(boardTile, rackTile4)
+        )
+
+        val result = realRuleService.validateSubmittedDraft(
+            confirmedGame = game,
+            actingPlayerUserId = "user-1",
+            submittedDraft = draft
+        )
+
+        assertTrue(result.isValid)
+        assertTrue(result.violations.none { it.code == "BOARD_TILE_REMOVAL" })
     }
 
 

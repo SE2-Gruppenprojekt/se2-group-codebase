@@ -83,6 +83,7 @@ class RummikubRuleService(
 
         violations += validateConfirmedBoardTilesRemainOnBoard(
             confirmedGame = confirmedGame,
+            actingPlayerUserId = actingPlayerUserId,
             submittedDraft = submittedDraft
         )
 
@@ -93,8 +94,10 @@ class RummikubRuleService(
 
     private fun validateConfirmedBoardTilesRemainOnBoard(
         confirmedGame: ConfirmedGame,
+        actingPlayerUserId: String,
         submittedDraft: TurnDraft
     ): List<RuleViolation> {
+        val actingPlayer = confirmedGame.players.first { it.userId == actingPlayerUserId }
         val confirmedBoardTileIds = confirmedGame.boardSets
             .flatMap { it.tiles }
             .map(Tile::tileId)
@@ -110,10 +113,17 @@ class RummikubRuleService(
             return emptyList()
         }
 
+        val startedTurnWithRackSize = actingPlayer.rackTiles.size
+        val submittedRackSize = submittedDraft.rackTiles.size
+
+        if (submittedRackSize < startedTurnWithRackSize) {
+            return emptyList()
+        }
+
         return listOf(
             RuleViolation(
                 code = "BOARD_TILE_REMOVAL",
-                message = "Tiles already on the board must remain on the board at end of turn",
+                message = "Tiles taken from the board may stay on the rack only if the player ends the turn with fewer rack tiles than they started with",
                 tileIds = removedBoardTileIds.toList()
             )
         )
