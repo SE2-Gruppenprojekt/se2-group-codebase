@@ -13,10 +13,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.Style
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -41,23 +40,22 @@ fun LobbyBrowseCard(
     lobby: LobbyBrowseItem,
     cardColor: Color,
     primaryText: Color,
-    secondaryText: Color,
     onJoinLobby: (String) -> Unit
 ) {
     val accentColor = lobby.accentColor
-    val subtleCardColor = accentColor.copy(alpha = 0.14f).compositeOver(cardColor)
-    val disabledButtonColor = appColors().screen.disabledButton
+    val cardAlpha = if (lobby.isOpen) 0.14f else 0.05f
+    val borderAlpha = if (lobby.isOpen) 0.95f else 0.30f
+    val subtleCardColor = accentColor.copy(alpha = cardAlpha).compositeOver(cardColor)
+    val disabledButtonColor = MaterialTheme.appColors.screen.disabledButton
     val buttonColor = if (lobby.isOpen) accentColor else disabledButtonColor
     val buttonText = if (lobby.isOpen) "Join" else "Full"
-    val metaColor = secondaryText.copy(alpha = 0.75f)
-
     Card(
         modifier = Modifier
             .testTag("${LobbyBrowseTestTags.LobbyItem.CARD_PREFIX}_${lobby.lobbyId}")
             .fillMaxWidth()
             .border(
                 width = 1.5.dp,
-                color = accentColor.copy(alpha = 0.95f),
+                color = accentColor.copy(alpha = borderAlpha),
                 shape = RoundedCornerShape(20.dp)
             ),
         colors = CardDefaults.cardColors(containerColor = subtleCardColor),
@@ -73,7 +71,7 @@ fun LobbyBrowseCard(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .height(78.dp),
+                    .height(72.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
@@ -93,35 +91,12 @@ fun LobbyBrowseCard(
                     )
                 }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.Timer,
-                        contentDescription = null,
-                        tint = metaColor,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${lobby.turnTimerSeconds}s",
-                        color = metaColor,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Icon(
-                        imageVector = Icons.Filled.Style,
-                        contentDescription = null,
-                        tint = metaColor,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${lobby.startingCards} cards",
-                        color = metaColor,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Filled.Casino,
+                    contentDescription = null,
+                    tint = accentColor.copy(alpha = 0.6f),
+                    modifier = Modifier.size(16.dp)
+                )
             }
 
             Spacer(modifier = Modifier.width(12.dp))

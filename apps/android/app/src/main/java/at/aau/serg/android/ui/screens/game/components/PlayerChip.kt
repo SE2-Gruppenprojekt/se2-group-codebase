@@ -35,7 +35,7 @@ fun PlayerChip(
     player: GamePlayer,
     isActive: Boolean
 ) {
-    val c = appColors()
+    val c = MaterialTheme.appColors
 
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseScale by infiniteTransition.animateFloat(

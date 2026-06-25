@@ -58,7 +58,6 @@ fun GameResultScreen(
     gameResult: GameResultUiModel?,
     currentUserId: String? = null,
     onNavigateHome: () -> Unit = {},
-    onNextRound: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val players = gameResult?.players.orEmpty()
@@ -232,11 +231,7 @@ fun GameResultScreen(
                     value = "${currentPlayer.meldsCreated}",
                     modifier = Modifier.weight(1f)
                 )
-                ResultStatBox(
-                    label = "Avg Turn",
-                    value = "0:00",
-                    modifier = Modifier.weight(1f)
-                )
+
             }
         }
 
@@ -258,7 +253,9 @@ fun GameResultScreen(
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = ResAccent)
             ) {
-                Text("▶  Next Round", fontWeight = FontWeight.Bold, color = Color.White)
+                Icon(Icons.Default.Home, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Back to Home", fontWeight = FontWeight.Bold, color = Color.White)
             }
 
             IconButton(
@@ -276,17 +273,6 @@ fun GameResultScreen(
                     .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(14.dp))
             ) {
                 Icon(Icons.Default.Share, contentDescription = "Share", tint = Color.White)
-            }
-
-            IconButton(
-                onClick = onNavigateHome,
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color.White.copy(alpha = 0.08f))
-                    .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(14.dp))
-            ) {
-                Icon(Icons.Default.Home, contentDescription = "Home", tint = Color.White)
             }
         }
     }

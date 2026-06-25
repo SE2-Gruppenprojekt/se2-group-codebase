@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import shared.models.game.domain.BoardSet
@@ -34,6 +35,7 @@ import shared.models.game.domain.Tile
 import shared.models.game.event.GameEvent
 import shared.models.game.request.EndTurnRequest
 import shared.models.game.request.UpdateDraftRequest
+import java.time.Duration
 import java.util.UUID
 
 
@@ -48,10 +50,11 @@ class GameViewModel(
     private var socketJob: Job? = null
     private var timerJob: Job? = null
     private var lastShownFinishCount = 0
+    private var gameEndHandled = false
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState
 
-    private val _effect = MutableSharedFlow<GameEffect>()
+    private val _effect = MutableSharedFlow<GameEffect>(extraBufferCapacity = 1)
     val effects: SharedFlow<GameEffect> = _effect.asSharedFlow()
 
     init {
@@ -61,6 +64,7 @@ class GameViewModel(
             }
         }
     }
+
 
     @VisibleForTesting
     internal fun startSocket(gameId: String) {
@@ -151,8 +155,15 @@ class GameViewModel(
                 }
                 is GameUIEvent.MoveTiles -> moveTiles(event.rowId)
                 is GameUIEvent.OnLoadGame -> {
-                    startSocket(event.gameId)
-                    loadGame(event.gameId)
+                    viewModelScope.launch {
+                        if (_uiState.value.user == null) {
+                            _uiState.first { it.user != null }
+                        }
+
+                        startSocket(event.gameId)
+                        loadGame(event.gameId)
+                        startTimer()
+                    }
                 }
                 is GameUIEvent.OnTileSelected -> {
                     onTileSelected(
@@ -172,6 +183,45 @@ class GameViewModel(
                         _effect.emit(GameEffect.NavigateBack)
                     }
                 }
+                GameUIEvent.DebugNavigateToResult -> {
+                    val game = _uiState.value.gameState
+                    if (game != null) {
+                        handlePlayerFinished(
+                            game,
+                            isGameOver = true,
+                            overrideWinnerId = game.winnerUserId ?: game.players.firstOrNull()?.userId,
+                            navigateToResult = true
+                        )
+                    } else {
+                        val user = _uiState.value.user
+                        val dummyPlayers = if (user != null) listOf(
+                            GameResultPlayerSummary(
+                                userId = user.uid,
+                                displayName = user.displayName,
+                                score = 42,
+                                finishPosition = 1,
+                                tilesPlayed = 7,
+                                meldsCreated = 3,
+                                turnsCompleted = 5,
+                                pointsFromTiles = 42,
+                                isStillPlaying = false
+                            )
+                        ) else emptyList()
+                        cancelTimer()
+                        gameEndHandled = true
+                        _uiState.update {
+                            it.copy(gameResult = GameResultUiModel(
+                                winnerUserId = user?.uid ?: "",
+                                players = dummyPlayers,
+                                matchDuration = formatElapsed(it.elapsedSeconds),
+                                isGameOver = true
+                            ))
+                        }
+                        viewModelScope.launch {
+                            _effect.emit(GameEffect.NavigateToResult)
+                        }
+                    }
+                }
             }
         } catch (e : Exception) {
             val appError = ErrorUiMapper.map(e)
@@ -188,6 +238,7 @@ class GameViewModel(
                 it.copy(loadState = LoadState.Loading)
             }
             try {
+                checkNotNull(_uiState.value.user) { "User must not be null when loading game." }
                 val gameState = gameService.loadGame(gameId).toDomain()
                 if (_uiState.value.gameState == null) {
                     applyGameState(gameState, true)
@@ -461,13 +512,28 @@ class GameViewModel(
                 }
 
                 is GameEvent.Ended -> {
-                    val game = _uiState.value.gameState ?: return
-                    handlePlayerFinished(
-                        game,
-                        isGameOver = true,
-                        overrideWinnerId = event.payload.winnerUserId,
-                        navigateToResult = lastShownFinishCount == 0
-                    )
+                    if (gameEndHandled) return
+                    val fallback = _uiState.value.gameState
+                        ?: throw IllegalStateException("GameState must not be null when GameEnded received.")
+                    viewModelScope.launch {
+                        try {
+                            val freshGame = gameService.loadGame(fallback.gameId).toDomain()
+                            applyGameState(freshGame, true)
+                            handlePlayerFinished(
+                                freshGame,
+                                isGameOver = true,
+                                overrideWinnerId = event.payload.winnerUserId,
+                                navigateToResult = true
+                            )
+                        } catch (e: Throwable) {
+                            handlePlayerFinished(
+                                fallback,
+                                isGameOver = true,
+                                overrideWinnerId = event.payload.winnerUserId,
+                                navigateToResult = true
+                            )
+                        }
+                    }
                 }
 
                 is GameEvent.TurnChanged -> {
@@ -497,7 +563,7 @@ class GameViewModel(
                         handlePlayerFinished(
                             game,
                             isGameOver = true,
-                            navigateToResult = lastShownFinishCount == 0
+                            navigateToResult = !gameEndHandled
                         )
                     } else {
                         if (!_uiState.value.isActivePlayer) {
@@ -573,7 +639,14 @@ class GameViewModel(
         overrideWinnerId: String? = null,
         navigateToResult: Boolean = true
     ) {
-        val matchDuration = formatElapsed(_uiState.value.elapsedSeconds)
+        val matchDuration = if (game.finishedAt != null) {
+            val duration = Duration.between(game.createdAt, game.finishedAt)
+            val durationSeconds = duration.toMillis() / 1000
+            formatElapsed(durationSeconds.toInt())
+        } else {
+            formatElapsed(0)
+        }
+
         val sorted = game.players
             .sortedWith(compareBy({ it.metrics.finishPosition ?: Int.MAX_VALUE }, { -it.score }))
         val players = sorted.mapIndexed { index, it ->
@@ -588,7 +661,7 @@ class GameViewModel(
                 turnsCompleted = it.metrics.turnsCompleted,
                 pointsFromTiles = it.metrics.pointsPlayed,
                 penaltyPoints = it.metrics.penaltyPointsAtEnd ?: 0,
-                isStillPlaying = it.metrics.finishPosition == null
+                isStillPlaying = !isGameOver && it.metrics.finishPosition == null
             )
         }
 
@@ -609,6 +682,8 @@ class GameViewModel(
         }
 
         if (navigateToResult) {
+            cancelTimer()
+            gameEndHandled = true
             viewModelScope.launch {
                 _effect.emit(GameEffect.NavigateToResult)
             }

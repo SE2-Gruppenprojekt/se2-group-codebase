@@ -69,7 +69,7 @@ fun HomeScreenContent(
     uiState: HomeUiState,
     onEvent: (HomeEvent) -> Unit
 ) {
-    val c = appColors()
+    val c = MaterialTheme.appColors
 
     // background gradient
     val backgroundGradient = Brush.verticalGradient(

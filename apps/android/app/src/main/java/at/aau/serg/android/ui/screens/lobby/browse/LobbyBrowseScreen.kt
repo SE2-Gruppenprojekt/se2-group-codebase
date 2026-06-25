@@ -65,7 +65,7 @@ fun LobbyBrowseScreenContent(
     uiState: LobbyBrowseUiState,
     onEvent: (LobbyBrowseEvent) -> Unit
 ) {
-    val c = appColors()
+    val c = MaterialTheme.appColors
 
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(c.screen.bgTop, c.screen.bgBottom)
@@ -209,7 +209,6 @@ fun LobbyBrowseScreenContent(
                     lobby = lobby,
                     cardColor = c.screen.card,
                     primaryText = c.screen.primaryText,
-                    secondaryText = c.screen.secondaryText,
                     onJoinLobby = { onEvent(LobbyBrowseEvent.OnJoinLobby(it)) }
                 )
             }

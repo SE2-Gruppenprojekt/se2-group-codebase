@@ -1,6 +1,8 @@
 package at.aau.serg.android.ui.screens.game
 
+import android.app.Activity
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import androidx.compose.foundation.background
@@ -36,9 +38,9 @@ import at.aau.serg.android.ui.screens.game.components.TileRow
 import at.aau.serg.android.ui.screens.game.components.TileRowConfig
 import at.aau.serg.android.ui.screens.game.components.TileRowPlaceholder
 import at.aau.serg.android.ui.theme.NotReadyRed
-import at.aau.serg.android.ui.theme.appColors
 import at.aau.serg.android.ui.util.ShakeDetector
 import at.aau.serg.android.R
+import at.aau.serg.android.ui.theme.appColors
 
 @Composable
 fun GameScreen(
@@ -68,18 +70,25 @@ fun GameScreenContent(
     uiState: GameUiState,
     onEvent: (GameUIEvent) -> Unit
 ) {
-    val c = appColors()
+    val c = MaterialTheme.appColors
 
     val context = LocalContext.current
+    val activity = context as? Activity
     val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
     DisposableEffect(Unit) {
+        val originalOrientation = activity?.requestedOrientation
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
         val detector = ShakeDetector { onEvent(GameUIEvent.ToggleXRAY) }
         sensorManager.registerListener(detector, accelerometer, SensorManager.SENSOR_DELAY_UI)
 
         onDispose {
             sensorManager.unregisterListener(detector)
+            if (originalOrientation != null) {
+                activity.requestedOrientation = originalOrientation
+            }
         }
     }
 
@@ -112,21 +121,12 @@ fun GameScreenContent(
                     )
 
                     // Center title
-                    Column(
+                    Text(
+                        "Rummikub",
                         modifier = Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            "Game #4821",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            "Round 2 of 3",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
 
                     // Right side controls
                     Row(

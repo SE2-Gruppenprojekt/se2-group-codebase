@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingEvent
 import at.aau.serg.android.ui.screens.lobby.waiting.LobbyWaitingTestTags
+import androidx.compose.material3.MaterialTheme
 import at.aau.serg.android.ui.theme.appColors
 import shared.models.lobby.domain.Lobby
 import shared.models.lobby.domain.LobbyPlayer
@@ -26,7 +27,7 @@ fun WaitingScreenPlayerSection(
     primaryTextColor: Color,
     secondaryTextColor: Color
 ) {
-    val w = appColors().waiting
+    val w = MaterialTheme.appColors.waiting
 
     if (fetchedLobby != null) {
         players.forEachIndexed { index, player ->

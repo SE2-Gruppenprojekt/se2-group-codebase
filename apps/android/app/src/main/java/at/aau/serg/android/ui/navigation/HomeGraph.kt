@@ -141,6 +141,7 @@ fun NavGraphBuilder.homeGraph(
                 val vm: GameViewModel = viewModel(
                     factory = GenericViewModelFactory { GameViewModel(userStore) }
                 )
+                val uiState by vm.uiState.collectAsState()
 
                 LaunchedEffect(gameId) {
                     vm.onUIEvent(GameUIEvent.OnLoadGame(gameId))
@@ -155,45 +156,24 @@ fun NavGraphBuilder.homeGraph(
                             GameEffect.NavigateBack ->
                                 navController.popBackStack()
 
-                            GameEffect.NavigateToResult ->
-                                navController.navigate(Routes.GAME_RESULT)
+                            GameEffect.NavigateToResult -> { /* handled via state */ }
                         }
                     }
                 }
 
-                GameScreen(viewModel = vm)
-            }
-
-            composable(Routes.GAME_RESULT) { backStackEntry ->
-                val userStore = remember { provider.getStore<User>() }
-
-                val parentEntry = remember(backStackEntry) {
-                    navController.getBackStackEntry(Routes.GAME_FLOW)
-                }
-                val vm: GameViewModel = viewModel(
-                    parentEntry,
-                    factory = GenericViewModelFactory { GameViewModel(userStore) }
-                )
-                val uiState by vm.uiState.collectAsState()
-
-                val lobbyId = uiState.gameState?.lobbyId
-
-                GameResultScreen(
-                    gameResult = uiState.gameResult,
-                    currentUserId = uiState.user?.uid,
-                    onNavigateHome = {
-                        navController.navigate(Routes.HOME_SCREEN) {
-                            popUpTo(Routes.HOME_SCREEN) { inclusive = true }
-                        }
-                    },
-                    onNextRound = if (lobbyId != null) {
-                        {
-                            navController.navigate("${Routes.WAITING_ROOM}/$lobbyId") {
-                                popUpTo(Routes.HOME_SCREEN) { inclusive = false }
+                if (uiState.gameResult != null) {
+                    GameResultScreen(
+                        gameResult = uiState.gameResult,
+                        currentUserId = uiState.user?.uid,
+                        onNavigateHome = {
+                            navController.navigate(Routes.HOME_SCREEN) {
+                                popUpTo(Routes.HOME_SCREEN) { inclusive = true }
                             }
                         }
-                    } else null
-                )
+                    )
+                } else {
+                    GameScreen(viewModel = vm)
+                }
             }
         }
 

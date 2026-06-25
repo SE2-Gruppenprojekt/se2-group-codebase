@@ -39,13 +39,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import at.aau.serg.android.R
 import at.aau.serg.android.ui.components.TopBar
 import at.aau.serg.android.ui.theme.AccentBlue
 import at.aau.serg.android.ui.theme.AccentPurple
@@ -67,7 +65,7 @@ fun RulesScreen(
 fun RulesScreenContent(
     onBack: () -> Unit
 ) {
-    val c = appColors()
+    val c = MaterialTheme.appColors
 
     Column(
         modifier = Modifier
@@ -170,19 +168,6 @@ fun RulesScreenContent(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                RuleItemCard(
-                    badgeContent = {
-                        Text(
-                            text = "30",
-                            color = RulesKeyRulesGreen,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp
-                        )
-                    },
-                    badgeBg = RulesKeyRulesGreen.copy(alpha = 0.15f),
-                    title = "Initial Meld",
-                    description = "Your first move must total at least 30 points using only tiles from your rack. You cannot use board tiles until this is met."
-                )
 
                 RuleItemCard(
                     badgeContent = {
@@ -195,7 +180,7 @@ fun RulesScreenContent(
                     },
                     badgeBg = AccentYellow.copy(alpha = 0.15f),
                     title = "The Joker",
-                    description = "Wildcards that can represent any number/color. If you replace a Joker on the board with the actual tile, you must use it in a set immediately."
+                    description = "Wildcards that can represent any number/color."
                 )
 
                 RuleItemCard(
@@ -211,6 +196,20 @@ fun RulesScreenContent(
                     title = "Manipulation",
                     description = "You can rearrange any tiles already on the board to form new valid sets, as long as every set remains valid at the end of your turn."
                 )
+
+                RuleItemCard(
+                    badgeContent = {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_hand_pick_up),
+                            contentDescription = null,
+                            tint = AccentPurple,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    },
+                    badgeBg = AccentBlue.copy(alpha = 0.15f),
+                    title = "Grab",
+                    description = "You can pick up any tiles already on the board to get an advantage."
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -222,42 +221,6 @@ fun RulesScreenContent(
                 title = "Scoring System"
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(c.settings.card)
-                    .padding(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Winner's Score",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = c.settings.primaryText
-                        )
-                        Text(
-                            text = "Sum of all opponents' remaining tiles.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = c.settings.secondaryText
-                        )
-                    }
-                    Text(
-                        text = "+Sum",
-                        color = AccentPurple,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-            }
-
             Spacer(modifier = Modifier.height(12.dp))
 
             Column(
@@ -268,37 +231,12 @@ fun RulesScreenContent(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "Once you empty your rack, the game continues until everyone else finishes too. Places are awarded in the order players finish - 1st, 2nd, 3rd, and so on.",
+                    text = "When a player has finished the game ends. The ranking is determined by how many tiles each player has left on their rack.",
                     style = MaterialTheme.typography.bodySmall,
                     color = c.settings.secondaryText
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(SettingsIconRedTint.copy(alpha = 0.1f))
-                        .padding(12.dp)
-                ) {
-                    Text(
-                        text = buildAnnotatedString {
-                            append("Careful! A Joker left on your rack at the end of a game counts as ")
-                            withStyle(
-                                style = SpanStyle(
-                                    fontWeight = FontWeight.Bold,
-                                    textDecoration = TextDecoration.Underline
-                                )
-                            ) {
-                                append("30 penalty points")
-                            }
-                            append(".")
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = SettingsIconRedTint
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -341,6 +279,24 @@ fun RulesScreenContent(
                     style = MaterialTheme.typography.bodySmall,
                     color = c.settings.secondaryText
                 )
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_cheat_xray),
+                        contentDescription = null,
+                        tint = AccentPurple,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "This icon appears in the game header when X-Ray is active",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = c.settings.secondaryText
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -395,7 +351,7 @@ private fun RuleSetCard(
     tiles: List<RuleTileData>,
     showAddTile: Boolean
 ) {
-    val c = appColors()
+    val c = MaterialTheme.appColors
 
     Column(
         modifier = Modifier
@@ -495,7 +451,7 @@ private fun RuleItemCard(
     title: String,
     description: String
 ) {
-    val c = appColors()
+    val c = MaterialTheme.appColors
 
     Row(
         modifier = Modifier
@@ -539,7 +495,7 @@ private fun RulesSectionHeader(
     iconBg: Color,
     title: String
 ) {
-    val c = appColors()
+    val c = MaterialTheme.appColors
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(

@@ -4,14 +4,9 @@ import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import at.aau.serg.android.core.datastore.ProtoStore
-import at.aau.serg.android.core.network.lobby.LobbyAPI
 import at.aau.serg.android.datastore.proto.User
-import io.mockk.mockk
-import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert
 import org.junit.Assert.assertEquals
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import shared.models.lobby.domain.Lobby
@@ -23,34 +18,6 @@ class LobbyWaitingScreenTest {
 
     @get:Rule
     val composeRule = createComposeRule()
-
-    private lateinit var userStore: ProtoStore<User>
-    private lateinit var api: LobbyAPI
-    private lateinit var user: User
-
-    @Before
-    fun setup() {
-        user = User.newBuilder()
-            .setUid("user-1")
-            .setDisplayName("Alice")
-            .build()
-
-        userStore = object : ProtoStore<User> {
-            override val data = MutableStateFlow(user)
-
-            override suspend fun save(value: User) {
-                data.value = value
-            }
-
-            override suspend fun wipe() {
-                data.value = User.getDefaultInstance()
-            }
-        }
-
-        api = mockk()
-
-    }
-
 
     private fun setContent(onEvent: (LobbyWaitingEvent) -> Unit = {}) {
         composeRule.setContent {
