@@ -38,133 +38,6 @@ jobs:
           GH_TOKEN: ${{ secrets.ORG_ACTIVITY_REPORT_TOKEN }}
         run: python3 .github/scripts/generate_org_user_activity.py
 
-      - name: Build markdown report
-        run: |
-          python3 <<'PY'
-          import json
-          import os
-
-          since = os.environ["REPORT_SINCE"][:10]
-          until = os.environ["REPORT_UNTIL"][:10]
-          org = os.environ["TARGET_ORGANIZATION"]
-
-          with open("reports/organization_user_activity.json", "r", encoding="utf-8") as fh:
-              rows = json.load(fh)
-
-          total_commits = sum(item["commits"] for item in rows)
-          total_issues = sum(item["issues"] for item in rows)
-          total_issue_comments = sum(item["issueComments"] for item in rows)
-          total_pr_comments = sum(item["prComments"] for item in rows)
-          active = [item for item in rows if item["isActive"]]
-          inactive = [item for item in rows if not item["isActive"]]
-
-          bot_names = {"github-actions[bot]", "sonarqubecloud[bot]", "Copilot"}
-          humans = [item for item in rows if item["login"] not in bot_names]
-          active_humans = [item for item in humans if item["isActive"]]
-          bots = [item for item in rows if item["login"] in bot_names]
-
-          def top_by(key):
-              candidates = [item for item in rows if item[key] > 0]
-              return max(candidates, key=lambda item: item[key]) if candidates else None
-
-          def yes_no(value):
-              return "Yes" if value else "No"
-
-          lines = []
-          lines.append("# Organization User Activity Report")
-          lines.append("")
-          lines.append("## Overview")
-          lines.append("")
-          lines.append(f"This report summarizes GitHub organization activity for **{org}** ")
-          lines.append(f"for the exact reporting period **{since} to {until}**.")
-          lines.append("")
-          lines.append("---")
-          lines.append("")
-          lines.append("## Report Metadata")
-          lines.append("")
-          lines.append("| Field | Value |")
-          lines.append("| --- | --- |")
-          lines.append(f"| Organization | `{org}` |")
-          lines.append("| Activity window | Exact fixed range |")
-          lines.append(f"| Date span | `{since}` to `{until}` |")
-          lines.append("| Source workflow | `Organization User Activity Report (Exact Range)` |")
-          lines.append("")
-          lines.append("---")
-          lines.append("")
-          lines.append("## Executive Summary")
-          lines.append("")
-          lines.append(f"- Active actors: **{len(active)}**")
-          lines.append(f"- Inactive listed actors: **{len(inactive)}**")
-          lines.append(f"- Active human contributors: **{len(active_humans)}**")
-          lines.append("")
-          lines.append("| Metric | Total |")
-          lines.append("| --- | ---: |")
-          lines.append(f"| Commits | {total_commits} |")
-          lines.append(f"| Issues | {total_issues} |")
-          lines.append(f"| Issue comments | {total_issue_comments} |")
-          lines.append(f"| Pull request comments | {total_pr_comments} |")
-          lines.append("")
-
-          top_commits = top_by("commits")
-          top_issues = top_by("issues")
-          top_issue_comments = top_by("issueComments")
-          top_pr_comments = top_by("prComments")
-          lines.append("### Highlights")
-          lines.append("")
-          if top_commits:
-              lines.append(f"- Most commits: `{top_commits['login']}` with **{top_commits['commits']}**")
-          if top_issues:
-              lines.append(f"- Most issues: `{top_issues['login']}` with **{top_issues['issues']}**")
-          if top_issue_comments:
-              lines.append(f"- Most issue comments: `{top_issue_comments['login']}` with **{top_issue_comments['issueComments']}**")
-          if top_pr_comments:
-              lines.append(f"- Most PR comments: `{top_pr_comments['login']}` with **{top_pr_comments['prComments']}**")
-          lines.append("")
-          lines.append("---")
-          lines.append("")
-          lines.append("## Full Activity Table")
-          lines.append("")
-          lines.append("| User / Actor | Active | Commits | Issues | Issue Comments | PR Comments |")
-          lines.append("| --- | :---: | ---: | ---: | ---: | ---: |")
-          for item in rows:
-              lines.append(
-                  f"| `{item['login']}` | {yes_no(item['isActive'])} | {item['commits']} | {item['issues']} | {item['issueComments']} | {item['prComments']} |"
-              )
-          lines.append("")
-          lines.append("---")
-          lines.append("")
-          lines.append("## Human Contributor Activity")
-          lines.append("")
-          lines.append("| User | Active | Commits | Issues | Issue Comments | PR Comments |")
-          lines.append("| --- | :---: | ---: | ---: | ---: | ---: |")
-          for item in humans:
-              lines.append(
-                  f"| `{item['login']}` | {yes_no(item['isActive'])} | {item['commits']} | {item['issues']} | {item['issueComments']} | {item['prComments']} |"
-              )
-          lines.append("")
-          lines.append("---")
-          lines.append("")
-          lines.append("## Automated / Tool Activity")
-          lines.append("")
-          lines.append("| Actor | Active | Commits | Issues | Issue Comments | PR Comments |")
-          lines.append("| --- | :---: | ---: | ---: | ---: | ---: |")
-          for item in bots:
-              lines.append(
-                  f"| `{item['login']}` | {yes_no(item['isActive'])} | {item['commits']} | {item['issues']} | {item['issueComments']} | {item['prComments']} |"
-              )
-          lines.append("")
-          lines.append("---")
-          lines.append("")
-          lines.append("## Raw JSON Output")
-          lines.append("")
-          lines.append("```json")
-          lines.append(json.dumps(rows, indent=2))
-          lines.append("```")
-
-          with open("reports/report_md.md", "w", encoding="utf-8") as fh:
-              fh.write("\n".join(lines) + "\n")
-          PY
-
       - name: Publish report summary
         if: always()
         run: |
@@ -175,8 +48,8 @@ jobs:
             echo "- Date span: ${REPORT_SINCE:0:10} to ${REPORT_UNTIL:0:10}"
             echo "- Data source: direct GitHub organization and repository API queries"
             echo
-            if [ -f reports/report_md.md ]; then
-              head -n 80 reports/report_md.md
+            if [ -f reports/organization_user_activity.md ]; then
+              head -n 120 reports/organization_user_activity.md
             else
               echo "No markdown report was generated."
             fi
@@ -191,4 +64,5 @@ jobs:
           path: |
             reports/organization_user_activity.csv
             reports/organization_user_activity.json
-            reports/report_md.md
+            reports/organization_repository_activity.csv
+            reports/organization_user_activity.md
