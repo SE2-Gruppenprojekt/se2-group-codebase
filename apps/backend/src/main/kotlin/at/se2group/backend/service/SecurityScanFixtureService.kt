@@ -43,6 +43,11 @@ class SecurityScanFixtureService(
         )
     }
 
+    @Transactional
+    fun deleteFixture() {
+        deleteIfPresent()
+    }
+
     private fun deleteIfPresent() {
         if (turnDraftRepository.existsById(SCAN_GAME_ID)) {
             turnDraftRepository.deleteById(SCAN_GAME_ID)

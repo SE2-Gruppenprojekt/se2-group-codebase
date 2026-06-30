@@ -185,7 +185,6 @@ fun GameResultScreen(
             ) {
                 ResultStatBox("Duration", matchDuration, Modifier.weight(1f))
                 ResultStatBox("Moves", "${currentPlayer?.turnsCompleted ?: gameResult?.totalTurns ?: 0}", Modifier.weight(1f))
-                ResultStatBox("Points", "+${currentPlayer?.pointsFromTiles ?: 0}", Modifier.weight(1f))
                 ResultStatBox("Melds", "${currentPlayer?.meldsCreated ?: 0}", Modifier.weight(1f))
             }
 
@@ -222,7 +221,7 @@ fun GameResultScreen(
             ) {
                 ResultStatBox(
                     label = "Tiles Played",
-                    value = "+${currentPlayer.tilesPlayed}",
+                    value = "${currentPlayer.tilesPlayed}",
                     modifier = Modifier.weight(1f),
                     valueColor = ResGreen
                 )
@@ -377,26 +376,7 @@ private fun PlayerResultCard(
                 Text("${player.remainingTiles} tiles left", fontSize = 11.sp, color = ResGray)
                 Text("•", fontSize = 11.sp, color = ResGray)
                 Text("${player.meldsCreated} melds", fontSize = 11.sp, color = ResGray)
-                if (player.penaltyPoints > 0) {
-                    Text("•", fontSize = 11.sp, color = ResGray)
-                    Text("-${player.penaltyPoints} penalty", fontSize = 11.sp, color = ResRed)
-                }
-                if (isWinner) {
-                    Text("•", fontSize = 11.sp, color = ResGray)
-                    Text("Bonus +50", fontSize = 11.sp, color = ResGreen)
-                }
             }
-        }
-
-        // Score
-        Column(horizontalAlignment = Alignment.End) {
-            Text(
-                text = "${player.score}",
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 22.sp,
-                color = Color.White
-            )
-            Text("points", fontSize = 10.sp, color = ResGray)
         }
     }
 }

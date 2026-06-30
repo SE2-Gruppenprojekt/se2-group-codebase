@@ -3,6 +3,7 @@ package at.se2group.backend.rules.service
 import at.se2group.backend.service.TileConservationService
 import org.springframework.stereotype.Service
 import shared.models.game.domain.ConfirmedGame
+import shared.models.game.domain.Tile
 import shared.models.game.domain.TurnDraft
 import shared.models.game.validation.RuleViolation
 import shared.models.game.validation.ValidationResult
@@ -80,8 +81,51 @@ class RummikubRuleService(
             .validate(submittedDraft.boardSets)
             .violations
 
+        violations += validateConfirmedBoardTilesRemainOnBoard(
+            confirmedGame = confirmedGame,
+            actingPlayerUserId = actingPlayerUserId,
+            submittedDraft = submittedDraft
+        )
+
         // Temporarily disabled: initial meld should not block turn submission in the backend.
 
         return if (violations.isEmpty()) valid() else invalid(violations)
+    }
+
+    private fun validateConfirmedBoardTilesRemainOnBoard(
+        confirmedGame: ConfirmedGame,
+        actingPlayerUserId: String,
+        submittedDraft: TurnDraft
+    ): List<RuleViolation> {
+        val actingPlayer = confirmedGame.players.first { it.userId == actingPlayerUserId }
+        val confirmedBoardTileIds = confirmedGame.boardSets
+            .flatMap { it.tiles }
+            .map(Tile::tileId)
+            .toSet()
+
+        val submittedBoardTileIds = submittedDraft.boardSets
+            .flatMap { it.tiles }
+            .map(Tile::tileId)
+            .toSet()
+
+        val removedBoardTileIds = confirmedBoardTileIds - submittedBoardTileIds
+        if (removedBoardTileIds.isEmpty()) {
+            return emptyList()
+        }
+
+        val startedTurnWithRackSize = actingPlayer.rackTiles.size
+        val submittedRackSize = submittedDraft.rackTiles.size
+
+        if (submittedRackSize < startedTurnWithRackSize) {
+            return emptyList()
+        }
+
+        return listOf(
+            RuleViolation(
+                code = "BOARD_TILE_REMOVAL",
+                message = "Tiles taken from the board may stay on the rack only if the player ends the turn with fewer rack tiles than they started with",
+                tileIds = removedBoardTileIds.toList()
+            )
+        )
     }
 }

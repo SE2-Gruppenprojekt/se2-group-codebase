@@ -28,6 +28,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import shared.models.game.domain.BoardSetType
 import shared.models.game.domain.GameStatus
 import shared.models.game.domain.JokerTile
 import shared.models.game.domain.TileColor
@@ -238,6 +239,106 @@ class EndTurnServiceTest {
 
         val user1 = result.players.first { it.userId == "user-1" }
         assertEquals(listOf("old-rack-tile", "draw-top"), user1.rackTiles.map { it.tileId })
+        assertEquals(listOf("draw-next"), result.drawPile.map { it.tileId })
+    }
+
+    @Test
+    fun `auto draws tile on pass turn when rack order changes only`() {
+        whenever(gameRepository.findById("game-1"))
+            .thenReturn(
+                Optional.of(
+                    gameEntity(
+                        user1Rack = mutableListOf(tile("rack-a"), tile("rack-b")),
+                        user2Rack = mutableListOf(tile("user-2-rack")),
+                        drawPile = mutableListOf(tile("draw-top"), tile("draw-next"))
+                    )
+                )
+            )
+
+        whenever(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(draftEntity())
+
+        whenever(rummikubRuleService.validateSubmittedDraft(any(), any(), any()))
+            .thenReturn(valid())
+
+        whenever(gameRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+
+        whenever(turnDraftRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+
+        val result = endTurnService.endTurn(
+            gameId = "game-1",
+            userId = "user-1",
+            request = EndTurnRequest(
+                boardSets = emptyList(),
+                rackTiles = listOf(
+                    TileRequest("rack-b", "RED", 5, false),
+                    TileRequest("rack-a", "RED", 5, false)
+                )
+            )
+        )
+
+        val user1 = result.players.first { it.userId == "user-1" }
+        assertEquals(listOf("rack-b", "rack-a", "draw-top"), user1.rackTiles.map { it.tileId })
+        assertEquals(listOf("draw-next"), result.drawPile.map { it.tileId })
+    }
+
+    @Test
+    fun `auto draws tile on pass turn when board is rearranged but rack is unchanged`() {
+        val boardLeft = tile("board-left")
+        val boardRight = tile("board-right")
+        val game = gameEntity(
+            user1Rack = mutableListOf(tile("rack-a")),
+            user2Rack = mutableListOf(tile("user-2-rack")),
+            drawPile = mutableListOf(tile("draw-top"), tile("draw-next"))
+        ).apply {
+            boardSets = mutableListOf(
+                at.se2group.backend.persistence.BoardSetEntity().apply {
+                    boardSetId = "set-1"
+                    tiles = mutableListOf(
+                        TileEmbeddable(boardLeft.tileId, boardLeft.color, boardLeft.number, false),
+                        TileEmbeddable(boardRight.tileId, boardRight.color, boardRight.number, false)
+                    )
+                }
+            )
+        }
+
+        whenever(gameRepository.findById("game-1"))
+            .thenReturn(Optional.of(game))
+
+        whenever(turnDraftRepository.findByGameId("game-1"))
+            .thenReturn(draftEntity())
+
+        whenever(rummikubRuleService.validateSubmittedDraft(any(), any(), any()))
+            .thenReturn(valid())
+
+        whenever(gameRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+
+        whenever(turnDraftRepository.save(any()))
+            .thenAnswer { it.arguments[0] }
+
+        val result = endTurnService.endTurn(
+            gameId = "game-1",
+            userId = "user-1",
+            request = EndTurnRequest(
+                boardSets = listOf(
+                    BoardSetRequest(
+                        boardSetId = "set-1",
+                        type = BoardSetType.GROUP,
+                        tiles = listOf(
+                            TileRequest(boardRight.tileId, boardRight.color.name, boardRight.number, false),
+                            TileRequest(boardLeft.tileId, boardLeft.color.name, boardLeft.number, false)
+                        )
+                    )
+                ),
+                rackTiles = listOf(TileRequest("rack-a", "RED", 5, false))
+            )
+        )
+
+        val user1 = result.players.first { it.userId == "user-1" }
+        assertEquals(listOf("rack-a", "draw-top"), user1.rackTiles.map { it.tileId })
         assertEquals(listOf("draw-next"), result.drawPile.map { it.tileId })
     }
 

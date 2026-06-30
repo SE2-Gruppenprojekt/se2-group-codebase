@@ -5,9 +5,12 @@ import at.se2group.backend.service.SecurityScanFixtureService
 import io.swagger.v3.oas.annotations.Hidden
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @Hidden
@@ -29,9 +32,7 @@ class SecurityScanFixtureController(
     fun createScanFixture(
         @RequestHeader("X-Scan-Secret", required = false) providedSecret: String?
     ): SecurityScanFixtureResponse {
-        if (providedSecret.isNullOrBlank() || expectedSecret.isBlank() || providedSecret != expectedSecret) {
-            throw SecurityException("Invalid scan fixture secret")
-        }
+        validateSecret(providedSecret)
 
         val state = securityScanFixtureService.recreateFixture()
         return SecurityScanFixtureResponse(
@@ -43,6 +44,21 @@ class SecurityScanFixtureController(
             hostAccessToken = jwtService.issueAccessToken(state.hostUserId),
             guestAccessToken = jwtService.issueAccessToken(state.guestUserId)
         )
+    }
+
+    @DeleteMapping("/scan-fixture")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun deleteScanFixture(
+        @RequestHeader("X-Scan-Secret", required = false) providedSecret: String?
+    ) {
+        validateSecret(providedSecret)
+        securityScanFixtureService.deleteFixture()
+    }
+
+    private fun validateSecret(providedSecret: String?) {
+        if (providedSecret.isNullOrBlank() || expectedSecret.isBlank() || providedSecret != expectedSecret) {
+            throw SecurityException("Invalid scan fixture secret")
+        }
     }
 }
 
